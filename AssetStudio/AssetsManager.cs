@@ -173,9 +173,9 @@ namespace AssetStudio
                     {
                         LoadAssetsFromMemory(subReader, originalPath ?? reader.FullPath, bundleFile.m_Header.unityRevision);
                     }
-                    else
+                    else if (!resourceFileReaders.ContainsKey(file.fileName))
                     {
-                        resourceFileReaders[file.fileName] = subReader; //TODO
+                        resourceFileReaders.Add(file.fileName, subReader);
                     }
                 }
             }

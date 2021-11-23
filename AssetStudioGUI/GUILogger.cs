@@ -6,7 +6,7 @@ namespace AssetStudioGUI
 {
     class GUILogger : ILogger
     {
-        public bool ShowErrorMessage = true;
+        public bool ShowErrorMessage = false;
         private Action<string> action;
 
         public GUILogger(Action<string> action)

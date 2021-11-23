@@ -1243,6 +1243,8 @@ namespace AssetStudioGUI
             reverseSort = false;
             enableFiltering = false;
             listSearch.Text = " Filter ";
+            if (tabControl1.SelectedIndex == 1)
+                assetListView.Select();
 
             var count = filterTypeToolStripMenuItem.DropDownItems.Count;
             for (var i = 1; i < count; i++)
@@ -1275,7 +1277,10 @@ namespace AssetStudioGUI
                     }
                 }
 
-                tempClipboard = assetListView.HitTest(new Point(e.X, e.Y)).SubItem.Text;
+                var selectedElement = assetListView.HitTest(new Point(e.X, e.Y));
+                var subItemIndex = selectedElement.Item.SubItems.IndexOf(selectedElement.SubItem);
+                tempClipboard = selectedElement.SubItem.Text;
+                copyToolStripMenuItem.Text = $"Copy {assetListView.Columns[subItemIndex].Text}";
                 contextMenuStrip1.Show(assetListView, e.X, e.Y);
             }
         }
@@ -1288,6 +1293,11 @@ namespace AssetStudioGUI
         private void exportSelectedAssetsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ExportAssets(ExportFilter.Selected, ExportType.Convert);
+        }
+
+        private void dumpSelectedAssetsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ExportAssets(ExportFilter.Selected, ExportType.Dump);
         }
 
         private void showOriginalFileToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1492,6 +1502,18 @@ namespace AssetStudioGUI
             {
                 StatusStripUpdate("No Objects available for export");
             }
+        }
+
+        private void assetListView_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (assetListView.SelectedIndices.Count > 1)
+                StatusStripUpdate($"Selected {assetListView.SelectedIndices.Count} assets.");
+        }
+
+        private void assetListView_VirtualItemsSelectionRangeChanged(object sender, ListViewVirtualItemsSelectionRangeChangedEventArgs e)
+        {
+            if (assetListView.SelectedIndices.Count > 1)
+                StatusStripUpdate($"Selected {assetListView.SelectedIndices.Count} assets.");
         }
 
         private List<AssetItem> GetSelectedAssets()
