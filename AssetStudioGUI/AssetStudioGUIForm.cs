@@ -763,10 +763,9 @@ namespace AssetStudioGUI
 
         private void PreviewTexture2D(AssetItem assetItem, Texture2D m_Texture2D)
         {
-            var stream = m_Texture2D.ConvertToStream(ImageFormat.Png, true);
-            if (stream != null)
+            var bitmap = m_Texture2D.ConvertToBitmap(true);
+            if (bitmap != null)
             {
-                var bitmap = new Bitmap(stream);
                 assetItem.InfoText = $"Width: {m_Texture2D.m_Width}\nHeight: {m_Texture2D.m_Height}\nFormat: {m_Texture2D.m_TextureFormat}";
                 switch (m_Texture2D.m_TextureSettings.m_FilterMode)
                 {
@@ -1174,10 +1173,9 @@ namespace AssetStudioGUI
 
         private void PreviewSprite(AssetItem assetItem, Sprite m_Sprite)
         {
-            var stream = m_Sprite.GetImage(ImageFormat.Png);
-            if (stream != null)
+            var bitmap = m_Sprite.GetImage();
+            if (bitmap != null)
             {
-                var bitmap = new Bitmap(stream);
                 assetItem.InfoText = $"Width: {bitmap.Width}\nHeight: {bitmap.Height}\n";
                 PreviewTexture(bitmap);
             }
