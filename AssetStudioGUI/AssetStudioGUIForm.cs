@@ -73,6 +73,7 @@ namespace AssetStudioGUI
         //asset list sorting
         private int sortColumn = -1;
         private bool reverseSort;
+        private AlphanumComparatorFast alphanumComparator = new AlphanumComparatorFast();
 
         //asset list filter
         private System.Timers.Timer delayTimer;
@@ -619,6 +620,15 @@ namespace AssetStudioGUI
                     long pathID_X = x.m_PathID;
                     long pathID_Y = y.m_PathID;
                     return reverseSort ? pathID_Y.CompareTo(pathID_X) : pathID_X.CompareTo(pathID_Y);
+                });
+            }
+            else if (sortColumn == 0) // Name
+            {
+                visibleAssets.Sort((a, b) =>
+                {
+                    var at = a.SubItems[sortColumn].Text;
+                    var bt = b.SubItems[sortColumn].Text;
+                    return reverseSort ? alphanumComparator.Compare(bt, at) : alphanumComparator.Compare(at, bt);
                 });
             }
             else
