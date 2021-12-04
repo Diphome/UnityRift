@@ -820,20 +820,21 @@
             // 
             // FMODtimerLabel
             // 
+            this.FMODtimerLabel.AutoSize = true;
             this.FMODtimerLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.FMODtimerLabel.Location = new System.Drawing.Point(404, 255);
+            this.FMODtimerLabel.Location = new System.Drawing.Point(457, 253);
             this.FMODtimerLabel.Name = "FMODtimerLabel";
-            this.FMODtimerLabel.Size = new System.Drawing.Size(155, 13);
+            this.FMODtimerLabel.Size = new System.Drawing.Size(102, 13);
             this.FMODtimerLabel.TabIndex = 7;
-            this.FMODtimerLabel.Text = "0:00.0 / 0:00.0";
-            this.FMODtimerLabel.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            this.FMODtimerLabel.Text = "00:00.00 / 00:00.00";
             // 
             // FMODstatusLabel
             // 
+            this.FMODstatusLabel.AutoSize = true;
             this.FMODstatusLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             this.FMODstatusLabel.Location = new System.Drawing.Point(213, 255);
             this.FMODstatusLabel.Name = "FMODstatusLabel";
-            this.FMODstatusLabel.Size = new System.Drawing.Size(50, 13);
+            this.FMODstatusLabel.Size = new System.Drawing.Size(47, 13);
             this.FMODstatusLabel.TabIndex = 6;
             this.FMODstatusLabel.Text = "Stopped";
             // 
@@ -1024,7 +1025,7 @@
             this.goToSceneHierarchyToolStripMenuItem,
             this.showOriginalFileToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(304, 158);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(304, 136);
             // 
             // copyToolStripMenuItem
             // 
@@ -1074,8 +1075,6 @@
             // AssetStudioGUIForm
             // 
             this.AllowDrop = true;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1264, 681);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.menuStrip1);
