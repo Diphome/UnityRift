@@ -802,7 +802,7 @@ namespace AssetStudioGUI
                     var bmpData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
                     var bytes = new byte[bitmap.Width * bitmap.Height * 4];
                     Marshal.Copy(bmpData.Scan0, bytes, 0, bytes.Length);
-                    for (int i = 0; i < bmpData.Height; i++)
+                    Parallel.For(0, bmpData.Height, i =>
                     {
                         int offset = Math.Abs(bmpData.Stride) * i;
                         for (int j = 0; j < bmpData.Width; j++)
@@ -813,7 +813,7 @@ namespace AssetStudioGUI
                             bytes[offset + 3] = textureChannels[3] ? bytes[offset + 3] : byte.MaxValue;
                             offset += 4;
                         }
-                    }
+                    });
                     Marshal.Copy(bytes, 0, bmpData.Scan0, bytes.Length);
                     bitmap.UnlockBits(bmpData);
                 }
@@ -1246,6 +1246,7 @@ namespace AssetStudioGUI
             classesListView.Groups.Clear();
             previewPanel.BackgroundImage = Properties.Resources.preview;
             imageTexture?.Dispose();
+            imageTexture = null;
             previewPanel.BackgroundImageLayout = ImageLayout.Center;
             assetInfoLabel.Visible = false;
             assetInfoLabel.Text = null;
