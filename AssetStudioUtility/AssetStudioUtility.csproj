@@ -2,15 +2,8 @@
 
   <PropertyGroup>
     <TargetFrameworks>net472;netstandard2.0;net5.0;net6.0</TargetFrameworks>
-    <Version>0.16.8.1</Version>
-    <AssemblyVersion>0.16.8.1</AssemblyVersion>
-    <FileVersion>0.16.8.1</FileVersion>
+    <Version>0.16.21.1</Version>
     <Copyright>Copyright © Perfare 2018-2021</Copyright>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net472|AnyCPU'">
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
