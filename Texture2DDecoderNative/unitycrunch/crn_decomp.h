@@ -18,9 +18,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef _WIN32
-#include <memory.h>
-#else
-#include <malloc.h>
+    #include <memory.h>
+    #define MALLOC_SIZE _msize
+#elif __APPLE__
+    #include <cstring>
+    #include <malloc/malloc.h>
+    #define MALLOC_SIZE malloc_size
+#else // Linux
+    #include <cstring>
+    #include <malloc.h>
+    #define MALLOC_SIZE malloc_usable_size
 #endif
 #include <stdarg.h>
 #include <new>  // needed for placement new, _msize, _expand
@@ -1923,11 +1930,7 @@ static void* crnd_default_realloc(void* p, size_t size, size_t* pActual_size, bo
     p_new = ::malloc(size);
 
     if (pActual_size) {
-#ifdef _WIN32
-      *pActual_size = p_new ? ::_msize(p_new) : 0;
-#else
-      *pActual_size = p_new ? malloc_usable_size(p_new) : 0;
-#endif
+      *pActual_size = p_new ? MALLOC_SIZE(p_new) : 0;
     }
   } else if (!size) {
     ::free(p);
@@ -1953,11 +1956,7 @@ static void* crnd_default_realloc(void* p, size_t size, size_t* pActual_size, bo
     }
 
     if (pActual_size) {
-#ifdef _WIN32
-      *pActual_size = ::_msize(p_final_block);
-#else
-      *pActual_size = ::malloc_usable_size(p_final_block);
-#endif
+      *pActual_size = ::MALLOC_SIZE(p_final_block);
     }
   }
 
@@ -1966,11 +1965,7 @@ static void* crnd_default_realloc(void* p, size_t size, size_t* pActual_size, bo
 
 static size_t crnd_default_msize(void* p, void* pUser_data) {
   pUser_data;
-#ifdef _WIN32
-  return p ? _msize(p) : 0;
-#else
-  return p ? malloc_usable_size(p) : 0;
-#endif
+  return p ? MALLOC_SIZE(p) : 0;
 }
 
 static crnd_realloc_func g_pRealloc = crnd_default_realloc;
