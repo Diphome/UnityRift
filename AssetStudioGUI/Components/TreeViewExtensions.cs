@@ -40,7 +40,7 @@ namespace AssetStudioGUI
                 hItem = node.Handle,
                 mask = TVIF_STATE,
                 stateMask = TVIS_STATEIMAGEMASK,
-                state = TVIS_STATEIMAGEMASK  //temp bugfix for an issue with getting stuck during the "Building tree structure" step
+                state = TVIS_STATEIMAGEMASK
             };
             SendMessage(node.TreeView.Handle, TVM_SETITEM, IntPtr.Zero, ref tvi);
         }
