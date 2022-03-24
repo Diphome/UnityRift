@@ -6,8 +6,9 @@
 		<UseWindowsForms>true</UseWindowsForms>
 		<ApplicationIcon>Resources\as.ico</ApplicationIcon>
 		<AssemblyTitle>AssetStudio Mod by VaDiM</AssemblyTitle>
-		<Version>0.16.21.1</Version>
-		<Copyright>Copyright © Perfare 2018-2021</Copyright>
+		<Version>0.16.40.1</Version>
+		<Copyright>Copyright © Perfare 2018-2022</Copyright>
+		<DebugType>embedded</DebugType>
 	</PropertyGroup>
 
 	<ItemGroup>
