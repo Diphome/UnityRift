@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;netstandard2.0;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>net472;net6.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Version>0.16.40.1</Version>
+    <Version>0.16.47.1</Version>
     <Copyright>Copyright © Perfare 2018-2022; Copyright © hozuki 2020</Copyright>
     <DebugType>embedded</DebugType>
   </PropertyGroup>

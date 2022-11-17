@@ -2,11 +2,11 @@
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFrameworks>net472;net5.0-windows;net6.0-windows</TargetFrameworks>
+		<TargetFrameworks>net472;net6.0-windows</TargetFrameworks>
 		<UseWindowsForms>true</UseWindowsForms>
 		<ApplicationIcon>Resources\as.ico</ApplicationIcon>
 		<AssemblyTitle>AssetStudio Mod by VaDiM</AssemblyTitle>
-		<Version>0.16.40.1</Version>
+		<Version>0.16.47.1</Version>
 		<Copyright>Copyright © Perfare 2018-2022</Copyright>
 		<DebugType>embedded</DebugType>
 	</PropertyGroup>
