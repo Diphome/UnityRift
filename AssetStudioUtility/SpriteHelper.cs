@@ -1,29 +1,19 @@
-﻿using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
+﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 
 namespace AssetStudio
 {
     public static class SpriteHelper
     {
-        public static MemoryStream GetImage(this Sprite m_Sprite, ImageFormat imageFormat)
-        {
-            var image = GetImage(m_Sprite);
-            if (image != null)
-            {
-                using (image)
-                {
-                    return image.ConvertToStream(imageFormat);
-                }
-            }
-            return null;
-        }
-
-        public static Bitmap GetImage(this Sprite m_Sprite)
+        public static Image<Bgra32> GetImage(this Sprite m_Sprite)
         {
             if (m_Sprite.m_SpriteAtlas != null && m_Sprite.m_SpriteAtlas.TryGet(out var m_SpriteAtlas))
             {
@@ -42,9 +32,9 @@ namespace AssetStudio
             return null;
         }
 
-        private static Bitmap CutImage(Texture2D m_Texture2D, Sprite m_Sprite, Rectf textureRect, Vector2 textureRectOffset, SpriteSettings settingsRaw)
+        private static Image<Bgra32> CutImage(Texture2D m_Texture2D, Sprite m_Sprite, Rectf textureRect, Vector2 textureRectOffset, SpriteSettings settingsRaw)
         {
-            var originalImage = m_Texture2D.ConvertToBitmap(false);
+            var originalImage = m_Texture2D.ConvertToImage(false);
             if (originalImage != null)
             {
                 using (originalImage)
@@ -56,29 +46,23 @@ namespace AssetStudio
                     rectRight = Math.Min(rectRight, m_Texture2D.m_Width);
                     rectBottom = Math.Min(rectBottom, m_Texture2D.m_Height);
                     var rect = new Rectangle(rectX, rectY, rectRight - rectX, rectBottom - rectY);
-
-                    var spriteImage = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
-                    var destRect = new Rectangle(0, 0, rect.Width, rect.Height);
-                    using (var graphic = Graphics.FromImage(spriteImage))
-                    {
-                        graphic.DrawImage(originalImage, destRect, rect, GraphicsUnit.Pixel);
-                    }
+                    var spriteImage = originalImage.Clone(x => x.Crop(rect));
                     if (settingsRaw.packed == 1)
                     {
                         //RotateAndFlip
                         switch (settingsRaw.packingRotation)
                         {
                             case SpritePackingRotation.kSPRFlipHorizontal:
-                                spriteImage.RotateFlip(RotateFlipType.RotateNoneFlipX);
+                                spriteImage.Mutate(x => x.Flip(FlipMode.Horizontal));
                                 break;
                             case SpritePackingRotation.kSPRFlipVertical:
-                                spriteImage.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                                spriteImage.Mutate(x => x.Flip(FlipMode.Vertical));
                                 break;
                             case SpritePackingRotation.kSPRRotate180:
-                                spriteImage.RotateFlip(RotateFlipType.Rotate180FlipNone);
+                                spriteImage.Mutate(x => x.Rotate(180));
                                 break;
                             case SpritePackingRotation.kSPRRotate90:
-                                spriteImage.RotateFlip(RotateFlipType.Rotate270FlipNone);
+                                spriteImage.Mutate(x => x.Rotate(270));
                                 break;
                         }
                     }
@@ -89,40 +73,27 @@ namespace AssetStudio
                         try
                         {
                             var triangles = GetTriangles(m_Sprite.m_RD);
-                            var points = triangles.Select(x => x.Select(y => new PointF(y.X, y.Y)).ToArray());
-                            using (var path = new GraphicsPath())
+                            var polygons = triangles.Select(x => new Polygon(new LinearLineSegment(x.Select(y => new PointF(y.X, y.Y)).ToArray()))).ToArray();
+                            IPathCollection path = new PathCollection(polygons);
+                            var matrix = Matrix3x2.CreateScale(m_Sprite.m_PixelsToUnits);
+                            matrix *= Matrix3x2.CreateTranslation(m_Sprite.m_Rect.width * m_Sprite.m_Pivot.X - textureRectOffset.X, m_Sprite.m_Rect.height * m_Sprite.m_Pivot.Y - textureRectOffset.Y);
+                            path = path.Transform(matrix);
+                            var graphicsOptions = new GraphicsOptions
                             {
-                                foreach (var p in points)
-                                {
-                                    path.AddPolygon(p);
-                                }
-                                using (var matr = new Matrix())
-                                {
-                                    var version = m_Sprite.version;
-                                    if (version[0] < 5
-                                       || (version[0] == 5 && version[1] < 4)
-                                       || (version[0] == 5 && version[1] == 4 && version[2] <= 1)) //5.4.1p3 down
-                                    {
-                                        matr.Translate(m_Sprite.m_Rect.width * 0.5f - textureRectOffset.X, m_Sprite.m_Rect.height * 0.5f - textureRectOffset.Y);
-                                    }
-                                    else
-                                    {
-                                        matr.Translate(m_Sprite.m_Rect.width * m_Sprite.m_Pivot.X - textureRectOffset.X, m_Sprite.m_Rect.height * m_Sprite.m_Pivot.Y - textureRectOffset.Y);
-                                    }
-                                    matr.Scale(m_Sprite.m_PixelsToUnits, m_Sprite.m_PixelsToUnits);
-                                    path.Transform(matr);
-                                    var bitmap = new Bitmap(rect.Width, rect.Height);
-                                    using (var graphic = Graphics.FromImage(bitmap))
-                                    {
-                                        using (var brush = new TextureBrush(spriteImage))
-                                        {
-                                            graphic.FillPath(brush, path);
-                                            bitmap.RotateFlip(RotateFlipType.RotateNoneFlipY);
-                                            spriteImage.Dispose();
-                                            return bitmap;
-                                        }
-                                    }
-                                }
+                                Antialias = false,
+                                AlphaCompositionMode = PixelAlphaCompositionMode.DestOut
+                            };
+                            var options = new DrawingOptions
+                            {
+                                GraphicsOptions = graphicsOptions
+                            };
+                            using (var mask = new Image<Bgra32>(rect.Width, rect.Height, SixLabors.ImageSharp.Color.Black))
+                            {
+                                mask.Mutate(x => x.Fill(options, SixLabors.ImageSharp.Color.Red, path));
+                                var bursh = new ImageBrush(mask);
+                                spriteImage.Mutate(x => x.Fill(graphicsOptions, bursh));
+                                spriteImage.Mutate(x => x.Flip(FlipMode.Vertical));
+                                return spriteImage;
                             }
                         }
                         catch
@@ -132,7 +103,7 @@ namespace AssetStudio
                     }
 
                     //Rectangle
-                    spriteImage.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                    spriteImage.Mutate(x => x.Flip(FlipMode.Vertical));
                     return spriteImage;
                 }
             }

@@ -1,41 +1,38 @@
-﻿using System.Drawing;
-using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
+﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System.IO;
 
 namespace AssetStudio
 {
     public static class Texture2DExtensions
     {
-        public static Bitmap ConvertToBitmap(this Texture2D m_Texture2D, bool flip)
+        public static Image<Bgra32> ConvertToImage(this Texture2D m_Texture2D, bool flip)
         {
             var converter = new Texture2DConverter(m_Texture2D);
-            var bytes = BigArrayPool<byte>.Shared.Rent(m_Texture2D.m_Width * m_Texture2D.m_Height * 4);
+            var buff = BigArrayPool<byte>.Shared.Rent(m_Texture2D.m_Width * m_Texture2D.m_Height * 4);
             try
             {
-                if (converter.DecodeTexture2D(bytes))
+                if (converter.DecodeTexture2D(buff))
                 {
-                    var bitmap = new Bitmap(m_Texture2D.m_Width, m_Texture2D.m_Height, PixelFormat.Format32bppArgb);
-                    var bmpData = bitmap.LockBits(new Rectangle(0, 0, m_Texture2D.m_Width, m_Texture2D.m_Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
-                    Marshal.Copy(bytes, 0, bmpData.Scan0, bitmap.Width * bitmap.Height * 4);
-                    bitmap.UnlockBits(bmpData);
+                    var image = Image.LoadPixelData<Bgra32>(buff, m_Texture2D.m_Width, m_Texture2D.m_Height);
                     if (flip)
                     {
-                        bitmap.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                        image.Mutate(x => x.Flip(FlipMode.Vertical));
                     }
-                    return bitmap;
+                    return image;
                 }
                 return null;
             }
             finally
             {
-                BigArrayPool<byte>.Shared.Return(bytes);
+                BigArrayPool<byte>.Shared.Return(buff);
             }
         }
 
         public static MemoryStream ConvertToStream(this Texture2D m_Texture2D, ImageFormat imageFormat, bool flip)
         {
-            var image = ConvertToBitmap(m_Texture2D, flip);
+            var image = ConvertToImage(m_Texture2D, flip);
             if (image != null)
             {
                 using (image)

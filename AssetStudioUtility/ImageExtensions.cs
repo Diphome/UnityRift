@@ -1,32 +1,55 @@
-﻿using System.Drawing;
+﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Bmp;
+using SixLabors.ImageSharp.Formats.Tga;
+using SixLabors.ImageSharp.PixelFormats;
 using System.IO;
-using TGASharpLib;
+using System.Runtime.InteropServices;
 
 namespace AssetStudio
 {
     public static class ImageExtensions
     {
-        public static MemoryStream ConvertToStream(this Bitmap image, ImageFormat imageFormat)
+        public static void WriteToStream(this Image image, Stream stream, ImageFormat imageFormat)
         {
-            var outputStream = new MemoryStream();
             switch (imageFormat)
             {
                 case ImageFormat.Jpeg:
-                    image.Save(outputStream, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    image.SaveAsJpeg(stream);
                     break;
                 case ImageFormat.Png:
-                    image.Save(outputStream, System.Drawing.Imaging.ImageFormat.Png);
+                    image.SaveAsPng(stream);
                     break;
                 case ImageFormat.Bmp:
-                    image.Save(outputStream, System.Drawing.Imaging.ImageFormat.Bmp);
+                    image.Save(stream, new BmpEncoder
+                    {
+                        BitsPerPixel = BmpBitsPerPixel.Pixel32,
+                        SupportTransparency = true
+                    });
                     break;
                 case ImageFormat.Tga:
-                    var tga = new TGA(image);
-                    tga.Save(outputStream);
+                    image.Save(stream, new TgaEncoder
+                    {
+                        BitsPerPixel = TgaBitsPerPixel.Pixel32,
+                        Compression = TgaCompression.None
+                    });
                     break;
             }
-            image.Dispose();
-            return outputStream;
+        }
+
+        public static MemoryStream ConvertToStream(this Image image, ImageFormat imageFormat)
+        {
+            var stream = new MemoryStream();
+            image.WriteToStream(stream, imageFormat);
+            return stream;
+        }
+
+        public static byte[] ConvertToBgra32Bytes(this Image<Bgra32> image)
+        {
+            if (image.TryGetSinglePixelSpan(out var pixelSpan))
+            {
+                return MemoryMarshal.AsBytes(pixelSpan).ToArray();
+            }
+            return null;
         }
     }
 }
