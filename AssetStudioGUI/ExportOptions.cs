@@ -12,6 +12,7 @@ namespace AssetStudioGUI
             assetGroupOptions.SelectedIndex = Properties.Settings.Default.assetGroupOption;
             restoreExtensionName.Checked = Properties.Settings.Default.restoreExtensionName;
             converttexture.Checked = Properties.Settings.Default.convertTexture;
+            exportSpriteWithAlphaMask.Checked = Properties.Settings.Default.exportSpriteWithMask;
             convertAudio.Checked = Properties.Settings.Default.convertAudio;
             var str = Properties.Settings.Default.convertType.ToString();
             foreach (Control c in panel1.Controls)
@@ -43,6 +44,7 @@ namespace AssetStudioGUI
             Properties.Settings.Default.assetGroupOption = assetGroupOptions.SelectedIndex;
             Properties.Settings.Default.restoreExtensionName = restoreExtensionName.Checked;
             Properties.Settings.Default.convertTexture = converttexture.Checked;
+            Properties.Settings.Default.exportSpriteWithMask = exportSpriteWithAlphaMask.Checked;
             Properties.Settings.Default.convertAudio = convertAudio.Checked;
             foreach (Control c in panel1.Controls)
             {
@@ -75,6 +77,5 @@ namespace AssetStudioGUI
             DialogResult = DialogResult.Cancel;
             Close();
         }
-
     }
 }

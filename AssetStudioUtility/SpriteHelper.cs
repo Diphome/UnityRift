@@ -11,9 +11,16 @@ using System.Numerics;
 
 namespace AssetStudio
 {
+    public enum SpriteMaskMode
+    {
+        Off,
+        On,
+        MaskOnly
+    }
+
     public static class SpriteHelper
     {
-        public static Image<Bgra32> GetImage(this Sprite m_Sprite)
+        public static Image<Bgra32> GetImage(this Sprite m_Sprite, SpriteMaskMode spriteMaskVisibleMode = SpriteMaskMode.On)
         {
             if (m_Sprite.m_SpriteAtlas != null && m_Sprite.m_SpriteAtlas.TryGet(out var m_SpriteAtlas))
             {
@@ -24,12 +31,53 @@ namespace AssetStudio
             }
             else
             {
-                if (m_Sprite.m_RD.texture.TryGet(out var m_Texture2D))
+                if (m_Sprite.m_RD.texture.TryGet(out var m_Texture2D) && m_Sprite.m_RD.alphaTexture.TryGet(out var m_AlphaTexture2D) && spriteMaskVisibleMode != SpriteMaskMode.Off)
+                {
+                    var tex = CutImage(m_Sprite, m_Texture2D, m_Sprite.m_RD.textureRect, m_Sprite.m_RD.textureRectOffset, m_Sprite.m_RD.downscaleMultiplier, m_Sprite.m_RD.settingsRaw);
+                    var alphaTex = CutImage(m_Sprite, m_AlphaTexture2D, m_Sprite.m_RD.textureRect, m_Sprite.m_RD.textureRectOffset, m_Sprite.m_RD.downscaleMultiplier, m_Sprite.m_RD.settingsRaw);
+
+                    if (tex.Width != alphaTex.Width || tex.Height != alphaTex.Height)
+                    {
+                        alphaTex.Mutate(x => x.Resize(tex.Width, tex.Height));
+                    }
+
+                    switch (spriteMaskVisibleMode)
+                    {
+                        case SpriteMaskMode.On:
+                            return ApplyRGBMask(tex, alphaTex);
+                        case SpriteMaskMode.MaskOnly:
+                            tex.Dispose();
+                            return alphaTex;
+                    }
+                }
+                else if (m_Sprite.m_RD.texture.TryGet(out m_Texture2D))
                 {
                     return CutImage(m_Sprite, m_Texture2D, m_Sprite.m_RD.textureRect, m_Sprite.m_RD.textureRectOffset, m_Sprite.m_RD.downscaleMultiplier, m_Sprite.m_RD.settingsRaw);
                 }
             }
             return null;
+        }
+
+        private static Image<Bgra32> ApplyRGBMask(Image<Bgra32> tex, Image<Bgra32> texMask)
+        {
+            using (texMask)
+            {
+                tex.ProcessPixelRows(texMask, (sourceTex, targetTexMask) =>
+                {
+                    for (int y = 0; y < texMask.Height; y++)
+                    {
+                        var texRow = sourceTex.GetRowSpan(y);
+                        var maskRow = targetTexMask.GetRowSpan(y);
+                        for (int x = 0; x < maskRow.Length; x++)
+                        {
+                            var grayscale = (byte)((maskRow[x].R + maskRow[x].G + maskRow[x].B) / 3);
+                            texRow[x].A = grayscale;
+                        }
+                    }
+                });
+
+                return tex;
+            }
         }
 
         private static Image<Bgra32> CutImage(Sprite m_Sprite, Texture2D m_Texture2D, Rectf textureRect, Vector2 textureRectOffset, float downscaleMultiplier, SpriteSettings settingsRaw)

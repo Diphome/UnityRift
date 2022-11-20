@@ -32,6 +32,7 @@
             this.OKbutton = new System.Windows.Forms.Button();
             this.Cancel = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.exportSpriteWithAlphaMask = new System.Windows.Forms.CheckBox();
             this.openAfterExport = new System.Windows.Forms.CheckBox();
             this.restoreExtensionName = new System.Windows.Forms.CheckBox();
             this.assetGroupOptions = new System.Windows.Forms.ComboBox();
@@ -94,6 +95,7 @@
             // groupBox1
             // 
             this.groupBox1.AutoSize = true;
+            this.groupBox1.Controls.Add(this.exportSpriteWithAlphaMask);
             this.groupBox1.Controls.Add(this.openAfterExport);
             this.groupBox1.Controls.Add(this.restoreExtensionName);
             this.groupBox1.Controls.Add(this.assetGroupOptions);
@@ -108,12 +110,24 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Export";
             // 
+            // exportSpriteWithAlphaMask
+            // 
+            this.exportSpriteWithAlphaMask.AutoSize = true;
+            this.exportSpriteWithAlphaMask.Checked = true;
+            this.exportSpriteWithAlphaMask.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.exportSpriteWithAlphaMask.Location = new System.Drawing.Point(6, 150);
+            this.exportSpriteWithAlphaMask.Name = "exportSpriteWithAlphaMask";
+            this.exportSpriteWithAlphaMask.Size = new System.Drawing.Size(205, 17);
+            this.exportSpriteWithAlphaMask.TabIndex = 11;
+            this.exportSpriteWithAlphaMask.Text = "Export sprites with alpha mask applied";
+            this.exportSpriteWithAlphaMask.UseVisualStyleBackColor = true;
+            // 
             // openAfterExport
             // 
             this.openAfterExport.AutoSize = true;
             this.openAfterExport.Checked = true;
             this.openAfterExport.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.openAfterExport.Location = new System.Drawing.Point(6, 173);
+            this.openAfterExport.Location = new System.Drawing.Point(6, 196);
             this.openAfterExport.Name = "openAfterExport";
             this.openAfterExport.Size = new System.Drawing.Size(137, 17);
             this.openAfterExport.TabIndex = 10;
@@ -160,7 +174,7 @@
             this.convertAudio.AutoSize = true;
             this.convertAudio.Checked = true;
             this.convertAudio.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.convertAudio.Location = new System.Drawing.Point(6, 150);
+            this.convertAudio.Location = new System.Drawing.Point(6, 173);
             this.convertAudio.Name = "convertAudio";
             this.convertAudio.Size = new System.Drawing.Size(179, 17);
             this.convertAudio.TabIndex = 6;
@@ -531,5 +545,6 @@
         private System.Windows.Forms.CheckBox openAfterExport;
         private System.Windows.Forms.CheckBox exportAllUvsAsDiffuseMaps;
         private System.Windows.Forms.ToolTip exportUvsTooltip;
+        private System.Windows.Forms.CheckBox exportSpriteWithAlphaMask;
     }
 }

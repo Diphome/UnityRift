@@ -43,6 +43,10 @@ namespace AssetStudioGUI
         private uint FMODlenms;
         private float FMODVolume = 0.8f;
 
+        #region SpriteControl
+        private SpriteMaskMode spriteMaskVisibleMode = SpriteMaskMode.On;
+        #endregion
+
         #region TexControl
         private static char[] textureChannelNames = new[] { 'B', 'G', 'R', 'A' };
         private bool[] textureChannels = new[] { true, true, true, true };
@@ -315,24 +319,41 @@ namespace AssetStudioGUI
                 if (e.Control)
                 {
                     var need = false;
-                    switch (e.KeyCode)
+                    if (lastSelectedItem.Type == ClassIDType.Texture2D)
                     {
-                        case Keys.B:
-                            textureChannels[0] = !textureChannels[0];
-                            need = true;
-                            break;
-                        case Keys.G:
-                            textureChannels[1] = !textureChannels[1];
-                            need = true;
-                            break;
-                        case Keys.R:
-                            textureChannels[2] = !textureChannels[2];
-                            need = true;
-                            break;
-                        case Keys.A:
-                            textureChannels[3] = !textureChannels[3];
-                            need = true;
-                            break;
+                        switch (e.KeyCode)
+                        {
+                            case Keys.B:
+                                textureChannels[0] = !textureChannels[0];
+                                need = true;
+                                break;
+                            case Keys.G:
+                                textureChannels[1] = !textureChannels[1];
+                                need = true;
+                                break;
+                            case Keys.R:
+                                textureChannels[2] = !textureChannels[2];
+                                need = true;
+                                break;
+                            case Keys.A:
+                                textureChannels[3] = !textureChannels[3];
+                                need = true;
+                                break;
+                        }
+                    }
+                    else if (lastSelectedItem.Type == ClassIDType.Sprite && !((Sprite)lastSelectedItem.Asset).m_RD.alphaTexture.IsNull)
+                    {
+                        switch (e.KeyCode)
+                        {
+                            case Keys.A:
+                                spriteMaskVisibleMode = spriteMaskVisibleMode == SpriteMaskMode.On ? SpriteMaskMode.Off : SpriteMaskMode.On;
+                                need = true;
+                                break;
+                            case Keys.M:
+                                spriteMaskVisibleMode = spriteMaskVisibleMode == SpriteMaskMode.MaskOnly ? SpriteMaskMode.On : SpriteMaskMode.MaskOnly;
+                                need = true;
+                                break;
+                        }
                     }
                     if (need)
                     {
@@ -1170,13 +1191,19 @@ namespace AssetStudioGUI
 
         private void PreviewSprite(AssetItem assetItem, Sprite m_Sprite)
         {
-            var image = m_Sprite.GetImage();
+            var image = m_Sprite.GetImage(spriteMaskVisibleMode);
             if (image != null)
             {
                 var bitmap = new DirectBitmap(image.ConvertToBytes(), image.Width, image.Height);
                 image.Dispose();
                 assetItem.InfoText = $"Width: {bitmap.Width}\nHeight: {bitmap.Height}\n";
                 PreviewTexture(bitmap);
+
+                if (!m_Sprite.m_RD.alphaTexture.IsNull)
+                {
+                    assetItem.InfoText += $"Alpha Mask: {spriteMaskVisibleMode}\n";
+                    StatusStripUpdate("'Ctrl'+'A' - Enable/Disable alpha mask usage. 'Ctrl'+'M' - Show alpha mask only.");
+                }
             }
             else
             {
