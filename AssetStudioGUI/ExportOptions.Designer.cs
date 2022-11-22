@@ -39,6 +39,7 @@
             this.label6 = new System.Windows.Forms.Label();
             this.convertAudio = new System.Windows.Forms.CheckBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.towebp = new System.Windows.Forms.RadioButton();
             this.totga = new System.Windows.Forms.RadioButton();
             this.tojpg = new System.Windows.Forms.RadioButton();
             this.topng = new System.Windows.Forms.RadioButton();
@@ -73,7 +74,7 @@
             // 
             // OKbutton
             // 
-            this.OKbutton.Location = new System.Drawing.Point(318, 380);
+            this.OKbutton.Location = new System.Drawing.Point(381, 380);
             this.OKbutton.Name = "OKbutton";
             this.OKbutton.Size = new System.Drawing.Size(75, 23);
             this.OKbutton.TabIndex = 6;
@@ -84,7 +85,7 @@
             // Cancel
             // 
             this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.Cancel.Location = new System.Drawing.Point(399, 380);
+            this.Cancel.Location = new System.Drawing.Point(462, 380);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
             this.Cancel.TabIndex = 7;
@@ -105,7 +106,7 @@
             this.groupBox1.Controls.Add(this.converttexture);
             this.groupBox1.Location = new System.Drawing.Point(12, 13);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(232, 362);
+            this.groupBox1.Size = new System.Drawing.Size(301, 362);
             this.groupBox1.TabIndex = 9;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Export";
@@ -183,14 +184,26 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.towebp);
             this.panel1.Controls.Add(this.totga);
             this.panel1.Controls.Add(this.tojpg);
             this.panel1.Controls.Add(this.topng);
             this.panel1.Controls.Add(this.tobmp);
-            this.panel1.Location = new System.Drawing.Point(20, 111);
+            this.panel1.Location = new System.Drawing.Point(18, 111);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(202, 33);
+            this.panel1.Size = new System.Drawing.Size(260, 33);
             this.panel1.TabIndex = 5;
+            // 
+            // towebp
+            // 
+            this.towebp.AutoSize = true;
+            this.towebp.Location = new System.Drawing.Point(201, 7);
+            this.towebp.Name = "towebp";
+            this.towebp.Size = new System.Drawing.Size(54, 17);
+            this.towebp.TabIndex = 5;
+            this.towebp.TabStop = true;
+            this.towebp.Text = "Webp";
+            this.towebp.UseVisualStyleBackColor = true;
             // 
             // totga
             // 
@@ -266,7 +279,7 @@
             this.groupBox2.Controls.Add(this.castToBone);
             this.groupBox2.Controls.Add(this.exportAllNodes);
             this.groupBox2.Controls.Add(this.eulerFilter);
-            this.groupBox2.Location = new System.Drawing.Point(250, 13);
+            this.groupBox2.Location = new System.Drawing.Point(313, 13);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(224, 362);
             this.groupBox2.TabIndex = 11;
@@ -484,7 +497,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.Cancel;
-            this.ClientSize = new System.Drawing.Size(486, 416);
+            this.ClientSize = new System.Drawing.Size(549, 416);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.Cancel);
@@ -546,5 +559,6 @@
         private System.Windows.Forms.CheckBox exportAllUvsAsDiffuseMaps;
         private System.Windows.Forms.ToolTip exportUvsTooltip;
         private System.Windows.Forms.CheckBox exportSpriteWithAlphaMask;
+        private System.Windows.Forms.RadioButton towebp;
     }
 }

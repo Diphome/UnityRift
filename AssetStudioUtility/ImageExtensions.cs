@@ -1,6 +1,7 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Bmp;
 using SixLabors.ImageSharp.Formats.Tga;
+using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.IO;
@@ -32,6 +33,13 @@ namespace AssetStudio
                     {
                         BitsPerPixel = TgaBitsPerPixel.Pixel32,
                         Compression = TgaCompression.None
+                    });
+                    break;
+                case ImageFormat.Webp:
+                    image.Save(stream, new WebpEncoder
+                    {
+                        FileFormat = WebpFileFormatType.Lossless,
+                        Quality = 50
                     });
                     break;
             }
