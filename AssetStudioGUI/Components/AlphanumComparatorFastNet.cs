@@ -5,16 +5,22 @@
 using System;
 using System.Collections.Generic;
 
+#if NET6_0_OR_GREATER
 namespace AssetStudioGUI
 {
-    internal class AlphanumComparatorFast : IComparer<string>
+    internal class AlphanumComparatorFastNet : IComparer<string>
     {
         public int Compare(string s1, string s2)
         {
+            const int maxStackSize = 256;
             int len1 = s1.Length;
             int len2 = s2.Length;
             int marker1 = 0;
             int marker2 = 0;
+
+            // Some buffers we can build up characters in for each chunk.
+            Span<char> space1 = len1 > maxStackSize ? new char[len1] : stackalloc char[len1];
+            Span<char> space2 = len2 > maxStackSize ? new char[len2] : stackalloc char[len2];
 
             // Walk through two the strings with two markers.
             while (marker1 < len1 && marker2 < len2)
@@ -22,11 +28,10 @@ namespace AssetStudioGUI
                 char ch1 = s1[marker1];
                 char ch2 = s2[marker2];
 
-                // Some buffers we can build up characters in for each chunk.
-                char[] space1 = new char[len1];
                 int loc1 = 0;
-                char[] space2 = new char[len2];
                 int loc2 = 0;
+                space1.Clear();
+                space2.Clear();
 
                 // Walk through all following characters that are digits or
                 // characters in BOTH strings starting at the appropriate marker.
@@ -67,13 +72,13 @@ namespace AssetStudioGUI
 
                 if (char.IsDigit(space1[0]) && char.IsDigit(space2[0]))
                 {
-                    int thisNumericChunk = int.Parse(new string(space1));
-                    int thatNumericChunk = int.Parse(new string(space2));
+                    int thisNumericChunk = int.Parse(space1);
+                    int thatNumericChunk = int.Parse(space2);
                     result = thisNumericChunk.CompareTo(thatNumericChunk);
                 }
                 else
                 {
-                    result = MemoryExtensions.CompareTo(space1, space2, StringComparison.OrdinalIgnoreCase); 
+                    result = MemoryExtensions.CompareTo(space1, space2, StringComparison.OrdinalIgnoreCase);
                 }
 
                 if (result != 0)
@@ -85,3 +90,4 @@ namespace AssetStudioGUI
         }
     }
 }
+#endif

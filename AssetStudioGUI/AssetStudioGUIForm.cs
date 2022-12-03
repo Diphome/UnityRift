@@ -80,7 +80,12 @@ namespace AssetStudioGUI
         //asset list sorting
         private int sortColumn = -1;
         private bool reverseSort;
+
+#if NET6_0_OR_GREATER
+        private AlphanumComparatorFastNet alphanumComparator = new AlphanumComparatorFastNet();
+#else
         private AlphanumComparatorFast alphanumComparator = new AlphanumComparatorFast();
+#endif
 
         //asset list filter
         private System.Timers.Timer delayTimer;
@@ -655,9 +660,10 @@ namespace AssetStudioGUI
             {
                 visibleAssets.Sort((a, b) =>
                 {
-                    var at = a.SubItems[sortColumn].Text;
-                    var bt = b.SubItems[sortColumn].Text;
-                    return reverseSort ? bt.CompareTo(at) : at.CompareTo(bt);
+                    var at = a.SubItems[sortColumn].Text.AsSpan();
+                    var bt = b.SubItems[sortColumn].Text.AsSpan();
+
+                    return reverseSort ? MemoryExtensions.CompareTo(bt, at, StringComparison.OrdinalIgnoreCase) : MemoryExtensions.CompareTo(at, bt, StringComparison.OrdinalIgnoreCase);
                 });
             }
             assetListView.EndUpdate();
