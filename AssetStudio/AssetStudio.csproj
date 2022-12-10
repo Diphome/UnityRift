@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;net6.0</TargetFrameworks>
+    <TargetFrameworks>net472;net6.0;net7.0</TargetFrameworks>
     <Version>0.16.47.1</Version>
     <Copyright>Copyright © Perfare 2018-2022</Copyright>
     <DebugType>embedded</DebugType>
