@@ -248,7 +248,7 @@ namespace AssetStudio
 
         private void LoadZipFile(FileReader reader)
         {
-            Logger.Info("Loading " + reader.FileName);
+            Logger.Info("Reading " + reader.FileName);
             try
             {
                 using (ZipArchive archive = new ZipArchive(reader.BaseStream, ZipArchiveMode.Read))
@@ -303,6 +303,9 @@ namespace AssetStudio
                     }
 
                     // load all entries
+                    var progressCount = archive.Entries.Count;
+                    int k = 0;
+                    Progress.Reset();
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
                         try
@@ -328,6 +331,7 @@ namespace AssetStudio
                                     resourceFileReaders.Add(entry.Name, entryReader);
                                 }
                             }
+                            Progress.Report(++k, progressCount);
                         }
                         catch (Exception e)
                         {
