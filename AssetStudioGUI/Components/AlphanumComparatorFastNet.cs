@@ -78,7 +78,7 @@ namespace AssetStudioGUI
                 }
                 else
                 {
-                    result = MemoryExtensions.CompareTo(space1, space2, StringComparison.OrdinalIgnoreCase);
+                    result = MemoryExtensions.CompareTo(space1, space2, StringComparison.InvariantCultureIgnoreCase);
                 }
 
                 if (result != 0)
