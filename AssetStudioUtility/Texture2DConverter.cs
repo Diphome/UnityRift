@@ -219,9 +219,7 @@ namespace AssetStudio
             {
                 for (var i = 0; i < reader.Size / 2; i++)
                 {
-                    var b = image_data[i * 2];
-                    image_data[i * 2] = image_data[i * 2 + 1];
-                    image_data[i * 2 + 1] = b;
+                    (image_data[i * 2 + 1], image_data[i * 2]) = (image_data[i * 2], image_data[i * 2 + 1]);
                 }
             }
         }
