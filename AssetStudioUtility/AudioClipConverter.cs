@@ -14,11 +14,8 @@ namespace AssetStudio
             m_AudioClip = audioClip;
         }
 
-        public byte[] ConvertToWav()
+        public byte[] ConvertToWav(byte[] m_AudioData)
         {
-            var m_AudioData = m_AudioClip.m_AudioData.GetData();
-            if (m_AudioData == null || m_AudioData.Length == 0)
-                return null;
             var exinfo = new CREATESOUNDEXINFO();
             var result = Factory.System_Create(out var system);
             if (result != RESULT.OK)
