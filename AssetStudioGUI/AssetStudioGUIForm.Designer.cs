@@ -81,6 +81,7 @@
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.treeSearch = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.filterExcludeMode = new System.Windows.Forms.CheckBox();
             this.assetListView = new System.Windows.Forms.ListView();
             this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderContainer = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -588,6 +589,7 @@
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.filterExcludeMode);
             this.tabPage2.Controls.Add(this.assetListView);
             this.tabPage2.Controls.Add(this.listSearch);
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
@@ -596,6 +598,23 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Asset List";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // filterExludeMode
+            // 
+            this.filterExcludeMode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.filterExcludeMode.AutoSize = true;
+            this.filterExcludeMode.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.filterExcludeMode.Enabled = false;
+            this.filterExcludeMode.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.filterExcludeMode.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.filterExcludeMode.Location = new System.Drawing.Point(409, 2);
+            this.filterExcludeMode.Name = "filterExludeMode";
+            this.filterExcludeMode.Size = new System.Drawing.Size(61, 17);
+            this.filterExcludeMode.TabIndex = 2;
+            this.filterExcludeMode.Text = "Exclude";
+            this.filterExcludeMode.TextAlign = System.Drawing.ContentAlignment.BottomRight;
+            this.filterExcludeMode.UseVisualStyleBackColor = false;
+            this.filterExcludeMode.CheckedChanged += new System.EventHandler(this.filterExludeMode_CheckedChanged);
             // 
             // assetListView
             // 
@@ -1219,6 +1238,7 @@
         private System.Windows.Forms.ToolStripTextBox specifyUnityVersion;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem15;
         private System.Windows.Forms.ToolStripMenuItem dumpSelectedAssetsToolStripMenuItem;
+        private System.Windows.Forms.CheckBox filterExcludeMode;
     }
 }
 

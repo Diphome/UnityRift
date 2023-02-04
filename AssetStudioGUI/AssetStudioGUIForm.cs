@@ -212,6 +212,7 @@ namespace AssetStudioGUI
         {
             if (assetsManager.assetsFileList.Count == 0)
             {
+                filterExcludeModeCheck(assetsManager.assetsFileList.Count);
                 StatusStripUpdate("No Unity file can be loaded.");
                 return;
             }
@@ -249,6 +250,8 @@ namespace AssetStudioGUI
             }
             typeMap.Clear();
             classesListView.EndUpdate();
+
+            filterExcludeModeCheck(exportableAssets.Count);
 
             var types = exportableAssets.Select(x => x.Type).Distinct().OrderBy(x => x.ToString()).ToArray();
             foreach (var type in types)
@@ -1576,6 +1579,20 @@ namespace AssetStudioGUI
             return selectedAssets;
         }
 
+        private void filterExludeMode_CheckedChanged(object sender, EventArgs e)
+        {
+            FilterAssetList();
+        }
+
+        private void filterExcludeModeCheck(int itemCount)
+        {
+            filterExcludeMode.Enabled = itemCount > 0;
+            if (!filterExcludeMode.Enabled)
+            {
+                filterExcludeMode.Checked = false;
+            }
+        }
+
         private void FilterAssetList()
         {
             assetListView.BeginUpdate();
@@ -1599,10 +1616,20 @@ namespace AssetStudioGUI
             }
             if (listSearch.Text != " Filter ")
             {
-                visibleAssets = visibleAssets.FindAll(
-                    x => x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+                if (filterExcludeMode.Checked)
+                {
+                    visibleAssets = visibleAssets.FindAll(
+                        x => x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0 &&
+                        x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0 &&
+                        x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0);
+                }
+                else
+                {
+                    visibleAssets = visibleAssets.FindAll(
+                        x => x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+                }
             }
             assetListView.VirtualListSize = visibleAssets.Count;
             assetListView.EndUpdate();
