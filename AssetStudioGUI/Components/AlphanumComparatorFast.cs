@@ -67,9 +67,15 @@ namespace AssetStudioGUI
 
                 if (char.IsDigit(space1[0]) && char.IsDigit(space2[0]))
                 {
-                    int thisNumericChunk = int.Parse(new string(space1));
-                    int thatNumericChunk = int.Parse(new string(space2));
-                    result = thisNumericChunk.CompareTo(thatNumericChunk);
+                    if (long.TryParse(new string(space1), out long thisNumericChunk) &&
+                        long.TryParse(new string(space2), out long thatNumericChunk))
+                    {
+                        result = thisNumericChunk.CompareTo(thatNumericChunk);
+                    }
+                    else
+                    {
+                        result = MemoryExtensions.CompareTo(space1, space2, StringComparison.Ordinal);
+                    }
                 }
                 else
                 {
