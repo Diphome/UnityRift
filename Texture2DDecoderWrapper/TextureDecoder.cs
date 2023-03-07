@@ -1,16 +1,20 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+
+#if NETFRAMEWORK
 using AssetStudio.PInvoke;
+#endif
 
 namespace Texture2DDecoder
 {
     public static unsafe partial class TextureDecoder
     {
-
+#if NETFRAMEWORK
         static TextureDecoder()
         {
             DllLoader.PreloadDll(T2DDll.DllName);
         }
+#endif
 
         public static bool DecodeDXT1(byte[] data, int width, int height, byte[] image)
         {

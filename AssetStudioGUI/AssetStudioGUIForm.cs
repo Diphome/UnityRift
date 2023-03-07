@@ -1579,7 +1579,7 @@ namespace AssetStudioGUI
             return selectedAssets;
         }
 
-        private void filterExludeMode_CheckedChanged(object sender, EventArgs e)
+        private void filterExcludeMode_CheckedChanged(object sender, EventArgs e)
         {
             FilterAssetList();
         }

@@ -35,6 +35,9 @@ bld/
 # Visual Studio 2017 auto generated files
 Generated\ Files/
 
+# Launch Settings
+*launchSettings.json
+
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*

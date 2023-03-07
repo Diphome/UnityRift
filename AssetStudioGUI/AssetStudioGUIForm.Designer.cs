@@ -79,6 +79,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.sceneTreeView = new AssetStudioGUI.GOHierarchy();
             this.treeSearch = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.filterExcludeMode = new System.Windows.Forms.CheckBox();
@@ -127,7 +128,6 @@
             this.dumpSelectedAssetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.goToSceneHierarchyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showOriginalFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.sceneTreeView = new AssetStudioGUI.GOHierarchy();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -573,6 +573,17 @@
             this.tabPage1.Text = "Scene Hierarchy";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // sceneTreeView
+            // 
+            this.sceneTreeView.CheckBoxes = true;
+            this.sceneTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.sceneTreeView.HideSelection = false;
+            this.sceneTreeView.Location = new System.Drawing.Point(0, 20);
+            this.sceneTreeView.Name = "sceneTreeView";
+            this.sceneTreeView.Size = new System.Drawing.Size(472, 587);
+            this.sceneTreeView.TabIndex = 1;
+            this.sceneTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.sceneTreeView_AfterCheck);
+            // 
             // treeSearch
             // 
             this.treeSearch.Dock = System.Windows.Forms.DockStyle.Top;
@@ -599,7 +610,7 @@
             this.tabPage2.Text = "Asset List";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
-            // filterExludeMode
+            // filterExcludeMode
             // 
             this.filterExcludeMode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.filterExcludeMode.AutoSize = true;
@@ -607,14 +618,15 @@
             this.filterExcludeMode.Enabled = false;
             this.filterExcludeMode.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.filterExcludeMode.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.filterExcludeMode.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.filterExcludeMode.Location = new System.Drawing.Point(409, 2);
-            this.filterExcludeMode.Name = "filterExludeMode";
+            this.filterExcludeMode.Name = "filterExcludeMode";
             this.filterExcludeMode.Size = new System.Drawing.Size(61, 17);
             this.filterExcludeMode.TabIndex = 2;
             this.filterExcludeMode.Text = "Exclude";
             this.filterExcludeMode.TextAlign = System.Drawing.ContentAlignment.BottomRight;
             this.filterExcludeMode.UseVisualStyleBackColor = false;
-            this.filterExcludeMode.CheckedChanged += new System.EventHandler(this.filterExludeMode_CheckedChanged);
+            this.filterExcludeMode.CheckedChanged += new System.EventHandler(this.filterExcludeMode_CheckedChanged);
             // 
             // assetListView
             // 
@@ -731,6 +743,7 @@
             // progressBar1
             // 
             this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.progressBar1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.progressBar1.Location = new System.Drawing.Point(1, 3);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(478, 18);
@@ -782,6 +795,7 @@
             this.assetInfoLabel.AutoSize = true;
             this.assetInfoLabel.BackColor = System.Drawing.Color.Transparent;
             this.assetInfoLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.assetInfoLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.assetInfoLabel.Location = new System.Drawing.Point(4, 8);
             this.assetInfoLabel.Name = "assetInfoLabel";
             this.assetInfoLabel.Size = new System.Drawing.Size(0, 13);
@@ -811,6 +825,7 @@
             // 
             this.FMODcopyright.AutoSize = true;
             this.FMODcopyright.ForeColor = System.Drawing.SystemColors.ControlLight;
+            this.FMODcopyright.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODcopyright.Location = new System.Drawing.Point(214, 365);
             this.FMODcopyright.Name = "FMODcopyright";
             this.FMODcopyright.Size = new System.Drawing.Size(283, 13);
@@ -821,6 +836,7 @@
             // 
             this.FMODinfoLabel.AutoSize = true;
             this.FMODinfoLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.FMODinfoLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODinfoLabel.Location = new System.Drawing.Point(275, 255);
             this.FMODinfoLabel.Name = "FMODinfoLabel";
             this.FMODinfoLabel.Size = new System.Drawing.Size(0, 13);
@@ -830,6 +846,7 @@
             // 
             this.FMODtimerLabel.AutoSize = true;
             this.FMODtimerLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.FMODtimerLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODtimerLabel.Location = new System.Drawing.Point(457, 253);
             this.FMODtimerLabel.Name = "FMODtimerLabel";
             this.FMODtimerLabel.Size = new System.Drawing.Size(102, 13);
@@ -840,6 +857,7 @@
             // 
             this.FMODstatusLabel.AutoSize = true;
             this.FMODstatusLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.FMODstatusLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODstatusLabel.Location = new System.Drawing.Point(214, 255);
             this.FMODstatusLabel.Name = "FMODstatusLabel";
             this.FMODstatusLabel.Size = new System.Drawing.Size(47, 13);
@@ -849,6 +867,7 @@
             // FMODprogressBar
             // 
             this.FMODprogressBar.AutoSize = false;
+            this.FMODprogressBar.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODprogressBar.Location = new System.Drawing.Point(213, 274);
             this.FMODprogressBar.Maximum = 1000;
             this.FMODprogressBar.Name = "FMODprogressBar";
@@ -861,6 +880,7 @@
             // 
             // FMODvolumeBar
             // 
+            this.FMODvolumeBar.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODvolumeBar.LargeChange = 2;
             this.FMODvolumeBar.Location = new System.Drawing.Point(460, 303);
             this.FMODvolumeBar.Name = "FMODvolumeBar";
@@ -873,6 +893,7 @@
             // FMODloopButton
             // 
             this.FMODloopButton.Appearance = System.Windows.Forms.Appearance.Button;
+            this.FMODloopButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODloopButton.Location = new System.Drawing.Point(399, 303);
             this.FMODloopButton.Name = "FMODloopButton";
             this.FMODloopButton.Size = new System.Drawing.Size(55, 46);
@@ -884,6 +905,7 @@
             // 
             // FMODstopButton
             // 
+            this.FMODstopButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODstopButton.Location = new System.Drawing.Point(338, 303);
             this.FMODstopButton.Name = "FMODstopButton";
             this.FMODstopButton.Size = new System.Drawing.Size(55, 46);
@@ -894,6 +916,7 @@
             // 
             // FMODpauseButton
             // 
+            this.FMODpauseButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODpauseButton.Location = new System.Drawing.Point(277, 303);
             this.FMODpauseButton.Name = "FMODpauseButton";
             this.FMODpauseButton.Size = new System.Drawing.Size(55, 46);
@@ -904,6 +927,7 @@
             // 
             // FMODplayButton
             // 
+            this.FMODplayButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODplayButton.Location = new System.Drawing.Point(216, 303);
             this.FMODplayButton.Name = "FMODplayButton";
             this.FMODplayButton.Size = new System.Drawing.Size(55, 46);
@@ -945,7 +969,7 @@
             // textPreviewBox
             // 
             this.textPreviewBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textPreviewBox.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textPreviewBox.Font = new System.Drawing.Font("Consolas", 9.75F);
             this.textPreviewBox.Location = new System.Drawing.Point(0, 0);
             this.textPreviewBox.Multiline = true;
             this.textPreviewBox.Name = "textPreviewBox";
@@ -1079,17 +1103,6 @@
             this.showOriginalFileToolStripMenuItem.Text = "Show original file";
             this.showOriginalFileToolStripMenuItem.Visible = false;
             this.showOriginalFileToolStripMenuItem.Click += new System.EventHandler(this.showOriginalFileToolStripMenuItem_Click);
-            // 
-            // sceneTreeView
-            // 
-            this.sceneTreeView.CheckBoxes = true;
-            this.sceneTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.sceneTreeView.HideSelection = false;
-            this.sceneTreeView.Location = new System.Drawing.Point(0, 20);
-            this.sceneTreeView.Name = "sceneTreeView";
-            this.sceneTreeView.Size = new System.Drawing.Size(472, 587);
-            this.sceneTreeView.TabIndex = 1;
-            this.sceneTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.sceneTreeView_AfterCheck);
             // 
             // AssetStudioGUIForm
             // 

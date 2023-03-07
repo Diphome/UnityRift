@@ -1,16 +1,20 @@
 ﻿using AssetStudio.FbxInterop;
-using AssetStudio.PInvoke;
 using System.IO;
+
+#if NETFRAMEWORK
+using AssetStudio.PInvoke;
+#endif
 
 namespace AssetStudio
 {
     public static partial class Fbx
     {
-
+#if NETFRAMEWORK
         static Fbx()
         {
             DllLoader.PreloadDll(FbxDll.DllName);
         }
+#endif
 
         public static Vector3 QuaternionToEuler(Quaternion q)
         {
