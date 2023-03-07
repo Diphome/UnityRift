@@ -1300,6 +1300,14 @@ namespace AssetStudioGUI
             FMODreset();
         }
 
+        private void tabControl2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tabControl2.SelectedIndex == 1 && lastSelectedItem != null)
+            {
+                dumpTextBox.Text = DumpAsset(lastSelectedItem.Asset);
+            }
+        }
+
         private void assetListView_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right && assetListView.SelectedIndices.Count > 0)
@@ -1699,6 +1707,65 @@ namespace AssetStudioGUI
             {
                 StatusStripUpdate("No exportable assets loaded");
             }
+        }
+
+        private void toolStripMenuItem15_Click(object sender, EventArgs e)
+        {
+            logger.ShowErrorMessage = toolStripMenuItem15.Checked;
+        }
+
+        private void sceneTreeView_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right && sceneTreeView.Nodes.Count > 0)
+            {
+                contextMenuStrip2.Show(sceneTreeView, e.Location.X, e.Location.Y);
+            }
+        }
+
+        private void selectAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            sceneTreeView.BeginUpdate();
+            foreach (TreeNode node in sceneTreeView.Nodes)
+            {
+                node.Checked = true;
+            }
+            sceneTreeView.EndUpdate();
+        }
+
+        private void selectNoneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            sceneTreeView.BeginUpdate();
+            foreach (TreeNode node in sceneTreeView.Nodes)
+            {
+                node.Checked = false;
+            }
+            sceneTreeView.EndUpdate();
+        }
+
+        private void expandAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (sceneTreeView.Nodes.Count > 500)
+            {
+                MessageBox.Show("Too many elements.");
+                return;
+            }
+
+            sceneTreeView.BeginUpdate();
+            foreach (TreeNode node in sceneTreeView.Nodes)
+            {
+                node.ExpandAll();
+            }
+            sceneTreeView.EndUpdate();
+        }
+
+        private void collapseAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            sceneTreeView.BeginUpdate();
+            foreach (TreeNode node in sceneTreeView.Nodes)
+            {
+                node.Collapse(ignoreChildren: false);
+            }
+            sceneTreeView.EndUpdate();
         }
 
         #region FMOD
@@ -2132,19 +2199,6 @@ namespace AssetStudioGUI
             GL.BindVertexArray(0);
             GL.Flush();
             glControl1.SwapBuffers();
-        }
-
-        private void tabControl2_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (tabControl2.SelectedIndex == 1 && lastSelectedItem != null)
-            {
-                dumpTextBox.Text = DumpAsset(lastSelectedItem.Asset);
-            }
-        }
-
-        private void toolStripMenuItem15_Click(object sender, EventArgs e)
-        {
-            logger.ShowErrorMessage = toolStripMenuItem15.Checked;
         }
 
         private void glControl1_MouseWheel(object sender, MouseEventArgs e)
