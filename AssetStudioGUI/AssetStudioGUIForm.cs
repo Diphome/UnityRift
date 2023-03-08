@@ -186,7 +186,7 @@ namespace AssetStudioGUI
                     var fileNames = openFileDialog1.FileNames;
                     var savePath = saveFolderDialog.Folder;
                     var extractedCount = await Task.Run(() => ExtractFile(fileNames, savePath));
-                    StatusStripUpdate($"Finished extracting {extractedCount} files.");
+                    Logger.Info($"Finished extracting {extractedCount} files.");
                 }
             }
         }
@@ -203,7 +203,7 @@ namespace AssetStudioGUI
                     var path = openFolderDialog.Folder;
                     var savePath = saveFolderDialog.Folder;
                     var extractedCount = await Task.Run(() => ExtractFolder(path, savePath));
-                    StatusStripUpdate($"Finished extracting {extractedCount} files.");
+                    Logger.Info($"Finished extracting {extractedCount} files.");
                 }
             }
         }
@@ -213,7 +213,7 @@ namespace AssetStudioGUI
             if (assetsManager.assetsFileList.Count == 0)
             {
                 filterExcludeModeCheck(assetsManager.assetsFileList.Count);
-                StatusStripUpdate("No Unity file can be loaded.");
+                Logger.Info("No Unity file can be loaded.");
                 return;
             }
 
@@ -274,7 +274,7 @@ namespace AssetStudioGUI
             {
                 log += $" and {m_ObjectsCount - objectsCount} assets failed to read";
             }
-            StatusStripUpdate(log);
+            Logger.Info(log);
         }
 
         private void typeToolStripMenuItem_Click(object sender, EventArgs e)
@@ -397,7 +397,7 @@ namespace AssetStudioGUI
                         Progress.Report(++i, count);
                     }
 
-                    StatusStripUpdate("Finished exporting class structures");
+                    Logger.Info("Finished exporting class structures");
                 }
             }
         }
@@ -1780,7 +1780,7 @@ namespace AssetStudioGUI
             ERRCHECK(result);
             if (version < FMOD.VERSION.number)
             {
-                MessageBox.Show($"Error!  You are using an old version of FMOD {version:X}.  This program requires {FMOD.VERSION.number:X}.");
+                Logger.Error($"Error!  You are using an old version of FMOD {version:X}.  This program requires {FMOD.VERSION.number:X}.");
                 Application.Exit();
             }
 
@@ -2036,7 +2036,7 @@ namespace AssetStudioGUI
             if (result != FMOD.RESULT.OK)
             {
                 FMODreset();
-                StatusStripUpdate($"FMOD error! {result} - {FMOD.Error.String(result)}");
+                Logger.Warning($"FMOD error! {result} - {FMOD.Error.String(result)}");
                 return true;
             }
             return false;

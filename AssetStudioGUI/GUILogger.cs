@@ -19,16 +19,22 @@ namespace AssetStudioGUI
             switch (loggerEvent)
             {
                 case LoggerEvent.Error:
+                    MessageBox.Show(message, "Error");
+                    break;
+                case LoggerEvent.Warning:
                     if (ShowErrorMessage)
                     {
-                        MessageBox.Show(message);
+                        MessageBox.Show(message, "Warning");
+                    }
+                    else
+                    {
+                        action("An error has occurred. Turn on \"Show all error messages\" to see details next time.");
                     }
                     break;
                 default:
                     action(message);
                     break;
             }
-
         }
     }
 }

@@ -84,7 +84,7 @@ namespace AssetStudioGUI
 
         private static int ExtractBundleFile(FileReader reader, string savePath)
         {
-            StatusStripUpdate($"Decompressing {reader.FileName} ...");
+            Logger.Info($"Decompressing {reader.FileName} ...");
             var bundleFile = new BundleFile(reader);
             reader.Dispose();
             if (bundleFile.fileList.Length > 0)
@@ -97,7 +97,7 @@ namespace AssetStudioGUI
 
         private static int ExtractWebDataFile(FileReader reader, string savePath)
         {
-            StatusStripUpdate($"Decompressing {reader.FileName} ...");
+            Logger.Info($"Decompressing {reader.FileName} ...");
             var webFile = new WebFile(reader);
             reader.Dispose();
             if (webFile.fileList.Length > 0)
@@ -134,7 +134,7 @@ namespace AssetStudioGUI
 
         public static (string, List<TreeNode>) BuildAssetData()
         {
-            StatusStripUpdate("Building asset list...");
+            Logger.Info("Building asset list...");
 
             string productName = null;
             var objectCount = assetsManager.assetsFileList.Sum(x => x.Objects.Count);
@@ -256,7 +256,7 @@ namespace AssetStudioGUI
 
             visibleAssets = exportableAssets;
 
-            StatusStripUpdate("Building tree structure...");
+            Logger.Info("Building tree structure...");
 
             var treeNodeCollection = new List<TreeNode>();
             var treeNodeDictionary = new Dictionary<GameObject, GameObjectTreeNode>();
@@ -414,7 +414,7 @@ namespace AssetStudioGUI
                             break;
                     }
                     exportPath += Path.DirectorySeparatorChar;
-                    StatusStripUpdate($"[{exportedCount}/{toExportCount}] Exporting {asset.TypeString}: {asset.Text}");
+                    Logger.Info($"[{exportedCount}/{toExportCount}] Exporting {asset.TypeString}: {asset.Text}");
                     try
                     {
                         switch (exportType)
@@ -441,7 +441,7 @@ namespace AssetStudioGUI
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Export {asset.Type}:{asset.Text} error\r\n{ex.Message}\r\n{ex.StackTrace}");
+                        Logger.Error($"Export {asset.Type}:{asset.Text} error", ex);
                     }
 
                     Progress.Report(++i, toExportCount);
@@ -454,7 +454,7 @@ namespace AssetStudioGUI
                     statusText += $" {toExportCount - exportedCount} assets skipped (not extractable or files already exist)";
                 }
 
-                StatusStripUpdate(statusText);
+                Logger.Info(statusText);
 
                 if (Properties.Settings.Default.openAfterExport && exportedCount > 0)
                 {
@@ -499,7 +499,7 @@ namespace AssetStudioGUI
 
                 var statusText = $"Finished exporting asset list with {toExportAssets.Count()} items.";
 
-                StatusStripUpdate(statusText);
+                Logger.Info(statusText);
 
                 if (Properties.Settings.Default.openAfterExport && toExportAssets.Count() > 0)
                 {
@@ -547,25 +547,25 @@ namespace AssetStudioGUI
                         }
                         Directory.CreateDirectory(targetPath);
                         //导出FBX
-                        StatusStripUpdate($"Exporting {filename}.fbx");
+                        Logger.Info($"Exporting {filename}.fbx");
                         try
                         {
                             ExportGameObject(j.gameObject, targetPath);
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show($"Export GameObject:{j.Text} error\r\n{ex.Message}\r\n{ex.StackTrace}");
+                            Logger.Error($"Export GameObject:{j.Text} error", ex);
                         }
 
                         Progress.Report(++k, count);
-                        StatusStripUpdate($"Finished exporting {filename}.fbx");
+                        Logger.Info($"Finished exporting {filename}.fbx");
                     }
                 }
                 if (Properties.Settings.Default.openAfterExport)
                 {
                     OpenFolderInExplorer(savePath);
                 }
-                StatusStripUpdate("Finished");
+                Logger.Info("Finished");
             });
         }
 
@@ -583,7 +583,7 @@ namespace AssetStudioGUI
             ThreadPool.QueueUserWorkItem(state =>
             {
                 Progress.Reset();
-                StatusStripUpdate($"Exporting {animator.Text}");
+                Logger.Info($"Exporting {animator.Text}");
                 try
                 {
                     ExportAnimator(animator, exportPath, animationList);
@@ -592,12 +592,12 @@ namespace AssetStudioGUI
                         OpenFolderInExplorer(exportPath);
                     }
                     Progress.Report(1, 1);
-                    StatusStripUpdate($"Finished exporting {animator.Text}");
+                    Logger.Info($"Finished exporting {animator.Text}");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Export Animator:{animator.Text} error\r\n{ex.Message}\r\n{ex.StackTrace}");
-                    StatusStripUpdate("Error in export");
+                    Logger.Error($"Export Animator:{animator.Text} error", ex);
+                    Logger.Info("Error in export");
                 }
             });
         }
@@ -615,16 +615,16 @@ namespace AssetStudioGUI
                     Progress.Reset();
                     foreach (var gameObject in gameObjects)
                     {
-                        StatusStripUpdate($"Exporting {gameObject.m_Name}");
+                        Logger.Info($"Exporting {gameObject.m_Name}");
                         try
                         {
                             ExportGameObject(gameObject, exportPath, animationList);
-                            StatusStripUpdate($"Finished exporting {gameObject.m_Name}");
+                            Logger.Info($"Finished exporting {gameObject.m_Name}");
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show($"Export GameObject:{gameObject.m_Name} error\r\n{ex.Message}\r\n{ex.StackTrace}");
-                            StatusStripUpdate("Error in export");
+                            Logger.Error($"Export GameObject:{gameObject.m_Name} error", ex);
+                            Logger.Info("Error in export");
                         }
 
                         Progress.Report(++i, count);
@@ -636,7 +636,7 @@ namespace AssetStudioGUI
                 }
                 else
                 {
-                    StatusStripUpdate("No Object selected for export.");
+                    Logger.Info("No Object selected for export.");
                 }
             });
         }
@@ -647,17 +647,17 @@ namespace AssetStudioGUI
             {
                 var name = Path.GetFileName(exportPath);
                 Progress.Reset();
-                StatusStripUpdate($"Exporting {name}");
+                Logger.Info($"Exporting {name}");
                 try
                 {
                     ExportGameObjectMerge(gameObjects, exportPath, animationList);
                     Progress.Report(1, 1);
-                    StatusStripUpdate($"Finished exporting {name}");
+                    Logger.Info($"Finished exporting {name}");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Export Model:{name} error\r\n{ex.Message}\r\n{ex.StackTrace}");
-                    StatusStripUpdate("Error in export");
+                    Logger.Error($"Export Model:{name} error", ex);
+                    Logger.Info("Error in export");
                 }
                 if (Properties.Settings.Default.openAfterExport)
                 {

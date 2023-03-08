@@ -135,9 +135,14 @@ namespace AssetStudio
                         }
                     }
                 }
+                catch (NotSupportedException e)
+                {
+                    Logger.Error(e.Message, e);
+                    reader.Dispose();
+                }
                 catch (Exception e)
                 {
-                    Logger.Error($"Error while reading assets file {reader.FullPath}", e);
+                    Logger.Warning($"Error while reading assets file {reader.FullPath}\r\n{e}");
                     reader.Dispose();
                 }
             }
@@ -164,9 +169,14 @@ namespace AssetStudio
                     assetsFileList.Add(assetsFile);
                     assetsFileListHash.Add(assetsFile.fileName);
                 }
+                catch (NotSupportedException e)
+                {
+                    Logger.Error(e.Message, e);
+                    resourceFileReaders.Add(reader.FileName, reader);
+                }
                 catch (Exception e)
                 {
-                    Logger.Error($"Error while reading assets file {reader.FullPath} from {Path.GetFileName(originalPath)}", e);
+                    Logger.Warning($"Error while reading assets file {reader.FullPath} from {Path.GetFileName(originalPath)}\r\n{e}");
                     resourceFileReaders.Add(reader.FileName, reader);
                 }
             }
@@ -201,7 +211,7 @@ namespace AssetStudio
                 {
                     str += $" from {Path.GetFileName(originalPath)}";
                 }
-                Logger.Error(str, e);
+                Logger.Warning($"{str}\r\n{e}");
             }
             finally
             {
@@ -298,7 +308,7 @@ namespace AssetStudio
                         }
                         catch (Exception e)
                         {
-                            Logger.Error($"Error while reading zip split file {basePath}", e);
+                            Logger.Warning($"Error while reading zip split file {basePath}\r\n{e}");
                         }
                     }
 
@@ -335,7 +345,7 @@ namespace AssetStudio
                         }
                         catch (Exception e)
                         {
-                            Logger.Error($"Error while reading zip entry {entry.FullName}", e);
+                            Logger.Warning($"Error while reading zip entry {entry.FullName}\r\n{e}");
                         }
                     }
                 }
@@ -354,7 +364,7 @@ namespace AssetStudio
         {
             if (assetsFile.IsVersionStripped && string.IsNullOrEmpty(SpecifyUnityVersion))
             {
-                throw new Exception("The Unity version has been stripped, please set the version in the options");
+                throw new NotSupportedException("The Unity version has been stripped, please set the version in the options");
             }
             if (!string.IsNullOrEmpty(SpecifyUnityVersion))
             {
@@ -496,7 +506,7 @@ namespace AssetStudio
                             .AppendLine($"Type {objectReader.type}")
                             .AppendLine($"PathID {objectInfo.m_PathID}")
                             .Append(e);
-                        Logger.Error(sb.ToString());
+                        Logger.Warning(sb.ToString());
                     }
 
                     Progress.Report(++i, progressCount);
