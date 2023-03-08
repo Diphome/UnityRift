@@ -31,6 +31,7 @@ namespace AssetStudioCLI
         {
             var isLoaded = false;
             assetsManager.SpecifyUnityVersion = options.o_unityVersion.Value;
+            assetsManager.SetAssetFilter(options.o_exportAssetTypes.Value);
 
             if (Directory.Exists(options.inputPath))
             {

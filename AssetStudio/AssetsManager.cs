@@ -12,6 +12,7 @@ namespace AssetStudio
     {
         public string SpecifyUnityVersion;
         public List<SerializedFile> assetsFileList = new List<SerializedFile>();
+        private List<ClassIDType> filteredAssetTypesList = new List<ClassIDType>();
 
         internal Dictionary<string, int> assetsFileIndexCache = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         internal Dictionary<string, BinaryReader> resourceFileReaders = new Dictionary<string, BinaryReader>(StringComparer.OrdinalIgnoreCase);
@@ -20,6 +21,37 @@ namespace AssetStudio
         private HashSet<string> importFilesHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private HashSet<string> noexistFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private HashSet<string> assetsFileListHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        public void SetAssetFilter(ClassIDType classIDType)
+        {
+            if (filteredAssetTypesList.Count == 0)
+            {
+                filteredAssetTypesList.AddRange(new List<ClassIDType>
+                {
+                    ClassIDType.AssetBundle,
+                    ClassIDType.ResourceManager,
+                });
+            }
+
+            if (classIDType == ClassIDType.MonoBehaviour)
+            {
+                filteredAssetTypesList.AddRange(new List<ClassIDType>
+                {
+                    ClassIDType.MonoScript,
+                    ClassIDType.MonoBehaviour
+                });
+            }
+            else
+            {
+                filteredAssetTypesList.Add(classIDType);
+            }
+        }
+
+        public void SetAssetFilter(List<ClassIDType> classIDTypeList)
+        {
+            foreach (ClassIDType classIDType in classIDTypeList)
+                SetAssetFilter(classIDType);
+        }
 
         public void LoadFiles(params string[] files)
         {
@@ -404,6 +436,10 @@ namespace AssetStudio
                     var objectReader = new ObjectReader(assetsFile.reader, assetsFile, objectInfo);
                     try
                     {
+                        if (filteredAssetTypesList.Count > 0 && !filteredAssetTypesList.Contains(objectReader.type))
+                        {
+                            continue;
+                        }
                         Object obj;
                         switch (objectReader.type)
                         {
