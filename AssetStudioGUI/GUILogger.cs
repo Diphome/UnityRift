@@ -31,6 +31,8 @@ namespace AssetStudioGUI
                         action("An error has occurred. Turn on \"Show all error messages\" to see details next time.");
                     }
                     break;
+                case LoggerEvent.Debug:
+                    break;
                 default:
                     action(message);
                     break;

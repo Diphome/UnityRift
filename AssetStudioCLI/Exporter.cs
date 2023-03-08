@@ -3,6 +3,7 @@ using AssetStudioCLI.Options;
 using Newtonsoft.Json;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace AssetStudioCLI
 {
@@ -60,11 +61,13 @@ namespace AssetStudioCLI
                 if (!TryExportFile(exportPath, item, ".wav", out exportFullPath))
                     return false;
 
-                Logger.Debug($"Converting \"{m_AudioClip.m_Name}\" to wav..\n" +
-                    $"AudioClip sound compression: {m_AudioClip.m_CompressionFormat}\n" +
-                    $"AudioClip channel count: {m_AudioClip.m_Channels}\n" +
-                    $"AudioClip sample rate: {m_AudioClip.m_Frequency}\n" +
-                    $"AudioClip bit depth: {m_AudioClip.m_BitsPerSample}");
+                var sb = new StringBuilder();
+                sb.AppendLine($"Converting \"{m_AudioClip.m_Name}\" to wav..");
+                sb.AppendLine(m_AudioClip.version[0] < 5 ? $"AudioClip type: {m_AudioClip.m_Type}" : $"AudioClip compression format: {m_AudioClip.m_CompressionFormat}");
+                sb.AppendLine($"AudioClip channel count: {m_AudioClip.m_Channels}");
+                sb.AppendLine($"AudioClip sample rate: {m_AudioClip.m_Frequency}");
+                sb.AppendLine($"AudioClip bit depth: {m_AudioClip.m_BitsPerSample}");
+                Logger.Debug(sb.ToString());
 
                 var buffer = converter.ConvertToWav(m_AudioData);
                 if (buffer == null)

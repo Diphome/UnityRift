@@ -51,9 +51,14 @@ namespace AssetStudio
 
         public byte[] SoundToWav(Sound sound)
         {
-            var result = sound.getFormat(out _, out _, out int channels, out int bits);
+            Logger.Debug($"[Fmod] Detecting sound format..\n");
+            var result = sound.getFormat(out SOUND_TYPE soundType, out SOUND_FORMAT soundFormat, out int channels, out int bits);
             if (result != RESULT.OK)
                 return null;
+            Logger.Debug($"Detected sound type: {soundType}\n" +
+                $"Detected sound format: {soundFormat}\n" +
+                $"Detected channels: {channels}\n" +
+                $"Detected bit depth: {bits}");
             result = sound.getDefaults(out var frequency, out _);
             if (result != RESULT.OK)
                 return null;
