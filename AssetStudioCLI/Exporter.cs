@@ -95,6 +95,15 @@ namespace AssetStudioCLI
             {
                 if (!TryExportFile(exportPath, item, Path.GetExtension(m_VideoClip.m_OriginalPath), out var exportFullPath))
                     return false;
+
+                var sb = new StringBuilder();
+                sb.AppendLine($"VideoClip format: {m_VideoClip.m_Format}");
+                sb.AppendLine($"VideoClip width: {m_VideoClip.Width}");
+                sb.AppendLine($"VideoClip height: {m_VideoClip.Height}");
+                sb.AppendLine($"VideoClip frame rate: {m_VideoClip.m_FrameRate}");
+                sb.AppendLine($"VideoClip split alpha: {m_VideoClip.m_HasSplitAlpha}");
+                Logger.Debug(sb.ToString());
+
                 m_VideoClip.m_VideoData.WriteData(exportFullPath);
                 Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
                 return true;

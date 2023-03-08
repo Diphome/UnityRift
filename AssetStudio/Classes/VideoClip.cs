@@ -21,22 +21,27 @@ namespace AssetStudio
         public ResourceReader m_VideoData;
         public string m_OriginalPath;
         public StreamedResource m_ExternalResources;
+        public uint Width;
+        public uint Height;
+        public double m_FrameRate;
+        public int m_Format;
+        public bool m_HasSplitAlpha;
 
         public VideoClip(ObjectReader reader) : base(reader)
         {
             m_OriginalPath = reader.ReadAlignedString();
             var m_ProxyWidth = reader.ReadUInt32();
             var m_ProxyHeight = reader.ReadUInt32();
-            var Width = reader.ReadUInt32();
-            var Height = reader.ReadUInt32();
+            Width = reader.ReadUInt32();
+            Height = reader.ReadUInt32();
             if (version[0] > 2017 || (version[0] == 2017 && version[1] >= 2)) //2017.2 and up
             {
                 var m_PixelAspecRatioNum = reader.ReadUInt32();
                 var m_PixelAspecRatioDen = reader.ReadUInt32();
             }
-            var m_FrameRate = reader.ReadDouble();
+            m_FrameRate = reader.ReadDouble();
             var m_FrameCount = reader.ReadUInt64();
-            var m_Format = reader.ReadInt32();
+            m_Format = reader.ReadInt32();
             var m_AudioChannelCount = reader.ReadUInt16Array();
             reader.AlignStream();
             var m_AudioSampleRate = reader.ReadUInt32Array();
@@ -51,7 +56,7 @@ namespace AssetStudio
                 }
             }
             m_ExternalResources = new StreamedResource(reader);
-            var m_HasSplitAlpha = reader.ReadBoolean();
+            m_HasSplitAlpha = reader.ReadBoolean();
             if (version[0] >= 2020) //2020.1 and up
             {
                 var m_sRGB = reader.ReadBoolean();
