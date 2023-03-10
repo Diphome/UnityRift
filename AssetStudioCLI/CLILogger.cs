@@ -97,9 +97,9 @@ namespace AssetStudioCLI
             }
         }
 
-        public void Log(LoggerEvent logMsgLevel, string message)
+        public void Log(LoggerEvent logMsgLevel, string message, bool ignoreLevel)
         {
-            if (logMsgLevel < logMinLevel || string.IsNullOrEmpty(message))
+            if ((logMsgLevel < logMinLevel && !ignoreLevel) || string.IsNullOrEmpty(message))
             {
                 return;
             }

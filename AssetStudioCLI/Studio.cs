@@ -161,6 +161,7 @@ namespace AssetStudioCLI
         public void ShowExportableAssetsInfo()
         {
             var exportableAssetsCountDict = new Dictionary<ClassIDType, int>();
+            string info = "";
             if (parsedAssetsList.Count > 0)
             {
                 foreach (var asset in parsedAssetsList)
@@ -175,7 +176,7 @@ namespace AssetStudioCLI
                     }
                 }
 
-                var info = "\n[Exportable Assets Count]\n";
+                info += "\n[Exportable Assets Count]\n";
                 foreach (var assetType in exportableAssetsCountDict.Keys)
                 {
                     info += $"# {assetType}: {exportableAssetsCountDict[assetType]}\n";
@@ -184,15 +185,19 @@ namespace AssetStudioCLI
                 {
                     info += $"#\n# Total: {parsedAssetsList.Count} assets";
                 }
+            }
+            else
+            {
+                info += "No exportable assets found.";
+            }
 
-                if (options.o_logLevel.Value > LoggerEvent.Info)
-                {
-                    Console.WriteLine(info);
-                }
-                else
-                {
-                    Logger.Info(info);
-                }
+            if (options.o_logLevel.Value > LoggerEvent.Info)
+            {
+                Console.WriteLine(info);
+            }
+            else
+            {
+                Logger.Info(info);
             }
         }
 
@@ -327,20 +332,20 @@ namespace AssetStudioCLI
 
             if (exportedCount == 0)
             {
-                Logger.Info("Nothing exported.");
+                Logger.Default.Log(LoggerEvent.Info, "Nothing exported.", ignoreLevel: true);
             }
             else if (toExportCount > exportedCount)
             {
-                Logger.Info($"Finished exporting {exportedCount} asset(s) to \"{options.o_outputFolder.Value.Color(Ansi.BrightYellow)}\".");
+                Logger.Default.Log(LoggerEvent.Info, $"Finished exporting {exportedCount} asset(s) to \"{options.o_outputFolder.Value.Color(Ansi.BrightYellow)}\".", ignoreLevel: true);
             }
             else
             {
-                Logger.Info($"Finished exporting {exportedCount} asset(s) to \"{options.o_outputFolder.Value.Color(Ansi.BrightGreen)}\".");
+                Logger.Default.Log(LoggerEvent.Info, $"Finished exporting {exportedCount} asset(s) to \"{options.o_outputFolder.Value.Color(Ansi.BrightGreen)}\".", ignoreLevel: true);
             }
 
             if (toExportCount > exportedCount)
             {
-                Logger.Info($"{toExportCount - exportedCount} asset(s) skipped (not extractable or file(s) already exist).");
+                Logger.Default.Log(LoggerEvent.Info, $"{toExportCount - exportedCount} asset(s) skipped (not extractable or file(s) already exist).", ignoreLevel: true);
             }
         }
 

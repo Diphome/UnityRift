@@ -22,7 +22,7 @@ namespace AssetStudioCLI
                 var image = m_Texture2D.ConvertToImage(flip: true);
                 if (image == null)
                 {
-                    Logger.Error($"Failed to convert texture \"{m_Texture2D.m_Name}\" into image");
+                    Logger.Error($"Export error. Failed to convert texture \"{m_Texture2D.m_Name}\" into image");
                     return false;
                 }
                 using (image)
@@ -52,7 +52,7 @@ namespace AssetStudioCLI
             var m_AudioData = m_AudioClip.m_AudioData.GetData();
             if (m_AudioData == null || m_AudioData.Length == 0)
             {
-                Logger.Error($"[{item.Text}]: AudioData was not found");
+                Logger.Error($"Export error. \"{item.Text}\": AudioData was not found");
                 return false;
             }
             var converter = new AudioClipConverter(m_AudioClip);
@@ -72,7 +72,7 @@ namespace AssetStudioCLI
                 var buffer = converter.ConvertToWav(m_AudioData);
                 if (buffer == null)
                 {
-                    Logger.Error($"[{item.Text}]: Failed to convert to Wav");
+                    Logger.Error($"Export error. \"{item.Text}\": Failed to convert to Wav");
                     return false;
                 }
                 File.WriteAllBytes(exportFullPath, buffer);
