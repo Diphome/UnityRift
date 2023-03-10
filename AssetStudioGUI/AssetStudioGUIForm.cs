@@ -761,7 +761,9 @@ namespace AssetStudioGUI
                     case Mesh m_Mesh:
                         PreviewMesh(m_Mesh);
                         break;
-                    case VideoClip _:
+                    case VideoClip m_VideoClip:
+                        PreviewVideoClip(assetItem, m_VideoClip);
+                        break;
                     case MovieTexture _:
                         StatusStripUpdate("Only supported export.");
                         break;
@@ -973,6 +975,18 @@ namespace AssetStudioGUI
 
             FMODinfoLabel.Text = frequency + " Hz";
             FMODtimerLabel.Text = $"00:00.00 / {(FMODlenms / 1000 / 60):00}:{(FMODlenms / 1000 % 60):00}.{(FMODlenms / 10 % 100):00}";
+        }
+
+        private void PreviewVideoClip(AssetItem assetItem, VideoClip m_VideoClip)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"Width: {m_VideoClip.Width}");
+            sb.AppendLine($"Height: {m_VideoClip.Height}");
+            sb.AppendLine($"Frame rate: {m_VideoClip.m_FrameRate}");
+            sb.AppendLine($"Split alpha: {m_VideoClip.m_HasSplitAlpha}");
+            assetItem.InfoText = sb.ToString();
+            
+            StatusStripUpdate("Only supported export.");
         }
 
         private void PreviewShader(Shader m_Shader)
