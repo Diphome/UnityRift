@@ -111,6 +111,17 @@ namespace AssetStudioCLI
             return false;
         }
 
+        public static bool ExportMovieTexture(AssetItem item, string exportPath)
+        {
+            var m_MovieTexture = (MovieTexture)item.Asset;
+            if (!TryExportFile(exportPath, item, ".ogv", out var exportFullPath))
+                return false;
+            File.WriteAllBytes(exportFullPath, m_MovieTexture.m_MovieData);
+
+            Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+            return true;
+        }
+
         public static bool ExportShader(AssetItem item, string exportPath)
         {
             if (!TryExportFile(exportPath, item, ".shader", out var exportFullPath))
@@ -260,6 +271,8 @@ namespace AssetStudioCLI
                     return ExportAudioClip(item, exportPath, options);
                 case ClassIDType.VideoClip:
                     return ExportVideoClip(item, exportPath);
+                case ClassIDType.MovieTexture:
+                    return ExportMovieTexture(item, exportPath);
                 case ClassIDType.Shader:
                     return ExportShader(item, exportPath);
                 case ClassIDType.TextAsset:

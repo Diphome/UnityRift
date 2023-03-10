@@ -112,6 +112,7 @@ namespace AssetStudioCLI
                                 assetItem.FullSize = asset.byteSize + m_VideoClip.m_ExternalResources.m_Size;
                             assetItem.Text = m_VideoClip.m_Name;
                             break;
+                        case MovieTexture _:
                         case TextAsset _:
                         case Font _:
                         case Sprite _:

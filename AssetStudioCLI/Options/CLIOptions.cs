@@ -121,6 +121,7 @@ namespace AssetStudioCLI.Options
                 ClassIDType.Shader,
                 ClassIDType.AudioClip,
                 ClassIDType.VideoClip,
+                ClassIDType.MovieTexture,
             };
 
             #region Init General Options
@@ -142,7 +143,8 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: supportedAssetTypes,
                 optionName: "-t, --asset-type <value(s)>",
                 optionDescription: "Specify asset type(s) to export\n" +
-                    "<Value(s): tex2d, sprite, textAsset, monoBehaviour, font, shader, \naudio, video | all(default)>\n" +
+                    "<Value(s): tex2d, sprite, textAsset, monoBehaviour, font, shader, movieTexture,\n" +
+                    "audio, video | all(default)>\n" +
                     "All - export all asset types, which are listed in the values\n" +
                     "*To specify multiple asset types, write them separated by ',' or ';' without spaces\n" +
                     "Examples: \"-t sprite\" or \"-t all\" or \"-t tex2d,sprite,audio\" or \"-t tex2d;sprite;font\"\n",
@@ -449,6 +451,9 @@ namespace AssetStudioCLI.Options
                                     case "video":
                                     case "videoclip":
                                         o_exportAssetTypes.Value.Add(ClassIDType.VideoClip);
+                                        break;
+                                    case "movietexture":
+                                        o_exportAssetTypes.Value.Add(ClassIDType.MovieTexture);
                                         break;
                                     case "all":
                                         o_exportAssetTypes.Value = supportedAssetTypes;
