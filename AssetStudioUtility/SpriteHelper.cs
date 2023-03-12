@@ -15,12 +15,13 @@ namespace AssetStudio
     {
         Off,
         On,
-        MaskOnly
+        MaskOnly,
+        Export
     }
 
     public static class SpriteHelper
     {
-        public static Image<Bgra32> GetImage(this Sprite m_Sprite, SpriteMaskMode spriteMaskVisibleMode = SpriteMaskMode.On)
+        public static Image<Bgra32> GetImage(this Sprite m_Sprite, SpriteMaskMode spriteMaskMode = SpriteMaskMode.On)
         {
             if (m_Sprite.m_SpriteAtlas != null && m_Sprite.m_SpriteAtlas.TryGet(out var m_SpriteAtlas))
             {
@@ -31,20 +32,19 @@ namespace AssetStudio
             }
             else
             {
-                if (m_Sprite.m_RD.texture.TryGet(out var m_Texture2D) && m_Sprite.m_RD.alphaTexture.TryGet(out var m_AlphaTexture2D) && spriteMaskVisibleMode != SpriteMaskMode.Off)
+                if (m_Sprite.m_RD.texture.TryGet(out var m_Texture2D) && m_Sprite.m_RD.alphaTexture.TryGet(out var m_AlphaTexture2D) && spriteMaskMode != SpriteMaskMode.Off)
                 {
                     var tex = CutImage(m_Sprite, m_Texture2D, m_Sprite.m_RD.textureRect, m_Sprite.m_RD.textureRectOffset, m_Sprite.m_RD.downscaleMultiplier, m_Sprite.m_RD.settingsRaw);
                     var alphaTex = CutImage(m_Sprite, m_AlphaTexture2D, m_Sprite.m_RD.textureRect, m_Sprite.m_RD.textureRectOffset, m_Sprite.m_RD.downscaleMultiplier, m_Sprite.m_RD.settingsRaw);
 
-                    if (tex.Width != alphaTex.Width || tex.Height != alphaTex.Height)
-                    {
-                        alphaTex.Mutate(x => x.Resize(tex.Width, tex.Height));
-                    }
-
-                    switch (spriteMaskVisibleMode)
+                    switch (spriteMaskMode)
                     {
                         case SpriteMaskMode.On:
-                            return ApplyRGBMask(tex, alphaTex);
+                            tex.ApplyRGBMask(alphaTex, isPreview: true);
+                            return tex;
+                        case SpriteMaskMode.Export:
+                            tex.ApplyRGBMask(alphaTex);
+                            return tex;
                         case SpriteMaskMode.MaskOnly:
                             tex.Dispose();
                             return alphaTex;
@@ -58,10 +58,16 @@ namespace AssetStudio
             return null;
         }
 
-        private static Image<Bgra32> ApplyRGBMask(Image<Bgra32> tex, Image<Bgra32> texMask)
+        private static void ApplyRGBMask(this Image<Bgra32> tex, Image<Bgra32> texMask, bool isPreview = false)
         {
             using (texMask)
             {
+                if (tex.Width != texMask.Width || tex.Height != texMask.Height)
+                {
+                    var resampler = isPreview ? KnownResamplers.NearestNeighbor : KnownResamplers.Bicubic;
+                    texMask.Mutate(x => x.Resize(tex.Width, tex.Height, resampler));
+                }
+
                 tex.ProcessPixelRows(texMask, (sourceTex, targetTexMask) =>
                 {
                     for (int y = 0; y < texMask.Height; y++)
@@ -75,8 +81,6 @@ namespace AssetStudio
                         }
                     }
                 });
-
-                return tex;
             }
         }
 

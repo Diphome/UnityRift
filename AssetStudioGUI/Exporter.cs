@@ -231,10 +231,10 @@ namespace AssetStudioGUI
         public static bool ExportSprite(AssetItem item, string exportPath)
         {
             var type = Properties.Settings.Default.convertType;
-            var alphaMask = Properties.Settings.Default.exportSpriteWithMask ? SpriteMaskMode.On : SpriteMaskMode.Off;
+            var spriteMaskMode = Properties.Settings.Default.exportSpriteWithMask ? SpriteMaskMode.Export : SpriteMaskMode.Off;
             if (!TryExportFile(exportPath, item, "." + type.ToString().ToLower(), out var exportFullPath))
                 return false;
-            var image = ((Sprite)item.Asset).GetImage(alphaMask);
+            var image = ((Sprite)item.Asset).GetImage(spriteMaskMode: spriteMaskMode);
             if (image != null)
             {
                 using (image)
