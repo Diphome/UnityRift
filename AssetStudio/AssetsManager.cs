@@ -434,13 +434,13 @@ namespace AssetStudio
                 foreach (var objectInfo in assetsFile.m_Objects)
                 {
                     var objectReader = new ObjectReader(assetsFile.reader, assetsFile, objectInfo);
+                    if (filteredAssetTypesList.Count > 0 && !filteredAssetTypesList.Contains(objectReader.type))
+                    {
+                        continue;
+                    }
                     try
                     {
-                        if (filteredAssetTypesList.Count > 0 && !filteredAssetTypesList.Contains(objectReader.type))
-                        {
-                            continue;
-                        }
-                        Object obj;
+                        Object obj = null;
                         switch (objectReader.type)
                         {
                             case ClassIDType.Animation:
@@ -501,7 +501,8 @@ namespace AssetStudio
                                 obj = new RectTransform(objectReader);
                                 break;
                             case ClassIDType.Shader:
-                                obj = new Shader(objectReader);
+                                if (objectReader.version[0] < 2021)
+                                    obj = new Shader(objectReader);
                                 break;
                             case ClassIDType.SkinnedMeshRenderer:
                                 obj = new SkinnedMeshRenderer(objectReader);
@@ -531,7 +532,8 @@ namespace AssetStudio
                                 obj = new Object(objectReader);
                                 break;
                         }
-                        assetsFile.AddObject(obj);
+                        if (obj != null)
+                            assetsFile.AddObject(obj);
                     }
                     catch (Exception e)
                     {
