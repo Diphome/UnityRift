@@ -223,6 +223,10 @@ namespace AssetStudio
             {
                 unityVersion = stringVersion;
                 var buildSplit = Regex.Replace(stringVersion, @"\d", "").Split(new[] { "." }, StringSplitOptions.RemoveEmptyEntries);
+                if (buildSplit.Length == 0)
+                    throw new NotSupportedException("Specified Unity version is not in a correct format.\n" +
+                        "Specify full Unity version, including letters at the end.\n" +
+                        "Example: 2017.4.39f1");
                 buildType = new BuildType(buildSplit[0]);
                 var versionSplit = Regex.Replace(stringVersion, @"\D", ".").Split(new[] { "." }, StringSplitOptions.RemoveEmptyEntries);
                 version = versionSplit.Select(int.Parse).ToArray();
