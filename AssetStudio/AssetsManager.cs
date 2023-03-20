@@ -169,7 +169,7 @@ namespace AssetStudio
                 }
                 catch (NotSupportedException e)
                 {
-                    Logger.Error(e.Message, e);
+                    Logger.Error(e.Message);
                     reader.Dispose();
                 }
                 catch (Exception e)
@@ -203,7 +203,7 @@ namespace AssetStudio
                 }
                 catch (NotSupportedException e)
                 {
-                    Logger.Error(e.Message, e);
+                    Logger.Error(e.Message);
                     resourceFileReaders.Add(reader.FileName, reader);
                 }
                 catch (Exception e)
@@ -221,7 +221,7 @@ namespace AssetStudio
             Logger.Info("Loading " + reader.FullPath);
             try
             {
-                var bundleFile = new BundleFile(reader);
+                var bundleFile = new BundleFile(reader, SpecifyUnityVersion);
                 foreach (var file in bundleFile.fileList)
                 {
                     var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), file.fileName);
@@ -235,6 +235,10 @@ namespace AssetStudio
                         resourceFileReaders.Add(file.fileName, subReader);
                     }
                 }
+            }
+            catch (NotSupportedException e)
+            {
+                Logger.Error(e.Message);
             }
             catch (Exception e)
             {

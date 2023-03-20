@@ -16,6 +16,13 @@ namespace AssetStudio
     }
 
     [Flags]
+    public enum CnEncryptionFlags
+    {
+        OldFlag = 0x200,
+        NewFlag = 0x400
+    }
+
+    [Flags]
     public enum StorageBlockFlags
     {
         CompressionTypeMask = 0x3f,
@@ -66,7 +73,7 @@ namespace AssetStudio
 
         public StreamFile[] fileList;
 
-        public BundleFile(FileReader reader)
+        public BundleFile(FileReader reader, string specUnityVer = "")
         {
             m_Header = new Header();
             m_Header.signature = reader.ReadStringToNull();
@@ -92,6 +99,30 @@ namespace AssetStudio
                     break;
                 case "UnityFS":
                     ReadHeader(reader);
+
+                    bool isUnityCnEnc = false;
+                    string unityVer = string.IsNullOrEmpty(specUnityVer) ? m_Header.unityRevision : specUnityVer;
+                    int[] ver = new string(unityVer.SkipWhile(x => !char.IsDigit(x)).TakeWhile(x => char.IsDigit(x) || x == '.').ToArray()).Split('.').Select(x => int.Parse(x)).ToArray();
+                    if (ver[0] != 0)
+                    {
+                        // https://issuetracker.unity3d.com/issues/files-within-assetbundles-do-not-start-on-aligned-boundaries-breaking-patching-on-nintendo-switch
+                        if (ver[0] < 2020 ||
+                           (ver[0] == 2020 && ver[1] <= 3 && ver[2] < 34) ||
+                           (ver[0] == 2021 && ver[1] <= 3 && ver[2] < 2) ||
+                           (ver[0] == 2022 && ver[1] <= 1 && ver[2] < 1))
+                        {
+                            isUnityCnEnc = ((CnEncryptionFlags)m_Header.flags & CnEncryptionFlags.OldFlag) != 0;
+                        }
+                        else
+                        {
+                            isUnityCnEnc = ((CnEncryptionFlags)m_Header.flags & CnEncryptionFlags.NewFlag) != 0;                    
+                        }
+                    }
+                    if (isUnityCnEnc)
+                    {
+                        throw new NotSupportedException("Unsupported bundle file. UnityCN encryption was detected.");
+                    }
+
                     ReadBlocksInfoAndDirectory(reader);
                     using (var blocksStream = CreateBlocksStream(reader.FullPath))
                     {
