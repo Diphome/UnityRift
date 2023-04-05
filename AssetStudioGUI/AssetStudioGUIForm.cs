@@ -327,7 +327,7 @@ namespace AssetStudioGUI
                 if (e.Control)
                 {
                     var need = false;
-                    if (lastSelectedItem.Type == ClassIDType.Texture2D)
+                    if (lastSelectedItem?.Type == ClassIDType.Texture2D)
                     {
                         switch (e.KeyCode)
                         {
@@ -349,7 +349,7 @@ namespace AssetStudioGUI
                                 break;
                         }
                     }
-                    else if (lastSelectedItem.Type == ClassIDType.Sprite && !((Sprite)lastSelectedItem.Asset).m_RD.alphaTexture.IsNull)
+                    else if (lastSelectedItem?.Type == ClassIDType.Sprite && !((Sprite)lastSelectedItem.Asset).m_RD.alphaTexture.IsNull)
                     {
                         switch (e.KeyCode)
                         {
