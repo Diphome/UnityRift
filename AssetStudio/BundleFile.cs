@@ -123,7 +123,7 @@ namespace AssetStudio
                         throw new NotSupportedException("Unsupported bundle file. UnityCN encryption was detected.");
                     }
 
-                    ReadBlocksInfoAndDirectory(reader);
+                    ReadBlocksInfoAndDirectory(reader, ver);
                     using (var blocksStream = CreateBlocksStream(reader.FullPath))
                     {
                         ReadBlocks(reader, blocksStream);
@@ -258,13 +258,27 @@ namespace AssetStudio
             }
         }
 
-        private void ReadBlocksInfoAndDirectory(EndianBinaryReader reader)
+        private void ReadBlocksInfoAndDirectory(EndianBinaryReader reader, int[] unityVer)
         {
             byte[] blocksInfoBytes;
+
             if (m_Header.version >= 7)
             {
                 reader.AlignStream(16);
             }
+            else if (unityVer[0] >= 2019 && unityVer[1] >= 4)
+            {
+                //check if we need to align the reader
+                //- align to 16 bytes and check if all are 0
+                //- if not, reset the reader to the previous position
+                var preAlign = reader.Position;
+                var alignData = reader.ReadBytes((16 - (int)(preAlign % 16)) % 16);
+                if (alignData.Any(x => x != 0))
+                {
+                    reader.Position = preAlign;
+                }
+            }
+
             if ((m_Header.flags & ArchiveFlags.BlocksInfoAtTheEnd) != 0)
             {
                 var position = reader.Position;
