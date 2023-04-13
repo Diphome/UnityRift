@@ -14,12 +14,10 @@ namespace AssetStudioGUI
         {
             Width = image.Width;
             Height = image.Height;
-            var buff = BigArrayPool<byte>.Shared.Rent(Width * Height * 4);
-            image.CopyPixelDataTo(buff);
-            Bits = buff;
+            Bits = BigArrayPool<byte>.Shared.Rent(Width * Height * 4);
+            image.CopyPixelDataTo(Bits);
             m_handle = GCHandle.Alloc(Bits, GCHandleType.Pinned);
             m_bitmap = new Bitmap(Width, Height, Stride, PixelFormat.Format32bppArgb, m_handle.AddrOfPinnedObject());
-            BigArrayPool<byte>.Shared.Return(buff);
         }
 
         private void Dispose(bool disposing)
@@ -28,6 +26,7 @@ namespace AssetStudioGUI
             {
                 m_bitmap.Dispose();
                 m_handle.Free();
+                BigArrayPool<byte>.Shared.Return(Bits);
             }
             m_bitmap = null;
         }
