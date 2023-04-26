@@ -95,6 +95,11 @@ namespace AssetStudioGUI
         private int nextGObject;
         private List<TreeNode> treeSrcResults = new List<TreeNode>();
 
+        //tree selection
+        private List<TreeNode> treeNodeSelectedList = new List<TreeNode>();
+        private bool treeRecursionEnabled = true;
+        private bool isRecursionEvent = false;
+
         private string openDirectoryBackup = string.Empty;
         private string saveDirectoryBackup = string.Empty;
 
@@ -571,10 +576,38 @@ namespace AssetStudioGUI
 
         private void sceneTreeView_AfterCheck(object sender, TreeViewEventArgs e)
         {
+            if (!treeRecursionEnabled)
+                return;
+
+            if (!isRecursionEvent)
+            {
+                if (e.Node.Checked)
+                {
+                    treeNodeSelectedList.Add(e.Node);
+                }
+                else
+                {
+                    treeNodeSelectedList.Remove(e.Node);
+                }
+            }
+
             foreach (TreeNode childNode in e.Node.Nodes)
             {
+                isRecursionEvent = true;
+                bool wasChecked = childNode.Checked;
                 childNode.Checked = e.Node.Checked;
+                if (!wasChecked && childNode.Checked)
+                {
+                    treeNodeSelectedList.Add(childNode);
+                }
+                else if (!childNode.Checked)
+                {
+                    treeNodeSelectedList.Remove(childNode);
+                }
             }
+            isRecursionEvent = false;
+
+            StatusStripUpdate($"Selected {treeNodeSelectedList.Count} object(s).");
         }
 
         private void listSearch_Enter(object sender, EventArgs e)
@@ -1738,22 +1771,22 @@ namespace AssetStudioGUI
 
         private void selectAllToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            sceneTreeView.BeginUpdate();
             foreach (TreeNode node in sceneTreeView.Nodes)
             {
                 node.Checked = true;
             }
-            sceneTreeView.EndUpdate();
         }
 
-        private void selectNoneToolStripMenuItem_Click(object sender, EventArgs e)
+        private void clearSelectionToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            sceneTreeView.BeginUpdate();
-            foreach (TreeNode node in sceneTreeView.Nodes)
+            treeRecursionEnabled = false;
+            for(var i = 0; i < treeNodeSelectedList.Count; i++)
             {
-                node.Checked = false;
+                treeNodeSelectedList[i].Checked = false;
             }
-            sceneTreeView.EndUpdate();
+            treeRecursionEnabled = true;
+            treeNodeSelectedList.Clear();
+            StatusStripUpdate($"Selected {treeNodeSelectedList.Count} object(s).");
         }
 
         private void expandAllToolStripMenuItem_Click(object sender, EventArgs e)
