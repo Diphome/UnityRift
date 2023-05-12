@@ -112,7 +112,7 @@ namespace AssetStudioGUI
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             InitializeComponent();
-            Text = $"AssetStudioGUI v{Application.ProductVersion}";
+            Text = $"{Application.ProductName} v{Application.ProductVersion}";
             delayTimer = new System.Timers.Timer(800);
             delayTimer.Elapsed += new ElapsedEventHandler(delayTimer_Elapsed);
             displayAll.Checked = Properties.Settings.Default.displayAll;
@@ -227,11 +227,11 @@ namespace AssetStudioGUI
 
             if (!string.IsNullOrEmpty(productName))
             {
-                Text = $"AssetStudioGUI v{Application.ProductVersion} - {productName} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"{Application.ProductName} v{Application.ProductVersion} - {productName} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
             else
             {
-                Text = $"AssetStudioGUI v{Application.ProductVersion} - no productName - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"{Application.ProductName} v{Application.ProductVersion} - no productName - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
 
             assetListView.VirtualListSize = visibleAssets.Count;
@@ -1311,7 +1311,7 @@ namespace AssetStudioGUI
 
         private void ResetForm()
         {
-            Text = $"AssetStudioGUI v{Application.ProductVersion}";
+            Text = $"{Application.ProductName} v{Application.ProductVersion}";
             assetsManager.Clear();
             assemblyLoader.Clear();
             exportableAssets.Clear();
@@ -1813,6 +1813,12 @@ namespace AssetStudioGUI
                 node.Collapse(ignoreChildren: false);
             }
             sceneTreeView.EndUpdate();
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var aboutForm = new AboutForm();
+            aboutForm.ShowDialog(this);
         }
 
         #region FMOD

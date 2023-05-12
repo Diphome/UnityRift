@@ -76,6 +76,7 @@
             this.debugMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem15 = new System.Windows.Forms.ToolStripMenuItem();
             this.exportClassStructuresMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
@@ -164,7 +165,8 @@
             this.modelToolStripMenuItem,
             this.exportToolStripMenuItem,
             this.filterTypeToolStripMenuItem,
-            this.debugMenuItem});
+            this.debugMenuItem,
+            this.aboutToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1264, 24);
@@ -272,9 +274,11 @@
             // 
             // specifyUnityVersion
             // 
+            this.specifyUnityVersion.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.specifyUnityVersion.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
             this.specifyUnityVersion.Name = "specifyUnityVersion";
             this.specifyUnityVersion.Size = new System.Drawing.Size(100, 23);
+            this.specifyUnityVersion.ToolTipText = "Specify full Unity version, including letters at the end\r\nExample: 2017.4.39f1";
             // 
             // showExpOpt
             // 
@@ -530,6 +534,13 @@
             this.exportClassStructuresMenuItem.Size = new System.Drawing.Size(200, 22);
             this.exportClassStructuresMenuItem.Text = "Export class structures";
             this.exportClassStructuresMenuItem.Click += new System.EventHandler(this.exportClassStructuresMenuItem_Click);
+            // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
+            this.aboutToolStripMenuItem.Text = "About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // splitContainer1
             // 
@@ -1051,38 +1062,38 @@
             this.expandAllToolStripMenuItem,
             this.collapseAllToolStripMenuItem});
             this.contextMenuStrip2.Name = "contextMenuStrip2";
-            this.contextMenuStrip2.Size = new System.Drawing.Size(181, 120);
+            this.contextMenuStrip2.Size = new System.Drawing.Size(152, 98);
             // 
             // selectAllToolStripMenuItem
             // 
             this.selectAllToolStripMenuItem.Name = "selectAllToolStripMenuItem";
-            this.selectAllToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.selectAllToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
             this.selectAllToolStripMenuItem.Text = "Select all";
             this.selectAllToolStripMenuItem.Click += new System.EventHandler(this.selectAllToolStripMenuItem_Click);
             // 
             // clearSelectionToolStripMenuItem
             // 
             this.clearSelectionToolStripMenuItem.Name = "clearSelectionToolStripMenuItem";
-            this.clearSelectionToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.clearSelectionToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
             this.clearSelectionToolStripMenuItem.Text = "Clear selection";
             this.clearSelectionToolStripMenuItem.Click += new System.EventHandler(this.clearSelectionToolStripMenuItem_Click);
             // 
             // toolStripSeparator5
             // 
             this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator5.Size = new System.Drawing.Size(148, 6);
             // 
             // expandAllToolStripMenuItem
             // 
             this.expandAllToolStripMenuItem.Name = "expandAllToolStripMenuItem";
-            this.expandAllToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.expandAllToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
             this.expandAllToolStripMenuItem.Text = "Expand all";
             this.expandAllToolStripMenuItem.Click += new System.EventHandler(this.expandAllToolStripMenuItem_Click);
             // 
             // collapseAllToolStripMenuItem
             // 
             this.collapseAllToolStripMenuItem.Name = "collapseAllToolStripMenuItem";
-            this.collapseAllToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.collapseAllToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
             this.collapseAllToolStripMenuItem.Text = "Collapse all";
             this.collapseAllToolStripMenuItem.Click += new System.EventHandler(this.collapseAllToolStripMenuItem_Click);
             // 
@@ -1168,7 +1179,7 @@
             this.MinimumSize = new System.Drawing.Size(620, 400);
             this.Name = "AssetStudioGUIForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "AssetStudioGUI";
+            this.Text = "AssetStudioModGUI";
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.AssetStudioGUIForm_DragDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.AssetStudioGUIForm_DragEnter);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.AssetStudioForm_KeyDown);
@@ -1311,6 +1322,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.ToolStripMenuItem collapseAllToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem expandAllToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
     }
 }
 

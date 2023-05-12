@@ -3,7 +3,8 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFrameworks>net472;net6.0;net7.0</TargetFrameworks>
-        <AssemblyTitle>AssetStudio Mod by VaDiM</AssemblyTitle>
+        <AssemblyTitle>AssetStudioMod by aelurum</AssemblyTitle>
+        <AssemblyName>AssetStudioModCLI</AssemblyName>
         <Version>0.16.48.1</Version>
         <Copyright>Copyright © Perfare; Copyright © aelurum 2023</Copyright>
         <PlatformTarget>AnyCPU</PlatformTarget>

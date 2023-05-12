@@ -5,9 +5,10 @@
         <TargetFrameworks>net472;net6.0-windows;net7.0-windows</TargetFrameworks>
         <UseWindowsForms>true</UseWindowsForms>
         <ApplicationIcon>Resources\as.ico</ApplicationIcon>
-        <AssemblyTitle>AssetStudio Mod by VaDiM</AssemblyTitle>
+        <AssemblyTitle>AssetStudioMod by aelurum</AssemblyTitle>
+        <AssemblyName>AssetStudioModGUI</AssemblyName>
         <Version>0.16.48.1</Version>
-        <Copyright>Copyright © Perfare 2018-2022</Copyright>
+        <Copyright>Copyright © Perfare 2018-2022; Copyright © aelurum 2021-2023</Copyright>
         <DebugType>embedded</DebugType>
     </PropertyGroup>
 
@@ -42,6 +43,13 @@
             <DependentUpon>Resources.resx</DependentUpon>
             <DesignTime>True</DesignTime>
         </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ContentWithTargetPath Include="..\LICENSE">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>LICENSE</TargetPath>
+        </ContentWithTargetPath>
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
