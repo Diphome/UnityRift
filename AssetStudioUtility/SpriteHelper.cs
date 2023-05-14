@@ -149,6 +149,13 @@ namespace AssetStudio
                                     AlphaCompositionMode = PixelAlphaCompositionMode.DestOut
                                 }
                             };
+                            if (triangles.Length < 1024)
+                            {
+                                var rectP = new RectangularPolygon(0, 0, rect.Width, rect.Height);
+                                spriteImage.Mutate(x => x.Fill(options, SixLabors.ImageSharp.Color.Red, rectP.Clip(path)));
+                                spriteImage.Mutate(x => x.Flip(FlipMode.Vertical));
+                                return spriteImage;
+                            }
                             using (var mask = new Image<Bgra32>(rect.Width, rect.Height, SixLabors.ImageSharp.Color.Black))
                             {
                                 mask.Mutate(x => x.Fill(options, SixLabors.ImageSharp.Color.Red, path));
