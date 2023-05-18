@@ -154,11 +154,12 @@
             this.assetGroupOptions.Items.AddRange(new object[] {
             "type name",
             "container path",
+            "container path full (with name)",
             "source file name",
             "do not group"});
             this.assetGroupOptions.Location = new System.Drawing.Point(6, 35);
             this.assetGroupOptions.Name = "assetGroupOptions";
-            this.assetGroupOptions.Size = new System.Drawing.Size(149, 21);
+            this.assetGroupOptions.Size = new System.Drawing.Size(165, 21);
             this.assetGroupOptions.TabIndex = 8;
             // 
             // label6

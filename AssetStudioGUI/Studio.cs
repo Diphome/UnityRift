@@ -32,6 +32,14 @@ namespace AssetStudioGUI
         XML
     }
 
+    internal enum AssetGroupOption
+    {
+        TypeName,
+        ContainerPath,
+        ContainerPathFull,
+        SourceFileName
+    }
+
     internal enum ListSearchFilterMode
     {
         Include,
@@ -389,25 +397,31 @@ namespace AssetStudioGUI
                 int exportedCount = 0;
                 int i = 0;
                 Progress.Reset();
+                var groupOption = (AssetGroupOption)Properties.Settings.Default.assetGroupOption;
                 foreach (var asset in toExportAssets)
                 {
                     string exportPath;
-                    switch (Properties.Settings.Default.assetGroupOption)
+                    switch (groupOption)
                     {
-                        case 0: //type name
+                        case AssetGroupOption.TypeName:
                             exportPath = Path.Combine(savePath, asset.TypeString);
                             break;
-                        case 1: //container path
+                        case AssetGroupOption.ContainerPath:
+                        case AssetGroupOption.ContainerPathFull:
                             if (!string.IsNullOrEmpty(asset.Container))
                             {
                                 exportPath = Path.Combine(savePath, Path.GetDirectoryName(asset.Container));
+                                if (groupOption == AssetGroupOption.ContainerPathFull)
+                                {
+                                    exportPath = Path.Combine(exportPath, Path.GetFileNameWithoutExtension(asset.Container));
+                                }
                             }
                             else
                             {
                                 exportPath = savePath;
                             }
                             break;
-                        case 2: //source file
+                        case AssetGroupOption.SourceFileName:
                             if (string.IsNullOrEmpty(asset.SourceFile.originalPath))
                             {
                                 exportPath = Path.Combine(savePath, asset.SourceFile.fileName + "_export");

@@ -261,18 +261,24 @@ namespace AssetStudioCLI
             var toExportCount = parsedAssetsList.Count;
             var exportedCount = 0;
 
+            var groupOption = options.o_groupAssetsBy.Value;
             foreach (var asset in parsedAssetsList)
             {
                 string exportPath;
-                switch (options.o_groupAssetsBy.Value)
+                switch (groupOption)
                 {
                     case AssetGroupOption.TypeName:
                         exportPath = Path.Combine(savePath, asset.TypeString);
                         break;
                     case AssetGroupOption.ContainerPath:
+                    case AssetGroupOption.ContainerPathFull:
                         if (!string.IsNullOrEmpty(asset.Container))
                         {
                             exportPath = Path.Combine(savePath, Path.GetDirectoryName(asset.Container));
+                            if (groupOption == AssetGroupOption.ContainerPathFull)
+                            {
+                                exportPath = Path.Combine(exportPath, Path.GetFileNameWithoutExtension(asset.Container));
+                            }
                         }
                         else
                         {
