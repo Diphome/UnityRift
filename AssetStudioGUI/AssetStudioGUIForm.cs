@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -119,6 +120,7 @@ namespace AssetStudioGUI
             displayInfo.Checked = Properties.Settings.Default.displayInfo;
             enablePreview.Checked = Properties.Settings.Default.enablePreview;
             FMODinit();
+            listSearchFilterMode.SelectedIndex = 0;
 
             logger = new GUILogger(StatusStripUpdate);
             Logger.Default = logger;
@@ -217,7 +219,6 @@ namespace AssetStudioGUI
         {
             if (assetsManager.assetsFileList.Count == 0)
             {
-                filterExcludeModeCheck(assetsManager.assetsFileList.Count);
                 Logger.Info("No Unity file can be loaded.");
                 return;
             }
@@ -255,8 +256,6 @@ namespace AssetStudioGUI
             }
             typeMap.Clear();
             classesListView.EndUpdate();
-
-            filterExcludeModeCheck(exportableAssets.Count);
 
             var types = exportableAssets.Select(x => x.Type).Distinct().OrderBy(x => x.ToString()).ToArray();
             foreach (var type in types)
@@ -616,7 +615,7 @@ namespace AssetStudioGUI
             {
                 listSearch.Text = "";
                 listSearch.ForeColor = SystemColors.WindowText;
-                enableFiltering = true;
+                BeginInvoke(new Action(() => enableFiltering = true));
             }
         }
 
@@ -627,6 +626,7 @@ namespace AssetStudioGUI
                 enableFiltering = false;
                 listSearch.Text = " Filter ";
                 listSearch.ForeColor = SystemColors.GrayText;
+                listSearch.BackColor = System.Drawing.Color.White;
             }
         }
 
@@ -649,7 +649,23 @@ namespace AssetStudioGUI
         private void delayTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             delayTimer.Stop();
+            ListSearchHistoryAdd();
             Invoke(new Action(FilterAssetList));
+        }
+
+        private void ListSearchHistoryAdd()
+        {
+            BeginInvoke(new Action(() =>
+            {
+                if (listSearch.Text != "")
+                {
+                    if (listSearchHistory.Items.Count == listSearchHistory.MaxDropDownItems)
+                    {
+                        listSearchHistory.Items.RemoveAt(listSearchHistory.MaxDropDownItems - 1);
+                    }
+                    listSearchHistory.Items.Insert(0, listSearch.Text);
+                }
+            }));
         }
 
         private void assetListView_ColumnClick(object sender, ColumnClickEventArgs e)
@@ -1335,6 +1351,8 @@ namespace AssetStudioGUI
             reverseSort = false;
             enableFiltering = false;
             listSearch.Text = " Filter ";
+            listSearch.ForeColor = SystemColors.GrayText;
+            listSearch.BackColor = System.Drawing.Color.White;
             if (tabControl1.SelectedIndex == 1)
                 assetListView.Select();
 
@@ -1634,22 +1652,11 @@ namespace AssetStudioGUI
             return selectedAssets;
         }
 
-        private void filterExcludeMode_CheckedChanged(object sender, EventArgs e)
-        {
-            FilterAssetList();
-        }
-
-        private void filterExcludeModeCheck(int itemCount)
-        {
-            filterExcludeMode.Enabled = itemCount > 0;
-            if (!filterExcludeMode.Enabled)
-            {
-                filterExcludeMode.Checked = false;
-            }
-        }
-
         private void FilterAssetList()
         {
+            if (exportableAssets.Count < 1)
+                return;
+
             assetListView.BeginUpdate();
             assetListView.SelectedIndices.Clear();
             var show = new List<ClassIDType>();
@@ -1671,19 +1678,49 @@ namespace AssetStudioGUI
             }
             if (listSearch.Text != " Filter ")
             {
-                if (filterExcludeMode.Checked)
+                var mode = (ListSearchFilterMode)listSearchFilterMode.SelectedIndex;
+                switch (mode)
                 {
-                    visibleAssets = visibleAssets.FindAll(
-                        x => x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0 &&
-                        x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0 &&
-                        x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0);
-                }
-                else
-                {
-                    visibleAssets = visibleAssets.FindAll(
-                        x => x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+                    case ListSearchFilterMode.Include:
+                        visibleAssets = visibleAssets.FindAll(
+                            x => x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                            x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                            x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+                        break;
+                    case ListSearchFilterMode.Exclude:
+                        visibleAssets = visibleAssets.FindAll(
+                            x => x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0 &&
+                            x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0 &&
+                            x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0);
+                        break;
+                    case ListSearchFilterMode.RegexName:
+                    case ListSearchFilterMode.RegexContainer:
+                        StatusStripUpdate("");
+                        var pattern = listSearch.Text;
+                        var regexOptions = RegexOptions.IgnoreCase | RegexOptions.Singleline;
+                        try
+                        {
+                            if (mode == ListSearchFilterMode.RegexName)
+                            {
+                                visibleAssets = visibleAssets.FindAll(x => Regex.IsMatch(x.Text, pattern, regexOptions));
+                            }
+                            else
+                            {
+                                visibleAssets = visibleAssets.FindAll(x => Regex.IsMatch(x.SubItems[1].Text, pattern, regexOptions));
+                            }
+                            listSearch.BackColor = System.Drawing.Color.PaleGreen;
+                        }
+                        catch (ArgumentException e)
+                        {
+                            listSearch.BackColor = System.Drawing.Color.FromArgb(255, 160, 160);
+                            StatusStripUpdate($"Regex error: {e.Message}");
+                        }
+                        catch (RegexMatchTimeoutException)
+                        {
+                            listSearch.BackColor = System.Drawing.Color.FromArgb(255, 160, 160);
+                            StatusStripUpdate($"Timeout error");
+                        }
+                        break;
                 }
             }
             assetListView.VirtualListSize = visibleAssets.Count;
@@ -1819,6 +1856,22 @@ namespace AssetStudioGUI
         {
             var aboutForm = new AboutForm();
             aboutForm.ShowDialog(this);
+        }
+
+        private void listSearchFilterMode_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            listSearch.BackColor = System.Drawing.Color.White;
+            if (listSearch.Text != " Filter ")
+            {
+                FilterAssetList();
+            }
+        }
+
+        private void listSearchHistory_TextChanged(object sender, EventArgs e)
+        {
+            listSearch.Text = listSearchHistory.Text;
+            listSearch.Focus();
+            listSearch.SelectionStart = listSearch.Text.Length;
         }
 
         #region FMOD

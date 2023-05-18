@@ -32,6 +32,14 @@ namespace AssetStudioGUI
         XML
     }
 
+    internal enum ListSearchFilterMode
+    {
+        Include,
+        Exclude,
+        RegexName,
+        RegexContainer,
+    }
+
     internal static class Studio
     {
         public static AssetsManager assetsManager = new AssetsManager();

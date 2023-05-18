@@ -83,14 +83,16 @@
             this.sceneTreeView = new AssetStudioGUI.GOHierarchy();
             this.treeSearch = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.filterExcludeMode = new System.Windows.Forms.CheckBox();
             this.assetListView = new System.Windows.Forms.ListView();
             this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderContainer = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderType = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderPathID = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderSize = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listSearch = new System.Windows.Forms.TextBox();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.listSearch = new System.Windows.Forms.RichTextBox();
+            this.listSearchHistory = new System.Windows.Forms.ComboBox();
+            this.listSearchFilterMode = new System.Windows.Forms.ComboBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.classesListView = new System.Windows.Forms.ListView();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -143,6 +145,7 @@
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.progressbarPanel.SuspendLayout();
             this.tabControl2.SuspendLayout();
@@ -619,33 +622,14 @@
             // 
             // tabPage2
             // 
-            this.tabPage2.Controls.Add(this.filterExcludeMode);
             this.tabPage2.Controls.Add(this.assetListView);
-            this.tabPage2.Controls.Add(this.listSearch);
+            this.tabPage2.Controls.Add(this.panel1);
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Size = new System.Drawing.Size(472, 607);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Asset List";
             this.tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // filterExcludeMode
-            // 
-            this.filterExcludeMode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.filterExcludeMode.AutoSize = true;
-            this.filterExcludeMode.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.filterExcludeMode.Enabled = false;
-            this.filterExcludeMode.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.filterExcludeMode.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.filterExcludeMode.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.filterExcludeMode.Location = new System.Drawing.Point(409, 2);
-            this.filterExcludeMode.Name = "filterExcludeMode";
-            this.filterExcludeMode.Size = new System.Drawing.Size(61, 17);
-            this.filterExcludeMode.TabIndex = 2;
-            this.filterExcludeMode.Text = "Exclude";
-            this.filterExcludeMode.TextAlign = System.Drawing.ContentAlignment.BottomRight;
-            this.filterExcludeMode.UseVisualStyleBackColor = false;
-            this.filterExcludeMode.CheckedChanged += new System.EventHandler(this.filterExcludeMode_CheckedChanged);
             // 
             // assetListView
             // 
@@ -659,9 +643,9 @@
             this.assetListView.FullRowSelect = true;
             this.assetListView.GridLines = true;
             this.assetListView.HideSelection = false;
-            this.assetListView.Location = new System.Drawing.Point(0, 20);
+            this.assetListView.Location = new System.Drawing.Point(0, 23);
             this.assetListView.Name = "assetListView";
-            this.assetListView.Size = new System.Drawing.Size(472, 587);
+            this.assetListView.Size = new System.Drawing.Size(472, 584);
             this.assetListView.TabIndex = 1;
             this.assetListView.UseCompatibleStateImageBehavior = false;
             this.assetListView.View = System.Windows.Forms.View.Details;
@@ -697,18 +681,65 @@
             this.columnHeaderSize.Text = "Size";
             this.columnHeaderSize.Width = 50;
             // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.listSearch);
+            this.panel1.Controls.Add(this.listSearchHistory);
+            this.panel1.Controls.Add(this.listSearchFilterMode);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel1.Location = new System.Drawing.Point(0, 0);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(472, 23);
+            this.panel1.TabIndex = 2;
+            // 
             // listSearch
             // 
-            this.listSearch.Dock = System.Windows.Forms.DockStyle.Top;
+            this.listSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.listSearch.BackColor = System.Drawing.Color.White;
+            this.listSearch.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.listSearch.DetectUrls = false;
             this.listSearch.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.listSearch.Location = new System.Drawing.Point(0, 0);
+            this.listSearch.Location = new System.Drawing.Point(3, 3);
+            this.listSearch.Multiline = false;
             this.listSearch.Name = "listSearch";
-            this.listSearch.Size = new System.Drawing.Size(472, 20);
-            this.listSearch.TabIndex = 0;
+            this.listSearch.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
+            this.listSearch.Size = new System.Drawing.Size(331, 16);
+            this.listSearch.TabIndex = 3;
             this.listSearch.Text = " Filter ";
+            this.listSearch.WordWrap = false;
             this.listSearch.TextChanged += new System.EventHandler(this.ListSearchTextChanged);
             this.listSearch.Enter += new System.EventHandler(this.listSearch_Enter);
             this.listSearch.Leave += new System.EventHandler(this.listSearch_Leave);
+            // 
+            // listSearchHistory
+            // 
+            this.listSearchHistory.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
+            this.listSearchHistory.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
+            this.listSearchHistory.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.listSearchHistory.Location = new System.Drawing.Point(0, 0);
+            this.listSearchHistory.Name = "listSearchHistory";
+            this.listSearchHistory.Size = new System.Drawing.Size(351, 21);
+            this.listSearchHistory.TabIndex = 2;
+            this.listSearchHistory.TabStop = false;
+            this.listSearchHistory.TextChanged += new System.EventHandler(this.listSearchHistory_TextChanged);
+            // 
+            // listSearchFilterMode
+            // 
+            this.listSearchFilterMode.Dock = System.Windows.Forms.DockStyle.Right;
+            this.listSearchFilterMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.listSearchFilterMode.DropDownWidth = 150;
+            this.listSearchFilterMode.Items.AddRange(new object[] {
+            "Include",
+            "Exclude",
+            "Regex (Name)",
+            "Regex (Container)"});
+            this.listSearchFilterMode.Location = new System.Drawing.Point(351, 0);
+            this.listSearchFilterMode.Name = "listSearchFilterMode";
+            this.listSearchFilterMode.Size = new System.Drawing.Size(121, 21);
+            this.listSearchFilterMode.TabIndex = 3;
+            this.listSearchFilterMode.SelectedIndexChanged += new System.EventHandler(this.listSearchFilterMode_SelectedIndexChanged);
             // 
             // tabPage3
             // 
@@ -1194,7 +1225,7 @@
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
             this.tabPage2.ResumeLayout(false);
-            this.tabPage2.PerformLayout();
+            this.panel1.ResumeLayout(false);
             this.tabPage3.ResumeLayout(false);
             this.progressbarPanel.ResumeLayout(false);
             this.tabControl2.ResumeLayout(false);
@@ -1225,7 +1256,6 @@
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.TextBox treeSearch;
-        private System.Windows.Forms.TextBox listSearch;
         private System.Windows.Forms.ToolStripMenuItem loadFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadFolderToolStripMenuItem;
         private System.Windows.Forms.ListView assetListView;
@@ -1315,7 +1345,6 @@
         private System.Windows.Forms.ToolStripTextBox specifyUnityVersion;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem15;
         private System.Windows.Forms.ToolStripMenuItem dumpSelectedAssetsToolStripMenuItem;
-        private System.Windows.Forms.CheckBox filterExcludeMode;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip2;
         private System.Windows.Forms.ToolStripMenuItem selectAllToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem clearSelectionToolStripMenuItem;
@@ -1323,6 +1352,10 @@
         private System.Windows.Forms.ToolStripMenuItem collapseAllToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem expandAllToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.ComboBox listSearchFilterMode;
+        private System.Windows.Forms.ComboBox listSearchHistory;
+        private System.Windows.Forms.RichTextBox listSearch;
     }
 }
 
