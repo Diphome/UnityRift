@@ -142,9 +142,10 @@
             this.restoreExtensionName.CheckState = System.Windows.Forms.CheckState.Checked;
             this.restoreExtensionName.Location = new System.Drawing.Point(6, 63);
             this.restoreExtensionName.Name = "restoreExtensionName";
-            this.restoreExtensionName.Size = new System.Drawing.Size(190, 17);
+            this.restoreExtensionName.Size = new System.Drawing.Size(275, 17);
             this.restoreExtensionName.TabIndex = 9;
-            this.restoreExtensionName.Text = "Restore TextAsset extension name";
+            this.restoreExtensionName.Text = "Try to restore/Use original TextAsset extension name";
+            this.exportUvsTooltip.SetToolTip(this.restoreExtensionName, "If not checked, AssetStudio will export all TextAssets with the \".txt\" extension");
             this.restoreExtensionName.UseVisualStyleBackColor = true;
             // 
             // assetGroupOptions
@@ -508,7 +509,7 @@
             this.MinimizeBox = false;
             this.Name = "ExportOptions";
             this.ShowIcon = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Export options";
             this.TopMost = true;
             this.groupBox1.ResumeLayout(false);

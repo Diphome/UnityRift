@@ -293,7 +293,7 @@ namespace AssetStudioCLI.Options
             (
                 optionDefaultValue: false,
                 optionName: "--not-restore-extension",
-                optionDescription: "(Flag) If specified, AssetStudio will not try to restore TextAssets extension name, \nand will just export all TextAssets with the \".txt\" extension",
+                optionDescription: "(Flag) If specified, AssetStudio will not try to use/restore original TextAsset\nextension name, and will just export all TextAssets with the \".txt\" extension",
                 optionHelpGroup: HelpGroups.Advanced,
                 isFlag: true
             );

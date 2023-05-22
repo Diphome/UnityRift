@@ -75,13 +75,22 @@ namespace AssetStudioGUI
 
         public static bool ExportTextAsset(AssetItem item, string exportPath)
         {
-            var m_TextAsset = (TextAsset)(item.Asset);
+            var m_TextAsset = (TextAsset)item.Asset;
             var extension = ".txt";
+            var assetExtension = Path.GetExtension(m_TextAsset.m_Name);
             if (Properties.Settings.Default.restoreExtensionName)
             {
-                if (!string.IsNullOrEmpty(item.Container))
+                if (!string.IsNullOrEmpty(assetExtension))
                 {
-                    extension = Path.GetExtension(item.Container);
+                    extension = "";
+                }
+                else if (!string.IsNullOrEmpty(item.Container))
+                {
+                    var ext = Path.GetExtension(item.Container);
+                    if (!string.IsNullOrEmpty(item.Container))
+                    {
+                        extension = ext;
+                    }
                 }
             }
             if (!TryExportFile(exportPath, item, extension, out var exportFullPath))
