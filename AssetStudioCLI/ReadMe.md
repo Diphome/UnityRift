@@ -34,10 +34,11 @@ General Options:
                                 Examples: "-t sprite" or "-t all" or "-t tex2d,sprite,audio" or "-t tex2d;sprite;font"
 
   -g, --group-option <value>    Specify the way in which exported assets should be grouped
-                                <Value: none | type | container(default) | filename>
+                                <Value: none | type | container(default) | containerFull | filename>
                                 None - Do not group exported assets
                                 Type - Group exported assets by type name
                                 Container - Group exported assets by container path
+                                ContainerFull - Group exported assets by full container path (e.g. with prefab name)
                                 Filename - Group exported assets by source file name
                                 Example: "-g container"
 
@@ -91,6 +92,6 @@ Advanced Options:
 
   --assembly-folder <path>      Specify the path to the assembly folder
   --unity-version <text>        Specify Unity version. Example: "--unity-version 2017.4.39f1"
-  --not-restore-extension       (Flag) If specified, AssetStudio will not try to restore TextAssets extension name,
-                                and will just export all TextAssets with the ".txt" extension
+  --not-restore-extension       (Flag) If specified, AssetStudio will not try to use/restore original TextAsset
+                                extension name, and will just export all TextAssets with the ".txt" extension
 ```
