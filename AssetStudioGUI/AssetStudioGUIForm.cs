@@ -657,7 +657,7 @@ namespace AssetStudioGUI
         {
             BeginInvoke(new Action(() =>
             {
-                if (listSearch.Text != "")
+                if (listSearch.Text != "" && listSearch.Text != " Filter ")
                 {
                     if (listSearchHistory.Items.Count == listSearchHistory.MaxDropDownItems)
                     {
@@ -1867,7 +1867,7 @@ namespace AssetStudioGUI
             }
         }
 
-        private void listSearchHistory_TextChanged(object sender, EventArgs e)
+        private void listSearchHistory_SelectedIndexChanged(object sender, EventArgs e)
         {
             listSearch.Text = listSearchHistory.Text;
             listSearch.Focus();

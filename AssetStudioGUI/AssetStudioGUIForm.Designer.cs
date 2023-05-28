@@ -723,7 +723,9 @@
             this.listSearchHistory.Size = new System.Drawing.Size(351, 21);
             this.listSearchHistory.TabIndex = 2;
             this.listSearchHistory.TabStop = false;
-            this.listSearchHistory.TextChanged += new System.EventHandler(this.listSearchHistory_TextChanged);
+            this.listSearchHistory.SelectedIndexChanged += new System.EventHandler(this.listSearchHistory_SelectedIndexChanged);
+            this.listSearchHistory.Enter += new System.EventHandler(this.listSearch_Enter);
+            this.listSearchHistory.Leave += new System.EventHandler(this.listSearch_Leave);
             // 
             // listSearchFilterMode
             // 
