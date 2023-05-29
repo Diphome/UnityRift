@@ -875,6 +875,7 @@
             // 
             // FMODcopyright
             // 
+            this.FMODcopyright.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODcopyright.AutoSize = true;
             this.FMODcopyright.ForeColor = System.Drawing.SystemColors.ControlLight;
             this.FMODcopyright.ImeMode = System.Windows.Forms.ImeMode.NoControl;
@@ -886,6 +887,7 @@
             // 
             // FMODinfoLabel
             // 
+            this.FMODinfoLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODinfoLabel.AutoSize = true;
             this.FMODinfoLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             this.FMODinfoLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
@@ -896,6 +898,7 @@
             // 
             // FMODtimerLabel
             // 
+            this.FMODtimerLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODtimerLabel.AutoSize = true;
             this.FMODtimerLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             this.FMODtimerLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
@@ -907,6 +910,7 @@
             // 
             // FMODstatusLabel
             // 
+            this.FMODstatusLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODstatusLabel.AutoSize = true;
             this.FMODstatusLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             this.FMODstatusLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
@@ -918,6 +922,7 @@
             // 
             // FMODprogressBar
             // 
+            this.FMODprogressBar.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODprogressBar.AutoSize = false;
             this.FMODprogressBar.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODprogressBar.Location = new System.Drawing.Point(213, 274);
@@ -932,6 +937,7 @@
             // 
             // FMODvolumeBar
             // 
+            this.FMODvolumeBar.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODvolumeBar.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODvolumeBar.LargeChange = 2;
             this.FMODvolumeBar.Location = new System.Drawing.Point(460, 303);
@@ -944,6 +950,7 @@
             // 
             // FMODloopButton
             // 
+            this.FMODloopButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODloopButton.Appearance = System.Windows.Forms.Appearance.Button;
             this.FMODloopButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODloopButton.Location = new System.Drawing.Point(399, 303);
@@ -957,6 +964,7 @@
             // 
             // FMODstopButton
             // 
+            this.FMODstopButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODstopButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODstopButton.Location = new System.Drawing.Point(338, 303);
             this.FMODstopButton.Name = "FMODstopButton";
@@ -968,6 +976,7 @@
             // 
             // FMODpauseButton
             // 
+            this.FMODpauseButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODpauseButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODpauseButton.Location = new System.Drawing.Point(277, 303);
             this.FMODpauseButton.Name = "FMODpauseButton";
@@ -979,6 +988,7 @@
             // 
             // FMODplayButton
             // 
+            this.FMODplayButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODplayButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODplayButton.Location = new System.Drawing.Point(216, 303);
             this.FMODplayButton.Name = "FMODplayButton";
