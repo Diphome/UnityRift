@@ -143,14 +143,8 @@ namespace AssetStudioGUI
             {
                 ResetForm();
                 assetsManager.SpecifyUnityVersion = specifyUnityVersion.Text;
-                if (paths.Length == 1 && Directory.Exists(paths[0]))
-                {
-                    await Task.Run(() => assetsManager.LoadFolder(paths[0]));
-                }
-                else
-                {
-                    await Task.Run(() => assetsManager.LoadFiles(paths));
-                }
+                await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, paths));
+                saveDirectoryBackup = openDirectoryBackup;
                 BuildAssetStructures();
             }
         }
@@ -161,9 +155,8 @@ namespace AssetStudioGUI
             if (openFileDialog1.ShowDialog(this) == DialogResult.OK)
             {
                 ResetForm();
-                openDirectoryBackup = Path.GetDirectoryName(openFileDialog1.FileNames[0]);
                 assetsManager.SpecifyUnityVersion = specifyUnityVersion.Text;
-                await Task.Run(() => assetsManager.LoadFiles(openFileDialog1.FileNames));
+                await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, openFileDialog1.FileNames));
                 BuildAssetStructures();
             }
         }
@@ -175,9 +168,8 @@ namespace AssetStudioGUI
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
                 ResetForm();
-                openDirectoryBackup = openFolderDialog.Folder;
                 assetsManager.SpecifyUnityVersion = specifyUnityVersion.Text;
-                await Task.Run(() => assetsManager.LoadFolder(openFolderDialog.Folder));
+                await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, openFolderDialog.Folder));
                 BuildAssetStructures();
             }
         }

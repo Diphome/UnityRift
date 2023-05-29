@@ -33,14 +33,7 @@ namespace AssetStudioCLI
             assetsManager.SpecifyUnityVersion = options.o_unityVersion.Value;
             assetsManager.SetAssetFilter(options.o_exportAssetTypes.Value);
 
-            if (Directory.Exists(options.inputPath))
-            {
-                assetsManager.LoadFolder(options.inputPath);
-            }
-            else
-            {
-                assetsManager.LoadFiles(options.inputPath);
-            }
+            assetsManager.LoadFilesAndFolders(options.inputPath);
             if (assetsManager.assetsFileList.Count == 0)
             {
                 Logger.Warning("No Unity file can be loaded.");

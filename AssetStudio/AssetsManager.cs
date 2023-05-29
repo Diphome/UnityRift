@@ -53,19 +53,53 @@ namespace AssetStudio
                 SetAssetFilter(classIDType);
         }
 
-        public void LoadFiles(params string[] files)
+        public void LoadFilesAndFolders(params string[] path)
         {
-            var path = Path.GetDirectoryName(Path.GetFullPath(files[0]));
-            MergeSplitAssets(path);
-            var toReadFile = ProcessingSplitFiles(files.ToList());
-            Load(toReadFile);
+            List<string> pathList = new List<string>();
+            pathList.AddRange(path);
+            LoadFilesAndFolders(out _, pathList);
         }
 
-        public void LoadFolder(string path)
+        public void LoadFilesAndFolders(out string parentPath, params string[] path)
         {
-            MergeSplitAssets(path, true);
-            var files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).ToList();
-            var toReadFile = ProcessingSplitFiles(files);
+            List<string> pathList = new List<string>();
+            pathList.AddRange(path);
+            LoadFilesAndFolders(out parentPath, pathList);
+        }
+
+        public void LoadFilesAndFolders(out string parentPath, List<string> pathList)
+        {
+            List<string> fileList = new List<string>();
+            bool filesInPath = false;
+            parentPath = "";
+            foreach (var path in pathList)
+            {
+                var fullPath = Path.GetFullPath(path);
+                if (Directory.Exists(fullPath))
+                {
+                    var parent = Directory.GetParent(fullPath).FullName;
+                    if (!filesInPath && (parentPath == "" || parentPath.Length > parent.Length))
+                    {
+                        parentPath = parent;
+                    }
+                    MergeSplitAssets(fullPath, true);
+                    fileList.AddRange(Directory.GetFiles(fullPath, "*.*", SearchOption.AllDirectories));
+                }
+                else
+                {
+                    parentPath = Path.GetDirectoryName(fullPath);
+                    fileList.Add(fullPath);
+                    filesInPath = true;
+                }
+            }
+            if (filesInPath)
+            {
+                MergeSplitAssets(parentPath);
+            }
+            var toReadFile = ProcessingSplitFiles(fileList);
+            fileList.Clear();
+            pathList.Clear();
+
             Load(toReadFile);
         }
 
