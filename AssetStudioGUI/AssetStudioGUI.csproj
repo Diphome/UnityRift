@@ -7,7 +7,7 @@
         <ApplicationIcon>Resources\as.ico</ApplicationIcon>
         <AssemblyTitle>AssetStudioMod by aelurum</AssemblyTitle>
         <AssemblyName>AssetStudioModGUI</AssemblyName>
-        <Version>0.16.48.1</Version>
+        <Version>0.17.0.0</Version>
         <Copyright>Copyright © Perfare 2018-2022; Copyright © aelurum 2021-2023</Copyright>
         <DebugType>embedded</DebugType>
     </PropertyGroup>

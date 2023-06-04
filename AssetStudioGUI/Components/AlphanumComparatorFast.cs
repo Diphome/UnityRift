@@ -1,4 +1,4 @@
-﻿// AlphanumComparatorFast mod by VaDiM
+﻿// AlphanumComparatorFast mod by aelurum
 // Original code was developed by Dot Net Perls
 // For more detail visit: https://www.dotnetperls.com/alphanumeric-sorting
 
