@@ -19,6 +19,7 @@ using System.Timers;
 using System.Windows.Forms;
 using static AssetStudioGUI.Studio;
 using Font = AssetStudio.Font;
+using Microsoft.WindowsAPICodePack.Taskbar;
 #if NET472
 using Vector3 = OpenTK.Vector3;
 using Vector4 = OpenTK.Vector4;
@@ -105,6 +106,8 @@ namespace AssetStudioGUI
         private string saveDirectoryBackup = string.Empty;
 
         private GUILogger logger;
+
+        private TaskbarManager taskbar = TaskbarManager.Instance;
 
         [DllImport("gdi32.dll")]
         private static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
@@ -607,7 +610,7 @@ namespace AssetStudioGUI
             {
                 listSearch.Text = "";
                 listSearch.ForeColor = SystemColors.WindowText;
-                BeginInvoke(new Action(() => enableFiltering = true));
+                BeginInvoke(new Action(() => { enableFiltering = true; }));
             }
         }
 
@@ -1303,6 +1306,16 @@ namespace AssetStudioGUI
             {
                 progressBar1.Value = value;
             }
+
+            BeginInvoke(new Action(() => 
+            {
+                var max = progressBar1.Maximum;
+                taskbar.SetProgressValue(value, max);
+                if (value == max)
+                    taskbar.SetProgressState(TaskbarProgressBarState.NoProgress);
+                else
+                    taskbar.SetProgressState(TaskbarProgressBarState.Normal);
+            }));
         }
 
         private void StatusStripUpdate(string statusText)
@@ -1354,6 +1367,7 @@ namespace AssetStudioGUI
                 filterTypeToolStripMenuItem.DropDownItems.RemoveAt(1);
             }
 
+            taskbar.SetProgressState(TaskbarProgressBarState.NoProgress);
             FMODreset();
         }
 
