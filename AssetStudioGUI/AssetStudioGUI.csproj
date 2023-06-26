@@ -65,9 +65,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft-WindowsAPICodePack-Core-6.0" Version="1.1.5" />
-        <PackageReference Include="Microsoft-WindowsAPICodePack-Shell-6.0" Version="1.1.5" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+        <PackageReference Include="Microsoft-WindowsAPICodePack-Core-6.0" Version="1.1.6-preview.2.24bd88f" />
+        <PackageReference Include="Microsoft-WindowsAPICodePack-Shell-6.0" Version="1.1.6-preview.2.24bd88f" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
 
     <!-- Use local compiled win-x86 and win-x64 Texture2DDecoder libs, because libs from Kyaru.Texture2DDecoder.Windows were compiled with /MD flag -->
