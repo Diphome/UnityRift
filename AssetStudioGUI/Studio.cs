@@ -9,6 +9,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using static AssetStudioGUI.Exporter;
+using static CubismLive2DExtractor.Live2DExtractor;
 using Object = AssetStudio.Object;
 
 namespace AssetStudioGUI
@@ -54,6 +55,7 @@ namespace AssetStudioGUI
         public static AssemblyLoader assemblyLoader = new AssemblyLoader();
         public static List<AssetItem> exportableAssets = new List<AssetItem>();
         public static List<AssetItem> visibleAssets = new List<AssetItem>();
+        private static Dictionary<Object, string> allContainers = new Dictionary<Object, string>();
         internal static Action<string> StatusStripUpdate = x => { };
 
         public static int ExtractFolder(string path, string savePath)
@@ -262,6 +264,7 @@ namespace AssetStudioGUI
                 if (pptr.TryGet(out var obj))
                 {
                     objectAssetItemDic[obj].Container = container;
+                    allContainers[obj] = container;
                 }
             }
             foreach (var tmp in exportableAssets)
@@ -737,6 +740,67 @@ namespace AssetStudioGUI
             var info = new ProcessStartInfo(path);
             info.UseShellExecute = true;
             Process.Start(info);
+        }
+
+        public static void ExportLive2D(Object[] cubismMocs, string exportPath)
+        {
+            var baseDestPath = Path.Combine(exportPath, "Live2DOutput");
+
+            ThreadPool.QueueUserWorkItem(state =>
+            {
+                Progress.Reset();
+                Logger.Info($"Searching for Live2D files...");
+
+                var useFullContainerPath = false;
+                if (cubismMocs.Length > 1)
+                {
+                    var basePathSet = cubismMocs.Select(x => allContainers[x].Substring(0, allContainers[x].LastIndexOf("/"))).ToHashSet();
+
+                    if (basePathSet.Count != cubismMocs.Length)
+                    {
+                        useFullContainerPath = true;
+                    }
+                }
+                var basePathList = useFullContainerPath ?
+                    cubismMocs.Select(x => allContainers[x]).ToList() :
+                    cubismMocs.Select(x => allContainers[x].Substring(0, allContainers[x].LastIndexOf("/"))).ToList();
+                var lookup = allContainers.ToLookup(
+                    x => basePathList.Find(b => x.Value.Contains(b) && x.Value.Split('/').Any(y => y == b.Substring(b.LastIndexOf("/") + 1))),
+                    x => x.Key
+                );
+
+                var totalModelCount = lookup.LongCount(x => x.Key != null);
+                var name = "";
+                var modelCounter = 0;
+                foreach (var assets in lookup)
+                {
+                    var container = assets.Key;
+                    if (container == null)
+                        continue;
+                    name = container;
+
+                    Logger.Info($"[{modelCounter + 1}/{totalModelCount}] Exporting Live2D: \"{container}\"...");
+                    try
+                    {
+                        var modelName = useFullContainerPath ? Path.GetFileNameWithoutExtension(container) : container.Substring(container.LastIndexOf('/') + 1);
+                        container = Path.HasExtension(container) ? container.Replace(Path.GetExtension(container), "") : container;
+                        var destPath = Path.Combine(baseDestPath, container) + Path.DirectorySeparatorChar;
+
+                        ExtractLive2D(assets, destPath, modelName);
+                        modelCounter++;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error($"Live2D model export error: \"{name}\"", ex);
+                    }
+                    Progress.Report(modelCounter, (int)totalModelCount);
+                }
+                Logger.Info($"Finished exporting [{modelCounter}/{totalModelCount}] Live2D model(s).");
+                if (Properties.Settings.Default.openAfterExport && modelCounter > 0)
+                {
+                    OpenFolderInExplorer(exportPath);
+                }
+            });
         }
     }
 }

@@ -21,6 +21,7 @@ namespace AssetStudioCLI.Options
         ExportRaw,
         Dump,
         Info,
+        ExportLive2D,
     }
 
     internal enum AssetGroupOption
@@ -132,11 +133,12 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: WorkMode.Export,
                 optionName: "-m, --mode <value>",
                 optionDescription: "Specify working mode\n" +
-                    "<Value: export(default) | exportRaw | dump | info>\n" +
+                    "<Value: export(default) | exportRaw | dump | info | live2d>\n" +
                     "Export - Exports converted assets\n" +
                     "ExportRaw - Exports raw data\n" +
                     "Dump - Makes asset dumps\n" +
                     "Info - Loads file(s), shows the number of supported for export assets and exits\n" +
+                    "Live2D - Exports Live2D Cubism 3 models\n" +
                     "Example: \"-m info\"\n",
                 optionHelpGroup: HelpGroups.General
             );
@@ -414,6 +416,17 @@ namespace AssetStudioCLI.Options
                                 case "info":
                                     o_workMode.Value = WorkMode.Info;
                                     break;
+                                case "live2d":
+                                    o_workMode.Value = WorkMode.ExportLive2D;
+                                    o_exportAssetTypes.Value = new List<ClassIDType>()
+                                    {
+                                        ClassIDType.AnimationClip,
+                                        ClassIDType.GameObject,
+                                        ClassIDType.MonoBehaviour,
+                                        ClassIDType.Texture2D,
+                                        ClassIDType.Transform,
+                                    };
+                                    break;
                                 default:
                                     Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported working mode: [{value.Color(brightRed)}].\n");
                                     Console.WriteLine(o_workMode.Description);
@@ -422,6 +435,11 @@ namespace AssetStudioCLI.Options
                             break;
                         case "-t":
                         case "--asset-type":
+                            if (o_workMode.Value == WorkMode.ExportLive2D)
+                            {
+                                i++;
+                                continue;
+                            }
                             var splittedTypes = ValueSplitter(value);
                             o_exportAssetTypes.Value = new List<ClassIDType>();
                             foreach (var type in splittedTypes)
@@ -773,29 +791,37 @@ namespace AssetStudioCLI.Options
             sb.AppendLine("[Current Options]");
             sb.AppendLine($"# Working Mode: {o_workMode}");
             sb.AppendLine($"# Input Path: \"{inputPath}\"");
-            if (o_workMode.Value != WorkMode.Info)
+            switch (o_workMode.Value)
             {
-                sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");
-                sb.AppendLine($"# Export Asset Type(s): {string.Join(", ", o_exportAssetTypes.Value)}");
-                sb.AppendLine($"# Asset Group Option: {o_groupAssetsBy}");
-                sb.AppendLine($"# Export Image Format: {o_imageFormat}");
-                sb.AppendLine($"# Export Audio Format: {o_audioFormat}");
-                sb.AppendLine($"# Log Level: {o_logLevel}");
-                sb.AppendLine($"# Log Output: {o_logOutput}");
-                sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
-                sb.AppendLine(ShowCurrentFilter());
-                sb.AppendLine($"# Assebmly Path: \"{o_assemblyPath}\"");
-                sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
-                sb.AppendLine($"# Restore TextAsset extension: {!f_notRestoreExtensionName.Value}");
-            }
-            else
-            {
-                sb.AppendLine($"# Export Asset Type(s): {string.Join(", ", o_exportAssetTypes.Value)}");
-                sb.AppendLine($"# Log Level: {o_logLevel}");
-                sb.AppendLine($"# Log Output: {o_logOutput}");
-                sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
-                sb.AppendLine(ShowCurrentFilter());
-                sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
+                case WorkMode.Info:
+                    sb.AppendLine($"# Export Asset Type(s): {string.Join(", ", o_exportAssetTypes.Value)}");
+                    sb.AppendLine($"# Log Level: {o_logLevel}");
+                    sb.AppendLine($"# Log Output: {o_logOutput}");
+                    sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
+                    sb.AppendLine(ShowCurrentFilter());
+                    sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
+                    break;
+                case WorkMode.ExportLive2D:
+                    sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");
+                    sb.AppendLine($"# Log Level: {o_logLevel}");
+                    sb.AppendLine($"# Log Output: {o_logOutput}");
+                    sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
+                    sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
+                    break;
+                default:
+                    sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");
+                    sb.AppendLine($"# Export Asset Type(s): {string.Join(", ", o_exportAssetTypes.Value)}");
+                    sb.AppendLine($"# Asset Group Option: {o_groupAssetsBy}");
+                    sb.AppendLine($"# Export Image Format: {o_imageFormat}");
+                    sb.AppendLine($"# Export Audio Format: {o_audioFormat}");
+                    sb.AppendLine($"# Log Level: {o_logLevel}");
+                    sb.AppendLine($"# Log Output: {o_logOutput}");
+                    sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
+                    sb.AppendLine(ShowCurrentFilter());
+                    sb.AppendLine($"# Assebmly Path: \"{o_assemblyPath}\"");
+                    sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
+                    sb.AppendLine($"# Restore TextAsset extension: {!f_notRestoreExtensionName.Value}");
+                    break;
             }
             sb.AppendLine("======");
             Logger.Info(sb.ToString());

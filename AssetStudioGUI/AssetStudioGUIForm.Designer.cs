@@ -66,6 +66,8 @@
             this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem9 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
+            this.allLive2DModelsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItem10 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem11 = new System.Windows.Forms.ToolStripMenuItem();
@@ -354,6 +356,8 @@
             this.toolStripSeparator4,
             this.toolStripMenuItem2,
             this.toolStripMenuItem3,
+            this.toolStripSeparator6,
+            this.allLive2DModelsToolStripMenuItem,
             this.toolStripSeparator2,
             this.toolStripMenuItem10});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
@@ -460,6 +464,18 @@
             this.toolStripMenuItem9.Text = "Filtered assets";
             this.toolStripMenuItem9.Click += new System.EventHandler(this.toolStripMenuItem9_Click);
             // 
+            // toolStripSeparator6
+            // 
+            this.toolStripSeparator6.Name = "toolStripSeparator6";
+            this.toolStripSeparator6.Size = new System.Drawing.Size(263, 6);
+            // 
+            // allLive2DModelsToolStripMenuItem
+            // 
+            this.allLive2DModelsToolStripMenuItem.Name = "allLive2DModelsToolStripMenuItem";
+            this.allLive2DModelsToolStripMenuItem.Size = new System.Drawing.Size(266, 22);
+            this.allLive2DModelsToolStripMenuItem.Text = "Live2D Cubism models";
+            this.allLive2DModelsToolStripMenuItem.Click += new System.EventHandler(this.allLive2DModelsToolStripMenuItem_Click);
+            // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
@@ -510,7 +526,7 @@
             this.allToolStripMenuItem.CheckOnClick = true;
             this.allToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.allToolStripMenuItem.Name = "allToolStripMenuItem";
-            this.allToolStripMenuItem.Size = new System.Drawing.Size(88, 22);
+            this.allToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.allToolStripMenuItem.Text = "All";
             this.allToolStripMenuItem.Click += new System.EventHandler(this.typeToolStripMenuItem_Click);
             // 
@@ -1368,6 +1384,8 @@
         private System.Windows.Forms.ComboBox listSearchFilterMode;
         private System.Windows.Forms.ComboBox listSearchHistory;
         private System.Windows.Forms.RichTextBox listSearch;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
+        private System.Windows.Forms.ToolStripMenuItem allLive2DModelsToolStripMenuItem;
     }
 }
 

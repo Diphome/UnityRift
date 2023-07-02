@@ -1880,6 +1880,40 @@ namespace AssetStudioGUI
             listSearch.SelectionStart = listSearch.Text.Length;
         }
 
+        private void allLive2DModelsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (exportableAssets.Count > 0)
+            {
+                var cubismMocs = exportableAssets.Where(x =>
+                {
+                    if (x.Type == ClassIDType.MonoBehaviour)
+                    {
+                        ((MonoBehaviour)x.Asset).m_Script.TryGet(out var m_Script);
+                        return m_Script?.m_ClassName == "CubismMoc";
+                    }
+                    return false;
+                }).Select(x => x.Asset).ToArray();
+                if (cubismMocs.Length == 0)
+                {
+                    Logger.Info("Live2D Cubism models were not found.");
+                    return;
+                }
+
+                var saveFolderDialog = new OpenFolderDialog();
+                saveFolderDialog.InitialFolder = saveDirectoryBackup;
+                if (saveFolderDialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    timer.Stop();
+                    saveDirectoryBackup = saveFolderDialog.Folder;
+                    Studio.ExportLive2D(cubismMocs, saveFolderDialog.Folder);
+                }
+            }
+            else
+            {
+                Logger.Info("No exportable assets loaded");
+            }
+        }
+
         #region FMOD
         private void FMODinit()
         {

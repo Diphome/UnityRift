@@ -36,7 +36,7 @@ namespace AssetStudioCLI
                 if (studio.LoadAssets())
                 {
                     studio.ParseAssets();
-                    if (options.filterBy != FilterBy.None)
+                    if (options.filterBy != FilterBy.None && options.o_workMode.Value != WorkMode.ExportLive2D)
                     {
                         studio.FilterAssets();
                     }
@@ -44,12 +44,18 @@ namespace AssetStudioCLI
                     {
                         studio.ExportAssetList();
                     }
-                    if (options.o_workMode.Value == WorkMode.Info)
+                    switch (options.o_workMode.Value)
                     {
-                        studio.ShowExportableAssetsInfo();
-                        return;
+                        case WorkMode.Info:
+                            studio.ShowExportableAssetsInfo();
+                            break;
+                        case WorkMode.ExportLive2D:
+                            studio.ExportLive2D();
+                            break;
+                        default:
+                            studio.ExportAssets();
+                            break;
                     }
-                    studio.ExportAssets();
                 }
             }
             catch (Exception ex)
