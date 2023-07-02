@@ -786,7 +786,7 @@ namespace AssetStudioGUI
                         container = Path.HasExtension(container) ? container.Replace(Path.GetExtension(container), "") : container;
                         var destPath = Path.Combine(baseDestPath, container) + Path.DirectorySeparatorChar;
 
-                        ExtractLive2D(assets, destPath, modelName);
+                        ExtractLive2D(assets, destPath, modelName, assemblyLoader);
                         modelCounter++;
                     }
                     catch (Exception ex)

@@ -16,12 +16,21 @@ namespace AssetStudioCLI
         public AssetsManager assetsManager = new AssetsManager();
         public List<AssetItem> parsedAssetsList = new List<AssetItem>();
         private static Dictionary<AssetStudio.Object, string> containers = new Dictionary<AssetStudio.Object, string>();
+        private static AssemblyLoader assemblyLoader = new AssemblyLoader();
         private readonly CLIOptions options;
 
-        public Studio(CLIOptions cliOptions) 
+        public Studio(CLIOptions cliOptions)
         {
             Progress.Default = new Progress<int>(ShowCurProgressValue);
             options = cliOptions;
+            if (options.o_assemblyPath.Value != "")
+            {
+                assemblyLoader.Load(options.o_assemblyPath.Value);
+            }
+            else
+            {
+                assemblyLoader.Loaded = true;
+            }
         }
 
         private void ShowCurProgressValue(int value)
@@ -308,14 +317,14 @@ namespace AssetStudioCLI
                             break;
                         case WorkMode.Dump:
                             Logger.Debug($"{options.o_workMode}: {asset.Type} : {asset.Container} : {asset.Text}");
-                            if (ExportDumpFile(asset, exportPath, options))
+                            if (ExportDumpFile(asset, exportPath, assemblyLoader))
                             {
                                 exportedCount++;
                             }
                             break;
                         case WorkMode.Export:
                             Logger.Debug($"{options.o_workMode}: {asset.Type} : {asset.Container} : {asset.Text}");
-                            if (ExportConvertFile(asset, exportPath, options))
+                            if (ExportConvertFile(asset, exportPath, options, assemblyLoader))
                             {
                                 exportedCount++;
                             }
@@ -438,7 +447,7 @@ namespace AssetStudioCLI
                     container = Path.HasExtension(container) ? container.Replace(Path.GetExtension(container), "") : container;
                     var destPath = Path.Combine(baseDestPath, container) + Path.DirectorySeparatorChar;
 
-                    ExtractLive2D(assets, destPath, modelName);
+                    ExtractLive2D(assets, destPath, modelName, assemblyLoader);
                     modelCounter++;
                 }
                 catch (Exception ex)

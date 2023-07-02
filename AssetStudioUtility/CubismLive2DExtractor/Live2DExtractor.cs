@@ -18,7 +18,7 @@ namespace CubismLive2DExtractor
 {
     public static class Live2DExtractor
     {
-        public static void ExtractLive2D(IGrouping<string, AssetStudio.Object> assets, string destPath, string modelName)
+        public static void ExtractLive2D(IGrouping<string, AssetStudio.Object> assets, string destPath, string modelName, AssemblyLoader assemblyLoader)
         {            
             var destTexturePath = Path.Combine(destPath, "textures") + Path.DirectorySeparatorChar;
             var destMotionPath = Path.Combine(destPath, "motions") + Path.DirectorySeparatorChar;
@@ -63,7 +63,7 @@ namespace CubismLive2DExtractor
             {
                 try
                 {
-                    var buff = ParsePhysics(physics);
+                    var buff = ParsePhysics(physics, assemblyLoader);
                     File.WriteAllText($"{destPath}{modelName}.physics3.json", buff);
                 }
                 catch (Exception e)
@@ -227,7 +227,15 @@ namespace CubismLive2DExtractor
                 var expressionName = fullName.Replace(".exp3", "");
                 var expressionObj = monoBehaviour.ToType();
                 if (expressionObj == null)
-                    continue;
+                {
+                    var m_Type = monoBehaviour.ConvertToTypeTree(assemblyLoader);
+                    expressionObj = monoBehaviour.ToType(m_Type);
+                    if (expressionObj == null)
+                    {
+                        Logger.Warning($"Expression \"{expressionName}\" is not readable.");
+                        continue;
+                    }
+                }
                 var expression = JsonConvert.DeserializeObject<CubismExpression3Json>(JsonConvert.SerializeObject(expressionObj));
 
                 expressions.Add(new JObject
@@ -311,11 +319,18 @@ namespace CubismLive2DExtractor
             File.WriteAllText($"{destPath}{modelName}.model3.json", JsonConvert.SerializeObject(model3, Formatting.Indented));
         }
 
-        private static string ParsePhysics(MonoBehaviour physics)
+        private static string ParsePhysics(MonoBehaviour physics, AssemblyLoader assemblyLoader)
         {
             var physicsObj = physics.ToType();
             if (physicsObj == null)
-                throw new Exception("MonoBehaviour is not readable.");
+            {
+                var m_Type = physics.ConvertToTypeTree(assemblyLoader);
+                physicsObj = physics.ToType(m_Type);
+                if (physicsObj == null)
+                {
+                    throw new Exception("MonoBehaviour is not readable.");
+                }
+            }
             var cubismPhysicsRig = JsonConvert.DeserializeObject<CubismPhysics>(JsonConvert.SerializeObject(physicsObj))._rig;
 
             var physicsSettings = new CubismPhysics3Json.SerializablePhysicsSettings[cubismPhysicsRig.SubRigs.Length];

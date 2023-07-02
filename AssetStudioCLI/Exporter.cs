@@ -9,8 +9,6 @@ namespace AssetStudioCLI
 {
     internal static class Exporter
     {
-        public static AssemblyLoader assemblyLoader = new AssemblyLoader();
-
         public static bool ExportTexture2D(AssetItem item, string exportPath, CLIOptions options)
         {
             var m_Texture2D = (Texture2D)item.Asset;
@@ -162,7 +160,7 @@ namespace AssetStudioCLI
             return true;
         }
         
-        public static bool ExportMonoBehaviour(AssetItem item, string exportPath, CLIOptions options)
+        public static bool ExportMonoBehaviour(AssetItem item, string exportPath, AssemblyLoader assemblyLoader)
         {
             if (!TryExportFile(exportPath, item, ".json", out var exportFullPath))
                 return false;
@@ -170,14 +168,18 @@ namespace AssetStudioCLI
             var type = m_MonoBehaviour.ToType();
             if (type == null)
             {
-                var m_Type = MonoBehaviourToTypeTree(m_MonoBehaviour, options);
+                var m_Type = m_MonoBehaviour.ConvertToTypeTree(assemblyLoader);
                 type = m_MonoBehaviour.ToType(m_Type);
             }
-            var str = JsonConvert.SerializeObject(type, Formatting.Indented);
-            File.WriteAllText(exportFullPath, str);
+            if (type != null)
+            {
+                var str = JsonConvert.SerializeObject(type, Formatting.Indented);
+                File.WriteAllText(exportFullPath, str);
 
-            Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
-            return true;
+                Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+                return true;
+            }
+            return false;
         }
 
         public static bool ExportFont(AssetItem item, string exportPath)
@@ -232,14 +234,14 @@ namespace AssetStudioCLI
             return true;
         }
 
-        public static bool ExportDumpFile(AssetItem item, string exportPath, CLIOptions options)
+        public static bool ExportDumpFile(AssetItem item, string exportPath, AssemblyLoader assemblyLoader)
         {
             if (!TryExportFile(exportPath, item, ".txt", out var exportFullPath))
                 return false;
             var str = item.Asset.Dump();
             if (str == null && item.Asset is MonoBehaviour m_MonoBehaviour)
             {
-                var m_Type = MonoBehaviourToTypeTree(m_MonoBehaviour, options);
+                var m_Type = m_MonoBehaviour.ConvertToTypeTree(assemblyLoader);
                 str = m_MonoBehaviour.Dump(m_Type);
             }
             if (str != null)
@@ -367,7 +369,7 @@ namespace AssetStudioCLI
             return true;
         }
 
-        public static bool ExportConvertFile(AssetItem item, string exportPath, CLIOptions options)
+        public static bool ExportConvertFile(AssetItem item, string exportPath, CLIOptions options, AssemblyLoader assemblyLoader)
         {
             switch (item.Type)
             {
@@ -384,7 +386,7 @@ namespace AssetStudioCLI
                 case ClassIDType.TextAsset:
                     return ExportTextAsset(item, exportPath, options);
                 case ClassIDType.MonoBehaviour:
-                    return ExportMonoBehaviour(item, exportPath, options);
+                    return ExportMonoBehaviour(item, exportPath, assemblyLoader);
                 case ClassIDType.Font:
                     return ExportFont(item, exportPath);
                 case ClassIDType.Sprite:
@@ -394,23 +396,6 @@ namespace AssetStudioCLI
                 default:
                     return ExportRawFile(item, exportPath);
             }
-        }
-
-        public static TypeTree MonoBehaviourToTypeTree(MonoBehaviour m_MonoBehaviour, CLIOptions options)
-        {
-            if (!assemblyLoader.Loaded)
-            {
-                var assemblyFolder = options.o_assemblyPath.Value;
-                if (assemblyFolder != "")
-                {
-                    assemblyLoader.Load(assemblyFolder);
-                }
-                else
-                {
-                    assemblyLoader.Loaded = true;
-                }
-            }
-            return m_MonoBehaviour.ConvertToTypeTree(assemblyLoader);
         }
 
         public static string FixFileName(string str)
