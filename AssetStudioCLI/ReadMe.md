@@ -1,7 +1,7 @@
 ## AssetStudioCLI
-CLI version of AssetStudio Mod.
-- Supported asset types: `Texture2D`, `Sprite`, `TextAsset`, `MonoBehaviour`, `Font`, `Shader`, `MovieTexture`, `AudioClip`, `VideoClip`, `Mesh`
-- *There are no plans to add support for `AnimationClip`/`Animator` for now*
+CLI version of AssetStudioMod.
+- Supported asset types: `Texture2D`, `Sprite`, `TextAsset`, `MonoBehaviour`, `Font`, `Shader`, `MovieTexture`, `AudioClip`, `VideoClip`, `Mesh`.
+- *There are no plans to add support for `AnimationClip`, `Animator` for now.*
 
 ### Usage
 ```
@@ -19,11 +19,12 @@ AssetStudioCLI <input path to asset file/folder> [-m, --mode <value>]
 
 General Options:
   -m, --mode <value>            Specify working mode
-                                <Value: export(default) | exportRaw | dump | info>
+                                <Value: export(default) | exportRaw | dump | info | live2d>
                                 Export - Exports converted assets
                                 ExportRaw - Exports raw data
                                 Dump - Makes asset dumps
                                 Info - Loads file(s), shows the number of supported for export assets and exits
+                                Live2D - Exports Live2D Cubism 3 models
                                 Example: "-m info"
 
   -t, --asset-type <value(s)>   Specify asset type(s) to export
