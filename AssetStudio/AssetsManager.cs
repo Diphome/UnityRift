@@ -592,7 +592,7 @@ namespace AssetStudio
 
         private void ProcessAssets()
         {
-            Logger.Info("Process Assets...");
+            Logger.Info("Process assets...");
 
             foreach (var assetsFile in assetsFileList)
             {

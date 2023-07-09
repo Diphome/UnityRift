@@ -1300,10 +1300,15 @@ namespace AssetStudioGUI
         {
             if (InvokeRequired)
             {
-                BeginInvoke(new Action(() => { progressBar1.Value = value; }));
+                BeginInvoke(new Action(() => 
+                {
+                    progressBar1.Value = value;
+                    progressBar1.Style = ProgressBarStyle.Continuous;
+                }));
             }
             else
             {
+                progressBar1.Style = ProgressBarStyle.Continuous;
                 progressBar1.Value = value;
             }
 
@@ -1905,6 +1910,8 @@ namespace AssetStudioGUI
                 {
                     timer.Stop();
                     saveDirectoryBackup = saveFolderDialog.Folder;
+                    Progress.Reset();
+                    BeginInvoke(new Action(() => { progressBar1.Style = ProgressBarStyle.Marquee; }));
                     Studio.ExportLive2D(cubismMocs, saveFolderDialog.Folder);
                 }
             }

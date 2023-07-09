@@ -158,6 +158,10 @@ namespace AssetStudioCLI
                 }
                 parsedAssetsList.AddRange(fileAssetsList);
                 fileAssetsList.Clear();
+                if (options.o_workMode.Value != WorkMode.ExportLive2D)
+                {
+                    containers.Clear();
+                }
             }
         }
 
