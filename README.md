@@ -1,49 +1,144 @@
-# AssetStudio
-[![Build status](https://ci.appveyor.com/api/projects/status/rnu7l90422pdewx4?svg=true)](https://ci.appveyor.com/project/Perfare/assetstudio/branch/master/artifacts)
+# AssetStudioMod
 
-**None of the repo, the tool, nor the repo owner is affiliated with, or sponsored or authorized by, Unity Technologies or its affiliates.**
+[![Build status](https://ci.appveyor.com/api/projects/status/5qyai0hqs0ktyara/branch/AssetStudioMod?svg=true)](https://ci.appveyor.com/project/aelurum/assetstudiomod/branch/AssetStudioMod)
 
-AssetStudio is a tool for exploring, extracting and exporting assets and assetbundles.
+**AssetStudioMod** - modified version of Perfare's [AssetStudio](https://github.com/Perfare/AssetStudio), mainly focused on UI optimization and some functionality enhancements.
 
-## Features
-* Support version:
-  * 3.4 - 2022.1
-* Support asset types:
-  * **Texture2D** : convert to png, tga, jpeg, bmp
-  * **Sprite** : crop Texture2D to png, tga, jpeg, bmp
-  * **AudioClip** : mp3, ogg, wav, m4a, fsb. support convert FSB file to WAV(PCM)
-  * **Font** : ttf, otf
-  * **Mesh** : obj
-  * **TextAsset**
-  * **Shader**
-  * **MovieTexture**
-  * **VideoClip**
-  * **MonoBehaviour** : json
-  * **Animator** : export to FBX file with bound AnimationClip
+**Neither the repository, nor the tool, nor the author of the tool, nor the author of the modification is affiliated with, sponsored, or authorized by Unity Technologies or its affiliates.**
+
+Since the original repo has been archived, it's worth saying that you shouldn't expect support for newer versions of Unity from this fork. 
+Unfortunately, I can't continue Perfare's work and keep AssetStudio up to date.
+
+## Game specific modifications
+
+- ArknightsStudio - soon™
+
+## AssetStudio Features
+
+- Support version:
+  - 3.4 - 2022.1
+- Support asset types:
+  - **Texture2D** : convert to png, tga, jpeg, bmp, webp
+  - **Sprite** : crop Texture2D to png, tga, jpeg, bmp, webp
+  - **AudioClip** : mp3, ogg, wav, m4a, fsb. Support converting FSB file to WAV(PCM)
+  - **Font** : ttf, otf
+  - **Mesh** : obj
+  - **TextAsset**
+  - **Shader** (for Unity < 2021)
+  - **MovieTexture**
+  - **VideoClip**
+  - **MonoBehaviour** : json
+  - **Animator** : export to FBX file with bound AnimationClip
+ 
+## AssetStudioMod Features
+
+- CLI version (for Windows, Linux, Mac)
+   - `Animator` and `AnimationClip` assets are not supported in the CLI version
+- Support of sprites with alpha mask
+- Support of image export in WebP format
+- Support of Live2D Cubism 3 model export
+   - Ported from my fork of Perfare's [UnityLive2DExtractor](https://github.com/aelurum/UnityLive2DExtractor)
+   - Using the Live2D export in AssetStudio allows you to specify a Unity version and assembly folder if needed
+- Detecting bundles with UnityCN encryption
+   - Detection only. If you want to open them, please use Razmoth's [Studio](https://github.com/RazTools/Studio)
+- Some UI optimizations and bug fixes (See [CHANGELOG](https://github.com/aelurum/AssetStudio/blob/AssetStudioMod/CHANGELOG.md) for details)
+
 
 ## Requirements
 
-- AssetStudio.net472
-   - [.NET Framework 4.7.2](https://dotnet.microsoft.com/download/dotnet-framework/net472)
-- AssetStudio.net5
-   - [.NET Desktop Runtime 5.0](https://dotnet.microsoft.com/download/dotnet/5.0)
-- AssetStudio.net6
-   - [.NET Desktop Runtime 6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
+- AssetStudioMod.net472
+   - GUI/CLI - [.NET Framework 4.7.2](https://dotnet.microsoft.com/download/dotnet-framework/net472)
+- AssetStudioMod.net6
+   - GUI/CLI (Windows) - [.NET Desktop Runtime 6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
+   - CLI (Linux/Mac) - [.NET Runtime 6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
+- AssetStudioMod.net7
+   - GUI/CLI (Windows) - [.NET Desktop Runtime 7.0](https://dotnet.microsoft.com/download/dotnet/7.0)
+   - CLI (Linux/Mac) - [.NET Runtime 7.0](https://dotnet.microsoft.com/download/dotnet/7.0)
 
+## CLI Usage
 
-## Usage
+You can read CLI readme [here](https://github.com/aelurum/AssetStudio/blob/AssetStudioMod/AssetStudioCLI/ReadMe.md).
+
+### Run
+
+- Command-line: `AssetStudioModCLI <asset folder path>`
+- Command-line for Portable versions (.NET 6+): `dotnet AssetStudioModCLI.dll <asset folder path>`
+
+### Basic Samples
+
+- Show a list with a number of assets of each type available for export
+```
+AssetStudioModCLI <asset folder path> -m info
+```
+- Export assets of all supported types
+```
+AssetStudioModCLI <asset folder path>
+```
+- Export assets of specific types
+```
+AssetStudioModCLI <asset folder path> -t tex2d
+```
+```
+AssetStudioModCLI <asset folder path> -t tex2d,sprite,audio
+```
+- Export assets grouped by type
+```
+AssetStudioModCLI <asset folder path> -g type
+```
+- Export assets to a specified output folder
+```
+AssetStudioModCLI <asset folder path> -o <output folder path>
+```
+- Export Live2D Cubism models
+```
+AssetStudioModCLI <asset folder path> -m live2d
+```
+> When running in live2d mode you can only specify `-o`, `--log-level`, `--log-output`, `--export-asset-list`, `--unity-version` and `--assembly-folder` options.
+Any other options will be ignored.
+
+### Advanced Samples
+- Export image assets converted to webp format to a specified output folder
+```
+AssetStudioModCLI <asset folder path> -o <output folder path> -t sprite,tex2d --image-format webp
+```
+- Show the number of audio assets that have "voice" in their names
+```
+AssetStudioModCLI <asset folder path> -m info -t audio --filter-by-name voice
+```
+- Export audio assets that have "voice" in their names
+```
+AssetStudioModCLI <asset folder path> -t audio --filter-by-name voice
+```
+- Export audio assets that have "char" in their names **or** containers
+```
+AssetStudioModCLI <asset folder path> -t audio --filter-by-text char
+```
+- Export audio assets that have "voice" in their names **and** "char" in their containers
+```
+AssetStudioModCLI <asset folder path> -t audio --filter-by-name voice --filter-by-container char
+```
+- Export MonoBehaviour assets that require an assembly folder to read and create a log file
+```
+AssetStudioModCLI <asset folder path> -t monobehaviour --assembly-folder <assembly folder path> --log-output both
+```
+- Export assets that require to specify a Unity version
+```
+AssetStudioModCLI <asset folder path> --unity-version 2017.4.39f1
+```
+
+## GUI Usage
 
 ### Load Assets/AssetBundles
 
-Use **File-Load file** or **File-Load folder**.
+Use **File->Load file** or **File->Load folder**.
 
-When AssetStudio loads AssetBundles, it decompresses and reads it directly in memory, which may cause a large amount of memory to be used. You can use **File-Extract file** or **File-Extract folder** to extract AssetBundles to another folder, and then read.
+When AssetStudio loads AssetBundles, it decompresses and reads it directly in memory, which may cause a large amount of memory to be used. You can use **File->Extract file** or **File->Extract folder** to extract AssetBundles to another folder, and then read.
 
 ### Extract/Decompress AssetBundles
 
-Use **File-Extract file** or **File-Extract folder**.
+Use **File->Extract file** or **File->Extract folder**.
 
-### Export Assets
+### Export Assets, Live2D models
 
 use **Export** menu.
 
@@ -55,9 +150,9 @@ Export Animator from "Asset List" using the **Export** menu.
 
 #### With AnimationClip
 
-Select model from "Scene Hierarchy" then select the AnimationClip from "Asset List", using **Model-Export selected objects with AnimationClip** to export.
+Select model from "Scene Hierarchy" then select the AnimationClip from "Asset List", using **Model->Export selected objects with AnimationClip** to export.
 
-Export Animator will export bound AnimationClip or use **Ctrl** to select Animator and AnimationClip from "Asset List", using **Export-Export Animator with selected AnimationClip** to export.
+Export Animator will export bound AnimationClip or use **Ctrl** to select Animator and AnimationClip from "Asset List", using **Export->Export Animator with selected AnimationClip** to export.
 
 ### Export MonoBehaviour
 
@@ -65,7 +160,7 @@ When you select an asset of the MonoBehaviour type for the first time, AssetStud
 
 #### For Il2Cpp
 
-First, use my another program [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) to generate dummy dll, then when using AssetStudio to select the assembly directory, select the dummy dll folder.
+First, use [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) to generate dummy dll, then when using AssetStudio to select the assembly directory, select the dummy dll folder.
 
 ## Build
 

@@ -1,11 +1,11 @@
-## AssetStudioCLI
+## AssetStudioModCLI
 CLI version of AssetStudioMod.
 - Supported asset types: `Texture2D`, `Sprite`, `TextAsset`, `MonoBehaviour`, `Font`, `Shader`, `MovieTexture`, `AudioClip`, `VideoClip`, `Mesh`.
 - *There are no plans to add support for `AnimationClip`, `Animator` for now.*
 
 ### Usage
 ```
-AssetStudioCLI <input path to asset file/folder> [-m, --mode <value>]
+AssetStudioModCLI <input path to asset file/folder> [-m, --mode <value>]
                       [-t, --asset-type <value(s)>] [-g, --group-option <value>]
                       [-o, --output <path>] [-h, --help]
                       [--log-level <value>] [--log-output <value>]
@@ -16,14 +16,13 @@ AssetStudioCLI <input path to asset file/folder> [-m, --mode <value>]
                       [--unity-version <text>] [--not-restore-extension]
 
 
-
 General Options:
   -m, --mode <value>            Specify working mode
                                 <Value: export(default) | exportRaw | dump | info | live2d>
                                 Export - Exports converted assets
                                 ExportRaw - Exports raw data
                                 Dump - Makes asset dumps
-                                Info - Loads file(s), shows the number of supported for export assets and exits
+                                Info - Loads file(s), shows the number of available for export assets and exits
                                 Live2D - Exports Live2D Cubism 3 models
                                 Example: "-m info"
 
@@ -32,7 +31,7 @@ General Options:
                                 audio, video, mesh | all(default)>
                                 All - export all asset types, which are listed in the values
                                 *To specify multiple asset types, write them separated by ',' or ';' without spaces
-                                Examples: "-t sprite" or "-t all" or "-t tex2d,sprite,audio" or "-t tex2d;sprite;font"
+                                Examples: "-t sprite" or "-t tex2d,sprite,audio" or "-t tex2d;sprite;font"
 
   -g, --group-option <value>    Specify the way in which exported assets should be grouped
                                 <Value: none | type | container(default) | containerFull | filename>

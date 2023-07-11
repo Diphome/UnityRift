@@ -137,7 +137,7 @@ namespace AssetStudioCLI.Options
                     "Export - Exports converted assets\n" +
                     "ExportRaw - Exports raw data\n" +
                     "Dump - Makes asset dumps\n" +
-                    "Info - Loads file(s), shows the number of supported for export assets and exits\n" +
+                    "Info - Loads file(s), shows the number of available for export assets and exits\n" +
                     "Live2D - Exports Live2D Cubism 3 models\n" +
                     "Example: \"-m info\"\n",
                 optionHelpGroup: HelpGroups.General
@@ -151,7 +151,7 @@ namespace AssetStudioCLI.Options
                     "audio, video, mesh | all(default)>\n" +
                     "All - export all asset types, which are listed in the values\n" +
                     "*To specify multiple asset types, write them separated by ',' or ';' without spaces\n" +
-                    "Examples: \"-t sprite\" or \"-t all\" or \"-t tex2d,sprite,audio\" or \"-t tex2d;sprite;font\"\n",
+                    "Examples: \"-t sprite\" or \"-t tex2d,sprite,audio\" or \"-t tex2d;sprite;font\"\n",
                 optionHelpGroup: HelpGroups.General
             );
             o_groupAssetsBy = new GroupedOption<AssetGroupOption>
