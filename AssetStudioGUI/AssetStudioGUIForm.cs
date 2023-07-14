@@ -267,7 +267,10 @@ namespace AssetStudioGUI
             }
             allToolStripMenuItem.Checked = true;
             var log = $"Finished loading {assetsManager.assetsFileList.Count} files with {assetListView.Items.Count} exportable assets";
-            var m_ObjectsCount = assetsManager.assetsFileList.Sum(x => x.m_Objects.Count);
+            var unityVer = assetsManager.assetsFileList[0].version;
+            var m_ObjectsCount = unityVer[0] > 2020 ?
+                assetsManager.assetsFileList.Sum(x => x.m_Objects.LongCount(y => y.classID != (int)ClassIDType.Shader)) :
+                assetsManager.assetsFileList.Sum(x => x.m_Objects.Count);
             var objectsCount = assetsManager.assetsFileList.Sum(x => x.Objects.Count);
             if (m_ObjectsCount != objectsCount)
             {
