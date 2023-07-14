@@ -163,6 +163,26 @@ namespace AssetStudioCLI
                     containers.Clear();
                 }
             }
+            var log = $"Finished loading {assetsManager.assetsFileList.Count} files with {parsedAssetsList.Count} exportable assets";
+            var unityVer = assetsManager.assetsFileList[0].version;
+            long m_ObjectsCount;
+            if (unityVer[0] > 2020)
+            {
+                m_ObjectsCount = assetsManager.assetsFileList.Sum(x => x.m_Objects.LongCount(y =>
+                    y.classID != (int)ClassIDType.Shader
+                    && options.o_exportAssetTypes.Value.Any(k => (int)k == y.classID))
+                );
+            }
+            else
+            {
+                m_ObjectsCount = assetsManager.assetsFileList.Sum(x => x.m_Objects.LongCount(y => options.o_exportAssetTypes.Value.Any(k => (int)k == y.classID)));
+            }
+            var objectsCount = assetsManager.assetsFileList.Sum(x => x.Objects.LongCount(y => options.o_exportAssetTypes.Value.Any(k => k == y.type)));
+            if (m_ObjectsCount != objectsCount)
+            {
+                log += $" and {m_ObjectsCount - objectsCount} assets failed to read";
+            }
+            Logger.Info(log);
         }
 
         public void ShowExportableAssetsInfo()
