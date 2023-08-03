@@ -1,9 +1,9 @@
 ﻿using AssetStudio;
+using AssetStudioCLI.Options;
 using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using AssetStudioCLI.Options;
 
 namespace AssetStudioCLI
 {
@@ -21,16 +21,16 @@ namespace AssetStudioCLI
         public string LogName;
         public string LogPath;
 
-        public CLILogger(CLIOptions options)
+        public CLILogger()
         {
-            logOutput = options.o_logOutput.Value;
-            logMinLevel = options.o_logLevel.Value;
+            logOutput = CLIOptions.o_logOutput.Value;
+            logMinLevel = CLIOptions.o_logLevel.Value;
             LogName = $"AssetStudioCLI_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log";
             LogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogName);
 
             var ver = typeof(Program).Assembly.GetName().Version;
             LogToFile(LoggerEvent.Verbose, $"---AssetStudioCLI v{ver} | Logger launched---\n" +
-                                           $"CMD Args: {string.Join(" ", options.cliArgs)}");
+                                           $"CMD Args: {string.Join(" ", CLIOptions.cliArgs)}");
         }
 
         private static string ColorLogLevel(LoggerEvent logLevel)

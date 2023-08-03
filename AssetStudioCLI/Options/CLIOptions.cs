@@ -57,57 +57,83 @@ namespace AssetStudioCLI.Options
 
     internal class GroupedOption<T> : Option<T>
     {
-        public GroupedOption(T optionDefaultValue, string optionName, string optionDescription, HelpGroups optionHelpGroup, bool isFlag = false) : base(optionDefaultValue, optionName, optionDescription, optionHelpGroup, isFlag)
+        internal GroupedOption(T optionDefaultValue, string optionName, string optionDescription, HelpGroups optionHelpGroup, bool isFlag = false) : base(optionDefaultValue, optionName, optionDescription, optionHelpGroup, isFlag)
         {
-            CLIOptions.OptionGrouping(optionName, optionDescription, optionHelpGroup, isFlag);
+            CLIOptions._OptionGrouping(optionName, optionDescription, optionHelpGroup, isFlag);
         }
     }
 
-    internal class CLIOptions
+    internal static class CLIOptions
     {
-        public bool isParsed;
-        public bool showHelp;
-        public string[] cliArgs;
-        public string inputPath;
-        public FilterBy filterBy;
+        public static bool isParsed;
+        public static bool showHelp;
+        public static string[] cliArgs;
+        public static string inputPath;
+        public static FilterBy filterBy;
         private static Dictionary<string, string> optionsDict;
         private static Dictionary<string, string> flagsDict;
         private static Dictionary<HelpGroups, Dictionary<string, string>> optionGroups;
-        private List<ClassIDType> supportedAssetTypes;
+        private static List<ClassIDType> supportedAssetTypes;
         //general
-        public Option<WorkMode> o_workMode;
-        public Option<List<ClassIDType>> o_exportAssetTypes;
-        public Option<AssetGroupOption> o_groupAssetsBy;
-        public Option<string> o_outputFolder;
-        public Option<bool> o_displayHelp;
+        public static Option<WorkMode> o_workMode;
+        public static Option<List<ClassIDType>> o_exportAssetTypes;
+        public static Option<AssetGroupOption> o_groupAssetsBy;
+        public static Option<string> o_outputFolder;
+        public static Option<bool> o_displayHelp;
         //logger
-        public Option<LoggerEvent> o_logLevel;
-        public Option<LogOutputMode> o_logOutput;
+        public static Option<LoggerEvent> o_logLevel;
+        public static Option<LogOutputMode> o_logOutput;
         //convert
-        public bool convertTexture;
-        public Option<ImageFormat> o_imageFormat;
-        public Option<AudioFormat> o_audioFormat;
+        public static bool convertTexture;
+        public static Option<ImageFormat> o_imageFormat;
+        public static Option<AudioFormat> o_audioFormat;
         //advanced
-        public Option<ExportListType> o_exportAssetList;
-        public Option<List<string>> o_filterByName;
-        public Option<List<string>> o_filterByContainer;
-        public Option<List<string>> o_filterByPathID;
-        public Option<List<string>> o_filterByText;
-        public Option<string> o_assemblyPath;
-        public Option<string> o_unityVersion;
-        public Option<bool> f_notRestoreExtensionName;
+        public static Option<ExportListType> o_exportAssetList;
+        public static Option<List<string>> o_filterByName;
+        public static Option<List<string>> o_filterByContainer;
+        public static Option<List<string>> o_filterByPathID;
+        public static Option<List<string>> o_filterByText;
+        public static Option<string> o_assemblyPath;
+        public static Option<string> o_unityVersion;
+        public static Option<bool> f_notRestoreExtensionName;
 
-        public CLIOptions(string[] args)
+        static CLIOptions()
         {
-            cliArgs = args;
             InitOptions();
-            ParseArgs(args);
         }
 
-        private void InitOptions()
+        internal static void _OptionGrouping(string name, string desc, HelpGroups group, bool isFlag)  //TODO
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return;
+            }
+
+            var optionDict = new Dictionary<string, string>() { { name, desc } };
+            if (!optionGroups.ContainsKey(group))
+            {
+                optionGroups.Add(group, optionDict);
+            }
+            else
+            {
+                optionGroups[group].Add(name, desc);
+            }
+
+            if (isFlag)
+            {
+                flagsDict.Add(name, desc);
+            }
+            else
+            {
+                optionsDict.Add(name, desc);
+            }
+        }
+
+        private static void InitOptions()
         {
             isParsed = false;
             showHelp = false;
+            cliArgs = null;
             inputPath = "";
             filterBy = FilterBy.None;
             optionsDict = new Dictionary<string, string>();
@@ -303,35 +329,10 @@ namespace AssetStudioCLI.Options
             #endregion
         }
 
-        internal static void OptionGrouping(string name, string desc, HelpGroups group, bool isFlag)
+        public static void ParseArgs(string[] args)
         {
-            if (string.IsNullOrEmpty(name))
-            {
-                return;
-            }
+            cliArgs = args;
 
-            var optionDict = new Dictionary<string, string>() { { name, desc } };
-            if (!optionGroups.ContainsKey(group))
-            {
-                optionGroups.Add(group, optionDict);
-            }
-            else
-            {
-                optionGroups[group].Add(name, desc);
-            }
-
-            if (isFlag)
-            {
-                flagsDict.Add(name, desc);
-            }
-            else
-            {
-                optionsDict.Add(name, desc);
-            }
-        }
-
-        private void ParseArgs(string[] args)
-        {
             var brightYellow = CLIAnsiColors.BrightYellow;
             var brightRed = CLIAnsiColors.BrightRed;
 
@@ -658,6 +659,7 @@ namespace AssetStudioCLI.Options
                             if (Directory.Exists(value))
                             {
                                 o_assemblyPath.Value = value;
+                                Studio.assemblyLoader.Load(value);
                             }
                             else
                             {
@@ -703,8 +705,13 @@ namespace AssetStudioCLI.Options
                     return;
                 }
             }
-            isParsed = true;
             #endregion
+
+            if (!Studio.assemblyLoader.Loaded)
+            {
+                Studio.assemblyLoader.Loaded = true;
+            }
+            isParsed = true;
         }
 
         private static string[] ValueSplitter(string value)
@@ -713,7 +720,7 @@ namespace AssetStudioCLI.Options
             return value.Split(separator);
         }
 
-        private bool TryShowOptionDescription(string option, Dictionary<string, string> descDict)
+        private static bool TryShowOptionDescription(string option, Dictionary<string, string> descDict)
         {
             var optionDesc = descDict.Where(x => x.Key.Contains(option));
             if (optionDesc.Any())
@@ -728,7 +735,7 @@ namespace AssetStudioCLI.Options
             return false;
         }
 
-        public void ShowHelp(bool showUsageOnly = false)
+        public static void ShowHelp(bool showUsageOnly = false)
         {
             const int indent = 22;
             var helpMessage = new StringBuilder();
@@ -766,7 +773,7 @@ namespace AssetStudioCLI.Options
             }
         }
 
-        private string ShowCurrentFilter()
+        private static string ShowCurrentFilter()
         {
             switch (filterBy)
             {
@@ -785,7 +792,7 @@ namespace AssetStudioCLI.Options
             }
         }
 
-        public void ShowCurrentOptions()
+        public static void ShowCurrentOptions()
         {
             var sb = new StringBuilder();
             sb.AppendLine("[Current Options]");

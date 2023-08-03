@@ -9,12 +9,12 @@ namespace AssetStudioCLI
 {
     internal static class Exporter
     {
-        public static bool ExportTexture2D(AssetItem item, string exportPath, CLIOptions options)
+        public static bool ExportTexture2D(AssetItem item, string exportPath)
         {
             var m_Texture2D = (Texture2D)item.Asset;
-            if (options.convertTexture)
+            if (CLIOptions.convertTexture)
             {
-                var type = options.o_imageFormat.Value;
+                var type = CLIOptions.o_imageFormat.Value;
                 if (!TryExportFile(exportPath, item, "." + type.ToString().ToLower(), out var exportFullPath))
                     return false;
                 var image = m_Texture2D.ConvertToImage(flip: true);
@@ -43,7 +43,7 @@ namespace AssetStudioCLI
             }
         }
 
-        public static bool ExportAudioClip(AssetItem item, string exportPath, CLIOptions options)
+        public static bool ExportAudioClip(AssetItem item, string exportPath)
         {
             string exportFullPath;
             var m_AudioClip = (AudioClip)item.Asset;
@@ -54,7 +54,7 @@ namespace AssetStudioCLI
                 return false;
             }
             var converter = new AudioClipConverter(m_AudioClip);
-            if (options.o_audioFormat.Value != AudioFormat.None && converter.IsSupport)
+            if (CLIOptions.o_audioFormat.Value != AudioFormat.None && converter.IsSupport)
             {
                 if (!TryExportFile(exportPath, item, ".wav", out exportFullPath))
                     return false;
@@ -132,12 +132,12 @@ namespace AssetStudioCLI
             return true;
         }
         
-        public static bool ExportTextAsset(AssetItem item, string exportPath, CLIOptions options)
+        public static bool ExportTextAsset(AssetItem item, string exportPath)
         {
             var m_TextAsset = (TextAsset)item.Asset;
             var extension = ".txt";
             var assetExtension = Path.GetExtension(m_TextAsset.m_Name);
-            if (!options.f_notRestoreExtensionName.Value)
+            if (!CLIOptions.f_notRestoreExtensionName.Value)
             {
                 if (!string.IsNullOrEmpty(assetExtension))
                 {
@@ -160,7 +160,7 @@ namespace AssetStudioCLI
             return true;
         }
         
-        public static bool ExportMonoBehaviour(AssetItem item, string exportPath, AssemblyLoader assemblyLoader)
+        public static bool ExportMonoBehaviour(AssetItem item, string exportPath)
         {
             if (!TryExportFile(exportPath, item, ".json", out var exportFullPath))
                 return false;
@@ -168,7 +168,7 @@ namespace AssetStudioCLI
             var type = m_MonoBehaviour.ToType();
             if (type == null)
             {
-                var m_Type = m_MonoBehaviour.ConvertToTypeTree(assemblyLoader);
+                var m_Type = m_MonoBehaviour.ConvertToTypeTree(Studio.assemblyLoader);
                 type = m_MonoBehaviour.ToType(m_Type);
             }
             if (type != null)
@@ -202,9 +202,9 @@ namespace AssetStudioCLI
             return false;
         }
 
-        public static bool ExportSprite(AssetItem item, string exportPath, CLIOptions options)
+        public static bool ExportSprite(AssetItem item, string exportPath)
         {
-            var type = options.o_imageFormat.Value;
+            var type = CLIOptions.o_imageFormat.Value;
             var alphaMask = SpriteMaskMode.On;
             if (!TryExportFile(exportPath, item, "." + type.ToString().ToLower(), out var exportFullPath))
                 return false;
@@ -234,14 +234,14 @@ namespace AssetStudioCLI
             return true;
         }
 
-        public static bool ExportDumpFile(AssetItem item, string exportPath, AssemblyLoader assemblyLoader)
+        public static bool ExportDumpFile(AssetItem item, string exportPath)
         {
             if (!TryExportFile(exportPath, item, ".txt", out var exportFullPath))
                 return false;
             var str = item.Asset.Dump();
             if (str == null && item.Asset is MonoBehaviour m_MonoBehaviour)
             {
-                var m_Type = m_MonoBehaviour.ConvertToTypeTree(assemblyLoader);
+                var m_Type = m_MonoBehaviour.ConvertToTypeTree(Studio.assemblyLoader);
                 str = m_MonoBehaviour.Dump(m_Type);
             }
             if (str != null)
@@ -369,14 +369,14 @@ namespace AssetStudioCLI
             return true;
         }
 
-        public static bool ExportConvertFile(AssetItem item, string exportPath, CLIOptions options, AssemblyLoader assemblyLoader)
+        public static bool ExportConvertFile(AssetItem item, string exportPath)
         {
             switch (item.Type)
             {
                 case ClassIDType.Texture2D:
-                    return ExportTexture2D(item, exportPath, options);
+                    return ExportTexture2D(item, exportPath);
                 case ClassIDType.AudioClip:
-                    return ExportAudioClip(item, exportPath, options);
+                    return ExportAudioClip(item, exportPath);
                 case ClassIDType.VideoClip:
                     return ExportVideoClip(item, exportPath);
                 case ClassIDType.MovieTexture:
@@ -384,13 +384,13 @@ namespace AssetStudioCLI
                 case ClassIDType.Shader:
                     return ExportShader(item, exportPath);
                 case ClassIDType.TextAsset:
-                    return ExportTextAsset(item, exportPath, options);
+                    return ExportTextAsset(item, exportPath);
                 case ClassIDType.MonoBehaviour:
-                    return ExportMonoBehaviour(item, exportPath, assemblyLoader);
+                    return ExportMonoBehaviour(item, exportPath);
                 case ClassIDType.Font:
                     return ExportFont(item, exportPath);
                 case ClassIDType.Sprite:
-                    return ExportSprite(item, exportPath, options);
+                    return ExportSprite(item, exportPath);
                 case ClassIDType.Mesh:
                     return ExportMesh(item, exportPath);
                 default:

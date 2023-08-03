@@ -8,52 +8,51 @@ namespace AssetStudioCLI
     {
         public static void Main(string[] args)
         {
-            var options = new CLIOptions(args);
-            if (options.isParsed)
+            CLIOptions.ParseArgs(args);
+            if (CLIOptions.isParsed)
             {
-                CLIRun(options);
+                CLIRun();
             }
-            else if (options.showHelp)
+            else if (CLIOptions.showHelp)
             {
-                options.ShowHelp();
+                CLIOptions.ShowHelp();
             }
             else
             {
                 Console.WriteLine();
-                options.ShowHelp(showUsageOnly: true);
+                CLIOptions.ShowHelp(showUsageOnly: true);
             }
         }
 
-        private static void CLIRun(CLIOptions options)
+        private static void CLIRun()
         {
-            var cliLogger = new CLILogger(options);
+            var cliLogger = new CLILogger();
             Logger.Default = cliLogger;
-            var studio = new Studio(options);
-            options.ShowCurrentOptions();
+            CLIOptions.ShowCurrentOptions();
 
             try
             {
-                if (studio.LoadAssets())
+                if (Studio.LoadAssets())
                 {
-                    studio.ParseAssets();
-                    if (options.filterBy != FilterBy.None && options.o_workMode.Value != WorkMode.ExportLive2D)
+                    Studio.ParseAssets();
+                    if (CLIOptions.filterBy != FilterBy.None && CLIOptions.o_workMode.Value != WorkMode.ExportLive2D)
                     {
-                        studio.FilterAssets();
+                        Studio.FilterAssets();
                     }
-                    if (options.o_exportAssetList.Value != ExportListType.None)
+                    if (CLIOptions.o_exportAssetList.Value != ExportListType.None)
                     {
-                        studio.ExportAssetList();
+                        Studio.ExportAssetList();
                     }
-                    switch (options.o_workMode.Value)
+                    switch (CLIOptions.o_workMode.Value)
                     {
                         case WorkMode.Info:
-                            studio.ShowExportableAssetsInfo();
+                            Studio.ShowExportableAssetsInfo();
                             break;
                         case WorkMode.ExportLive2D:
-                            studio.ExportLive2D();
+                            Studio.ExportLive2D();
                             break;
                         default:
-                            studio.ExportAssets();
+                            Studio.ExportAssets();
                             break;
                     }
                 }
