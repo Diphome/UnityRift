@@ -502,10 +502,10 @@ namespace AssetStudioGUI
             switch (e.TabPageIndex)
             {
                 case 0:
-                    treeSearch.Select();
+                    sceneTreeView.Select();
                     break;
                 case 1:
-                    listSearch.Select();
+                    assetListView.Select();
                     break;
             }
         }
@@ -1812,10 +1812,11 @@ namespace AssetStudioGUI
             logger.ShowErrorMessage = toolStripMenuItem15.Checked;
         }
 
-        private void sceneTreeView_MouseClick(object sender, MouseEventArgs e)
+        private void sceneTreeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            if (e.Button == MouseButtons.Right && sceneTreeView.Nodes.Count > 0)
+            if (e.Button == MouseButtons.Right)
             {
+                sceneTreeView.SelectedNode = e.Node;
                 contextMenuStrip2.Show(sceneTreeView, e.Location.X, e.Location.Y);
             }
         }
@@ -1921,6 +1922,77 @@ namespace AssetStudioGUI
             else
             {
                 Logger.Info("No exportable assets loaded");
+            }
+        }
+
+        private void selectRelatedAsset(object sender, EventArgs e)
+        {
+            var selectedItem = (ToolStripMenuItem)sender;
+            var index = int.Parse(selectedItem.Name.Split('_')[0]);
+
+            assetListView.SelectedIndices.Clear();
+            tabControl1.SelectedTab = tabPage2;
+            var assetItem = assetListView.Items[index];
+            assetItem.Selected = true;
+            assetItem.EnsureVisible();
+        }
+
+        private void selectAllRelatedAssets(object sender, EventArgs e)
+        {
+            var selectedNode = sceneTreeView.SelectedNode;
+            var relatedAssets = visibleAssets.FindAll(x => x.TreeNode == selectedNode);
+            if (relatedAssets.Count > 0)
+            {
+                assetListView.SelectedIndices.Clear();
+                tabControl1.SelectedTab = tabPage2;
+                foreach (var asset in relatedAssets)
+                {
+                    var assetItem = assetListView.Items[assetListView.Items.IndexOf(asset)];
+                    assetItem.Selected = true;
+                }
+                assetListView.Items[assetListView.Items.IndexOf(relatedAssets[0])].EnsureVisible();
+            }
+        }
+
+        private void showRelatedAssetsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var selectedNode = sceneTreeView.SelectedNode;
+            var relatedAssets = visibleAssets.FindAll(x => x.TreeNode == selectedNode);
+            if (relatedAssets.Count == 0)
+            {
+                StatusStripUpdate("No related assets were found among the visible assets.");
+            }
+        }
+
+        private void contextMenuStrip2_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            var selectedNode = sceneTreeView.SelectedNode;
+            var relatedAssets = visibleAssets.FindAll(x => x.TreeNode == selectedNode);
+            showRelatedAssetsToolStripMenuItem.DropDownItems.Clear();
+            if (relatedAssets.Count > 1)
+            {
+                var assetItem = new ToolStripMenuItem
+                {
+                    CheckOnClick = false,
+                    Name = "selectAllRelatedAssetsToolStripMenuItem",
+                    Size = new Size(180, 22),
+                    Text = "Select all"
+                };
+                assetItem.Click += selectAllRelatedAssets;
+                showRelatedAssetsToolStripMenuItem.DropDownItems.Add(assetItem);
+            }
+            foreach (var asset in relatedAssets)
+            {
+                var index = assetListView.Items.IndexOf(asset);
+                var assetItem = new ToolStripMenuItem
+                {
+                    CheckOnClick = false,
+                    Name = $"{index}_{asset.TypeString}",
+                    Size = new Size(180, 22),
+                    Text = $"({asset.TypeString}) {asset.Text}"
+                };
+                assetItem.Click += selectRelatedAsset;
+                showRelatedAssetsToolStripMenuItem.DropDownItems.Add(assetItem);
             }
         }
 

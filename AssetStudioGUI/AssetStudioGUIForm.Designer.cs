@@ -125,6 +125,8 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.showRelatedAssetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.selectAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearSelectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
@@ -526,7 +528,7 @@
             this.allToolStripMenuItem.CheckOnClick = true;
             this.allToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.allToolStripMenuItem.Name = "allToolStripMenuItem";
-            this.allToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.allToolStripMenuItem.Size = new System.Drawing.Size(88, 22);
             this.allToolStripMenuItem.Text = "All";
             this.allToolStripMenuItem.Click += new System.EventHandler(this.typeToolStripMenuItem_Click);
             // 
@@ -620,7 +622,7 @@
             this.sceneTreeView.Size = new System.Drawing.Size(472, 587);
             this.sceneTreeView.TabIndex = 1;
             this.sceneTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.sceneTreeView_AfterCheck);
-            this.sceneTreeView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.sceneTreeView_MouseClick);
+            this.sceneTreeView.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.sceneTreeView_NodeMouseClick);
             // 
             // treeSearch
             // 
@@ -629,7 +631,7 @@
             this.treeSearch.Location = new System.Drawing.Point(0, 0);
             this.treeSearch.Name = "treeSearch";
             this.treeSearch.Size = new System.Drawing.Size(472, 20);
-            this.treeSearch.TabIndex = 0;
+            this.treeSearch.TabIndex = 2;
             this.treeSearch.Text = " Search ";
             this.treeSearch.TextChanged += new System.EventHandler(this.treeSearch_TextChanged);
             this.treeSearch.Enter += new System.EventHandler(this.treeSearch_Enter);
@@ -1115,13 +1117,28 @@
             // contextMenuStrip2
             // 
             this.contextMenuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.showRelatedAssetsToolStripMenuItem,
+            this.toolStripSeparator7,
             this.selectAllToolStripMenuItem,
             this.clearSelectionToolStripMenuItem,
             this.toolStripSeparator5,
             this.expandAllToolStripMenuItem,
             this.collapseAllToolStripMenuItem});
             this.contextMenuStrip2.Name = "contextMenuStrip2";
-            this.contextMenuStrip2.Size = new System.Drawing.Size(152, 98);
+            this.contextMenuStrip2.Size = new System.Drawing.Size(152, 126);
+            this.contextMenuStrip2.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip2_Opening);
+            // 
+            // showRelatedAssetsToolStripMenuItem
+            // 
+            this.showRelatedAssetsToolStripMenuItem.Name = "showRelatedAssetsToolStripMenuItem";
+            this.showRelatedAssetsToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.showRelatedAssetsToolStripMenuItem.Text = "Related assets";
+            this.showRelatedAssetsToolStripMenuItem.Click += new System.EventHandler(this.showRelatedAssetsToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator7
+            // 
+            this.toolStripSeparator7.Name = "toolStripSeparator7";
+            this.toolStripSeparator7.Size = new System.Drawing.Size(148, 6);
             // 
             // selectAllToolStripMenuItem
             // 
@@ -1286,7 +1303,6 @@
         private System.Windows.Forms.TextBox treeSearch;
         private System.Windows.Forms.ToolStripMenuItem loadFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadFolderToolStripMenuItem;
-        private System.Windows.Forms.ListView assetListView;
         private System.Windows.Forms.ColumnHeader columnHeaderName;
         private System.Windows.Forms.ColumnHeader columnHeaderSize;
         private System.Windows.Forms.ColumnHeader columnHeaderType;
@@ -1386,6 +1402,9 @@
         private System.Windows.Forms.RichTextBox listSearch;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
         private System.Windows.Forms.ToolStripMenuItem allLive2DModelsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showRelatedAssetsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
+        private System.Windows.Forms.ListView assetListView;
     }
 }
 
