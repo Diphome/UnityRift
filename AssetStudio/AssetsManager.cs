@@ -12,7 +12,7 @@ namespace AssetStudio
     {
         public string SpecifyUnityVersion;
         public List<SerializedFile> assetsFileList = new List<SerializedFile>();
-        private List<ClassIDType> filteredAssetTypesList = new List<ClassIDType>();
+        private HashSet<ClassIDType> filteredAssetTypesList = new HashSet<ClassIDType>();
 
         internal Dictionary<string, int> assetsFileIndexCache = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         internal Dictionary<string, BinaryReader> resourceFileReaders = new Dictionary<string, BinaryReader>(StringComparer.OrdinalIgnoreCase);
@@ -22,35 +22,32 @@ namespace AssetStudio
         private HashSet<string> noexistFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private HashSet<string> assetsFileListHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        public void SetAssetFilter(ClassIDType classIDType)
+        public void SetAssetFilter(params ClassIDType[] classIDTypes)
         {
             if (filteredAssetTypesList.Count == 0)
             {
-                filteredAssetTypesList.AddRange(new List<ClassIDType>
+                filteredAssetTypesList.UnionWith(new HashSet<ClassIDType>
                 {
                     ClassIDType.AssetBundle,
                     ClassIDType.ResourceManager,
                 });
             }
 
-            if (classIDType == ClassIDType.MonoBehaviour)
+            if (classIDTypes.Contains(ClassIDType.MonoBehaviour))
             {
-                filteredAssetTypesList.AddRange(new List<ClassIDType>
-                {
-                    ClassIDType.MonoScript,
-                    ClassIDType.MonoBehaviour
-                });
+                filteredAssetTypesList.Add(ClassIDType.MonoScript);
             }
-            else
+            if (classIDTypes.Contains(ClassIDType.Sprite))
             {
-                filteredAssetTypesList.Add(classIDType);
+                filteredAssetTypesList.Add(ClassIDType.Texture2D);
             }
+            
+            filteredAssetTypesList.UnionWith(classIDTypes);
         }
 
         public void SetAssetFilter(List<ClassIDType> classIDTypeList)
         {
-            foreach (ClassIDType classIDType in classIDTypeList)
-                SetAssetFilter(classIDType);
+            SetAssetFilter(classIDTypeList.ToArray());
         }
 
         public void LoadFilesAndFolders(params string[] path)
