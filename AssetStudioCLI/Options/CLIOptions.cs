@@ -55,14 +55,6 @@ namespace AssetStudioCLI.Options
         NameAndContainer,
     }
 
-    internal class GroupedOption<T> : Option<T>
-    {
-        internal GroupedOption(T optionDefaultValue, string optionName, string optionDescription, HelpGroups optionHelpGroup, bool isFlag = false) : base(optionDefaultValue, optionName, optionDescription, optionHelpGroup, isFlag)
-        {
-            CLIOptions._OptionGrouping(optionName, optionDescription, optionHelpGroup, isFlag);
-        }
-    }
-
     internal static class CLIOptions
     {
         public static bool isParsed;
@@ -99,10 +91,11 @@ namespace AssetStudioCLI.Options
 
         static CLIOptions()
         {
+            OptionExtensions.OptionGrouping = OptionGrouping;
             InitOptions();
         }
 
-        internal static void _OptionGrouping(string name, string desc, HelpGroups group, bool isFlag)  //TODO
+        private static void OptionGrouping(string name, string desc, HelpGroups group, bool isFlag)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -828,7 +821,7 @@ namespace AssetStudioCLI.Options
                     sb.AppendLine(ShowCurrentFilter());
                     sb.AppendLine($"# Assebmly Path: \"{o_assemblyPath}\"");
                     sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
-                    sb.AppendLine($"# Restore TextAsset extension: {!f_notRestoreExtensionName.Value}");
+                    sb.AppendLine($"# Restore TextAsset Extension: {!f_notRestoreExtensionName.Value}");
                     break;
             }
             sb.AppendLine("======");
