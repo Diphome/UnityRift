@@ -17,6 +17,30 @@ namespace AssetStudioCLI
                 var type = CLIOptions.o_imageFormat.Value;
                 if (!TryExportFile(exportPath, item, "." + type.ToString().ToLower(), out var exportFullPath))
                     return false;
+
+                if (CLIOptions.o_logLevel.Value <= LoggerEvent.Debug)
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine($"Converting \"{m_Texture2D.m_Name}\" to {type}..");
+                    sb.AppendLine($"Width: {m_Texture2D.m_Width}");
+                    sb.AppendLine($"Height: {m_Texture2D.m_Height}");
+                    sb.AppendLine($"Format: {m_Texture2D.m_TextureFormat}");
+                    switch (m_Texture2D.m_TextureSettings.m_FilterMode)
+                    {
+                        case 0: sb.AppendLine("Filter Mode: Point "); break;
+                        case 1: sb.AppendLine("Filter Mode: Bilinear "); break;
+                        case 2: sb.AppendLine("Filter Mode: Trilinear "); break;
+                    }
+                    sb.AppendLine($"Anisotropic level: {m_Texture2D.m_TextureSettings.m_Aniso}");
+                    sb.AppendLine($"Mip map bias: {m_Texture2D.m_TextureSettings.m_MipBias}");
+                    switch (m_Texture2D.m_TextureSettings.m_WrapMode)
+                    {
+                        case 0: sb.AppendLine($"Wrap mode: Repeat"); break;
+                        case 1: sb.AppendLine($"Wrap mode: Clamp"); break;
+                    }
+                    Logger.Debug(sb.ToString());
+                }
+
                 var image = m_Texture2D.ConvertToImage(flip: true);
                 if (image == null)
                 {
@@ -29,7 +53,7 @@ namespace AssetStudioCLI
                     {
                         image.WriteToStream(file, type);
                     }
-                    Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+                    Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
                     return true;
                 }
             }
@@ -38,7 +62,7 @@ namespace AssetStudioCLI
                 if (!TryExportFile(exportPath, item, ".tex", out var exportFullPath))
                     return false;
                 File.WriteAllBytes(exportFullPath, m_Texture2D.image_data.GetData());
-                Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+                Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
                 return true;
             }
         }
@@ -59,13 +83,16 @@ namespace AssetStudioCLI
                 if (!TryExportFile(exportPath, item, ".wav", out exportFullPath))
                     return false;
 
-                var sb = new StringBuilder();
-                sb.AppendLine($"Converting \"{m_AudioClip.m_Name}\" to wav..");
-                sb.AppendLine(m_AudioClip.version[0] < 5 ? $"AudioClip type: {m_AudioClip.m_Type}" : $"AudioClip compression format: {m_AudioClip.m_CompressionFormat}");
-                sb.AppendLine($"AudioClip channel count: {m_AudioClip.m_Channels}");
-                sb.AppendLine($"AudioClip sample rate: {m_AudioClip.m_Frequency}");
-                sb.AppendLine($"AudioClip bit depth: {m_AudioClip.m_BitsPerSample}");
-                Logger.Debug(sb.ToString());
+                if (CLIOptions.o_logLevel.Value <= LoggerEvent.Debug)
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine($"Converting \"{m_AudioClip.m_Name}\" to wav..");
+                    sb.AppendLine(m_AudioClip.version[0] < 5 ? $"AudioClip type: {m_AudioClip.m_Type}" : $"AudioClip compression format: {m_AudioClip.m_CompressionFormat}");
+                    sb.AppendLine($"AudioClip channel count: {m_AudioClip.m_Channels}");
+                    sb.AppendLine($"AudioClip sample rate: {m_AudioClip.m_Frequency}");
+                    sb.AppendLine($"AudioClip bit depth: {m_AudioClip.m_BitsPerSample}");
+                    Logger.Debug(sb.ToString());
+                }
 
                 var buffer = converter.ConvertToWav(m_AudioData);
                 if (buffer == null)
@@ -82,7 +109,7 @@ namespace AssetStudioCLI
                 File.WriteAllBytes(exportFullPath, m_AudioData);
             }
 
-            Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+            Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
             return true;
         }
 
@@ -94,16 +121,19 @@ namespace AssetStudioCLI
                 if (!TryExportFile(exportPath, item, Path.GetExtension(m_VideoClip.m_OriginalPath), out var exportFullPath))
                     return false;
 
-                var sb = new StringBuilder();
-                sb.AppendLine($"VideoClip format: {m_VideoClip.m_Format}");
-                sb.AppendLine($"VideoClip width: {m_VideoClip.Width}");
-                sb.AppendLine($"VideoClip height: {m_VideoClip.Height}");
-                sb.AppendLine($"VideoClip frame rate: {m_VideoClip.m_FrameRate}");
-                sb.AppendLine($"VideoClip split alpha: {m_VideoClip.m_HasSplitAlpha}");
-                Logger.Debug(sb.ToString());
+                if (CLIOptions.o_logLevel.Value <= LoggerEvent.Debug)
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine($"VideoClip format: {m_VideoClip.m_Format}");
+                    sb.AppendLine($"VideoClip width: {m_VideoClip.Width}");
+                    sb.AppendLine($"VideoClip height: {m_VideoClip.Height}");
+                    sb.AppendLine($"VideoClip frame rate: {m_VideoClip.m_FrameRate:.0##}");
+                    sb.AppendLine($"VideoClip split alpha: {m_VideoClip.m_HasSplitAlpha}");
+                    Logger.Debug(sb.ToString());
+                }
 
                 m_VideoClip.m_VideoData.WriteData(exportFullPath);
-                Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+                Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
                 return true;
             }
             return false;
@@ -116,7 +146,7 @@ namespace AssetStudioCLI
                 return false;
             File.WriteAllBytes(exportFullPath, m_MovieTexture.m_MovieData);
 
-            Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+            Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
             return true;
         }
 
@@ -128,7 +158,7 @@ namespace AssetStudioCLI
             var str = m_Shader.Convert();
             File.WriteAllText(exportFullPath, str);
 
-            Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+            Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
             return true;
         }
         
@@ -156,7 +186,7 @@ namespace AssetStudioCLI
                 return false;
             File.WriteAllBytes(exportFullPath, m_TextAsset.m_Script);
 
-            Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+            Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
             return true;
         }
         
@@ -176,7 +206,7 @@ namespace AssetStudioCLI
                 var str = JsonConvert.SerializeObject(type, Formatting.Indented);
                 File.WriteAllText(exportFullPath, str);
 
-                Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+                Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
                 return true;
             }
             return false;
@@ -196,7 +226,7 @@ namespace AssetStudioCLI
                     return false;
                 File.WriteAllBytes(exportFullPath, m_Font.m_FontData);
 
-                Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+                Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
                 return true;
             }
             return false;
@@ -217,7 +247,7 @@ namespace AssetStudioCLI
                     {
                         image.WriteToStream(file, type);
                     }
-                    Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+                    Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
                     return true;
                 }
             }
@@ -230,7 +260,7 @@ namespace AssetStudioCLI
                 return false;
             File.WriteAllBytes(exportFullPath, item.Asset.GetRawData());
 
-            Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+            Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
             return true;
         }
 
@@ -247,7 +277,7 @@ namespace AssetStudioCLI
             if (str != null)
             {
                 File.WriteAllText(exportFullPath, str);
-                Logger.Debug($"{item.TypeString}: \"{item.Text}\" saved to \"{exportFullPath}\"");
+                Logger.Debug($"{item.TypeString} \"{item.Text}\" saved to \"{exportFullPath}\"");
                 return true;
             }
             return false;
@@ -365,7 +395,7 @@ namespace AssetStudioCLI
 
             sb.Replace("NaN", "0");
             File.WriteAllText(exportFullPath, sb.ToString());
-            Logger.Debug($"{item.TypeString}: \"{item.Text}\" exported to \"{exportFullPath}\"");
+            Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
             return true;
         }
 

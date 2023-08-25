@@ -25,11 +25,12 @@ namespace AssetStudioCLI
         {
             logOutput = CLIOptions.o_logOutput.Value;
             logMinLevel = CLIOptions.o_logLevel.Value;
-            LogName = $"AssetStudioCLI_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log";
+            var appAssembly = typeof(Program).Assembly.GetName();
+            LogName = $"{appAssembly.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log";
             LogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogName);
+            var arch = Environment.Is64BitProcess ? "x64" : "x32";
 
-            var ver = typeof(Program).Assembly.GetName().Version;
-            LogToFile(LoggerEvent.Verbose, $"---AssetStudioCLI v{ver} | Logger launched---\n" +
+            LogToFile(LoggerEvent.Verbose, $"---{appAssembly.Name} v{appAssembly.Version} [{arch}] | Logger launched---\n" +
                                            $"CMD Args: {string.Join(" ", CLIOptions.cliArgs)}");
         }
 

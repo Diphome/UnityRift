@@ -761,7 +761,8 @@ namespace AssetStudioCLI.Options
             }
             else
             {
-                Console.WriteLine($"# {appAssembly.Name}\n# Based on AssetStudioMod v{appAssembly.Version}\n");
+                var arch = Environment.Is64BitProcess ? "x64" : "x32";
+                Console.WriteLine($"# {appAssembly.Name} [{arch}]\n# Based on AssetStudioMod v{appAssembly.Version}\n");
                 Console.WriteLine($"{usage}\n\n{helpMessage}");
             }
         }

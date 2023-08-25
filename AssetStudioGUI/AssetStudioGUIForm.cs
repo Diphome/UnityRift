@@ -1,6 +1,5 @@
 ﻿using AssetStudio;
 using Newtonsoft.Json;
-using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
@@ -21,6 +20,7 @@ using static AssetStudioGUI.Studio;
 using Font = AssetStudio.Font;
 using Microsoft.WindowsAPICodePack.Taskbar;
 #if NET472
+using OpenTK;
 using Vector3 = OpenTK.Vector3;
 using Vector4 = OpenTK.Vector4;
 #else
@@ -785,42 +785,42 @@ namespace AssetStudioGUI
                 return;
             try
             {
-                switch (assetItem.Asset)
+                switch (assetItem.Type)
                 {
-                    case Texture2D m_Texture2D:
-                        PreviewTexture2D(assetItem, m_Texture2D);
+                    case ClassIDType.Texture2D:
+                        PreviewTexture2D(assetItem, assetItem.Asset as Texture2D);
                         break;
-                    case AudioClip m_AudioClip:
-                        PreviewAudioClip(assetItem, m_AudioClip);
+                    case ClassIDType.AudioClip:
+                        PreviewAudioClip(assetItem, assetItem.Asset as AudioClip);
                         break;
-                    case Shader m_Shader:
-                        PreviewShader(m_Shader);
+                    case ClassIDType.Shader:
+                        PreviewShader(assetItem.Asset as Shader);
                         break;
-                    case TextAsset m_TextAsset:
-                        PreviewTextAsset(m_TextAsset);
+                    case ClassIDType.TextAsset:
+                        PreviewTextAsset(assetItem.Asset as TextAsset);
                         break;
-                    case MonoBehaviour m_MonoBehaviour:
-                        PreviewMonoBehaviour(m_MonoBehaviour);
+                    case ClassIDType.MonoBehaviour:
+                        PreviewMonoBehaviour(assetItem.Asset as MonoBehaviour);
                         break;
-                    case Font m_Font:
-                        PreviewFont(m_Font);
+                    case ClassIDType.Font:
+                        PreviewFont(assetItem.Asset as Font);
                         break;
-                    case Mesh m_Mesh:
-                        PreviewMesh(m_Mesh);
+                    case ClassIDType.Mesh:
+                        PreviewMesh(assetItem.Asset as Mesh);
                         break;
-                    case VideoClip m_VideoClip:
-                        PreviewVideoClip(assetItem, m_VideoClip);
+                    case ClassIDType.VideoClip:
+                        PreviewVideoClip(assetItem, assetItem.Asset as VideoClip);
                         break;
-                    case MovieTexture _:
+                    case ClassIDType.MovieTexture:
                         StatusStripUpdate("Only supported export.");
                         break;
-                    case Sprite m_Sprite:
-                        PreviewSprite(assetItem, m_Sprite);
+                    case ClassIDType.Sprite:
+                        PreviewSprite(assetItem, assetItem.Asset as Sprite);
                         break;
-                    case Animator _:
+                    case ClassIDType.Animator:
                         StatusStripUpdate("Can be exported to FBX file.");
                         break;
-                    case AnimationClip _:
+                    case ClassIDType.AnimationClip:
                         StatusStripUpdate("Can be exported with Animator or Objects");
                         break;
                     default:
@@ -1029,7 +1029,7 @@ namespace AssetStudioGUI
             var sb = new StringBuilder();
             sb.AppendLine($"Width: {m_VideoClip.Width}");
             sb.AppendLine($"Height: {m_VideoClip.Height}");
-            sb.AppendLine($"Frame rate: {m_VideoClip.m_FrameRate}");
+            sb.AppendLine($"Frame rate: {m_VideoClip.m_FrameRate:.0##}");
             sb.AppendLine($"Split alpha: {m_VideoClip.m_HasSplitAlpha}");
             assetItem.InfoText = sb.ToString();
             

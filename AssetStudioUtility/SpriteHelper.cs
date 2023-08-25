@@ -34,7 +34,11 @@ namespace AssetStudio
             {
                 if (m_Sprite.m_RD.texture.TryGet(out var m_Texture2D) && m_Sprite.m_RD.alphaTexture.TryGet(out var m_AlphaTexture2D) && spriteMaskMode != SpriteMaskMode.Off)
                 {
-                    var tex = CutImage(m_Sprite, m_Texture2D, m_Sprite.m_RD.textureRect, m_Sprite.m_RD.textureRectOffset, m_Sprite.m_RD.downscaleMultiplier, m_Sprite.m_RD.settingsRaw);
+                    Image<Bgra32> tex = null;
+                    if (spriteMaskMode != SpriteMaskMode.MaskOnly)
+                    {
+                        tex = CutImage(m_Sprite, m_Texture2D, m_Sprite.m_RD.textureRect, m_Sprite.m_RD.textureRectOffset, m_Sprite.m_RD.downscaleMultiplier, m_Sprite.m_RD.settingsRaw);
+                    }
                     var alphaTex = CutImage(m_Sprite, m_AlphaTexture2D, m_Sprite.m_RD.textureRect, m_Sprite.m_RD.textureRectOffset, m_Sprite.m_RD.downscaleMultiplier, m_Sprite.m_RD.settingsRaw);
 
                     switch (spriteMaskMode)
@@ -46,7 +50,6 @@ namespace AssetStudio
                             tex.ApplyRGBMask(alphaTex);
                             return tex;
                         case SpriteMaskMode.MaskOnly:
-                            tex.Dispose();
                             return alphaTex;
                     }
                 }
@@ -89,92 +92,90 @@ namespace AssetStudio
             var originalImage = m_Texture2D.ConvertToImage(false);
             if (originalImage != null)
             {
-                using (originalImage)
+                if (downscaleMultiplier > 0f && downscaleMultiplier != 1f)
                 {
-                    if (downscaleMultiplier > 0f && downscaleMultiplier != 1f)
-                    {
-                        var width = (int)(m_Texture2D.m_Width / downscaleMultiplier);
-                        var height = (int)(m_Texture2D.m_Height / downscaleMultiplier);
-                        originalImage.Mutate(x => x.Resize(width, height));
-                    }
-                    var rectX = (int)Math.Floor(textureRect.x);
-                    var rectY = (int)Math.Floor(textureRect.y);
-                    var rectRight = (int)Math.Ceiling(textureRect.x + textureRect.width);
-                    var rectBottom = (int)Math.Ceiling(textureRect.y + textureRect.height);
-                    rectRight = Math.Min(rectRight, originalImage.Width);
-                    rectBottom = Math.Min(rectBottom, originalImage.Height);
-                    var rect = new Rectangle(rectX, rectY, rectRight - rectX, rectBottom - rectY);
-                    var spriteImage = originalImage.Clone(x => x.Crop(rect));
-                    if (settingsRaw.packed == 1)
-                    {
-                        //RotateAndFlip
-                        switch (settingsRaw.packingRotation)
-                        {
-                            case SpritePackingRotation.FlipHorizontal:
-                                spriteImage.Mutate(x => x.Flip(FlipMode.Horizontal));
-                                break;
-                            case SpritePackingRotation.FlipVertical:
-                                spriteImage.Mutate(x => x.Flip(FlipMode.Vertical));
-                                break;
-                            case SpritePackingRotation.Rotate180:
-                                spriteImage.Mutate(x => x.Rotate(180));
-                                break;
-                            case SpritePackingRotation.Rotate90:
-                                spriteImage.Mutate(x => x.Rotate(270));
-                                break;
-                        }
-                    }
-
-                    //Tight
-                    if (settingsRaw.packingMode == SpritePackingMode.Tight)
-                    {
-                        try
-                        {
-                            var matrix = Matrix3x2.CreateScale(m_Sprite.m_PixelsToUnits);
-                            matrix *= Matrix3x2.CreateTranslation(m_Sprite.m_Rect.width * m_Sprite.m_Pivot.X - textureRectOffset.X, m_Sprite.m_Rect.height * m_Sprite.m_Pivot.Y - textureRectOffset.Y);
-                            var triangles = GetTriangles(m_Sprite.m_RD);
-                            var points = triangles.Select(x => x.Select(y => new PointF(y.X, y.Y)).ToArray());
-                            var pathBuilder = new PathBuilder(matrix);
-                            foreach (var p in points)
-                            {
-                                pathBuilder.AddLines(p);
-                                pathBuilder.CloseFigure();
-                            }
-                            var path = pathBuilder.Build();
-                            var options = new DrawingOptions
-                            {
-                                GraphicsOptions = new GraphicsOptions
-                                {
-                                    Antialias = false,
-                                    AlphaCompositionMode = PixelAlphaCompositionMode.DestOut
-                                }
-                            };
-                            if (triangles.Length < 1024)
-                            {
-                                var rectP = new RectangularPolygon(0, 0, rect.Width, rect.Height);
-                                spriteImage.Mutate(x => x.Fill(options, SixLabors.ImageSharp.Color.Red, rectP.Clip(path)));
-                                spriteImage.Mutate(x => x.Flip(FlipMode.Vertical));
-                                return spriteImage;
-                            }
-                            using (var mask = new Image<Bgra32>(rect.Width, rect.Height, SixLabors.ImageSharp.Color.Black))
-                            {
-                                mask.Mutate(x => x.Fill(options, SixLabors.ImageSharp.Color.Red, path));
-                                var brush = new ImageBrush(mask);
-                                spriteImage.Mutate(x => x.Fill(options, brush));
-                                spriteImage.Mutate(x => x.Flip(FlipMode.Vertical));
-                                return spriteImage;
-                            }
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
-                    }
-
-                    //Rectangle
-                    spriteImage.Mutate(x => x.Flip(FlipMode.Vertical));
-                    return spriteImage;
+                    var width = (int)(m_Texture2D.m_Width / downscaleMultiplier);
+                    var height = (int)(m_Texture2D.m_Height / downscaleMultiplier);
+                    originalImage.Mutate(x => x.Resize(width, height));
                 }
+                var rectX = (int)Math.Floor(textureRect.x);
+                var rectY = (int)Math.Floor(textureRect.y);
+                var rectRight = (int)Math.Ceiling(textureRect.x + textureRect.width);
+                var rectBottom = (int)Math.Ceiling(textureRect.y + textureRect.height);
+                rectRight = Math.Min(rectRight, originalImage.Width);
+                rectBottom = Math.Min(rectBottom, originalImage.Height);
+                var rect = new Rectangle(rectX, rectY, rectRight - rectX, rectBottom - rectY);
+                var spriteImage = originalImage.Clone(x => x.Crop(rect));
+                originalImage.Dispose();
+                if (settingsRaw.packed == 1)
+                {
+                    //RotateAndFlip
+                    switch (settingsRaw.packingRotation)
+                    {
+                        case SpritePackingRotation.FlipHorizontal:
+                            spriteImage.Mutate(x => x.Flip(FlipMode.Horizontal));
+                            break;
+                        case SpritePackingRotation.FlipVertical:
+                            spriteImage.Mutate(x => x.Flip(FlipMode.Vertical));
+                            break;
+                        case SpritePackingRotation.Rotate180:
+                            spriteImage.Mutate(x => x.Rotate(180));
+                            break;
+                        case SpritePackingRotation.Rotate90:
+                            spriteImage.Mutate(x => x.Rotate(270));
+                            break;
+                    }
+                }
+
+                //Tight
+                if (settingsRaw.packingMode == SpritePackingMode.Tight)
+                {
+                    try
+                    {
+                        var matrix = Matrix3x2.CreateScale(m_Sprite.m_PixelsToUnits);
+                        matrix *= Matrix3x2.CreateTranslation(m_Sprite.m_Rect.width * m_Sprite.m_Pivot.X - textureRectOffset.X, m_Sprite.m_Rect.height * m_Sprite.m_Pivot.Y - textureRectOffset.Y);
+                        var triangles = GetTriangles(m_Sprite.m_RD);
+                        var points = triangles.Select(x => x.Select(y => new PointF(y.X, y.Y)).ToArray());
+                        var pathBuilder = new PathBuilder(matrix);
+                        foreach (var p in points)
+                        {
+                            pathBuilder.AddLines(p);
+                            pathBuilder.CloseFigure();
+                        }
+                        var path = pathBuilder.Build();
+                        var options = new DrawingOptions
+                        {
+                            GraphicsOptions = new GraphicsOptions
+                            {
+                                Antialias = false,
+                                AlphaCompositionMode = PixelAlphaCompositionMode.DestOut
+                            }
+                        };
+                        if (triangles.Length < 1024)
+                        {
+                            var rectP = new RectangularPolygon(0, 0, rect.Width, rect.Height);
+                            spriteImage.Mutate(x => x.Fill(options, SixLabors.ImageSharp.Color.Red, rectP.Clip(path)));
+                            spriteImage.Mutate(x => x.Flip(FlipMode.Vertical));
+                            return spriteImage;
+                        }
+                        using (var mask = new Image<Bgra32>(rect.Width, rect.Height, SixLabors.ImageSharp.Color.Black))
+                        {
+                            mask.Mutate(x => x.Fill(options, SixLabors.ImageSharp.Color.Red, path));
+                            var brush = new ImageBrush(mask);
+                            spriteImage.Mutate(x => x.Fill(options, brush));
+                            spriteImage.Mutate(x => x.Flip(FlipMode.Vertical));
+                            return spriteImage;
+                        }
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                }
+
+                //Rectangle
+                spriteImage.Mutate(x => x.Flip(FlipMode.Vertical));
+                return spriteImage;
             }
 
             return null;
