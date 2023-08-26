@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.17.2.0 [27-08-2023]
+- [GUI] Improved Scene Hierarchy tab
+   - Added "Related assets" item to the context menu (https://github.com/aelurum/AssetStudio/issues/7)
+- [GUI] Added app.manifest for net472 build 
+   - Added long paths support (win10 v1607+)
+   - Fixed blurring at high DPI with scaling
+- [CLI] Fixed sprite export in sprite only mode
+- Made some changes to motion list for live2d models
+   - Motion list is now sorted
+   - Motions divided into groups (each motion is a separate group)
+   - Motion names are used as group names
+- Updated dependencies
+- Made some other minor fixes and improvements
+
 ## v0.17.1.0 [12-07-2023]
 #### Breaking Changes
 - With the drag&drop fix (https://github.com/aelurum/AssetStudio/commit/2f8f57c1a63893c0b0d2a55349d6cb6d8f8a5a3b), functions `LoadFiles` and `LoadFolder` in AssetsManager have been replaced with one universal function `LoadFilesAndFolders`
