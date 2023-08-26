@@ -99,7 +99,7 @@ namespace CubismLive2DExtractor
             }
 
             //motion
-            var motions = new JArray();
+            var motions = new SortedDictionary<string, JArray>();
 
             if (gameObjects.Count > 0)
             {
@@ -205,11 +205,8 @@ namespace CubismLive2DExtractor
                     }
                     json.Meta.TotalUserDataSize = totalUserDataSize;
 
-                    motions.Add(new JObject
-                    {
-                        { "Name", animation.Name },
-                        { "File", $"motions/{animation.Name}.motion3.json" }
-                    });
+                    var motionPath = new JObject(new JProperty("File", $"motions/{animation.Name}.motion3.json"));
+                    motions.Add(animation.Name, new JArray(motionPath));
                     File.WriteAllText($"{destMotionPath}{animation.Name}.motion3.json", JsonConvert.SerializeObject(json, Formatting.Indented, new MyJsonConverter()));
                 }
             }
@@ -307,7 +304,7 @@ namespace CubismLive2DExtractor
                 {
                     Moc = $"{modelName}.moc3",
                     Textures = textures.ToArray(),
-                    Motions = new JObject { { "", motions } },
+                    Motions = JObject.FromObject(motions),
                     Expressions = expressions,
                 },
                 Groups = groups.ToArray()
