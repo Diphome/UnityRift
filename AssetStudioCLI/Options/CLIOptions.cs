@@ -12,6 +12,7 @@ namespace AssetStudioCLI.Options
         General,
         Convert,
         Logger,
+        FBX,
         Advanced,
     }
 
@@ -22,6 +23,7 @@ namespace AssetStudioCLI.Options
         Dump,
         Info,
         ExportLive2D,
+        SplitObjects,
     }
 
     internal enum AssetGroupOption
@@ -79,6 +81,9 @@ namespace AssetStudioCLI.Options
         public static bool convertTexture;
         public static Option<ImageFormat> o_imageFormat;
         public static Option<AudioFormat> o_audioFormat;
+        //fbx
+        public static Option<float> o_fbxScaleFactor;
+        public static Option<int> o_fbxBoneSize;
         //advanced
         public static Option<ExportListType> o_exportAssetList;
         public static Option<List<string>> o_filterByName;
@@ -158,6 +163,7 @@ namespace AssetStudioCLI.Options
                     "Dump - Makes asset dumps\n" +
                     "Info - Loads file(s), shows the number of available for export assets and exits\n" +
                     "Live2D - Exports Live2D Cubism 3 models\n" +
+                    "SplitObjects - Export split objects\n" +
                     "Example: \"-m info\"\n",
                 optionHelpGroup: HelpGroups.General
             );
@@ -246,6 +252,27 @@ namespace AssetStudioCLI.Options
                     "None - Do not convert audios and export them in their own format\n" +
                     "Example: \"--audio-format wav\"",
                 optionHelpGroup: HelpGroups.Convert
+            );
+            #endregion
+
+            #region Init FBX Options
+            o_fbxScaleFactor = new GroupedOption<float>
+            (
+                optionDefaultValue: 1f,
+                optionName: "--fbx-scale-factor <value>",
+                optionDescription: "Specify the FBX Scale Factor\n" +
+                    "<Value: float number from 0 to 100 (default=1)\n" +
+                    "Example: \"--fbx-scale-factor 50\"\n",
+                optionHelpGroup: HelpGroups.FBX
+            );
+            o_fbxBoneSize = new GroupedOption<int>
+            (
+                optionDefaultValue: 10,
+                optionName: "--fbx-bone-size <value>",
+                optionDescription: "Specify the FBX Bone Size\n" +
+                    "<Value: integer number from 0 to 100 (default=10)\n" +
+                    "Example: \"--fbx-bone-size 10\"",
+                optionHelpGroup: HelpGroups.FBX
             );
             #endregion
 
@@ -419,6 +446,19 @@ namespace AssetStudioCLI.Options
                                         ClassIDType.MonoBehaviour,
                                         ClassIDType.Texture2D,
                                         ClassIDType.Transform,
+                                    };
+                                    break;
+                                case "splitobjects":
+                                    o_workMode.Value = WorkMode.SplitObjects;
+                                    o_exportAssetTypes.Value = new List<ClassIDType>()
+                                    {
+                                        ClassIDType.GameObject,
+                                        ClassIDType.Texture2D,
+                                        ClassIDType.Material,
+                                        ClassIDType.Transform,
+                                        ClassIDType.Mesh,
+                                        ClassIDType.MeshRenderer,
+                                        ClassIDType.MeshFilter
                                     };
                                     break;
                                 default:
@@ -615,6 +655,32 @@ namespace AssetStudioCLI.Options
                                     Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported audio format: [{value.Color(brightRed)}].\n");
                                     Console.WriteLine(o_audioFormat.Description);
                                     return;
+                            }
+                            break;
+                        case "--fbx-scale-factor":
+                            var isFloat = float.TryParse(value, out float floatValue);
+                            if (isFloat && floatValue >= 0 && floatValue <= 100)
+                            {
+                                o_fbxScaleFactor.Value = floatValue;
+                            }
+                            else
+                            {
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported scale factor value: [{value.Color(brightRed)}].\n");
+                                Console.WriteLine(o_fbxScaleFactor.Description);
+                                return;
+                            }
+                            break;
+                        case "--fbx-bone-size":
+                            var isInt = int.TryParse(value, out int intValue);
+                            if (isInt && intValue >= 0 && intValue <= 100)
+                            {
+                                o_fbxBoneSize.Value = intValue;
+                            }
+                            else
+                            {
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported bone size value: [{value.Color(brightRed)}].\n");
+                                Console.WriteLine(o_fbxBoneSize.Description);
+                                return;
                             }
                             break;
                         case "--export-asset-list":

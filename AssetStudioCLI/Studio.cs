@@ -15,6 +15,7 @@ namespace AssetStudioCLI
     {
         public static AssetsManager assetsManager = new AssetsManager();
         public static List<AssetItem> parsedAssetsList = new List<AssetItem>();
+        public static List<BaseNode> gameObjectTree = new List<BaseNode>();
         public static AssemblyLoader assemblyLoader = new AssemblyLoader();
         private static Dictionary<AssetStudio.Object, string> containers = new Dictionary<AssetStudio.Object, string>();
 
@@ -53,6 +54,7 @@ namespace AssetStudioCLI
 
             var fileAssetsList = new List<AssetItem>();
             var objectCount = assetsManager.assetsFileList.Sum(x => x.Objects.Count);
+            var objectAssetItemDic = new Dictionary<AssetStudio.Object, AssetItem>(objectCount);
 
             Progress.Reset();
             var i = 0;
@@ -61,6 +63,7 @@ namespace AssetStudioCLI
                 foreach (var asset in assetsFile.Objects)
                 {
                     var assetItem = new AssetItem(asset);
+                    objectAssetItemDic.Add(asset, assetItem);
                     assetItem.UniqueID = "_#" + i;
                     var isExportable = false;
                     switch (asset)
@@ -89,6 +92,9 @@ namespace AssetStudioCLI
                                     containers[obj] = m_Container.Key;
                                 }
                             }
+                            break;
+                        case GameObject m_GameObject:
+                            assetItem.Text = m_GameObject.m_Name;
                             break;
                         case Texture2D m_Texture2D:
                             if (!string.IsNullOrEmpty(m_Texture2D.m_StreamData?.path))
@@ -153,6 +159,12 @@ namespace AssetStudioCLI
                     containers.Clear();
                 }
             }
+
+            if (CLIOptions.o_workMode.Value == WorkMode.SplitObjects)
+            {
+                BuildTreeStructure(objectAssetItemDic);
+            }
+
             var log = $"Finished loading {assetsManager.assetsFileList.Count} files with {parsedAssetsList.Count} exportable assets";
             var unityVer = assetsManager.assetsFileList[0].version;
             long m_ObjectsCount;
@@ -173,6 +185,93 @@ namespace AssetStudioCLI
                 log += $" and {m_ObjectsCount - objectsCount} assets failed to read";
             }
             Logger.Info(log);
+        }
+
+        public static void BuildTreeStructure(Dictionary<AssetStudio.Object, AssetItem> objectAssetItemDic)
+        {
+            foreach (var entry in containers)
+            {
+                objectAssetItemDic[entry.Key].Container = entry.Value;
+            }
+
+            containers.Clear();
+
+            Logger.Info("Building tree structure...");
+
+            var treeNodeDictionary = new Dictionary<GameObject, GameObjectNode>();
+            var assetsFileCount = assetsManager.assetsFileList.Count;
+            int j = 0;
+            Progress.Reset();
+            foreach (var assetsFile in assetsManager.assetsFileList)
+            {
+                var fileNode = new BaseNode();
+
+                foreach (var obj in assetsFile.Objects)
+                {
+                    if (obj is GameObject m_GameObject)
+                    {
+                        if (!treeNodeDictionary.TryGetValue(m_GameObject, out var currentNode))
+                        {
+                            currentNode = new GameObjectNode(m_GameObject);
+                            treeNodeDictionary.Add(m_GameObject, currentNode);
+                        }
+                        
+                        foreach (var pptr in m_GameObject.m_Components)
+                        {
+                            if (pptr.TryGet(out var m_Component))
+                            {
+                                objectAssetItemDic[m_Component].Node = currentNode;
+                                if (m_Component is MeshFilter m_MeshFilter)
+                                {
+                                    if (m_MeshFilter.m_Mesh.TryGet(out var m_Mesh))
+                                    {
+                                        objectAssetItemDic[m_Mesh].Node = currentNode;
+                                    }
+                                }
+                                else if (m_Component is SkinnedMeshRenderer m_SkinnedMeshRenderer)
+                                {
+                                    if (m_SkinnedMeshRenderer.m_Mesh.TryGet(out var m_Mesh))
+                                    {
+                                        objectAssetItemDic[m_Mesh].Node = currentNode;
+                                    }
+                                }
+                            }
+                        }
+
+                        var parentNode = fileNode;
+
+                        if (m_GameObject.m_Transform != null)
+                        {
+                            if (m_GameObject.m_Transform.m_Father.TryGet(out var m_Father))
+                            {
+                                if (m_Father.m_GameObject.TryGet(out var parentGameObject))
+                                {
+                                    if (!treeNodeDictionary.TryGetValue(parentGameObject, out var parentGameObjectNode))
+                                    {
+                                        parentGameObjectNode = new GameObjectNode(parentGameObject);
+                                        treeNodeDictionary.Add(parentGameObject, parentGameObjectNode);
+                                    }
+                                    parentNode = parentGameObjectNode;
+                                }
+                            }
+                        }
+
+                        parentNode.nodes.Add(currentNode);
+
+                    }
+                }
+
+                if (fileNode.nodes.Count > 0)
+                {
+                    gameObjectTree.Add(fileNode);
+                }
+
+                Progress.Report(++j, assetsFileCount);
+            }
+
+            treeNodeDictionary.Clear();
+
+            objectAssetItemDic.Clear();
         }
 
         public static void ShowExportableAssetsInfo()
@@ -401,6 +500,67 @@ namespace AssetStudioCLI
                    break;
             }
             Logger.Info($"Finished exporting asset list with {parsedAssetsList.Count} items.");
+        }
+
+        public static void ExportSplitObjects()
+        {
+            var savePath = CLIOptions.o_outputFolder.Value;
+            var count = parsedAssetsList.Count();
+            int k = 0;
+            Progress.Reset();
+            foreach (var node in gameObjectTree)
+            {
+                foreach(GameObjectNode j in node.nodes)
+                {
+                    var gameObjects = new List<GameObject>();
+                    CollectNode(j, gameObjects);
+
+                    if (gameObjects.All(x => x.m_SkinnedMeshRenderer == null && x.m_MeshFilter == null))
+                    {
+                        Progress.Report(++k, count);
+                        continue;
+                    }
+
+                    var filename = FixFileName(j.gameObject.m_Name);
+                    var targetPath = $"{savePath}{filename}{Path.DirectorySeparatorChar}";
+                    //重名文件处理
+                    for (int i = 1; ; i++)
+                    {
+                        if (Directory.Exists(targetPath))
+                        {
+                            targetPath = $"{savePath}{filename} ({i}){Path.DirectorySeparatorChar}";
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    Directory.CreateDirectory(targetPath);
+                    //导出FBX
+                    Logger.Info($"Exporting {filename}.fbx");
+                    try
+                    {
+                        ExportGameObject(j.gameObject, targetPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error($"Export GameObject:{j.gameObject.m_Name} error", ex);
+                    }
+
+                    Progress.Report(++k, count);
+                    Logger.Info($"Finished exporting {filename}.fbx");
+                }
+            }
+            Logger.Info("Finished");
+        }
+
+        private static void CollectNode(GameObjectNode node, List<GameObject> gameObjects)
+        {
+            gameObjects.Add(node.gameObject);
+            foreach (GameObjectNode i in node.nodes)
+            {
+                CollectNode(i, gameObjects);
+            }
         }
 
         public static void ExportLive2D()

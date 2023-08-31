@@ -24,6 +24,7 @@ General Options:
                                 Dump - Makes asset dumps
                                 Info - Loads file(s), shows the number of available for export assets and exits
                                 Live2D - Exports Live2D Cubism 3 models
+                                SplitObjects - Export split objects
                                 Example: "-m info"
 
   -t, --asset-type <value(s)>   Specify asset type(s) to export
@@ -66,6 +67,15 @@ Convert Options:
                                 <Value: none | wav(default)>
                                 None - Do not convert audios and export them in their own format
                                 Example: "--audio-format wav"
+
+FBX Options:
+  --fbx-scale-factor <value>    Specify the FBX Scale Factor
+                                <Value: float number from 0 to 100 (default=1)
+                                Example: "--fbx-scale-factor 50"
+                                
+  --fbx-bone-size <value>       Specify the FBX Bone Size
+                                <Value: integer number from 0 to 100 (default=10)
+                                Example: "--fbx-bone-size 10"
 
 Advanced Options:
   --export-asset-list <value>   Specify the format in which you want to export asset list

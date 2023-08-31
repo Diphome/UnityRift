@@ -13,6 +13,7 @@ namespace AssetStudioCLI
         public ClassIDType Type;
         public string Text;
         public string UniqueID;
+        public GameObjectNode Node;
 
         public AssetItem(Object asset)
         {
