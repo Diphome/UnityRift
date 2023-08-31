@@ -26,12 +26,16 @@
         <Message Text="Copying windows extra files for $(TargetFramework)... " Importance="high" />
         <Copy SourceFiles="$(SolutionDir)Texture2DDecoderNative\bin\Win32\$(Configuration)\Texture2DDecoderNative.dll" DestinationFolder="$(TargetDir)runtimes\win-x86\native" ContinueOnError="false" />
         <Copy SourceFiles="$(SolutionDir)Texture2DDecoderNative\bin\x64\$(Configuration)\Texture2DDecoderNative.dll" DestinationFolder="$(TargetDir)runtimes\win-x64\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(SolutionDir)AssetStudioFBXNative\bin\Win32\$(Configuration)\AssetStudioFBXNative.dll" DestinationFolder="$(TargetDir)runtimes\win-x86\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(SolutionDir)AssetStudioFBXNative\bin\x64\$(Configuration)\AssetStudioFBXNative.dll" DestinationFolder="$(TargetDir)runtimes\win-x64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\win-x86\fmod.dll" DestinationFolder="$(TargetDir)runtimes\win-x86\native" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\win-x64\fmod.dll" DestinationFolder="$(TargetDir)runtimes\win-x64\native" ContinueOnError="false" />
     </Target>
 
     <Target Name="CopyExtraFilesPortableNet" AfterTargets="AfterBuild" Condition=" '$(RuntimeIdentifier)' == '' AND '$(TargetFramework)' != 'net472' ">
         <Message Text="Copying other platforms extra files for $(TargetFramework)... " Importance="high" />
+        <Copy SourceFiles="$(TargetDir)runtimes\win-x86\native\AssetStudioFBXNative.dll" DestinationFolder="$(PublishDir)runtimes\win-x86\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(TargetDir)runtimes\win-x64\native\AssetStudioFBXNative.dll" DestinationFolder="$(PublishDir)runtimes\win-x64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\linux-x86\libfmod.so" DestinationFolder="$(TargetDir)runtimes\linux-x86\native" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\linux-x64\libfmod.so" DestinationFolder="$(TargetDir)runtimes\linux-x64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\osx-x64\libfmod.dylib" DestinationFolder="$(TargetDir)runtimes\osx-x64\native" ContinueOnError="false" />
@@ -59,17 +63,20 @@
     <Target Name="CopyExtraFilesWin86" AfterTargets="AfterBuild" Condition=" '$(RuntimeIdentifier)' == 'win-x86' ">
         <Message Text="Copying extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
         <Copy SourceFiles="$(SolutionDir)Texture2DDecoderNative\bin\Win32\$(Configuration)\Texture2DDecoderNative.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
+        <Copy SourceFiles="$(SolutionDir)AssetStudioFBXNative\bin\Win32\$(Configuration)\AssetStudioFBXNative.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\win-x86\fmod.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
     </Target>
 
     <Target Name="CopyExtraFilesWin64" AfterTargets="AfterBuild" Condition=" '$(RuntimeIdentifier)' == 'win-x64' ">
         <Message Text="Copying extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
         <Copy SourceFiles="$(SolutionDir)Texture2DDecoderNative\bin\x64\$(Configuration)\Texture2DDecoderNative.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
+        <Copy SourceFiles="$(SolutionDir)AssetStudioFBXNative\bin\x64\$(Configuration)\AssetStudioFBXNative.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\win-x64\fmod.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
     </Target>
 
     <Target Name="PublishExtraFilesWin" AfterTargets="Publish" Condition=" $(RuntimeIdentifier.Contains('win-x')) ">
         <Message Text="Publishing extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
+        <Copy SourceFiles="$(TargetDir)\AssetStudioFBXNative.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)\Texture2DDecoderNative.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)\fmod.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
     </Target>
@@ -77,21 +84,25 @@
     <Target Name="CopyExtraFilesLinux64" AfterTargets="AfterBuild" Condition=" '$(RuntimeIdentifier)' == 'linux-x64' ">
         <Message Text="Copying extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
         <Copy SourceFiles="$(ProjectDir)Libraries\linux-x64\libfmod.so" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
+        <Copy SourceFiles="$(ProjectDir)Libraries\linux-x64\libAssetStudioFBXNative.so" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
     </Target>
 
     <Target Name="PublishExtraFilesLinux64" AfterTargets="Publish" Condition=" '$(RuntimeIdentifier)' == 'linux-x64' ">
         <Message Text="Publishing extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
         <Copy SourceFiles="$(TargetDir)\libfmod.so" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
+        <Copy SourceFiles="$(TargetDir)\libAssetStudioFBXNative.so" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
     </Target>
 
     <Target Name="CopyExtraFilesMac" AfterTargets="AfterBuild" Condition=" $(RuntimeIdentifier.Contains('osx-')) ">
         <Message Text="Copying extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
         <Copy SourceFiles="$(ProjectDir)Libraries\$(RuntimeIdentifier)\libfmod.dylib" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
+        <Copy SourceFiles="$(ProjectDir)Libraries\$(RuntimeIdentifier)\libAssetStudioFBXNative.dylib" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
     </Target>
 
     <Target Name="PublishExtraFilesMac" AfterTargets="Publish" Condition=" $(RuntimeIdentifier.Contains('osx-')) ">
         <Message Text="Publishing extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
         <Copy SourceFiles="$(TargetDir)\libfmod.dylib" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
+        <Copy SourceFiles="$(TargetDir)\libAssetStudioFBXNative.dylib" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
     </Target>
 
 </Project>
