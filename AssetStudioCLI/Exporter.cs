@@ -1,6 +1,7 @@
 ﻿using AssetStudio;
 using AssetStudioCLI.Options;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -263,6 +264,34 @@ namespace AssetStudioCLI
             Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
             return true;
         }
+
+        public static void ExportGameObject(GameObject gameObject, string exportPath, List<AssetItem> animationList = null)
+        {
+            var convert = animationList != null
+                ? new ModelConverter(gameObject, CLIOptions.o_imageFormat.Value, animationList.Select(x => (AnimationClip)x.Asset).ToArray())
+                : new ModelConverter(gameObject, CLIOptions.o_imageFormat.Value);
+            exportPath = exportPath + FixFileName(gameObject.m_Name) + ".fbx";
+            ExportFbx(convert, exportPath);
+        }
+
+        private static void ExportFbx(IImported convert, string exportPath)
+        {
+            var eulerFilter = true;
+            var filterPrecision = (float)0.25f;
+            var exportAllNodes = true;
+            var exportSkins = true;
+            var exportAnimations = true;
+            var exportBlendShape = true;
+            var castToBone = false;
+            var boneSize = CLIOptions.o_fbxBoneSize.Value;
+            var exportAllUvsAsDiffuseMaps = false;
+            var scaleFactor = CLIOptions.o_fbxScaleFactor.Value;
+            var fbxVersion = 3;
+            var fbxFormat = 0;
+            ModelExporter.ExportFbx(exportPath, convert, eulerFilter, filterPrecision,
+                exportAllNodes, exportSkins, exportAnimations, exportBlendShape, castToBone, boneSize, exportAllUvsAsDiffuseMaps, scaleFactor, fbxVersion, fbxFormat == 1);
+        }
+
 
         public static bool ExportDumpFile(AssetItem item, string exportPath)
         {
