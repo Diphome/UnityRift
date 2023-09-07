@@ -878,7 +878,15 @@ namespace AssetStudioCLI.Options
                     sb.AppendLine($"# Log Level: {o_logLevel}");
                     sb.AppendLine($"# Log Output: {o_logOutput}");
                     sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
-                    sb.AppendLine($"# Assebmly Path: \"{o_assemblyPath}\"");
+                    if (o_workMode.Value == WorkMode.SplitObjects)
+                    {
+                        sb.AppendLine($"# Export Image Format: {o_imageFormat}");
+                        sb.AppendLine($"# Filter by Name(s): \"{string.Join("\", \"", o_filterByName.Value)}\"");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"# Assebmly Path: \"{o_assemblyPath}\"");
+                    }
                     sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
                     break;
                 default:

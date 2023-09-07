@@ -309,7 +309,20 @@ namespace AssetStudioCLI
             }
         }
 
-        public static void FilterAssets()
+        public static void Filter()
+        {
+            switch (CLIOptions.o_workMode.Value)
+            {
+                case WorkMode.ExportLive2D:
+                case WorkMode.SplitObjects:
+                    break;
+                default:
+                    FilterAssets();
+                    break;
+            }
+        }
+
+        private static void FilterAssets()
         {
             var assetsCount = parsedAssetsList.Count;
             var filteredAssets = new List<AssetItem>();
@@ -317,14 +330,14 @@ namespace AssetStudioCLI
             switch(CLIOptions.filterBy)
             {
                 case FilterBy.Name:
-                    filteredAssets = parsedAssetsList.FindAll(x => CLIOptions.o_filterByName.Value.Any(y => x.Text.ToString().IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0));
+                    filteredAssets = parsedAssetsList.FindAll(x => CLIOptions.o_filterByName.Value.Any(y => x.Text.IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0));
                     Logger.Info(
                         $"Found [{filteredAssets.Count}/{assetsCount}] asset(s) " +
                         $"that contain {$"\"{string.Join("\", \"", CLIOptions.o_filterByName.Value)}\"".Color(Ansi.BrightYellow)} in their Names."
                     );
                     break;
                 case FilterBy.Container:
-                    filteredAssets = parsedAssetsList.FindAll(x => CLIOptions.o_filterByContainer.Value.Any(y => x.Container.ToString().IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0));
+                    filteredAssets = parsedAssetsList.FindAll(x => CLIOptions.o_filterByContainer.Value.Any(y => x.Container.IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0));
                     Logger.Info(
                         $"Found [{filteredAssets.Count}/{assetsCount}] asset(s) " +
                         $"that contain {$"\"{string.Join("\", \"", CLIOptions.o_filterByContainer.Value)}\"".Color(Ansi.BrightYellow)} in their Containers."
@@ -339,8 +352,8 @@ namespace AssetStudioCLI
                     break;
                 case FilterBy.NameOrContainer:
                     filteredAssets = parsedAssetsList.FindAll(x =>
-                        CLIOptions.o_filterByText.Value.Any(y => x.Text.ToString().IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0) ||
-                        CLIOptions.o_filterByText.Value.Any(y => x.Container.ToString().IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0)
+                        CLIOptions.o_filterByText.Value.Any(y => x.Text.IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                        CLIOptions.o_filterByText.Value.Any(y => x.Container.IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0)
                     );
                     Logger.Info(
                         $"Found [{filteredAssets.Count}/{assetsCount}] asset(s) " +
@@ -349,8 +362,8 @@ namespace AssetStudioCLI
                     break;
                 case FilterBy.NameAndContainer:
                     filteredAssets = parsedAssetsList.FindAll(x =>
-                        CLIOptions.o_filterByName.Value.Any(y => x.Text.ToString().IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0) &&
-                        CLIOptions.o_filterByContainer.Value.Any(y => x.Container.ToString().IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0)
+                        CLIOptions.o_filterByName.Value.Any(y => x.Text.IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0) &&
+                        CLIOptions.o_filterByContainer.Value.Any(y => x.Container.IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0)
                     );
                     Logger.Info(
                         $"Found [{filteredAssets.Count}/{assetsCount}] asset(s) " +
@@ -497,14 +510,25 @@ namespace AssetStudioCLI
         public static void ExportSplitObjects()
         {
             var savePath = CLIOptions.o_outputFolder.Value;
-            var count = gameObjectTree.Sum(x => x.nodes.Count);
+            var searchList = CLIOptions.o_filterByName.Value;
+            var isFiltered = CLIOptions.filterBy == FilterBy.Name;
+
+            var exportableObjects = new List<GameObjectNode>();
             var exportedCount = 0;
-            int k = 0;
+            var k = 0;
+
+            Logger.Info($"Searching for objects to export..");
             Progress.Reset();
+            var count = gameObjectTree.Sum(x => x.nodes.Count);
             foreach (var node in gameObjectTree)
             {
                 foreach (GameObjectNode j in node.nodes)
                 {
+                    if (isFiltered)
+                    {
+                        if (!searchList.Any(searchText => j.gameObject.m_Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0))
+                            continue;
+                    }
                     var gameObjects = new List<GameObject>();
                     CollectNode(j, gameObjects);
 
@@ -513,8 +537,26 @@ namespace AssetStudioCLI
                         Progress.Report(++k, count);
                         continue;
                     }
+                    exportableObjects.Add(j);
+                }
+            }
+            gameObjectTree.Clear();
+            var exportableCount = exportableObjects.Count;
+            var log = $"Found {exportableCount} exportable object(s) ";
+            if (isFiltered)
+            {
+                log += $"that contain {$"\"{string.Join("\", \"", CLIOptions.o_filterByName.Value)}\"".Color(Ansi.BrightYellow)} in their Names";
+            }
+            Logger.Info(log);
+            if (exportableCount > 0)
+            {
+                Progress.Reset();
+                k = 0;
 
-                    var filename = FixFileName(j.gameObject.m_Name);
+                foreach (var gameObjectNode in exportableObjects)
+                {
+                    var gameObject = gameObjectNode.gameObject;
+                    var filename = FixFileName(gameObject.m_Name);
                     var targetPath = $"{savePath}{filename}{Path.DirectorySeparatorChar}";
                     //重名文件处理
                     for (int i = 1; ; i++)
@@ -531,23 +573,23 @@ namespace AssetStudioCLI
                     Directory.CreateDirectory(targetPath);
                     //导出FBX
                     Logger.Info($"Exporting {filename}.fbx");
+                    Progress.Report(k, exportableCount);
                     try
                     {
-                        ExportGameObject(j.gameObject, targetPath);
-                        Logger.Debug($"{j.gameObject.type} \"{filename}\" saved to \"{targetPath}\"");
+                        ExportGameObject(gameObject, targetPath);
+                        Logger.Debug($"{gameObject.type} \"{filename}\" saved to \"{targetPath}\"");
                         exportedCount++;
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error($"Export GameObject:{j.gameObject.m_Name} error", ex);
+                        Logger.Error($"Export GameObject:{gameObject.m_Name} error", ex);
                     }
-
-                    Progress.Report(++k, count);
+                    k++;
                 }
             }
             var status = exportedCount > 0
-                ? $"Finished exporting [{exportedCount}/{gameObjectTree.Count}] object(s) to \"{CLIOptions.o_outputFolder.Value.Color(Ansi.BrightCyan)}\""
-                : "Nothing exported.";
+                ? $"Finished exporting [{exportedCount}/{exportableCount}] object(s) to \"{CLIOptions.o_outputFolder.Value.Color(Ansi.BrightCyan)}\""
+                : "Nothing exported";
             Logger.Default.Log(LoggerEvent.Info, status, ignoreLevel: true);
         }
 
