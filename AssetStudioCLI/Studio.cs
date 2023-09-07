@@ -110,14 +110,7 @@ namespace AssetStudioCLI
                             if (!string.IsNullOrEmpty(m_VideoClip.m_OriginalPath))
                                 assetItem.FullSize = asset.byteSize + m_VideoClip.m_ExternalResources.m_Size;
                             assetItem.Text = m_VideoClip.m_Name;
-                            break;
-                        case Mesh _:
-                        case MovieTexture _:
-                        case TextAsset _:
-                        case Font _:
-                        case Sprite _:
-                            assetItem.Text = ((NamedObject)asset).m_Name;
-                            break;
+                            break;                        
                         case Shader m_Shader:
                             assetItem.Text = m_Shader.m_ParsedForm?.m_Name ?? m_Shader.m_Name;
                             break;
@@ -131,8 +124,11 @@ namespace AssetStudioCLI
                                 assetItem.Text = m_MonoBehaviour.m_Name;
                             }
                             break;
+                        case NamedObject m_NamedObject:
+                            assetItem.Text = m_NamedObject.m_Name;
+                            break;
                     }
-                    if (assetItem.Text == "")
+                    if (string.IsNullOrEmpty(assetItem.Text))
                     {
                         assetItem.Text = assetItem.TypeString + assetItem.UniqueID;
                     }
