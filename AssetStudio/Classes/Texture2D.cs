@@ -91,7 +91,7 @@ namespace AssetStudio
             }
             if (version[0] > 2019 || (version[0] == 2019 && version[1] >= 3)) //2019.3 and up
             {
-                if (version[0] >= 2022 && version[1] >= 2) //2022.2 and up
+                if (version[0] > 2022 || (version[0] == 2022 && version[1] >= 2)) //2022.2 and up
                 {
                     var m_IgnoreMipmapLimit = reader.ReadBoolean();
                 }
@@ -107,7 +107,7 @@ namespace AssetStudio
                     var m_ReadAllowed = reader.ReadBoolean();
                 }
             }
-            if (version[0] == 2022 && version[1] >= 2) //2022.2 and up
+            if (version[0] > 2022 || (version[0] == 2022 && version[1] >= 2)) //2022.2 and up
             {
                 var m_MipmapLimitGroupName = reader.ReadAlignedString();
                 reader.AlignStream();
