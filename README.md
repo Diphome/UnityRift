@@ -95,6 +95,12 @@ AssetStudioModCLI <asset folder path> -m live2d
 ```
 > When running in live2d mode you can only specify `-o`, `--log-level`, `--log-output`, `--export-asset-list`, `--unity-version` and `--assembly-folder` options.
 Any other options will be ignored.
+- Export all FBX objects (similar to "Export all objects (split)" in the GUI)
+```
+AssetStudioModCLI <asset folder path> -m splitObjects
+```
+> When running in splitObjects mode you can only specify `-o`, `--log-level`, `--log-output`, `--export-asset-list`, `--image-format`, `--filter-by-name` and `--unity-version` options.
+Any other options will be ignored.
 
 ### Advanced Samples
 - Export image assets converted to webp format to a specified output folder
@@ -109,6 +115,13 @@ AssetStudioModCLI <asset folder path> -m info -t audio --filter-by-name voice
 ```
 AssetStudioModCLI <asset folder path> -t audio --filter-by-name voice
 ```
+- Export audio assets that have "music" or "voice" in their names
+```
+AssetStudioModCLI <asset folder path> -t audio --filter-by-name music,voice
+```
+```
+AssetStudioModCLI <asset folder path> -t audio --filter-by-name music --filter-by-name voice
+```
 - Export audio assets that have "char" in their names **or** containers
 ```
 AssetStudioModCLI <asset folder path> -t audio --filter-by-text char
@@ -116,6 +129,10 @@ AssetStudioModCLI <asset folder path> -t audio --filter-by-text char
 - Export audio assets that have "voice" in their names **and** "char" in their containers
 ```
 AssetStudioModCLI <asset folder path> -t audio --filter-by-name voice --filter-by-container char
+```
+- Export FBX objects that have "model" or "scene" in their names and set the scale factor to 10
+```
+AssetStudioModCLI <asset folder path> -m splitObjects --filter-by-name model,scene --fbx-scale-factor 10
 ```
 - Export MonoBehaviour assets that require an assembly folder to read and create a log file
 ```
