@@ -33,7 +33,12 @@ namespace AssetStudio
 
         public TypeDefinition GetTypeDefinition(string assemblyName, string fullName)
         {
-            if (moduleDic.TryGetValue(assemblyName, out var module))
+            moduleDic.TryGetValue(assemblyName, out var module);
+            if (module == null && !assemblyName.Contains(".dll"))
+            {
+                moduleDic.TryGetValue(assemblyName + ".dll", out module);
+            }
+            if (module != null)
             {
                 var typeDef = module.GetType(fullName);
                 if (typeDef == null && assemblyName == "UnityEngine.dll")
