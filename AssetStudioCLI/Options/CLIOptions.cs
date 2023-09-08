@@ -195,7 +195,7 @@ namespace AssetStudioCLI.Options
             );
             o_outputFolder = new GroupedOption<string>
             (
-                optionDefaultValue: "",
+                optionDefaultValue: "ASExport",
                 optionName: "-o, --output <path>",
                 optionDescription: "Specify path to the output folder\n" +
                     "If path isn't specifyed, 'ASExport' folder will be created in the program's work folder\n",
@@ -371,7 +371,6 @@ namespace AssetStudioCLI.Options
                         $"Specified file or folder was not found. The input path must be specified as the first argument.");
                     return;
                 }
-                o_outputFolder.Value = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"ASExport{Path.DirectorySeparatorChar}");
             }
             else
             {
@@ -773,6 +772,15 @@ namespace AssetStudioCLI.Options
             if (!Studio.assemblyLoader.Loaded)
             {
                 Studio.assemblyLoader.Loaded = true;
+            }
+            if (o_outputFolder.Value == o_outputFolder.DefaultValue)
+            {
+                var fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, o_outputFolder.DefaultValue + Path.DirectorySeparatorChar);
+                if (!Directory.Exists(fullPath))
+                {
+                    Directory.CreateDirectory(fullPath);
+                }
+                o_outputFolder.Value = fullPath;
             }
             isParsed = true;
         }
