@@ -33,8 +33,10 @@ namespace AssetStudioCLI
         {
             var isLoaded = false;
             assetsManager.SpecifyUnityVersion = CLIOptions.o_unityVersion.Value;
-            assetsManager.SetAssetFilter(CLIOptions.o_exportAssetTypes.Value);
-
+            if (!CLIOptions.f_loadAllAssets.Value)
+            {
+                assetsManager.SetAssetFilter(CLIOptions.o_exportAssetTypes.Value);
+            }
             assetsManager.LoadFilesAndFolders(CLIOptions.inputPath);
             if (assetsManager.assetsFileList.Count == 0)
             {
@@ -134,7 +136,7 @@ namespace AssetStudioCLI
                     }
 
                     isExportable = CLIOptions.o_exportAssetTypes.Value.Contains(asset.type);
-                    if (isExportable)
+                    if (isExportable || (CLIOptions.f_loadAllAssets.Value && CLIOptions.o_exportAssetTypes.Value == CLIOptions.o_exportAssetTypes.DefaultValue))
                     {
                         fileAssetsList.Add(assetItem);
                     }

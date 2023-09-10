@@ -13,6 +13,7 @@ namespace AssetStudioCLI.Options
         Convert,
         Logger,
         FBX,
+        Filter,
         Advanced,
     }
 
@@ -67,7 +68,8 @@ namespace AssetStudioCLI.Options
         private static Dictionary<string, string> optionsDict;
         private static Dictionary<string, string> flagsDict;
         private static Dictionary<HelpGroups, Dictionary<string, string>> optionGroups;
-        private static List<ClassIDType> supportedAssetTypes;
+        private static List<ClassIDType> exportableAssetTypes;
+        private static Dictionary<string, ClassIDType> knownAssetTypesDict;
         //general
         public static Option<WorkMode> o_workMode;
         public static Option<List<ClassIDType>> o_exportAssetTypes;
@@ -84,15 +86,17 @@ namespace AssetStudioCLI.Options
         //fbx
         public static Option<float> o_fbxScaleFactor;
         public static Option<int> o_fbxBoneSize;
-        //advanced
-        public static Option<ExportListType> o_exportAssetList;
+        //filter
         public static Option<List<string>> o_filterByName;
         public static Option<List<string>> o_filterByContainer;
         public static Option<List<string>> o_filterByPathID;
         public static Option<List<string>> o_filterByText;
+        //advanced
+        public static Option<ExportListType> o_exportAssetList;
         public static Option<string> o_assemblyPath;
         public static Option<string> o_unityVersion;
         public static Option<bool> f_notRestoreExtensionName;
+        public static Option<bool> f_loadAllAssets;
 
         static CLIOptions()
         {
@@ -137,7 +141,7 @@ namespace AssetStudioCLI.Options
             optionsDict = new Dictionary<string, string>();
             flagsDict = new Dictionary<string, string>();
             optionGroups = new Dictionary<HelpGroups, Dictionary<string, string>>();
-            supportedAssetTypes = new List<ClassIDType>
+            exportableAssetTypes = new List<ClassIDType>
             {
                 ClassIDType.Texture2D,
                 ClassIDType.Sprite,
@@ -150,6 +154,7 @@ namespace AssetStudioCLI.Options
                 ClassIDType.MovieTexture,
                 ClassIDType.Mesh,
             };
+            knownAssetTypesDict = ((ClassIDType[])Enum.GetValues(typeof(ClassIDType))).ToHashSet().ToDictionary(x => x.ToString().ToLower(), y => y);
 
             #region Init General Options
             o_workMode = new GroupedOption<WorkMode>
@@ -163,13 +168,13 @@ namespace AssetStudioCLI.Options
                     "Dump - Makes asset dumps\n" +
                     "Info - Loads file(s), shows the number of available for export assets and exits\n" +
                     "Live2D - Exports Live2D Cubism 3 models\n" +
-                    "SplitObjects - Export split objects (fbx)\n" +
+                    "SplitObjects - Exports split objects (fbx)\n" +
                     "Example: \"-m info\"\n",
                 optionHelpGroup: HelpGroups.General
             );
             o_exportAssetTypes = new GroupedOption<List<ClassIDType>>
             (
-                optionDefaultValue: supportedAssetTypes,
+                optionDefaultValue: exportableAssetTypes,
                 optionName: "-t, --asset-type <value(s)>",
                 optionDescription: "Specify asset type(s) to export\n" +
                     "<Value(s): tex2d, sprite, textAsset, monoBehaviour, font, shader, movieTexture,\n" +
@@ -276,6 +281,46 @@ namespace AssetStudioCLI.Options
             );
             #endregion
 
+            #region Init Filter Options
+            o_filterByName = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--filter-by-name <text>",
+                optionDescription: "Specify the name by which assets should be filtered\n" +
+                    "*To specify multiple names write them separated by ',' or ';' without spaces\n" +
+                    "Example: \"--filter-by-name char\" or \"--filter-by-name char,bg\"\n",
+                optionHelpGroup: HelpGroups.Filter
+            );
+            o_filterByContainer = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--filter-by-container <text>",
+                optionDescription: "Specify the container by which assets should be filtered\n" +
+                    "*To specify multiple containers write them separated by ',' or ';' without spaces\n" +
+                    "Example: \"--filter-by-container arts\" or \"--filter-by-container arts,icons\"\n",
+                optionHelpGroup: HelpGroups.Filter
+            );
+            o_filterByPathID = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--filter-by-pathid <text>",
+                optionDescription: "Specify the PathID by which assets should be filtered\n" +
+                    "*To specify multiple PathIDs write them separated by ',' or ';' without spaces\n" +
+                    "Example: \"--filter-by-pathid 7238605633795851352,-2430306240205277265\"\n",
+                optionHelpGroup: HelpGroups.Filter
+            );
+            o_filterByText = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--filter-by-text <text>",
+                optionDescription: "Specify the text by which assets should be filtered\n" +
+                    "Looks for assets that contain the specified text in their names or containers\n" +
+                    "*To specify multiple values write them separated by ',' or ';' without spaces\n" +
+                    "Example: \"--filter-by-text portrait\" or \"--filter-by-text portrait,art\"\n",
+                optionHelpGroup: HelpGroups.Filter
+            );
+            #endregion
+
             #region Init Advanced Options
             o_exportAssetList = new GroupedOption<ExportListType>
             (
@@ -287,62 +332,33 @@ namespace AssetStudioCLI.Options
                     "Example: \"--export-asset-list xml\"\n",
                 optionHelpGroup: HelpGroups.Advanced
             );
-            o_filterByName = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--filter-by-name <text>",
-                optionDescription: "Specify the name by which assets should be filtered\n" +
-                    "*To specify multiple names write them separated by ',' or ';' without spaces\n" +
-                    "Example: \"--filter-by-name char\" or \"--filter-by-name char,bg\"\n",
-                optionHelpGroup: HelpGroups.Advanced
-            );
-            o_filterByContainer = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--filter-by-container <text>",
-                optionDescription: "Specify the container by which assets should be filtered\n" +
-                    "*To specify multiple containers write them separated by ',' or ';' without spaces\n" +
-                    "Example: \"--filter-by-container arts\" or \"--filter-by-container arts,icons\"\n",
-                optionHelpGroup: HelpGroups.Advanced
-            );
-            o_filterByPathID = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--filter-by-pathid <text>",
-                optionDescription: "Specify the PathID by which assets should be filtered\n" +
-                    "*To specify multiple PathIDs write them separated by ',' or ';' without spaces\n" +
-                    "Example: \"--filter-by-pathid 7238605633795851352,-2430306240205277265\"\n",
-                optionHelpGroup: HelpGroups.Advanced
-            );
-            o_filterByText = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--filter-by-text <text>",
-                optionDescription: "Specify the text by which assets should be filtered\n" +
-                    "Looks for assets that contain the specified text in their names or containers\n" +
-                    "*To specify multiple values write them separated by ',' or ';' without spaces\n" +
-                    "Example: \"--filter-by-text portrait\" or \"--filter-by-text portrait,art\"\n",
-                optionHelpGroup: HelpGroups.Advanced
-            );
             o_assemblyPath = new GroupedOption<string>
             (
                 optionDefaultValue: "",
                 optionName: "--assembly-folder <path>",
-                optionDescription: "Specify the path to the assembly folder",
+                optionDescription: "Specify the path to the assembly folder\n",
                 optionHelpGroup: HelpGroups.Advanced
             );
             o_unityVersion = new GroupedOption<string>
             (
                 optionDefaultValue: "",
                 optionName: "--unity-version <text>",
-                optionDescription: "Specify Unity version. Example: \"--unity-version 2017.4.39f1\"",
+                optionDescription: "Specify Unity version\nExample: \"--unity-version 2017.4.39f1\"\n",
                 optionHelpGroup: HelpGroups.Advanced
             );
             f_notRestoreExtensionName = new GroupedOption<bool>
             (
                 optionDefaultValue: false,
                 optionName: "--not-restore-extension",
-                optionDescription: "(Flag) If specified, AssetStudio will not try to use/restore original TextAsset\nextension name, and will just export all TextAssets with the \".txt\" extension",
+                optionDescription: "(Flag) If specified, AssetStudio will not try to use/restore original TextAsset\nextension name, and will just export all TextAssets with the \".txt\" extension\n",
+                optionHelpGroup: HelpGroups.Advanced,
+                isFlag: true
+            );
+            f_loadAllAssets = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--load-all",
+                optionDescription: "(Flag) If specified, AssetStudio will load assets of all types\n(Only for Dump, Info and ExportRaw modes)",
                 optionHelpGroup: HelpGroups.Advanced,
                 isFlag: true
             );
@@ -356,7 +372,7 @@ namespace AssetStudioCLI.Options
             var brightYellow = CLIAnsiColors.BrightYellow;
             var brightRed = CLIAnsiColors.BrightRed;
 
-            if (args.Length == 0 || args.Any(x => x == "-h" || x == "--help"))
+            if (args.Length == 0 || args.Any(x => x.ToLower() == "-h" || x.ToLower() == "--help" || x.ToLower() == "-?"))
             {
                 showHelp = true;
                 return;
@@ -395,6 +411,64 @@ namespace AssetStudioCLI.Options
                 }    
             };
 
+            var workModeOptionIndex = resplittedArgs.FindIndex(x => x.ToLower() == "-m" || x.ToLower() == "--mode");
+            if (workModeOptionIndex >= 0)
+            {
+                var option = resplittedArgs[workModeOptionIndex];
+                if (workModeOptionIndex + 1 >= resplittedArgs.Count)
+                {
+                    Console.WriteLine($"{"Error during parsing options:".Color(brightRed)} Value for [{option.Color(brightRed)}] option was not found.\n");
+                    TryShowOptionDescription(option, optionsDict);
+                    return;
+                }
+                var value = resplittedArgs[workModeOptionIndex + 1];
+                switch (value.ToLower())
+                {
+                    case "export":
+                        o_workMode.Value = WorkMode.Export;
+                        break;
+                    case "raw":
+                    case "exportraw":
+                        o_workMode.Value = WorkMode.ExportRaw;
+                        break;
+                    case "dump":
+                        o_workMode.Value = WorkMode.Dump;
+                        break;
+                    case "info":
+                        o_workMode.Value = WorkMode.Info;
+                        break;
+                    case "live2d":
+                        o_workMode.Value = WorkMode.ExportLive2D;
+                        o_exportAssetTypes.Value = new List<ClassIDType>()
+                        {
+                            ClassIDType.AnimationClip,
+                            ClassIDType.GameObject,
+                            ClassIDType.MonoBehaviour,
+                            ClassIDType.Texture2D,
+                            ClassIDType.Transform,
+                        };
+                        break;
+                    case "splitobjects":
+                        o_workMode.Value = WorkMode.SplitObjects;
+                        o_exportAssetTypes.Value = new List<ClassIDType>()
+                        {
+                            ClassIDType.GameObject,
+                            ClassIDType.Texture2D,
+                            ClassIDType.Material,
+                            ClassIDType.Transform,
+                            ClassIDType.Mesh,
+                            ClassIDType.MeshRenderer,
+                            ClassIDType.MeshFilter,
+                        };
+                        break;
+                    default:
+                        Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported working mode: [{value.Color(brightRed)}].\n");
+                        Console.WriteLine(o_workMode.Description);
+                        return;
+                }
+                resplittedArgs.RemoveRange(workModeOptionIndex, 2);
+            }
+
             #region Parse Flags
             for (int i = 0; i < resplittedArgs.Count; i++) 
             {
@@ -405,6 +479,21 @@ namespace AssetStudioCLI.Options
                     case "--not-restore-extension":
                         f_notRestoreExtensionName.Value = true;
                         resplittedArgs.RemoveAt(i);
+                        break;
+                    case "--load-all":
+                        switch (o_workMode.Value)
+                        {
+                            case WorkMode.ExportRaw:
+                            case WorkMode.Dump:
+                            case WorkMode.Info:
+                                f_loadAllAssets.Value = true;
+                                resplittedArgs.RemoveAt(i);
+                                break;
+                            default:
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
+                                Console.WriteLine(f_loadAllAssets.Description);
+                                return;
+                        }
                         break;
                 }
             }            
@@ -419,53 +508,6 @@ namespace AssetStudioCLI.Options
                     var value = resplittedArgs[i + 1].Replace("\"", "");
                     switch (option)
                     {
-                        case "-m":
-                        case "--mode":
-                            switch (value.ToLower())
-                            {
-                                case "export":
-                                    o_workMode.Value = WorkMode.Export;
-                                    break;
-                                case "raw":
-                                case "exportraw":
-                                    o_workMode.Value = WorkMode.ExportRaw;
-                                    break;
-                                case "dump":
-                                    o_workMode.Value = WorkMode.Dump;
-                                    break;
-                                case "info":
-                                    o_workMode.Value = WorkMode.Info;
-                                    break;
-                                case "live2d":
-                                    o_workMode.Value = WorkMode.ExportLive2D;
-                                    o_exportAssetTypes.Value = new List<ClassIDType>()
-                                    {
-                                        ClassIDType.AnimationClip,
-                                        ClassIDType.GameObject,
-                                        ClassIDType.MonoBehaviour,
-                                        ClassIDType.Texture2D,
-                                        ClassIDType.Transform,
-                                    };
-                                    break;
-                                case "splitobjects":
-                                    o_workMode.Value = WorkMode.SplitObjects;
-                                    o_exportAssetTypes.Value = new List<ClassIDType>()
-                                    {
-                                        ClassIDType.GameObject,
-                                        ClassIDType.Texture2D,
-                                        ClassIDType.Material,
-                                        ClassIDType.Transform,
-                                        ClassIDType.Mesh,
-                                        ClassIDType.MeshRenderer,
-                                        ClassIDType.MeshFilter
-                                    };
-                                    break;
-                                default:
-                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported working mode: [{value.Color(brightRed)}].\n");
-                                    Console.WriteLine(o_workMode.Description);
-                                    return;
-                            }
-                            break;
                         case "-t":
                         case "--asset-type":
                             if (o_workMode.Value == WorkMode.ExportLive2D || o_workMode.Value == WorkMode.SplitObjects)
@@ -480,43 +522,34 @@ namespace AssetStudioCLI.Options
                                 switch (type.ToLower())
                                 {
                                     case "tex2d":
-                                    case "texture2d":
                                         o_exportAssetTypes.Value.Add(ClassIDType.Texture2D);
                                         break;
-                                    case "sprite":
-                                        o_exportAssetTypes.Value.Add(ClassIDType.Sprite);
-                                        break;
-                                    case "textasset":
-                                        o_exportAssetTypes.Value.Add(ClassIDType.TextAsset);
-                                        break;
-                                    case "monobehaviour":
-                                        o_exportAssetTypes.Value.Add(ClassIDType.MonoBehaviour);
-                                        break;
-                                    case "font":
-                                        o_exportAssetTypes.Value.Add(ClassIDType.Font);
-                                        break;
-                                    case "shader":
-                                        o_exportAssetTypes.Value.Add(ClassIDType.Shader);
-                                        break;
                                     case "audio":
-                                    case "audioclip":
                                         o_exportAssetTypes.Value.Add(ClassIDType.AudioClip);
                                         break;
                                     case "video":
-                                    case "videoclip":
                                         o_exportAssetTypes.Value.Add(ClassIDType.VideoClip);
                                         break;
-                                    case "movietexture":
-                                        o_exportAssetTypes.Value.Add(ClassIDType.MovieTexture);
-                                        break;
-                                    case "mesh":
-                                        o_exportAssetTypes.Value.Add(ClassIDType.Mesh);
-                                        break;
                                     case "all":
-                                        o_exportAssetTypes.Value = supportedAssetTypes;
+                                        o_exportAssetTypes.Value = exportableAssetTypes;
                                         break;
                                     default:
-                                        Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported asset type: [{value.Color(brightRed)}].\n");
+                                        var isKnownType = knownAssetTypesDict.TryGetValue(type.ToLower(), out var assetType);
+                                        if (isKnownType)
+                                        {
+                                            if (f_loadAllAssets.Value || exportableAssetTypes.Contains(assetType))
+                                            {
+                                                o_exportAssetTypes.Value.Add(assetType);
+                                                break;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unknown asset type specified [{type.Color(brightRed)}].\n");
+                                            Console.WriteLine(o_exportAssetTypes.Description);
+                                            return;
+                                        }
+                                        Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Asset type [{type.Color(brightRed)}] is not supported for exporting.\n");
                                         Console.WriteLine(o_exportAssetTypes.Description);
                                         return;
                                 }
@@ -864,6 +897,21 @@ namespace AssetStudioCLI.Options
             }
         }
 
+        private static string ShowExportTypes()
+        {
+            switch (o_workMode.Value)
+            {
+                case WorkMode.ExportRaw:
+                case WorkMode.Dump:
+                case WorkMode.Info:
+                    return f_loadAllAssets.Value && o_exportAssetTypes.Value == o_exportAssetTypes.DefaultValue
+                        ? $"# Export Asset Type(s): All"
+                        : $"# Export Asset Type(s): {string.Join(", ", o_exportAssetTypes.Value)}";
+                default:
+                    return $"# Export Asset Type(s): {string.Join(", ", o_exportAssetTypes.Value)}";
+            }
+        }
+
         public static void ShowCurrentOptions()
         {
             var sb = new StringBuilder();
@@ -872,16 +920,43 @@ namespace AssetStudioCLI.Options
             sb.AppendLine($"# Input Path: \"{inputPath}\"");
             switch (o_workMode.Value)
             {
+                case WorkMode.Export:
+                case WorkMode.ExportRaw:
+                case WorkMode.Dump:
+                    sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");
+                    if  (o_workMode.Value != WorkMode.Export)
+                    {
+                        sb.AppendLine($"# Load All Assets: {f_loadAllAssets}");
+                    }
+                    sb.AppendLine(ShowExportTypes());
+                    sb.AppendLine($"# Asset Group Option: {o_groupAssetsBy}");
+                    if (o_workMode.Value == WorkMode.Export)
+                    {
+                        sb.AppendLine($"# Export Image Format: {o_imageFormat}");
+                        sb.AppendLine($"# Export Audio Format: {o_audioFormat}");
+                    }
+                    sb.AppendLine($"# Log Level: {o_logLevel}");
+                    sb.AppendLine($"# Log Output: {o_logOutput}");
+                    sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
+                    sb.AppendLine(ShowCurrentFilter());
+                    sb.AppendLine($"# Assebmly Path: \"{o_assemblyPath}\"");
+                    sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
+                    if (o_workMode.Value == WorkMode.Export)
+                    {
+                        sb.AppendLine($"# Restore TextAsset Extension: {!f_notRestoreExtensionName.Value}");
+                    }
+                    break;
                 case WorkMode.Info:
-                    sb.AppendLine($"# Export Asset Type(s): {string.Join(", ", o_exportAssetTypes.Value)}");
+                    sb.AppendLine($"# Load All Assets: {f_loadAllAssets}");
+                    sb.AppendLine(ShowExportTypes());
                     sb.AppendLine($"# Log Level: {o_logLevel}");
                     sb.AppendLine($"# Log Output: {o_logOutput}");
                     sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
                     sb.AppendLine(ShowCurrentFilter());
                     sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
                     break;
-                case WorkMode.SplitObjects:
                 case WorkMode.ExportLive2D:
+                case WorkMode.SplitObjects:
                     sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");
                     sb.AppendLine($"# Log Level: {o_logLevel}");
                     sb.AppendLine($"# Log Output: {o_logOutput}");
@@ -896,20 +971,6 @@ namespace AssetStudioCLI.Options
                         sb.AppendLine($"# Assebmly Path: \"{o_assemblyPath}\"");
                     }
                     sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
-                    break;
-                default:
-                    sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");
-                    sb.AppendLine($"# Export Asset Type(s): {string.Join(", ", o_exportAssetTypes.Value)}");
-                    sb.AppendLine($"# Asset Group Option: {o_groupAssetsBy}");
-                    sb.AppendLine($"# Export Image Format: {o_imageFormat}");
-                    sb.AppendLine($"# Export Audio Format: {o_audioFormat}");
-                    sb.AppendLine($"# Log Level: {o_logLevel}");
-                    sb.AppendLine($"# Log Output: {o_logOutput}");
-                    sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
-                    sb.AppendLine(ShowCurrentFilter());
-                    sb.AppendLine($"# Assebmly Path: \"{o_assemblyPath}\"");
-                    sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
-                    sb.AppendLine($"# Restore TextAsset Extension: {!f_notRestoreExtensionName.Value}");
                     break;
             }
             sb.AppendLine("======");
