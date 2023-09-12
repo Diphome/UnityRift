@@ -85,6 +85,7 @@ namespace AssetStudioCLI
                                     }
                                 }
                             }
+                            assetItem.Text = m_AssetBundle.m_Name;
                             break;
                         case ResourceManager m_ResourceManager:
                             foreach (var m_Container in m_ResourceManager.m_Container)
@@ -94,9 +95,6 @@ namespace AssetStudioCLI
                                     containers[obj] = m_Container.Key;
                                 }
                             }
-                            break;
-                        case GameObject m_GameObject:
-                            assetItem.Text = m_GameObject.m_Name;
                             break;
                         case Texture2D m_Texture2D:
                             if (!string.IsNullOrEmpty(m_Texture2D.m_StreamData?.path))
@@ -124,6 +122,15 @@ namespace AssetStudioCLI
                             else
                             {
                                 assetItem.Text = m_MonoBehaviour.m_Name;
+                            }
+                            break;
+                        case GameObject m_GameObject:
+                            assetItem.Text = m_GameObject.m_Name;
+                            break;
+                        case Animator m_Animator:
+                            if (m_Animator.m_GameObject.TryGet(out var gameObject))
+                            {
+                                assetItem.Text = gameObject.m_Name;
                             }
                             break;
                         case NamedObject m_NamedObject:
