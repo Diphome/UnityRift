@@ -89,13 +89,17 @@ AssetStudioModCLI <asset folder path> -g type
 ```
 AssetStudioModCLI <asset folder path> -o <output folder path>
 ```
+- Dump assets to a specified output folder
+```
+AssetStudioModCLI <asset folder path> -m dump -o <output folder path>
+```
 - Export Live2D Cubism models
 ```
 AssetStudioModCLI <asset folder path> -m live2d
 ```
 > When running in live2d mode you can only specify `-o`, `--log-level`, `--log-output`, `--export-asset-list`, `--unity-version` and `--assembly-folder` options.
 Any other options will be ignored.
-- Export all FBX objects (similar to "Export all objects (split)" in the GUI)
+- Export all FBX objects (similar to "Export all objects (split)" option in the GUI)
 ```
 AssetStudioModCLI <asset folder path> -m splitObjects
 ```
@@ -142,6 +146,14 @@ AssetStudioModCLI <asset folder path> -t monobehaviour --assembly-folder <assemb
 ```
 AssetStudioModCLI <asset folder path> --unity-version 2017.4.39f1
 ```
+- Load assets of all types and show them (similar to "Display all assets" option in the GUI)
+```
+AssetStudioModCLI <asset folder path> -m info --load-all
+```
+- Load assets of all types and dump Material assets
+```
+AssetStudioModCLI <asset folder path> -m dump -t material --load-all
+```
 
 ## GUI Usage
 
@@ -157,7 +169,7 @@ Use **File->Extract file** or **File->Extract folder**.
 
 ### Export Assets, Live2D models
 
-use **Export** menu.
+Use **Export** menu.
 
 ### Export Model
 
