@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.17.3.0 [13-09-2023]
+- [CLI] Added support for exporting split objects (fbx) (https://github.com/aelurum/AssetStudio/pull/10)
+- [CLI] Fixed display of asset names in the exported asset list in some working modes
+- [CLI] Fixed a bug where the default output folder might not exist
+- Added support of Texture2D assets from Unity 2022.2+
+- Fixed AssemblyLoader (https://github.com/aelurum/AssetStudio/issues/6)
+- [CLI] Added --load-all flag to load assets of all types
+- [CLI] Improved option grouping on the help screen
+
 ## v0.17.2.0 [27-08-2023]
 - [GUI] Improved Scene Hierarchy tab
    - Added "Related assets" item to the context menu (https://github.com/aelurum/AssetStudio/issues/7)
