@@ -70,7 +70,7 @@ You can read CLI readme [here](https://github.com/aelurum/AssetStudio/blob/Asset
 ```
 AssetStudioModCLI <asset folder path> -m info
 ```
-- Export assets of all supported types
+- Export assets of all supported for export types
 ```
 AssetStudioModCLI <asset folder path>
 ```
