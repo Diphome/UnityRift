@@ -11,7 +11,7 @@ Unfortunately, I can't continue Perfare's work and keep AssetStudio up to date.
 
 ## Game specific modifications
 
-- ArknightsStudio - soon™
+- [ArknightsStudio](https://github.com/aelurum/AssetStudio/tree/ArknightsStudio)
 
 ## AssetStudio Features
 
