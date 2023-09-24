@@ -133,7 +133,7 @@ namespace AssetStudio
 
         private void LoadFile(FileReader reader)
         {
-            switch (reader.FileType)
+            switch (reader?.FileType)
             {
                 case FileType.AssetsFile:
                     LoadAssetsFile(reader);

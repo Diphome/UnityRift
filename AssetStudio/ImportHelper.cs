@@ -53,15 +53,24 @@ namespace AssetStudio
 
         public static FileReader DecompressGZip(FileReader reader)
         {
-            using (reader)
+            try
             {
-                var stream = new MemoryStream();
-                using (var gs = new GZipStream(reader.BaseStream, CompressionMode.Decompress))
+                using (reader)
                 {
-                    gs.CopyTo(stream);
+                    var stream = new MemoryStream();
+                    using (var gs = new GZipStream(reader.BaseStream, CompressionMode.Decompress))
+                    {
+                        gs.CopyTo(stream);
+                    }
+                    stream.Position = 0;
+                    return new FileReader(reader.FullPath, stream);
                 }
-                stream.Position = 0;
-                return new FileReader(reader.FullPath, stream);
+            }
+            catch (System.Exception e)
+            {
+                Logger.Warning($"Error while decompressing gzip file {reader.FullPath}\r\n{e}");
+                reader.Dispose();
+                return null;
             }
         }
 
