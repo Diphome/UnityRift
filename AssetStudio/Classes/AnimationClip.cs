@@ -15,7 +15,6 @@ namespace AssetStudio
         public T inWeight;
         public T outWeight;
 
-
         public Keyframe(ObjectReader reader, Func<T> readerFunc)
         {
             time = reader.ReadSingle();
@@ -294,15 +293,20 @@ namespace AssetStudio
         public string path;
         public ClassIDType classID;
         public PPtr<MonoScript> script;
-
+        public int flags;
 
         public FloatCurve(ObjectReader reader)
         {
+            var version = reader.version;
             curve = new AnimationCurve<float>(reader, reader.ReadSingle);
             attribute = reader.ReadAlignedString();
             path = reader.ReadAlignedString();
             classID = (ClassIDType)reader.ReadInt32();
             script = new PPtr<MonoScript>(reader);
+            if (version[0] > 2022 || (version[0] == 2022 && version[1] >= 2)) //2022.2 and up
+            {
+                flags = reader.ReadInt32();
+            }
         }
     }
 
@@ -310,7 +314,6 @@ namespace AssetStudio
     {
         public float time;
         public PPtr<Object> value;
-
 
         public PPtrKeyframe(ObjectReader reader)
         {
@@ -326,10 +329,11 @@ namespace AssetStudio
         public string path;
         public int classID;
         public PPtr<MonoScript> script;
-
+        public int flags;
 
         public PPtrCurve(ObjectReader reader)
         {
+            var version = reader.version;
             int numCurves = reader.ReadInt32();
             curve = new PPtrKeyframe[numCurves];
             for (int i = 0; i < numCurves; i++)
@@ -341,6 +345,10 @@ namespace AssetStudio
             path = reader.ReadAlignedString();
             classID = reader.ReadInt32();
             script = new PPtr<MonoScript>(reader);
+            if (version[0] > 2022 || (version[0] == 2022 && version[1] >= 2)) //2022.2 and up
+            {
+                flags = reader.ReadInt32();
+            }
         }
     }
 
@@ -939,7 +947,6 @@ namespace AssetStudio
         public ClipMuscleConstant m_MuscleClip;
         public AnimationClipBindingConstant m_ClipBindingConstant;
         public AnimationEvent[] m_Events;
-
 
         public AnimationClip(ObjectReader reader) : base(reader)
         {
