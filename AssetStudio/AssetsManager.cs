@@ -41,7 +41,7 @@ namespace AssetStudio
             {
                 filteredAssetTypesList.Add(ClassIDType.Texture2D);
             }
-            
+
             filteredAssetTypesList.UnionWith(classIDTypes);
         }
 
@@ -635,13 +635,16 @@ namespace AssetStudio
                                 {
                                     m_Sprite.m_SpriteAtlas.Set(m_SpriteAtlas);
                                 }
-                                else
+                                else if (m_Sprite.m_SpriteAtlas.TryGet(out var m_SpriteAtlaOld))
                                 {
-                                    m_Sprite.m_SpriteAtlas.TryGet(out var m_SpriteAtlaOld);
                                     if (m_SpriteAtlaOld.m_IsVariant)
                                     {
                                         m_Sprite.m_SpriteAtlas.Set(m_SpriteAtlas);
                                     }
+                                }
+                                else
+                                {
+                                    Logger.Warning($"\"{m_Sprite.m_Name}\": Sprite loading error. SpriteAtlas with PathID: \"{m_Sprite.m_SpriteAtlas.m_PathID}\" was not found.");
                                 }
                             }
                         }
