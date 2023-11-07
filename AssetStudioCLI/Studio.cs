@@ -624,6 +624,7 @@ namespace AssetStudioCLI
                 }
                 return false;
             }).Select(x => x.Asset).ToArray();
+
             if (cubismMocs.Length == 0)
             {
                 Logger.Default.Log(LoggerEvent.Info, "Live2D Cubism models were not found.", ignoreLevel: true);
@@ -631,7 +632,18 @@ namespace AssetStudioCLI
             }
             if (cubismMocs.Length > 1)
             {
-                var basePathSet = cubismMocs.Select(x => containers[x].Substring(0, containers[x].LastIndexOf("/"))).ToHashSet();
+                var basePathSet = cubismMocs.Select(x =>
+                {
+                    var pathLen = containers.TryGetValue(x, out var itemContainer) ? itemContainer.LastIndexOf("/") : 0;
+                    pathLen = pathLen < 0 ? containers[x].Length : pathLen;
+                    return itemContainer?.Substring(0, pathLen);
+                }).ToHashSet();
+
+                if (basePathSet.All(x => x == null))
+                {
+                    Logger.Error($"Live2D Cubism export error: Cannot find any model related files.");
+                    return;
+                }
 
                 if (basePathSet.Count != cubismMocs.Length)
                 {
@@ -639,9 +651,16 @@ namespace AssetStudioCLI
                     Logger.Debug($"useFullContainerPath: {useFullContainerPath}");
                 }
             }
-            var basePathList = useFullContainerPath ?
-                cubismMocs.Select(x => containers[x]).ToList() :
-                cubismMocs.Select(x => containers[x].Substring(0, containers[x].LastIndexOf("/"))).ToList();
+
+            var basePathList = cubismMocs.Select(x =>
+            {
+                containers.TryGetValue(x, out var container);
+                container = useFullContainerPath
+                    ? container
+                    : container?.Substring(0, container.LastIndexOf("/"));
+                return container;
+            }).Where(x => x != null).ToList();
+
             var lookup = containers.ToLookup(
                 x => basePathList.Find(b => x.Value.Contains(b) && x.Value.Split('/').Any(y => y == b.Substring(b.LastIndexOf("/") + 1))),
                 x => x.Key
@@ -649,16 +668,15 @@ namespace AssetStudioCLI
 
             var totalModelCount = lookup.LongCount(x => x.Key != null);
             Logger.Info($"Found {totalModelCount} model(s).");
-            var name = "";
             var modelCounter = 0;
             foreach (var assets in lookup)
             {
-                var container = assets.Key;
-                if (container == null)
+                var srcContainer = assets.Key;
+                if (srcContainer == null)
                     continue;
-                name = container;
+                var container = srcContainer;
 
-                Logger.Info($"[{modelCounter + 1}/{totalModelCount}] Exporting Live2D: \"{container.Color(Ansi.BrightCyan)}\"");
+                Logger.Info($"[{modelCounter + 1}/{totalModelCount}] Exporting Live2D: \"{srcContainer.Color(Ansi.BrightCyan)}\"");
                 try
                 {
                     var modelName = useFullContainerPath ? Path.GetFileNameWithoutExtension(container) : container.Substring(container.LastIndexOf('/') + 1);
@@ -670,10 +688,11 @@ namespace AssetStudioCLI
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"Live2D model export error: \"{name}\"", ex);
+                    Logger.Error($"Live2D model export error: \"{srcContainer}\"", ex);
                 }
                 Progress.Report(modelCounter, (int)totalModelCount);
             }
+
             var status = modelCounter > 0 ?
                 $"Finished exporting [{modelCounter}/{totalModelCount}] Live2D model(s) to \"{CLIOptions.o_outputFolder.Value.Color(Ansi.BrightCyan)}\"" :
                 "Nothing exported.";

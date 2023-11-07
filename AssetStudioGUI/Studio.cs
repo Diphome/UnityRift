@@ -259,6 +259,7 @@ namespace AssetStudioGUI
                     Progress.Report(++i, objectCount);
                 }
             }
+            allContainers.Clear();
             foreach ((var pptr, var container) in containers)
             {
                 if (pptr.TryGet(out var obj))
@@ -753,32 +754,51 @@ namespace AssetStudioGUI
                 var useFullContainerPath = false;
                 if (cubismMocs.Length > 1)
                 {
-                    var basePathSet = cubismMocs.Select(x => allContainers[x].Substring(0, allContainers[x].LastIndexOf("/"))).ToHashSet();
+                    var basePathSet = cubismMocs.Select(x =>
+                    {
+                        var pathLen = allContainers.TryGetValue(x, out var itemContainer) ? itemContainer.LastIndexOf("/") : 0;
+                        pathLen = pathLen < 0 ? allContainers[x].Length : pathLen;
+                        return itemContainer?.Substring(0, pathLen);
+                    }).ToHashSet();
+
+                    if (basePathSet.All(x => x == null))
+                    {
+                        Logger.Error($"Live2D Cubism export error\r\nCannot find any model related files");
+                        StatusStripUpdate("Live2D export canceled");
+                        Progress.Reset();
+                        return;
+                    }
 
                     if (basePathSet.Count != cubismMocs.Length)
                     {
                         useFullContainerPath = true;
                     }
                 }
-                var basePathList = useFullContainerPath ?
-                    cubismMocs.Select(x => allContainers[x]).ToList() :
-                    cubismMocs.Select(x => allContainers[x].Substring(0, allContainers[x].LastIndexOf("/"))).ToList();
+
+                var basePathList = cubismMocs.Select(x =>
+                {
+                    allContainers.TryGetValue(x, out var container);
+                    container = useFullContainerPath
+                        ? container
+                        : container?.Substring(0, container.LastIndexOf("/"));
+                    return container;
+                }).Where(x => x != null).ToList();
+
                 var lookup = allContainers.ToLookup(
                     x => basePathList.Find(b => x.Value.Contains(b) && x.Value.Split('/').Any(y => y == b.Substring(b.LastIndexOf("/") + 1))),
                     x => x.Key
                 );
 
                 var totalModelCount = lookup.LongCount(x => x.Key != null);
-                var name = "";
                 var modelCounter = 0;
                 foreach (var assets in lookup)
                 {
-                    var container = assets.Key;
-                    if (container == null)
+                    var srcContainer = assets.Key;
+                    if (srcContainer == null)
                         continue;
-                    name = container;
+                    var container = srcContainer;
 
-                    Logger.Info($"[{modelCounter + 1}/{totalModelCount}] Exporting Live2D: \"{container}\"...");
+                    Logger.Info($"[{modelCounter + 1}/{totalModelCount}] Exporting Live2D: \"{srcContainer}\"...");
                     try
                     {
                         var modelName = useFullContainerPath ? Path.GetFileNameWithoutExtension(container) : container.Substring(container.LastIndexOf('/') + 1);
@@ -790,11 +810,17 @@ namespace AssetStudioGUI
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error($"Live2D model export error: \"{name}\"", ex);
+                        Logger.Error($"Live2D model export error: \"{srcContainer}\"", ex);
                     }
                     Progress.Report(modelCounter, (int)totalModelCount);
                 }
+
                 Logger.Info($"Finished exporting [{modelCounter}/{totalModelCount}] Live2D model(s).");
+                if (modelCounter < totalModelCount)
+                {
+                    var total = (int)totalModelCount;
+                    Progress.Report(total, total);
+                }
                 if (Properties.Settings.Default.openAfterExport && modelCounter > 0)
                 {
                     OpenFolderInExplorer(exportPath);

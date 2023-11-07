@@ -26,20 +26,57 @@ namespace CubismLive2DExtractor
             Directory.CreateDirectory(destPath);
             Directory.CreateDirectory(destTexturePath);
 
-            var monoBehaviours = new List<MonoBehaviour>();
-            var texture2Ds = new List<Texture2D>();
+            var expressionList = new List<MonoBehaviour>();
             var gameObjects = new List<GameObject>();
             var animationClips = new List<AnimationClip>();
+
+            var textures = new SortedSet<string>();
+            var eyeBlinkParameters = new HashSet<string>();
+            var lipSyncParameters = new HashSet<string>();
+            MonoBehaviour physics = null;
 
             foreach (var asset in assets)
             {
                 switch (asset)
                 {
                     case MonoBehaviour m_MonoBehaviour:
-                        monoBehaviours.Add(m_MonoBehaviour);
+                        if (m_MonoBehaviour.m_Script.TryGet(out var m_Script))
+                        {
+                            switch (m_Script.m_ClassName)
+                            {
+                                case "CubismMoc":
+                                    File.WriteAllBytes($"{destPath}{modelName}.moc3", ParseMoc(m_MonoBehaviour)); //moc
+                                    break;
+                                case "CubismPhysicsController":
+                                    physics = physics ?? m_MonoBehaviour;
+                                    break;
+                                case "CubismExpressionData":
+                                    expressionList.Add(m_MonoBehaviour);
+                                    break;
+                                case "CubismEyeBlinkParameter":
+                                    if (m_MonoBehaviour.m_GameObject.TryGet(out var blinkGameObject))
+                                    {
+                                        eyeBlinkParameters.Add(blinkGameObject.m_Name);
+                                    }
+                                    break;
+                                case "CubismMouthParameter":
+                                    if (m_MonoBehaviour.m_GameObject.TryGet(out var mouthGameObject))
+                                    {
+                                        lipSyncParameters.Add(mouthGameObject.m_Name);
+                                    }
+                                    break;
+                            }
+                        }
                         break;
                     case Texture2D m_Texture2D:
-                        texture2Ds.Add(m_Texture2D);
+                        using (var image = m_Texture2D.ConvertToImage(flip: true))
+                        {
+                            using (var file = File.OpenWrite($"{destTexturePath}{m_Texture2D.m_Name}.png"))
+                            {
+                                image.WriteToStream(file, ImageFormat.Png);
+                            }
+                            textures.Add($"textures/{m_Texture2D.m_Name}.png"); //texture
+                        }
                         break;
                     case GameObject m_GameObject:
                         gameObjects.Add(m_GameObject);
@@ -50,15 +87,12 @@ namespace CubismLive2DExtractor
                 }
             }
 
-            //physics
-            var physics = monoBehaviours.FirstOrDefault(x =>
+            if (textures.Count == 0)
             {
-                if (x.m_Script.TryGet(out var m_Script))
-                {
-                    return m_Script.m_ClassName == "CubismPhysicsController";
-                }
-                return false;
-            });
+                Logger.Warning($"No textures found for \"{modelName}\" model.");
+            }
+
+            //physics
             if (physics != null)
             {
                 try
@@ -70,31 +104,6 @@ namespace CubismLive2DExtractor
                 {
                     Logger.Warning($"Error in parsing physics data: {e.Message}");
                     physics = null;
-                }
-            }
-
-            //moc
-            var moc = monoBehaviours.First(x =>
-            {
-                if (x.m_Script.TryGet(out var m_Script))
-                {
-                    return m_Script.m_ClassName == "CubismMoc";
-                }
-                return false;
-            });
-            File.WriteAllBytes($"{destPath}{modelName}.moc3", ParseMoc(moc));
-
-            //texture
-            var textures = new SortedSet<string>();
-            foreach (var texture2D in texture2Ds)
-            {
-                using (var image = texture2D.ConvertToImage(flip: true))
-                {
-                    textures.Add($"textures/{texture2D.m_Name}.png");
-                    using (var file = File.OpenWrite($"{destTexturePath}{texture2D.m_Name}.png"))
-                    {
-                        image.WriteToStream(file, ImageFormat.Png);
-                    }
                 }
             }
 
@@ -205,23 +214,30 @@ namespace CubismLive2DExtractor
                     }
                     json.Meta.TotalUserDataSize = totalUserDataSize;
 
-                    var motionPath = new JObject(new JProperty("File", $"motions/{animation.Name}.motion3.json"));
-                    motions.Add(animation.Name, new JArray(motionPath));
-                    File.WriteAllText($"{destMotionPath}{animation.Name}.motion3.json", JsonConvert.SerializeObject(json, Formatting.Indented, new MyJsonConverter()));
+                    var animName = animation.Name;
+                    if (motions.ContainsKey(animName))
+                    {
+                        animName = $"{animName}_{animation.GetHashCode()}";
+                        if (motions.ContainsKey(animName))
+                        {
+                            continue;
+                        }
+                    }
+                    var motionPath = new JObject(new JProperty("File", $"motions/{animName}.motion3.json"));
+                    motions.Add(animName, new JArray(motionPath));
+                    File.WriteAllText($"{destMotionPath}{animName}.motion3.json", JsonConvert.SerializeObject(json, Formatting.Indented, new MyJsonConverter()));
                 }
             }
 
             //expression
             var expressions = new JArray();
-            var monoBehaviourArray = monoBehaviours.Where(x => x.m_Name.EndsWith(".exp3")).ToArray();
-            if (monoBehaviourArray.Length > 0)
+            if (expressionList.Count > 0)
             {
                 Directory.CreateDirectory(destExpressionPath);
             }
-            foreach (var monoBehaviour in monoBehaviourArray)
+            foreach (var monoBehaviour in expressionList)
             {
-                var fullName = monoBehaviour.m_Name;
-                var expressionName = fullName.Replace(".exp3", "");
+                var expressionName = monoBehaviour.m_Name.Replace(".exp3", "");
                 var expressionObj = monoBehaviour.ToType();
                 if (expressionObj == null)
                 {
@@ -238,57 +254,38 @@ namespace CubismLive2DExtractor
                 expressions.Add(new JObject
                     {
                         { "Name", expressionName },
-                        { "File", $"expressions/{fullName}.json" }
+                        { "File", $"expressions/{expressionName}.exp3.json" }
                     });
-                File.WriteAllText($"{destExpressionPath}{fullName}.json", JsonConvert.SerializeObject(expression, Formatting.Indented));
+                File.WriteAllText($"{destExpressionPath}{expressionName}.exp3.json", JsonConvert.SerializeObject(expression, Formatting.Indented));
             }
 
-            //model
+            //group
             var groups = new List<CubismModel3Json.SerializableGroup>();
 
-            var eyeBlinkParameters = monoBehaviours.Where(x =>
-            {
-                x.m_Script.TryGet(out var m_Script);
-                return m_Script?.m_ClassName == "CubismEyeBlinkParameter";
-            }).Select(x =>
-            {
-                x.m_GameObject.TryGet(out var m_GameObject);
-                return m_GameObject?.m_Name;
-            }).ToHashSet();
+            //Try looking for group IDs among the gameObjects
             if (eyeBlinkParameters.Count == 0)
             {
                 eyeBlinkParameters = gameObjects.Where(x =>
-                {
-                    return x.m_Name.ToLower().Contains("eye")
+                    x.m_Name.ToLower().Contains("eye")
                     && x.m_Name.ToLower().Contains("open")
-                    && (x.m_Name.ToLower().Contains('l') || x.m_Name.ToLower().Contains('r'));
-                }).Select(x => x.m_Name).ToHashSet();
+                    && (x.m_Name.ToLower().Contains('l') || x.m_Name.ToLower().Contains('r'))
+                ).Select(x => x.m_Name).ToHashSet();
             }
+            if (lipSyncParameters.Count == 0)
+            {
+                lipSyncParameters = gameObjects.Where(x =>
+                    x.m_Name.ToLower().Contains("mouth")
+                    && x.m_Name.ToLower().Contains("open")
+                    && x.m_Name.ToLower().Contains('y')
+                ).Select(x => x.m_Name).ToHashSet();
+            }
+
             groups.Add(new CubismModel3Json.SerializableGroup
             {
                 Target = "Parameter",
                 Name = "EyeBlink",
                 Ids = eyeBlinkParameters.ToArray()
             });
-
-            var lipSyncParameters = monoBehaviours.Where(x =>
-            {
-                x.m_Script.TryGet(out var m_Script);
-                return m_Script?.m_ClassName == "CubismMouthParameter";
-            }).Select(x =>
-            {
-                x.m_GameObject.TryGet(out var m_GameObject);
-                return m_GameObject?.m_Name;
-            }).ToHashSet();
-            if (lipSyncParameters.Count == 0)
-            {
-                lipSyncParameters = gameObjects.Where(x =>
-                {
-                    return x.m_Name.ToLower().Contains("mouth")
-                    && x.m_Name.ToLower().Contains("open")
-                    && x.m_Name.ToLower().Contains('y');
-                }).Select(x => x.m_Name).ToHashSet();
-            }
             groups.Add(new CubismModel3Json.SerializableGroup
             {
                 Target = "Parameter",
@@ -296,6 +293,7 @@ namespace CubismLive2DExtractor
                 Ids = lipSyncParameters.ToArray()
             });
 
+            //model
             var model3 = new CubismModel3Json
             {
                 Version = 3,
