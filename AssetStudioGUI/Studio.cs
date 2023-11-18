@@ -746,6 +746,8 @@ namespace AssetStudioGUI
         public static void ExportLive2D(Object[] cubismMocs, string exportPath)
         {
             var baseDestPath = Path.Combine(exportPath, "Live2DOutput");
+            var motionMode = Properties.Settings.Default.l2dMotionMode;
+            var forceBezier = Properties.Settings.Default.l2dForceBezier;
 
             ThreadPool.QueueUserWorkItem(state =>
             {
@@ -805,7 +807,7 @@ namespace AssetStudioGUI
                         container = Path.HasExtension(container) ? container.Replace(Path.GetExtension(container), "") : container;
                         var destPath = Path.Combine(baseDestPath, container) + Path.DirectorySeparatorChar;
 
-                        ExtractLive2D(assets, destPath, modelName, assemblyLoader);
+                        ExtractLive2D(assets, destPath, modelName, assemblyLoader, motionMode, forceBezier);
                         modelCounter++;
                     }
                     catch (Exception ex)

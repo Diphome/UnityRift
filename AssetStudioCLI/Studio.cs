@@ -611,6 +611,8 @@ namespace AssetStudioCLI
         {
             var baseDestPath = Path.Combine(CLIOptions.o_outputFolder.Value, "Live2DOutput");
             var useFullContainerPath = false;
+            var motionMode = CLIOptions.o_l2dMotionMode.Value;
+            var forceBezier = CLIOptions.f_l2dForceBezier.Value;
 
             Progress.Reset();
             Logger.Info($"Searching for Live2D files...");
@@ -683,7 +685,7 @@ namespace AssetStudioCLI
                     container = Path.HasExtension(container) ? container.Replace(Path.GetExtension(container), "") : container;
                     var destPath = Path.Combine(baseDestPath, container) + Path.DirectorySeparatorChar;
 
-                    ExtractLive2D(assets, destPath, modelName, assemblyLoader);
+                    ExtractLive2D(assets, destPath, modelName, assemblyLoader, motionMode, forceBezier);
                     modelCounter++;
                 }
                 catch (Exception ex)
