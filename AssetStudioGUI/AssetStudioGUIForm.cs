@@ -112,11 +112,15 @@ namespace AssetStudioGUI
         [DllImport("gdi32.dll")]
         private static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
 
+        private string guiTitle = string.Empty;
+
         public AssetStudioGUIForm()
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             InitializeComponent();
-            Text = $"{Application.ProductName} v{Application.ProductVersion}";
+            var appAssembly = typeof(Program).Assembly.GetName();
+            guiTitle = $"{appAssembly.Name} v{appAssembly.Version}";
+            Text = guiTitle;
             delayTimer = new System.Timers.Timer(800);
             delayTimer.Elapsed += new ElapsedEventHandler(delayTimer_Elapsed);
             displayAll.Checked = Properties.Settings.Default.displayAll;
@@ -223,11 +227,11 @@ namespace AssetStudioGUI
 
             if (!string.IsNullOrEmpty(productName))
             {
-                Text = $"{Application.ProductName} v{Application.ProductVersion} - {productName} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"{guiTitle} - {productName} - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
             else
             {
-                Text = $"{Application.ProductName} v{Application.ProductVersion} - no productName - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+                Text = $"{guiTitle} - no productName - {assetsManager.assetsFileList[0].unityVersion} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
             }
 
             assetListView.VirtualListSize = visibleAssets.Count;
@@ -1340,7 +1344,7 @@ namespace AssetStudioGUI
 
         private void ResetForm()
         {
-            Text = $"{Application.ProductName} v{Application.ProductVersion}";
+            Text = guiTitle;
             assetsManager.Clear();
             assemblyLoader.Clear();
             exportableAssets.Clear();
