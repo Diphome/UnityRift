@@ -12,7 +12,7 @@ namespace AssetStudio
         public SecondarySpriteTexture(ObjectReader reader)
         {
             texture = new PPtr<Texture2D>(reader);
-            name = reader.ReadStringToNull();
+            name = reader.ReadAlignedString();
         }
     }
 
