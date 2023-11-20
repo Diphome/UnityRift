@@ -162,6 +162,8 @@ namespace AssetStudioGUI
             Progress.Reset();
             foreach (var assetsFile in assetsManager.assetsFileList)
             {
+                var preloadTable = Array.Empty<PPtr<Object>>();
+
                 foreach (var asset in assetsFile.Objects)
                 {
                     var assetItem = new AssetItem(asset);
@@ -170,6 +172,9 @@ namespace AssetStudioGUI
                     var exportable = false;
                     switch (asset)
                     {
+                        case PreloadData m_PreloadData:
+                            preloadTable = m_PreloadData.m_Assets;
+                            break;
                         case GameObject m_GameObject:
                             assetItem.Text = m_GameObject.m_Name;
                             break;
@@ -187,7 +192,7 @@ namespace AssetStudioGUI
                             break;
                         case VideoClip m_VideoClip:
                             if (!string.IsNullOrEmpty(m_VideoClip.m_OriginalPath))
-                                assetItem.FullSize = asset.byteSize + (long)m_VideoClip.m_ExternalResources.m_Size;
+                                assetItem.FullSize = asset.byteSize + m_VideoClip.m_ExternalResources.m_Size;
                             assetItem.Text = m_VideoClip.m_Name;
                             exportable = true;
                             break;
@@ -226,17 +231,23 @@ namespace AssetStudioGUI
                             productName = m_PlayerSettings.productName;
                             break;
                         case AssetBundle m_AssetBundle:
+                            var isStreamedSceneAssetBundle = m_AssetBundle.m_IsStreamedSceneAssetBundle;
+                            if (!isStreamedSceneAssetBundle)
+                            {
+                                preloadTable = m_AssetBundle.m_PreloadTable;
+                            }
+                            assetItem.Text = string.IsNullOrEmpty(m_AssetBundle.m_AssetBundleName) ? m_AssetBundle.m_Name : m_AssetBundle.m_AssetBundleName;
+
                             foreach (var m_Container in m_AssetBundle.m_Container)
                             {
                                 var preloadIndex = m_Container.Value.preloadIndex;
-                                var preloadSize = m_Container.Value.preloadSize;
+                                var preloadSize = isStreamedSceneAssetBundle ? preloadTable.Length : m_Container.Value.preloadSize;
                                 var preloadEnd = preloadIndex + preloadSize;
-                                for (int k = preloadIndex; k < preloadEnd; k++)
+                                for (var k = preloadIndex; k < preloadEnd; k++)
                                 {
-                                    containers.Add((m_AssetBundle.m_PreloadTable[k], m_Container.Key));
+                                    containers.Add((preloadTable[k], m_Container.Key));
                                 }
                             }
-                            assetItem.Text = m_AssetBundle.m_Name;
                             break;
                         case ResourceManager m_ResourceManager:
                             foreach (var m_Container in m_ResourceManager.m_Container)
@@ -349,7 +360,6 @@ namespace AssetStudioGUI
                 Progress.Report(++j, assetsFileCount);
             }
             treeNodeDictionary.Clear();
-
             objectAssetItemDic.Clear();
 
             return (productName, treeNodeCollection);
@@ -387,7 +397,6 @@ namespace AssetStudioGUI
                     typeMap.Add(assetsFile.unityVersion, items);
                 }
             }
-
             return typeMap;
         }
 

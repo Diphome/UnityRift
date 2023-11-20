@@ -532,6 +532,9 @@ namespace AssetStudio
                             case ClassIDType.PlayerSettings:
                                 obj = new PlayerSettings(objectReader);
                                 break;
+                            case ClassIDType.PreloadData:
+                                obj = new PreloadData(objectReader);
+                                break;
                             case ClassIDType.RectTransform:
                                 obj = new RectTransform(objectReader);
                                 break;

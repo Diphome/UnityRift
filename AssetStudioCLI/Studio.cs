@@ -62,6 +62,7 @@ namespace AssetStudioCLI
             var i = 0;
             foreach (var assetsFile in assetsManager.assetsFileList)
             {
+                var preloadTable = Array.Empty<PPtr<AssetStudio.Object>>();
                 foreach (var asset in assetsFile.Objects)
                 {
                     var assetItem = new AssetItem(asset);
@@ -70,22 +71,31 @@ namespace AssetStudioCLI
                     var isExportable = false;
                     switch (asset)
                     {
+                        case PreloadData m_PreloadData:
+                            preloadTable = m_PreloadData.m_Assets;
+                            break;
                         case AssetBundle m_AssetBundle:
+                            var isStreamedSceneAssetBundle = m_AssetBundle.m_IsStreamedSceneAssetBundle;
+                            if (!isStreamedSceneAssetBundle)
+                            {
+                                preloadTable = m_AssetBundle.m_PreloadTable;
+                            }
+                            assetItem.Text = string.IsNullOrEmpty(m_AssetBundle.m_AssetBundleName) ? m_AssetBundle.m_Name : m_AssetBundle.m_AssetBundleName;
+
                             foreach (var m_Container in m_AssetBundle.m_Container)
                             {
                                 var preloadIndex = m_Container.Value.preloadIndex;
-                                var preloadSize = m_Container.Value.preloadSize;
+                                var preloadSize = isStreamedSceneAssetBundle ? preloadTable.Length : m_Container.Value.preloadSize;
                                 var preloadEnd = preloadIndex + preloadSize;
-                                for (int k = preloadIndex; k < preloadEnd; k++)
+                                for (var k = preloadIndex; k < preloadEnd; k++)
                                 {
-                                    var pptr = m_AssetBundle.m_PreloadTable[k];
+                                    var pptr = preloadTable[k];
                                     if (pptr.TryGet(out var obj))
                                     {
                                         containers[obj] = m_Container.Key;
                                     }
                                 }
                             }
-                            assetItem.Text = m_AssetBundle.m_Name;
                             break;
                         case ResourceManager m_ResourceManager:
                             foreach (var m_Container in m_ResourceManager.m_Container)
@@ -110,7 +120,7 @@ namespace AssetStudioCLI
                             if (!string.IsNullOrEmpty(m_VideoClip.m_OriginalPath))
                                 assetItem.FullSize = asset.byteSize + m_VideoClip.m_ExternalResources.m_Size;
                             assetItem.Text = m_VideoClip.m_Name;
-                            break;                        
+                            break;
                         case Shader m_Shader:
                             assetItem.Text = m_Shader.m_ParsedForm?.m_Name ?? m_Shader.m_Name;
                             break;
@@ -152,9 +162,9 @@ namespace AssetStudioCLI
                 }
                 foreach (var asset in fileAssetsList)
                 {
-                    if (containers.ContainsKey(asset.Asset))
+                    if (containers.TryGetValue(asset.Asset, out var container))
                     {
-                        asset.Container = containers[asset.Asset];
+                        asset.Container = container;
                     }
                 }
                 parsedAssetsList.AddRange(fileAssetsList);
