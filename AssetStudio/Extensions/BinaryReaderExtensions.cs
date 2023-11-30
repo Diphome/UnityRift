@@ -35,10 +35,13 @@ namespace AssetStudio
             return "";
         }
 
-        public static string ReadStringToNull(this BinaryReader reader, int maxLength = 32767)
+        public static string ReadStringToNull(this BinaryReader reader, int maxLength = 32767, Encoding encoding = null)
         {
+            if (encoding?.CodePage == 1200) //Unicode (UTF-16LE)
+                return reader.ReadUnicodeStringToNull(maxLength * 2);
+
             var bytes = new List<byte>();
-            int count = 0;
+            var count = 0;
             while (reader.BaseStream.Position != reader.BaseStream.Length && count < maxLength)
             {
                 var b = reader.ReadByte();
@@ -49,7 +52,24 @@ namespace AssetStudio
                 bytes.Add(b);
                 count++;
             }
-            return Encoding.UTF8.GetString(bytes.ToArray());
+            return encoding?.GetString(bytes.ToArray()) ?? Encoding.UTF8.GetString(bytes.ToArray());
+        }
+
+        private static string ReadUnicodeStringToNull(this BinaryReader reader, int maxLength)
+        {
+            var bytes = new List<byte>();
+            var count = 0;
+            while (reader.BaseStream.Position != reader.BaseStream.Length && count < maxLength)
+            {
+                var b = reader.ReadBytes(2);
+                if (b.Length < 2 || (b[0] == 0 && b[1] == 0))
+                {
+                    break;
+                }
+                bytes.AddRange(b);
+                count += 2;
+            }
+            return Encoding.Unicode.GetString(bytes.ToArray());
         }
 
         public static Quaternion ReadQuaternion(this BinaryReader reader)

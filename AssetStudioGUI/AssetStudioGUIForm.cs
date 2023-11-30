@@ -146,14 +146,25 @@ namespace AssetStudioGUI
         private async void AssetStudioGUIForm_DragDrop(object sender, DragEventArgs e)
         {
             var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (paths.Length > 0)
+            if (paths.Length == 0)
+                return;
+
+            ResetForm();
+            for (var i = 0; i < paths.Length; i++)
             {
-                ResetForm();
-                assetsManager.SpecifyUnityVersion = specifyUnityVersion.Text;
-                await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, paths));
-                saveDirectoryBackup = openDirectoryBackup;
-                BuildAssetStructures();
+                if (paths[i].ToLower().EndsWith(".lnk"))
+                {
+                    var targetPath = LnkReader.GetLnkTarget(paths[i]);
+                    if (!string.IsNullOrEmpty(targetPath))
+                    {
+                        paths[i] = targetPath;
+                    }
+                }
             }
+            assetsManager.SpecifyUnityVersion = specifyUnityVersion.Text;
+            await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, paths));
+            saveDirectoryBackup = openDirectoryBackup;
+            BuildAssetStructures();
         }
 
         private async void loadFile_Click(object sender, EventArgs e)

@@ -82,7 +82,7 @@ namespace AssetStudio
                     MergeSplitAssets(fullPath, true);
                     fileList.AddRange(Directory.GetFiles(fullPath, "*.*", SearchOption.AllDirectories));
                 }
-                else
+                else if (File.Exists(fullPath))
                 {
                     parentPath = Path.GetDirectoryName(fullPath);
                     fileList.Add(fullPath);
