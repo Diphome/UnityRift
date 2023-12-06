@@ -29,6 +29,7 @@ namespace AssetStudioCLI
             LogName = $"{appAssembly.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log";
             LogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogName);
             var arch = Environment.Is64BitProcess ? "x64" : "x32";
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
 
             LogToFile(LoggerEvent.Verbose, $"---{appAssembly.Name} v{appAssembly.Version} [{arch}] | Logger launched---\n" +
                                            $"CMD Args: {string.Join(" ", CLIOptions.cliArgs)}");
@@ -36,15 +37,15 @@ namespace AssetStudioCLI
 
         private static string ColorLogLevel(LoggerEvent logLevel)
         {
-            string formattedLevel = $"[{logLevel}]";
+            var formattedLevel = $"[{logLevel}]";
             switch (logLevel)
             {
                 case LoggerEvent.Info:
-                    return $"{formattedLevel.Color(CLIAnsiColors.BrightCyan)}";
+                    return $"{formattedLevel.Color(ColorConsole.BrightCyan)}";
                 case LoggerEvent.Warning:
-                    return $"{formattedLevel.Color(CLIAnsiColors.BrightYellow)}";
+                    return $"{formattedLevel.Color(ColorConsole.BrightYellow)}";
                 case LoggerEvent.Error:
-                    return $"{formattedLevel.Color(CLIAnsiColors.BrightRed)}";
+                    return $"{formattedLevel.Color(ColorConsole.BrightRed)}";
                 default:
                     return formattedLevel;
             }
@@ -59,7 +60,7 @@ namespace AssetStudioCLI
             string formattedMessage;
             if (consoleMode)
             {
-                string colorLogLevel = ColorLogLevel(logMsgLevel);
+                var colorLogLevel = ColorLogLevel(logMsgLevel);
                 formattedMessage = $"{colorLogLevel} {message}";
                 if (multiLine)
                 {

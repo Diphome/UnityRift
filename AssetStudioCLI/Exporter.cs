@@ -327,7 +327,7 @@ namespace AssetStudioCLI
                 Directory.CreateDirectory(dir);
                 return true;
             }
-            Logger.Error($"Export error. File \"{fullPath.Color(CLIAnsiColors.BrightRed)}\" already exist");
+            Logger.Error($"Export error. File \"{fullPath.Color(ColorConsole.BrightRed)}\" already exist");
             return false;
         }
 

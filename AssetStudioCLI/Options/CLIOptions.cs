@@ -397,8 +397,8 @@ namespace AssetStudioCLI.Options
         {
             cliArgs = args;
 
-            var brightYellow = CLIAnsiColors.BrightYellow;
-            var brightRed = CLIAnsiColors.BrightRed;
+            var brightYellow = ColorConsole.BrightYellow;
+            var brightRed = ColorConsole.BrightRed;
 
             if (args.Length == 0 || args.Any(x => x.ToLower() == "-h" || x.ToLower() == "--help" || x.ToLower() == "-?"))
             {
@@ -858,7 +858,7 @@ namespace AssetStudioCLI.Options
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Unknown Error.".Color(CLIAnsiColors.Red));
+                    Console.WriteLine("Unknown Error.".Color(ColorConsole.Red));
                     Console.WriteLine(ex);
                     return;
                 }
@@ -901,7 +901,7 @@ namespace AssetStudioCLI.Options
                 var arg = isFlag ? "flag" : "option";
                 var rand = new Random();
                 var rndOption = optionDesc.ElementAt(rand.Next(0, optionDesc.Length));
-                Console.WriteLine($"Did you mean [{$"{rndOption.Key}".Color(CLIAnsiColors.BrightYellow)}] {arg}?");
+                Console.WriteLine($"Did you mean [{$"{rndOption.Key}".Color(ColorConsole.BrightYellow)}] {arg}?");
                 Console.WriteLine($"Here's a description of it: \n\n{rndOption.Value}");
 
                 return true;

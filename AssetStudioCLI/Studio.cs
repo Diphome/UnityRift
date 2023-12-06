@@ -7,7 +7,7 @@ using System.Linq;
 using System.Xml.Linq;
 using static AssetStudioCLI.Exporter;
 using static CubismLive2DExtractor.Live2DExtractor;
-using Ansi = AssetStudioCLI.CLIAnsiColors;
+using Ansi = AssetStudio.ColorConsole;
 
 namespace AssetStudioCLI
 {
