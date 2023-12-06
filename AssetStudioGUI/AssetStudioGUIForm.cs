@@ -130,6 +130,7 @@ namespace AssetStudioGUI
             displayInfo.Checked = Properties.Settings.Default.displayInfo;
             enablePreview.Checked = Properties.Settings.Default.enablePreview;
             showConsoleToolStripMenuItem.Checked = Properties.Settings.Default.showConsole;
+            buildTreeStructureToolStripMenuItem.Checked = Properties.Settings.Default.buildTreeStructure;
             FMODinit();
             listSearchFilterMode.SelectedIndex = 0;
 
@@ -2035,6 +2036,12 @@ namespace AssetStudioGUI
         private void AssetStudioGUIForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             Logger.Verbose("Closing AssetStudio");
+        }
+
+        private void buildTreeStructureToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.buildTreeStructure = buildTreeStructureToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
         }
 
         #region FMOD

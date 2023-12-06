@@ -334,5 +334,17 @@ namespace AssetStudioGUI.Properties {
                 this["useFileLogger"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool buildTreeStructure {
+            get {
+                return ((bool)(this["buildTreeStructure"]));
+            }
+            set {
+                this["buildTreeStructure"] = value;
+            }
+        }
     }
 }

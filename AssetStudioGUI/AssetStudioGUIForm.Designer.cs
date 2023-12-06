@@ -41,6 +41,7 @@
             this.displayAll = new System.Windows.Forms.ToolStripMenuItem();
             this.enablePreview = new System.Windows.Forms.ToolStripMenuItem();
             this.displayInfo = new System.Windows.Forms.ToolStripMenuItem();
+            this.buildTreeStructureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem14 = new System.Windows.Forms.ToolStripMenuItem();
             this.specifyUnityVersion = new System.Windows.Forms.ToolStripTextBox();
             this.showExpOpt = new System.Windows.Forms.ToolStripMenuItem();
@@ -233,6 +234,7 @@
             this.displayAll,
             this.enablePreview,
             this.displayInfo,
+            this.buildTreeStructureToolStripMenuItem,
             this.toolStripMenuItem14,
             this.showExpOpt});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
@@ -272,6 +274,17 @@
             this.displayInfo.ToolTipText = "Toggle the overlay that shows information about each asset, eg. image size, forma" +
     "t, audio bitrate, etc.";
             this.displayInfo.CheckedChanged += new System.EventHandler(this.displayAssetInfo_Check);
+            // 
+            // buildTreeStructureToolStripMenuItem
+            // 
+            this.buildTreeStructureToolStripMenuItem.Checked = true;
+            this.buildTreeStructureToolStripMenuItem.CheckOnClick = true;
+            this.buildTreeStructureToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.buildTreeStructureToolStripMenuItem.Name = "buildTreeStructureToolStripMenuItem";
+            this.buildTreeStructureToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
+            this.buildTreeStructureToolStripMenuItem.Text = "Build tree structure";
+            this.buildTreeStructureToolStripMenuItem.ToolTipText = "You can disable tree structure building if you don\'t use the Scene Hierarchy tab";
+            this.buildTreeStructureToolStripMenuItem.CheckedChanged += new System.EventHandler(this.buildTreeStructureToolStripMenuItem_CheckedChanged);
             // 
             // toolStripMenuItem14
             // 
@@ -1430,6 +1443,7 @@
         private System.Windows.Forms.ListView assetListView;
         private System.Windows.Forms.ToolStripMenuItem showConsoleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem writeLogToFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem buildTreeStructureToolStripMenuItem;
     }
 }
 

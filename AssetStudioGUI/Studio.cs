@@ -158,7 +158,8 @@ namespace AssetStudioGUI
             var objectCount = assetsManager.assetsFileList.Sum(x => x.Objects.Count);
             var objectAssetItemDic = new Dictionary<Object, AssetItem>(objectCount);
             var containers = new List<(PPtr<Object>, string)>();
-            int i = 0;
+            allContainers.Clear();
+            var i = 0;
             Progress.Reset();
             foreach (var assetsFile in assetsManager.assetsFileList)
             {
@@ -270,8 +271,7 @@ namespace AssetStudioGUI
                     Progress.Report(++i, objectCount);
                 }
             }
-            allContainers.Clear();
-            foreach ((var pptr, var container) in containers)
+            foreach (var (pptr, container) in containers)
             {
                 if (pptr.TryGet(out var obj))
                 {
@@ -287,12 +287,19 @@ namespace AssetStudioGUI
 
             visibleAssets = exportableAssets;
 
+            if (!Properties.Settings.Default.buildTreeStructure)
+            {
+                Logger.Info("Building tree structure step is skipped");
+                objectAssetItemDic.Clear();
+                return (productName, new List<TreeNode>());
+            }
+
             Logger.Info("Building tree structure...");
 
             var treeNodeCollection = new List<TreeNode>();
             var treeNodeDictionary = new Dictionary<GameObject, GameObjectTreeNode>();
             var assetsFileCount = assetsManager.assetsFileList.Count;
-            int j = 0;
+            var j = 0;
             Progress.Reset();
             foreach (var assetsFile in assetsManager.assetsFileList)
             {
