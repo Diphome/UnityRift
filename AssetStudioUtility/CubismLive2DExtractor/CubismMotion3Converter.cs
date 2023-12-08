@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using AssetStudio;
 
@@ -73,7 +72,7 @@ namespace CubismLive2DExtractor
 
                 if (iAnim.TrackList.Count == 0 || iAnim.Events.Count == 0)
                 {
-                    Logger.Warning($"[Motion Converter] {iAnim.Name} has {iAnim.TrackList.Count} tracks and {iAnim.Events.Count} event!.");
+                    Logger.Warning($"[Motion Converter] \"{iAnim.Name}\" has {iAnim.TrackList.Count} tracks and {iAnim.Events.Count} event!.");
                 }
             }
         }
@@ -84,7 +83,7 @@ namespace CubismLive2DExtractor
             GetLive2dPath(binding, out var target, out var boneName);
             if (string.IsNullOrEmpty(boneName))
             {
-                Logger.Warning($"[Motion Converter] {iAnim.Name} read fail on binding {Array.IndexOf(m_ClipBindingConstant.genericBindings, binding)}");
+                Logger.Warning($"[Motion Converter] \"{iAnim.Name}\" read fail on binding {Array.IndexOf(m_ClipBindingConstant.genericBindings, binding)}");
                 return;
             }
 
@@ -99,7 +98,7 @@ namespace CubismLive2DExtractor
             GetLive2dPath(binding, out var target, out var boneName);
             if (string.IsNullOrEmpty(boneName))
             {
-                Logger.Warning($"[Motion Converter] {iAnim.Name} read fail on binding {Array.IndexOf(m_ClipBindingConstant.genericBindings, binding)}");
+                Logger.Warning($"[Motion Converter] \"{iAnim.Name}\" read fail on binding {Array.IndexOf(m_ClipBindingConstant.genericBindings, binding)}");
                 return;
             }
 

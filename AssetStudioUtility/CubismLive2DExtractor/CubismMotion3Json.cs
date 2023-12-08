@@ -97,7 +97,7 @@ namespace CubismLive2DExtractor
             totalSegmentCount++;
         }
 
-        public CubismMotion3Json(CubismFadeMotion fadeMotion, bool forceBezier)
+        public CubismMotion3Json(CubismFadeMotion fadeMotion, HashSet<string> paramNames, HashSet<string> partNames, bool forceBezier)
         {
             Version = 3;
             Meta = new SerializableMeta
@@ -130,12 +130,37 @@ namespace CubismLive2DExtractor
                 if (fadeMotion.ParameterCurves[i].m_Curve.Length == 0)
                     continue;
 
+                string target;
+                string paramId = fadeMotion.ParameterIds[i];
+                switch (paramId)
+                {
+                    case "Opacity":
+                    case "EyeBlink":
+                    case "LipSync":
+                        target = "Model";
+                        break;
+                    default:
+                        if (paramNames.Contains(paramId))
+                        {
+                            target = "Parameter";
+                        }
+                        else if (partNames.Contains(paramId))
+                        {
+                            target = "PartOpacity";
+                        }
+                        else
+                        {
+                            target = paramId.ToLower().Contains("part") ? "PartOpacity" : "Parameter";
+                            AssetStudio.Logger.Warning($"[{fadeMotion.m_Name}] Binding error: Unable to find \"{paramId}\" among the model parts/parameters");
+                        }
+                        break;
+                }
                 Curves[actualCurveCount] = new SerializableCurve
                 {
                     // Target type.
-                    Target = "Parameter",
+                    Target = target,
                     // Identifier for mapping curve to target.
-                    Id = fadeMotion.ParameterIds[i],
+                    Id = paramId,
                     // [Optional] Time of the Fade - In for easing in seconds.
                     FadeInTime = fadeMotion.ParameterFadeInTimes[i],
                     // [Optional] Time of the Fade - Out for easing in seconds.

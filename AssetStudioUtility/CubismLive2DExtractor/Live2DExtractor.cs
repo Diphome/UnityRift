@@ -34,6 +34,8 @@ namespace CubismLive2DExtractor
             var textures = new SortedSet<string>();
             var eyeBlinkParameters = new HashSet<string>();
             var lipSyncParameters = new HashSet<string>();
+            var parameterNames = new HashSet<string>();
+            var partNames = new HashSet<string>();
             MonoBehaviour physics = null;
 
             foreach (var asset in assets)
@@ -67,6 +69,18 @@ namespace CubismLive2DExtractor
                                     if (m_MonoBehaviour.m_GameObject.TryGet(out var mouthGameObject))
                                     {
                                         lipSyncParameters.Add(mouthGameObject.m_Name);
+                                    }
+                                    break;
+                                case "CubismParameter":
+                                    if (m_MonoBehaviour.m_GameObject.TryGet(out var paramGameObject))
+                                    {
+                                        parameterNames.Add(paramGameObject.m_Name);
+                                    }
+                                    break;
+                                case "CubismPart":
+                                    if (m_MonoBehaviour.m_GameObject.TryGet(out var partGameObject))
+                                    {
+                                        partNames.Add(partGameObject.m_Name);
                                     }
                                     break;
                             }
@@ -116,6 +130,7 @@ namespace CubismLive2DExtractor
 
             if (motionMode == Live2DMotionMode.MonoBehaviour && fadeMotionList.Count > 0)  //motion from MonoBehaviour
             {
+                Logger.Debug("Motion export method: MonoBehaviour (Fade motion)");
                 Directory.CreateDirectory(destMotionPath);
                 foreach (var fadeMotionMono in fadeMotionList)
                 {
@@ -134,7 +149,7 @@ namespace CubismLive2DExtractor
                     if (fadeMotion.ParameterIds.Length == 0)
                         continue;
 
-                    var motionJson = new CubismMotion3Json(fadeMotion, forceBezier);
+                    var motionJson = new CubismMotion3Json(fadeMotion, parameterNames, partNames, forceBezier);
 
                     var animName = Path.GetFileNameWithoutExtension(fadeMotion.m_Name);
                     if (motions.ContainsKey(animName))
@@ -151,6 +166,10 @@ namespace CubismLive2DExtractor
             }
             else if (gameObjects.Count > 0)  //motion from AnimationClip
             {
+                var exportMethod = motionMode == Live2DMotionMode.AnimationClip
+                    ? "AnimationClip"
+                    : "AnimationClip (no Fade motions found)";
+                Logger.Debug($"Motion export method: {exportMethod}");
                 var rootTransform = gameObjects[0].m_Transform;
                 while (rootTransform.m_Father.TryGet(out var m_Father))
                 {
