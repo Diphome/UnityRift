@@ -10,6 +10,7 @@ AssetStudioModCLI <input path to asset file/folder> [-m, --mode <value>]
                       [-o, --output <path>] [-h, --help]
                       [--log-level <value>] [--log-output <value>]
                       [--image-format <value>] [--audio-format <value>]
+                      [--l2d-motion-mode <value>] [--l2d-force-bezier]
                       [--fbx-scale-factor <value>] [--fbx-bone-size <value>]
                       [--filter-by-name <text>] [--filter-by-container <text>]
                       [--filter-by-pathid <text>] [--filter-by-text <text>]
@@ -45,7 +46,7 @@ General Options:
                                 Example: "-g container"
 
   -o, --output <path>           Specify path to the output folder
-                                If path isn't specifyed, 'ASExport' folder will be created in the program's work folder
+                                If path isn't specified, 'ASExport' folder will be created in the program's work folder
 
   -h, --help                    Display help and exit
 
@@ -68,6 +69,17 @@ Convert Options:
                                 <Value: none | wav(default)>
                                 None - Do not convert audios and export them in their own format
                                 Example: "--audio-format wav"
+
+Live2D Options:
+  --l2d-motion-mode <value>     Specify Live2D motion export mode
+                                <Value: monoBehaviour(default) | animationClip>
+                                MonoBehaviour - Try to export motions from MonoBehaviour Fade motions
+                                If no Fade motions are found, the AnimationClip method will be used
+                                AnimationClip - Try to export motions using AnimationClip assets
+                                Example: "--l2d-motion-mode animationClip"
+
+  --l2d-force-bezier            (Flag) If specified, Linear motion segments will be calculated as Bezier segments
+                                (May help if the exported motions look jerky/not smooth enough)
 
 FBX Options:
   --fbx-scale-factor <value>    Specify the FBX Scale Factor
