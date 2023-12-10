@@ -40,6 +40,7 @@ namespace AssetStudio
             if (classIDTypes.Contains(ClassIDType.Sprite))
             {
                 filteredAssetTypesList.Add(ClassIDType.Texture2D);
+                filteredAssetTypesList.Add(ClassIDType.SpriteAtlas);
             }
 
             filteredAssetTypesList.UnionWith(classIDTypes);
