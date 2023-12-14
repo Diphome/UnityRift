@@ -198,7 +198,7 @@ namespace CubismLive2DExtractor
                     File.WriteAllText($"{destMotionPath}{animName}.motion3.json", JsonConvert.SerializeObject(motionJson, Formatting.Indented, new MyJsonConverter()));
                 }
             }
-            else
+            if (motions.Count == 0)
             {
                 Logger.Warning($"No motions found for \"{modelName}\" model.");
             }
