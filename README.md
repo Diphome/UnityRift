@@ -16,7 +16,7 @@ Unfortunately, I can't continue Perfare's work and keep AssetStudio up to date.
 ## AssetStudio Features
 
 - Support version:
-  - 3.4 - 2022.1
+  - 3.4 - 2022.3
 - Support asset types:
   - **Texture2D** : convert to png, tga, jpeg, bmp, webp
   - **Sprite** : crop Texture2D to png, tga, jpeg, bmp, webp
@@ -36,7 +36,7 @@ Unfortunately, I can't continue Perfare's work and keep AssetStudio up to date.
    - `Animator` and `AnimationClip` assets are not supported in the CLI version
 - Support of sprites with alpha mask
 - Support of image export in WebP format
-- Support of Live2D Cubism 3 model export
+- Support of Live2D Cubism model export
    - Ported from my fork of Perfare's [UnityLive2DExtractor](https://github.com/aelurum/UnityLive2DExtractor)
    - Using the Live2D export in AssetStudio allows you to specify a Unity version and assembly folder if needed
 - Detecting bundles with UnityCN encryption
@@ -54,6 +54,9 @@ Unfortunately, I can't continue Perfare's work and keep AssetStudio up to date.
 - AssetStudioMod.net7
    - GUI/CLI (Windows) - [.NET Desktop Runtime 7.0](https://dotnet.microsoft.com/download/dotnet/7.0)
    - CLI (Linux/Mac) - [.NET Runtime 7.0](https://dotnet.microsoft.com/download/dotnet/7.0)
+- AssetStudioMod.net8
+   - GUI/CLI (Windows) - [.NET Desktop Runtime 8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
+   - CLI (Linux/Mac) - [.NET Runtime 8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
 
 ## CLI Usage
 
@@ -97,7 +100,7 @@ AssetStudioModCLI <asset folder path> -m dump -o <output folder path>
 ```
 AssetStudioModCLI <asset folder path> -m live2d
 ```
-> When running in live2d mode you can only specify `-o`, `--log-level`, `--log-output`, `--export-asset-list`, `--unity-version` and `--assembly-folder` options.
+> When running in live2d mode you can only specify `-o`, `--log-level`, `--log-output`, `--l2d-motion-mode`, `--l2d-force-bezier`, `--export-asset-list`, `--unity-version` and `--assembly-folder` options.
 Any other options will be ignored.
 - Export all FBX objects (similar to "Export all objects (split)" option in the GUI)
 ```
