@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.17.4.0 [16-12-2023]
+- Added support for Live2D Fade motions
+	- [GUI] Added related settings to the Export Options window
+	- [CLI] Added options section with related settings
+- Added support for separate PreloadData (https://github.com/Perfare/AssetStudio/issues/690)
+- [GUI] Added support for .lnk files via Drag&Drop (https://github.com/aelurum/AssetStudio/issues/13)
+- [GUI] Added support for Drag&Drop files from a browser
+- [GUI] Added console logger
+	- Added option to save log to a file
+- [GUI] Added option to not build a tree structure
+- Made some other minor fixes and improvements
+
 ## v0.17.3.0 [13-09-2023]
 - [CLI] Added support for exporting split objects (fbx) (https://github.com/aelurum/AssetStudio/pull/10)
 - [CLI] Fixed display of asset names in the exported asset list in some working modes
