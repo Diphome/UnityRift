@@ -1,8 +1,5 @@
 ﻿////
-// Based on UnityLive2DExtractorMod by aelurum
-// https://github.com/aelurum/UnityLive2DExtractor
-//
-// Original version - by Perfare
+// Based on UnityLive2DExtractor by Perfare
 // https://github.com/Perfare/UnityLive2DExtractor
 ////
 
@@ -164,11 +161,15 @@ namespace CubismLive2DExtractor
                     File.WriteAllText($"{destMotionPath}{animName}.motion3.json", JsonConvert.SerializeObject(motionJson, Formatting.Indented, new MyJsonConverter()));
                 }
             }
-            else if (gameObjects.Count > 0)  //motion from AnimationClip
+            if (motions.Count == 0 && gameObjects.Count > 0)  //motion from AnimationClip
             {
-                var exportMethod = motionMode == Live2DMotionMode.AnimationClip
-                    ? "AnimationClip"
-                    : "AnimationClip (no Fade motions found)";
+                var exportMethod = "AnimationClip";
+                if (motionMode == Live2DMotionMode.MonoBehaviour)
+                {
+                    exportMethod = fadeMotionList.Count > 0
+                        ? exportMethod + " (unable to export motion using Fade motion method)"
+                        : exportMethod + " (no Fade motions found)";
+                }
                 Logger.Debug($"Motion export method: {exportMethod}");
                 var rootTransform = gameObjects[0].m_Transform;
                 while (rootTransform.m_Father.TryGet(out var m_Father))
@@ -236,22 +237,22 @@ namespace CubismLive2DExtractor
             //group
             var groups = new List<CubismModel3Json.SerializableGroup>();
 
-            //Try looking for group IDs among the gameObjects
+            //Try looking for group IDs among the parameter names manually
             if (eyeBlinkParameters.Count == 0)
             {
-                eyeBlinkParameters = gameObjects.Where(x =>
-                    x.m_Name.ToLower().Contains("eye")
-                    && x.m_Name.ToLower().Contains("open")
-                    && (x.m_Name.ToLower().Contains('l') || x.m_Name.ToLower().Contains('r'))
-                ).Select(x => x.m_Name).ToHashSet();
+                eyeBlinkParameters = parameterNames.Where(x =>
+                    x.ToLower().Contains("eye")
+                    && x.ToLower().Contains("open")
+                    && (x.ToLower().Contains('l') || x.ToLower().Contains('r'))
+                ).ToHashSet();
             }
             if (lipSyncParameters.Count == 0)
             {
-                lipSyncParameters = gameObjects.Where(x =>
-                    x.m_Name.ToLower().Contains("mouth")
-                    && x.m_Name.ToLower().Contains("open")
-                    && x.m_Name.ToLower().Contains('y')
-                ).Select(x => x.m_Name).ToHashSet();
+                lipSyncParameters = parameterNames.Where(x =>
+                    x.ToLower().Contains("mouth")
+                    && x.ToLower().Contains("open")
+                    && x.ToLower().Contains('y')
+                ).ToHashSet();
             }
 
             groups.Add(new CubismModel3Json.SerializableGroup
