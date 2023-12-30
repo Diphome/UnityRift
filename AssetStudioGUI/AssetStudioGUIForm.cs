@@ -89,6 +89,10 @@ namespace AssetStudioGUI
         private AlphanumComparatorFast alphanumComparator = new AlphanumComparatorFast();
 #endif
 
+        //asset list selection
+        private List<int> selectedIndicesPrevList = new List<int>();
+        private List<AssetItem> selectedAnimationAssetsList = new List<AssetItem>();
+
         //asset list filter
         private System.Timers.Timer delayTimer;
         private bool enableFiltering;
@@ -695,6 +699,8 @@ namespace AssetStudioGUI
             sortColumn = e.Column;
             assetListView.BeginUpdate();
             assetListView.SelectedIndices.Clear();
+            selectedIndicesPrevList.Clear();
+            selectedAnimationAssetsList.Clear();
             if (sortColumn == 4) //FullSize
             {
                 visibleAssets.Sort((a, b) =>
@@ -1366,6 +1372,8 @@ namespace AssetStudioGUI
             assetListView.Items.Clear();
             classesListView.Items.Clear();
             classesListView.Groups.Clear();
+            selectedAnimationAssetsList.Clear();
+            selectedIndicesPrevList.Clear();
             previewPanel.BackgroundImage = Properties.Resources.preview;
             imageTexture?.Dispose();
             imageTexture = null;
@@ -1459,17 +1467,12 @@ namespace AssetStudioGUI
         private void exportAnimatorwithAnimationClipMenuItem_Click(object sender, EventArgs e)
         {
             AssetItem animator = null;
-            List<AssetItem> animationList = new List<AssetItem>();
             var selectedAssets = GetSelectedAssets();
             foreach (var assetPreloadData in selectedAssets)
             {
                 if (assetPreloadData.Type == ClassIDType.Animator)
                 {
                     animator = assetPreloadData;
-                }
-                else if (assetPreloadData.Type == ClassIDType.AnimationClip)
-                {
-                    animationList.Add(assetPreloadData);
                 }
             }
 
@@ -1481,7 +1484,7 @@ namespace AssetStudioGUI
                 {
                     saveDirectoryBackup = saveFolderDialog.Folder;
                     var exportPath = Path.Combine(saveFolderDialog.Folder, "Animator") + Path.DirectorySeparatorChar;
-                    ExportAnimatorWithAnimationClip(animator, animationList, exportPath);
+                    ExportAnimatorWithAnimationClip(animator, selectedAnimationAssetsList, exportPath);
                 }
             }
         }
@@ -1661,14 +1664,44 @@ namespace AssetStudioGUI
 
         private void assetListView_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (assetListView.SelectedIndices.Count > 1)
-                StatusStripUpdate($"Selected {assetListView.SelectedIndices.Count} assets.");
+            ProcessSelectedItems();
         }
 
         private void assetListView_VirtualItemsSelectionRangeChanged(object sender, ListViewVirtualItemsSelectionRangeChangedEventArgs e)
         {
+            ProcessSelectedItems();
+        }
+
+        private void ProcessSelectedItems()
+        {
             if (assetListView.SelectedIndices.Count > 1)
+            {
                 StatusStripUpdate($"Selected {assetListView.SelectedIndices.Count} assets.");
+            }
+
+            var selectedIndicesList = assetListView.SelectedIndices.Cast<int>().ToList();
+
+            var addedIndices = selectedIndicesList.Except(selectedIndicesPrevList).ToArray();
+            foreach (var itemIndex in addedIndices)
+            {
+                selectedIndicesPrevList.Add(itemIndex);
+                var selectedItem = (AssetItem)assetListView.Items[itemIndex];
+                if (selectedItem.Type == ClassIDType.AnimationClip)
+                {
+                    selectedAnimationAssetsList.Add(selectedItem);
+                }
+            }
+
+            var removedIndices = selectedIndicesPrevList.Except(selectedIndicesList).ToArray();
+            foreach (var itemIndex in removedIndices)
+            {
+                selectedIndicesPrevList.Remove(itemIndex);
+                var unselectedItem = (AssetItem)assetListView.Items[itemIndex];
+                if (unselectedItem.Type == ClassIDType.AnimationClip)
+                {
+                    selectedAnimationAssetsList.Remove(unselectedItem);
+                }
+            }
         }
 
         private List<AssetItem> GetSelectedAssets()

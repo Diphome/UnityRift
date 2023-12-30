@@ -626,6 +626,7 @@ namespace AssetStudioGUI
             {
                 Progress.Reset();
                 Logger.Info($"Exporting {animator.Text}");
+                Logger.Debug($"Selected AnimationClip(s):\n\"{string.Join("\"\n\"", animationList.Select(x => x.Text))}\"");
                 try
                 {
                     ExportAnimator(animator, exportPath, animationList);

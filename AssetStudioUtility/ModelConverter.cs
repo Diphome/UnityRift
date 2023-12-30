@@ -16,7 +16,7 @@ namespace AssetStudio
 
         private ImageFormat imageFormat;
         private Avatar avatar;
-        private HashSet<AnimationClip> animationClipHashSet = new HashSet<AnimationClip>();
+        private AnimationClip[] animationClipUniqArray = Array.Empty<AnimationClip>();
         private Dictionary<AnimationClip, string> boundAnimationPathDic = new Dictionary<AnimationClip, string>();
         private Dictionary<uint, string> bonePathHash = new Dictionary<uint, string>();
         private Dictionary<Texture2D, string> textureNameDictionary = new Dictionary<Texture2D, string>();
@@ -40,10 +40,7 @@ namespace AssetStudio
             }
             if (animationList != null)
             {
-                foreach (var animationClip in animationList)
-                {
-                    animationClipHashSet.Add(animationClip);
-                }
+                animationClipUniqArray = animationList.Distinct().ToArray();
             }
             ConvertAnimations();
         }
@@ -70,10 +67,7 @@ namespace AssetStudio
             }
             if (animationList != null)
             {
-                foreach (var animationClip in animationList)
-                {
-                    animationClipHashSet.Add(animationClip);
-                }
+                animationClipUniqArray = animationList.Distinct().ToArray();
             }
             ConvertAnimations();
         }
@@ -88,10 +82,7 @@ namespace AssetStudio
             }
             else
             {
-                foreach (var animationClip in animationList)
-                {
-                    animationClipHashSet.Add(animationClip);
-                }
+                animationClipUniqArray = animationList.Distinct().ToArray();
             }
             ConvertAnimations();
         }
@@ -160,6 +151,7 @@ namespace AssetStudio
 
             if (m_GameObject.m_Animation != null)
             {
+                var animationList = new List<AnimationClip>();
                 foreach (var animation in m_GameObject.m_Animation.m_Animations)
                 {
                     if (animation.TryGet(out var animationClip))
@@ -168,9 +160,10 @@ namespace AssetStudio
                         {
                             boundAnimationPathDic.Add(animationClip, GetTransformPath(m_Transform));
                         }
-                        animationClipHashSet.Add(animationClip);
+                        animationList.Add(animationClip);
                     }
                 }
+                animationClipUniqArray = animationList.Distinct().ToArray();
             }
 
             foreach (var pptr in m_Transform.m_Children)
@@ -184,6 +177,7 @@ namespace AssetStudio
         {
             if (m_Animator.m_Controller.TryGet(out var m_Controller))
             {
+                var animationList = new List<AnimationClip>();
                 switch (m_Controller)
                 {
                     case AnimatorOverrideController m_AnimatorOverrideController:
@@ -194,7 +188,7 @@ namespace AssetStudio
                                 {
                                     if (pptr.TryGet(out var m_AnimationClip))
                                     {
-                                        animationClipHashSet.Add(m_AnimationClip);
+                                        animationList.Add(m_AnimationClip);
                                     }
                                 }
                             }
@@ -207,12 +201,13 @@ namespace AssetStudio
                             {
                                 if (pptr.TryGet(out var m_AnimationClip))
                                 {
-                                    animationClipHashSet.Add(m_AnimationClip);
+                                    animationList.Add(m_AnimationClip);
                                 }
                             }
                             break;
                         }
                 }
+                animationClipUniqArray = animationList.Distinct().ToArray();
             }
         }
 
@@ -769,7 +764,7 @@ namespace AssetStudio
 
         private void ConvertAnimations()
         {
-            foreach (var animationClip in animationClipHashSet)
+            foreach (var animationClip in animationClipUniqArray)
             {
                 var iAnim = new ImportedKeyframedAnimation();
                 var name = animationClip.m_Name;
