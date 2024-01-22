@@ -366,6 +366,7 @@ namespace AssetStudio
                 {
                     if (iMesh.hasUV[uv])
                     {
+                        c = 4;
                         var m_UV = mesh.GetUV(uv);
                         if (m_UV.Length == mesh.m_VertexCount * 2)
                         {
