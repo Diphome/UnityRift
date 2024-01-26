@@ -53,21 +53,21 @@ namespace AssetStudio
 
         public void LoadFilesAndFolders(params string[] path)
         {
-            List<string> pathList = new List<string>();
+            var pathList = new List<string>();
             pathList.AddRange(path);
             LoadFilesAndFolders(out _, pathList);
         }
 
         public void LoadFilesAndFolders(out string parentPath, params string[] path)
         {
-            List<string> pathList = new List<string>();
+            var pathList = new List<string>();
             pathList.AddRange(path);
             LoadFilesAndFolders(out parentPath, pathList);
         }
 
         public void LoadFilesAndFolders(out string parentPath, List<string> pathList)
         {
-            List<string> fileList = new List<string>();
+            var fileList = new List<string>();
             bool filesInPath = false;
             parentPath = "";
             foreach (var path in pathList)
@@ -113,8 +113,14 @@ namespace AssetStudio
             //use a for loop because list size can change
             for (var i = 0; i < importFiles.Count; i++)
             {
-                LoadFile(importFiles[i]);
-                Progress.Report(i + 1, importFiles.Count);
+                if (LoadFile(importFiles[i]))
+                {
+                    Progress.Report(i + 1, importFiles.Count);
+                }
+                else
+                {
+                    break;
+                }
             }
 
             importFiles.Clear();
@@ -126,13 +132,13 @@ namespace AssetStudio
             ProcessAssets();
         }
 
-        private void LoadFile(string fullName)
+        private bool LoadFile(string fullName)
         {
             var reader = new FileReader(fullName);
-            LoadFile(reader);
+            return LoadFile(reader);
         }
 
-        private void LoadFile(FileReader reader)
+        private bool LoadFile(FileReader reader)
         {
             switch (reader?.FileType)
             {
@@ -140,8 +146,7 @@ namespace AssetStudio
                     LoadAssetsFile(reader);
                     break;
                 case FileType.BundleFile:
-                    LoadBundleFile(reader);
-                    break;
+                    return LoadBundleFile(reader);
                 case FileType.WebFile:
                     LoadWebFile(reader);
                     break;
@@ -154,7 +159,10 @@ namespace AssetStudio
                 case FileType.ZipFile:
                     LoadZipFile(reader);
                     break;
+                default:
+                    return false;
             }
+            return true;
         }
 
         private void LoadAssetsFile(FileReader reader)
@@ -248,7 +256,7 @@ namespace AssetStudio
                 Logger.Info($"Skipping {originalPath} ({reader.FileName})");
         }
 
-        private void LoadBundleFile(FileReader reader, string originalPath = null)
+        private bool LoadBundleFile(FileReader reader, string originalPath = null)
         {
             Logger.Info("Loading " + reader.FullPath);
             try
@@ -267,10 +275,12 @@ namespace AssetStudio
                         resourceFileReaders.Add(file.fileName, subReader);
                     }
                 }
+                return true;
             }
             catch (NotSupportedException e)
             {
                 Logger.Error(e.Message);
+                return false;
             }
             catch (Exception e)
             {
@@ -280,6 +290,7 @@ namespace AssetStudio
                     str += $" from {Path.GetFileName(originalPath)}";
                 }
                 Logger.Warning($"{str}\r\n{e}");
+                return true;
             }
             finally
             {

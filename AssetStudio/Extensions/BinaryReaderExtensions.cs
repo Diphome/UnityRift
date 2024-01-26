@@ -40,7 +40,7 @@ namespace AssetStudio
             if (encoding?.CodePage == 1200) //Unicode (UTF-16LE)
                 return reader.ReadUnicodeStringToNull(maxLength * 2);
 
-            var bytes = new List<byte>();
+            Span<byte> bytes = stackalloc byte[maxLength];
             var count = 0;
             while (reader.BaseStream.Position != reader.BaseStream.Length && count < maxLength)
             {
@@ -49,9 +49,10 @@ namespace AssetStudio
                 {
                     break;
                 }
-                bytes.Add(b);
+                bytes[count] = b;
                 count++;
             }
+            bytes = bytes.Slice(0, count);
             return encoding?.GetString(bytes.ToArray()) ?? Encoding.UTF8.GetString(bytes.ToArray());
         }
 

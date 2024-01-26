@@ -10,7 +10,7 @@ namespace AssetStudio
         public static Image<Bgra32> ConvertToImage(this Texture2D m_Texture2D, bool flip)
         {
             var converter = new Texture2DConverter(m_Texture2D);
-            var buff = BigArrayPool<byte>.Shared.Rent(m_Texture2D.m_Width * m_Texture2D.m_Height * 4);
+            var buff = BigArrayPool<byte>.Shared.Rent(converter.outPutSize);
             try
             {
                 if (converter.DecodeTexture2D(buff))
@@ -26,7 +26,7 @@ namespace AssetStudio
             }
             finally
             {
-                BigArrayPool<byte>.Shared.Return(buff);
+                BigArrayPool<byte>.Shared.Return(buff, clearArray: true);
             }
         }
 
