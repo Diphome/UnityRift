@@ -305,7 +305,7 @@
             // 
             // l2dAnimationClipRadioButton
             // 
-            this.l2dAnimationClipRadioButton.AccessibleName = "AnimationClip";
+            this.l2dAnimationClipRadioButton.AccessibleName = "AnimationClipV2";
             this.l2dAnimationClipRadioButton.AutoSize = true;
             this.l2dAnimationClipRadioButton.Location = new System.Drawing.Point(172, 5);
             this.l2dAnimationClipRadioButton.Name = "l2dAnimationClipRadioButton";

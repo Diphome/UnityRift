@@ -748,7 +748,11 @@ namespace AssetStudioCLI.Options
                                     o_l2dMotionMode.Value = CubismLive2DExtractor.Live2DMotionMode.MonoBehaviour;
                                     break;
                                 case "animationclip":
-                                    o_l2dMotionMode.Value = CubismLive2DExtractor.Live2DMotionMode.AnimationClip;
+                                case "animationclipv2":
+                                    o_l2dMotionMode.Value = CubismLive2DExtractor.Live2DMotionMode.AnimationClipV2;
+                                    break;
+                                case "animationclipv1":
+                                    o_l2dMotionMode.Value = CubismLive2DExtractor.Live2DMotionMode.AnimationClipV1;
                                     break;
                                 default:
                                     Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported Live2D motion mode: [{value.Color(brightRed)}].\n");

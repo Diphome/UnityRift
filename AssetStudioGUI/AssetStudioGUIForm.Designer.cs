@@ -68,7 +68,12 @@
             this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem9 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
-            this.allLive2DModelsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.live2DCubismModelsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.allL2DModelsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.selectedL2DModelsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.l2DModelWithFadeListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.l2DModelWithFadeMotionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.l2DModelWithClipsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItem10 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem11 = new System.Windows.Forms.ToolStripMenuItem();
@@ -140,8 +145,12 @@
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.copyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportSelectedAssetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exportAnimatorwithselectedAnimationClipMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dumpSelectedAssetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportAnimatorWithSelectedAnimationClipMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportAsLive2DModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportL2DWithFadeLstToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportL2DWithFadeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportL2DWithClipsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.goToSceneHierarchyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showOriginalFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
@@ -327,7 +336,7 @@
             this.exportAllObjectssplitToolStripMenuItem1.Name = "exportAllObjectssplitToolStripMenuItem1";
             this.exportAllObjectssplitToolStripMenuItem1.Size = new System.Drawing.Size(382, 22);
             this.exportAllObjectssplitToolStripMenuItem1.Text = "Export all objects (split)";
-            this.exportAllObjectssplitToolStripMenuItem1.Click += new System.EventHandler(this.exportAllObjectssplitToolStripMenuItem1_Click);
+            this.exportAllObjectssplitToolStripMenuItem1.Click += new System.EventHandler(this.exportAllObjectsSplitToolStripMenuItem1_Click);
             // 
             // exportSelectedObjectsToolStripMenuItem
             // 
@@ -341,7 +350,7 @@
             this.exportSelectedObjectsWithAnimationClipToolStripMenuItem.Name = "exportSelectedObjectsWithAnimationClipToolStripMenuItem";
             this.exportSelectedObjectsWithAnimationClipToolStripMenuItem.Size = new System.Drawing.Size(382, 22);
             this.exportSelectedObjectsWithAnimationClipToolStripMenuItem.Text = "Export selected objects (split) + selected AnimationClips";
-            this.exportSelectedObjectsWithAnimationClipToolStripMenuItem.Click += new System.EventHandler(this.exportObjectswithAnimationClipMenuItem_Click);
+            this.exportSelectedObjectsWithAnimationClipToolStripMenuItem.Click += new System.EventHandler(this.exportObjectsWithAnimationClipMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
@@ -353,14 +362,14 @@
             this.exportSelectedObjectsmergeToolStripMenuItem.Name = "exportSelectedObjectsmergeToolStripMenuItem";
             this.exportSelectedObjectsmergeToolStripMenuItem.Size = new System.Drawing.Size(382, 22);
             this.exportSelectedObjectsmergeToolStripMenuItem.Text = "Export selected objects (merge)";
-            this.exportSelectedObjectsmergeToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedObjectsmergeToolStripMenuItem_Click);
+            this.exportSelectedObjectsmergeToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedObjectsMergeToolStripMenuItem_Click);
             // 
             // exportSelectedObjectsmergeWithAnimationClipToolStripMenuItem
             // 
             this.exportSelectedObjectsmergeWithAnimationClipToolStripMenuItem.Name = "exportSelectedObjectsmergeWithAnimationClipToolStripMenuItem";
             this.exportSelectedObjectsmergeWithAnimationClipToolStripMenuItem.Size = new System.Drawing.Size(382, 22);
             this.exportSelectedObjectsmergeWithAnimationClipToolStripMenuItem.Text = "Export selected objects (merge) + selected AnimationClips";
-            this.exportSelectedObjectsmergeWithAnimationClipToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedObjectsmergeWithAnimationClipToolStripMenuItem_Click);
+            this.exportSelectedObjectsmergeWithAnimationClipToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedObjectsMergeWithAnimationClipToolStripMenuItem_Click);
             // 
             // exportToolStripMenuItem
             // 
@@ -374,7 +383,7 @@
             this.toolStripMenuItem2,
             this.toolStripMenuItem3,
             this.toolStripSeparator6,
-            this.allLive2DModelsToolStripMenuItem,
+            this.live2DCubismModelsToolStripMenuItem,
             this.toolStripSeparator2,
             this.toolStripMenuItem10});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
@@ -412,7 +421,7 @@
             this.exportAnimatorWithSelectedAnimationClipToolStripMenuItem.Name = "exportAnimatorWithSelectedAnimationClipToolStripMenuItem";
             this.exportAnimatorWithSelectedAnimationClipToolStripMenuItem.Size = new System.Drawing.Size(266, 22);
             this.exportAnimatorWithSelectedAnimationClipToolStripMenuItem.Text = "Animator + selected AnimationClips";
-            this.exportAnimatorWithSelectedAnimationClipToolStripMenuItem.Click += new System.EventHandler(this.exportAnimatorwithAnimationClipMenuItem_Click);
+            this.exportAnimatorWithSelectedAnimationClipToolStripMenuItem.Click += new System.EventHandler(this.exportAnimatorWithAnimationClipMenuItem_Click);
             // 
             // toolStripSeparator4
             // 
@@ -486,12 +495,52 @@
             this.toolStripSeparator6.Name = "toolStripSeparator6";
             this.toolStripSeparator6.Size = new System.Drawing.Size(263, 6);
             // 
-            // allLive2DModelsToolStripMenuItem
+            // live2DCubismModelsToolStripMenuItem
             // 
-            this.allLive2DModelsToolStripMenuItem.Name = "allLive2DModelsToolStripMenuItem";
-            this.allLive2DModelsToolStripMenuItem.Size = new System.Drawing.Size(266, 22);
-            this.allLive2DModelsToolStripMenuItem.Text = "Live2D Cubism models";
-            this.allLive2DModelsToolStripMenuItem.Click += new System.EventHandler(this.allLive2DModelsToolStripMenuItem_Click);
+            this.live2DCubismModelsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.allL2DModelsToolStripMenuItem,
+            this.selectedL2DModelsToolStripMenuItem,
+            this.l2DModelWithFadeListToolStripMenuItem,
+            this.l2DModelWithFadeMotionsToolStripMenuItem,
+            this.l2DModelWithClipsToolStripMenuItem});
+            this.live2DCubismModelsToolStripMenuItem.Name = "live2DCubismModelsToolStripMenuItem";
+            this.live2DCubismModelsToolStripMenuItem.Size = new System.Drawing.Size(266, 22);
+            this.live2DCubismModelsToolStripMenuItem.Text = "Live2D Cubism models";
+            // 
+            // allL2DModelsToolStripMenuItem
+            // 
+            this.allL2DModelsToolStripMenuItem.Name = "allL2DModelsToolStripMenuItem";
+            this.allL2DModelsToolStripMenuItem.Size = new System.Drawing.Size(292, 22);
+            this.allL2DModelsToolStripMenuItem.Text = "All models";
+            this.allL2DModelsToolStripMenuItem.Click += new System.EventHandler(this.exportAllL2D_Click);
+            // 
+            // selectedL2DModelsToolStripMenuItem
+            // 
+            this.selectedL2DModelsToolStripMenuItem.Name = "selectedL2DModelsToolStripMenuItem";
+            this.selectedL2DModelsToolStripMenuItem.Size = new System.Drawing.Size(292, 22);
+            this.selectedL2DModelsToolStripMenuItem.Text = "Selected models";
+            this.selectedL2DModelsToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedL2D_Click);
+            // 
+            // l2DModelWithFadeListToolStripMenuItem
+            // 
+            this.l2DModelWithFadeListToolStripMenuItem.Name = "l2DModelWithFadeListToolStripMenuItem";
+            this.l2DModelWithFadeListToolStripMenuItem.Size = new System.Drawing.Size(292, 22);
+            this.l2DModelWithFadeListToolStripMenuItem.Text = "Model + selected Fade Motion List";
+            this.l2DModelWithFadeListToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedL2DWithFadeList_Click);
+            // 
+            // l2DModelWithFadeMotionsToolStripMenuItem
+            // 
+            this.l2DModelWithFadeMotionsToolStripMenuItem.Name = "l2DModelWithFadeMotionsToolStripMenuItem";
+            this.l2DModelWithFadeMotionsToolStripMenuItem.Size = new System.Drawing.Size(292, 22);
+            this.l2DModelWithFadeMotionsToolStripMenuItem.Text = "Model + selected Fade motions";
+            this.l2DModelWithFadeMotionsToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedL2DWithFadeMotions_Click);
+            // 
+            // l2DModelWithClipsToolStripMenuItem
+            // 
+            this.l2DModelWithClipsToolStripMenuItem.Name = "l2DModelWithClipsToolStripMenuItem";
+            this.l2DModelWithClipsToolStripMenuItem.Size = new System.Drawing.Size(292, 22);
+            this.l2DModelWithClipsToolStripMenuItem.Text = "Model + selected AnimationClip motions";
+            this.l2DModelWithClipsToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedL2DWithClips_Click);
             // 
             // toolStripSeparator2
             // 
@@ -1226,46 +1275,82 @@
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.copyToolStripMenuItem,
             this.exportSelectedAssetsToolStripMenuItem,
-            this.exportAnimatorwithselectedAnimationClipMenuItem,
             this.dumpSelectedAssetsToolStripMenuItem,
+            this.exportAnimatorWithSelectedAnimationClipMenuItem,
+            this.exportAsLive2DModelToolStripMenuItem,
+            this.exportL2DWithFadeLstToolStripMenuItem,
+            this.exportL2DWithFadeToolStripMenuItem,
+            this.exportL2DWithClipsToolStripMenuItem,
             this.goToSceneHierarchyToolStripMenuItem,
             this.showOriginalFileToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(304, 136);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(332, 246);
             // 
             // copyToolStripMenuItem
             // 
             this.copyToolStripMenuItem.Name = "copyToolStripMenuItem";
-            this.copyToolStripMenuItem.Size = new System.Drawing.Size(303, 22);
+            this.copyToolStripMenuItem.Size = new System.Drawing.Size(331, 22);
             this.copyToolStripMenuItem.Text = "Copy text";
             this.copyToolStripMenuItem.Click += new System.EventHandler(this.copyToolStripMenuItem_Click);
             // 
             // exportSelectedAssetsToolStripMenuItem
             // 
             this.exportSelectedAssetsToolStripMenuItem.Name = "exportSelectedAssetsToolStripMenuItem";
-            this.exportSelectedAssetsToolStripMenuItem.Size = new System.Drawing.Size(303, 22);
+            this.exportSelectedAssetsToolStripMenuItem.Size = new System.Drawing.Size(331, 22);
             this.exportSelectedAssetsToolStripMenuItem.Text = "Export selected assets";
             this.exportSelectedAssetsToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedAssetsToolStripMenuItem_Click);
-            // 
-            // exportAnimatorwithselectedAnimationClipMenuItem
-            // 
-            this.exportAnimatorwithselectedAnimationClipMenuItem.Name = "exportAnimatorwithselectedAnimationClipMenuItem";
-            this.exportAnimatorwithselectedAnimationClipMenuItem.Size = new System.Drawing.Size(303, 22);
-            this.exportAnimatorwithselectedAnimationClipMenuItem.Text = "Export Animator + selected AnimationClips";
-            this.exportAnimatorwithselectedAnimationClipMenuItem.Visible = false;
-            this.exportAnimatorwithselectedAnimationClipMenuItem.Click += new System.EventHandler(this.exportAnimatorwithAnimationClipMenuItem_Click);
             // 
             // dumpSelectedAssetsToolStripMenuItem
             // 
             this.dumpSelectedAssetsToolStripMenuItem.Name = "dumpSelectedAssetsToolStripMenuItem";
-            this.dumpSelectedAssetsToolStripMenuItem.Size = new System.Drawing.Size(303, 22);
+            this.dumpSelectedAssetsToolStripMenuItem.Size = new System.Drawing.Size(331, 22);
             this.dumpSelectedAssetsToolStripMenuItem.Text = "Dump selected assets";
             this.dumpSelectedAssetsToolStripMenuItem.Click += new System.EventHandler(this.dumpSelectedAssetsToolStripMenuItem_Click);
+            // 
+            // exportAnimatorWithSelectedAnimationClipMenuItem
+            // 
+            this.exportAnimatorWithSelectedAnimationClipMenuItem.Name = "exportAnimatorWithSelectedAnimationClipMenuItem";
+            this.exportAnimatorWithSelectedAnimationClipMenuItem.Size = new System.Drawing.Size(331, 22);
+            this.exportAnimatorWithSelectedAnimationClipMenuItem.Text = "Export Animator + selected AnimationClips";
+            this.exportAnimatorWithSelectedAnimationClipMenuItem.Visible = false;
+            this.exportAnimatorWithSelectedAnimationClipMenuItem.Click += new System.EventHandler(this.exportAnimatorWithAnimationClipMenuItem_Click);
+            // 
+            // exportAsLive2DModelToolStripMenuItem
+            // 
+            this.exportAsLive2DModelToolStripMenuItem.Name = "exportAsLive2DModelToolStripMenuItem";
+            this.exportAsLive2DModelToolStripMenuItem.Size = new System.Drawing.Size(331, 22);
+            this.exportAsLive2DModelToolStripMenuItem.Text = "Export as Live2D model(s)";
+            this.exportAsLive2DModelToolStripMenuItem.Visible = false;
+            this.exportAsLive2DModelToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedL2D_Click);
+            // 
+            // exportL2DWithFadeLstToolStripMenuItem
+            // 
+            this.exportL2DWithFadeLstToolStripMenuItem.Name = "exportL2DWithFadeLstToolStripMenuItem";
+            this.exportL2DWithFadeLstToolStripMenuItem.Size = new System.Drawing.Size(331, 22);
+            this.exportL2DWithFadeLstToolStripMenuItem.Text = "Export Live2D model + selected Fade Motion List";
+            this.exportL2DWithFadeLstToolStripMenuItem.Visible = false;
+            this.exportL2DWithFadeLstToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedL2DWithFadeList_Click);
+            // 
+            // exportL2DWithFadeToolStripMenuItem
+            // 
+            this.exportL2DWithFadeToolStripMenuItem.Name = "exportL2DWithFadeToolStripMenuItem";
+            this.exportL2DWithFadeToolStripMenuItem.Size = new System.Drawing.Size(331, 22);
+            this.exportL2DWithFadeToolStripMenuItem.Text = "Export Live2D model + selected Fade motions";
+            this.exportL2DWithFadeToolStripMenuItem.Visible = false;
+            this.exportL2DWithFadeToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedL2DWithFadeMotions_Click);
+            // 
+            // exportL2DWithClipsToolStripMenuItem
+            // 
+            this.exportL2DWithClipsToolStripMenuItem.Name = "exportL2DWithClipsToolStripMenuItem";
+            this.exportL2DWithClipsToolStripMenuItem.Size = new System.Drawing.Size(331, 22);
+            this.exportL2DWithClipsToolStripMenuItem.Text = "Export Live2D model + selected AnimationClips";
+            this.exportL2DWithClipsToolStripMenuItem.Visible = false;
+            this.exportL2DWithClipsToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedL2DWithClips_Click);
             // 
             // goToSceneHierarchyToolStripMenuItem
             // 
             this.goToSceneHierarchyToolStripMenuItem.Name = "goToSceneHierarchyToolStripMenuItem";
-            this.goToSceneHierarchyToolStripMenuItem.Size = new System.Drawing.Size(303, 22);
+            this.goToSceneHierarchyToolStripMenuItem.Size = new System.Drawing.Size(331, 22);
             this.goToSceneHierarchyToolStripMenuItem.Text = "Go to scene hierarchy";
             this.goToSceneHierarchyToolStripMenuItem.Visible = false;
             this.goToSceneHierarchyToolStripMenuItem.Click += new System.EventHandler(this.goToSceneHierarchyToolStripMenuItem_Click);
@@ -1273,7 +1358,7 @@
             // showOriginalFileToolStripMenuItem
             // 
             this.showOriginalFileToolStripMenuItem.Name = "showOriginalFileToolStripMenuItem";
-            this.showOriginalFileToolStripMenuItem.Size = new System.Drawing.Size(303, 22);
+            this.showOriginalFileToolStripMenuItem.Size = new System.Drawing.Size(331, 22);
             this.showOriginalFileToolStripMenuItem.Text = "Show original file";
             this.showOriginalFileToolStripMenuItem.Visible = false;
             this.showOriginalFileToolStripMenuItem.Click += new System.EventHandler(this.showOriginalFileToolStripMenuItem_Click);
@@ -1387,7 +1472,7 @@
         private OpenTK.GLControl glControl1;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem showOriginalFileToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem exportAnimatorwithselectedAnimationClipMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportAnimatorWithSelectedAnimationClipMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSelectedAssetsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem filterTypeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem allToolStripMenuItem;
@@ -1437,13 +1522,22 @@
         private System.Windows.Forms.ComboBox listSearchHistory;
         private System.Windows.Forms.RichTextBox listSearch;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
-        private System.Windows.Forms.ToolStripMenuItem allLive2DModelsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showRelatedAssetsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
         private System.Windows.Forms.ListView assetListView;
         private System.Windows.Forms.ToolStripMenuItem showConsoleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem writeLogToFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem buildTreeStructureToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportL2DWithClipsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportAsLive2DModelToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem live2DCubismModelsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem allL2DModelsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem selectedL2DModelsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem l2DModelWithClipsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem l2DModelWithFadeMotionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportL2DWithFadeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem l2DModelWithFadeListToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportL2DWithFadeLstToolStripMenuItem;
     }
 }
 

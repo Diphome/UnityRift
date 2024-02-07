@@ -2,7 +2,7 @@
 
 namespace CubismLive2DExtractor
 {
-    public class AnimationCurve
+    public sealed class AnimationCurve
     {
         public CubismKeyframeData[] m_Curve { get; set; }
         public int m_PreInfinity {  get; set; }
@@ -10,7 +10,7 @@ namespace CubismLive2DExtractor
         public int m_RotationOrder { get; set; }
     }
 
-    public class CubismFadeMotion
+    public sealed class CubismFadeMotion
     {
         public string m_Name { get; set; }
         public string MotionName { get; set; }

@@ -12,6 +12,13 @@ namespace AssetStudio
                 : BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(start));
         }
 
+        public static uint SpanToUint16(Span<byte> data, int start, bool isBigEndian)
+        {
+            return isBigEndian
+                ? BinaryPrimitives.ReadUInt16BigEndian(data.Slice(start))
+                : BinaryPrimitives.ReadUInt16LittleEndian(data.Slice(start));
+        }
+
         public static long SpanToInt64(Span<byte> data, int start, bool isBigEndian)
         {
             return isBigEndian

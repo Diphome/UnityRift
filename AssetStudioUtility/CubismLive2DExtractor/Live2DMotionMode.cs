@@ -3,6 +3,7 @@
     public enum Live2DMotionMode
     {
         MonoBehaviour,
-        AnimationClip
+        AnimationClipV1,
+        AnimationClipV2,
     }
 }

@@ -10,14 +10,21 @@ namespace CubismLive2DExtractor
         private Dictionary<uint, string> bonePathHash = new Dictionary<uint, string>();
         public List<ImportedKeyframedAnimation> AnimationList { get; protected set; } = new List<ImportedKeyframedAnimation>();
 
-        public CubismMotion3Converter(GameObject rootGameObject, AnimationClip[] animationClips)
+        public CubismMotion3Converter(GameObject rootGameObject, List<AnimationClip> animationClips)
         {
             var rootTransform = GetTransform(rootGameObject);
             CreateBonePathHash(rootTransform);
             ConvertAnimations(animationClips);
         }
 
-        private void ConvertAnimations(AnimationClip[] animationClips)
+        public CubismMotion3Converter(List<AnimationClip> animationClips, HashSet<string> partIds, HashSet<string> parameterIds)
+        {
+            CreateBonePathHash(partIds, pathType: "Parts/");
+            CreateBonePathHash(parameterIds, pathType: "Parameters/");
+            ConvertAnimations(animationClips);
+        }
+
+        private void ConvertAnimations(List<AnimationClip> animationClips)
         {
             foreach (var animationClip in animationClips)
             {
@@ -160,21 +167,30 @@ namespace CubismLive2DExtractor
             return null;
         }
 
+        private void CreateBonePathHash(HashSet<string> ids, string pathType)
+        {
+            foreach (var id in ids)
+            {
+                var name = pathType + id;;
+                bonePathHash[GetCRC(name)] = name;
+                int index;
+                while ((index = name.IndexOf("/", StringComparison.Ordinal)) >= 0)
+                {
+                    name = name.Substring(index + 1);
+                    bonePathHash[GetCRC(name)] = name;
+                }
+            }
+        }
+
         private void CreateBonePathHash(Transform m_Transform)
         {
             var name = GetTransformPath(m_Transform);
-            var crc = new SevenZip.CRC();
-            var bytes = Encoding.UTF8.GetBytes(name);
-            crc.Update(bytes, 0, (uint)bytes.Length);
-            bonePathHash[crc.GetDigest()] = name;
+            bonePathHash[GetCRC(name)] = name;
             int index;
             while ((index = name.IndexOf("/", StringComparison.Ordinal)) >= 0)
             {
                 name = name.Substring(index + 1);
-                crc = new SevenZip.CRC();
-                bytes = Encoding.UTF8.GetBytes(name);
-                crc.Update(bytes, 0, (uint)bytes.Length);
-                bonePathHash[crc.GetDigest()] = name;
+                bonePathHash[GetCRC(name)] = name;
             }
             foreach (var pptr in m_Transform.m_Children)
             {
@@ -183,7 +199,13 @@ namespace CubismLive2DExtractor
             }
         }
 
-        private string GetTransformPath(Transform transform)
+        private static uint GetCRC(string name)
+        {
+            var bytes = Encoding.UTF8.GetBytes(name);
+            return SevenZip.CRC.CalculateDigest(bytes, 0, (uint)bytes.Length);
+        }
+
+        private static string GetTransformPath(Transform transform)
         {
             transform.m_GameObject.TryGet(out var m_GameObject);
             if (transform.m_Father.TryGet(out var father))

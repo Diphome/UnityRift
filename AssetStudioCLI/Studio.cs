@@ -1,12 +1,12 @@
 ﻿using AssetStudio;
 using AssetStudioCLI.Options;
+using CubismLive2DExtractor;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using static AssetStudioCLI.Exporter;
-using static CubismLive2DExtractor.Live2DExtractor;
 using Ansi = AssetStudio.ColorConsole;
 
 namespace AssetStudioCLI
@@ -17,6 +17,7 @@ namespace AssetStudioCLI
         public static List<AssetItem> parsedAssetsList = new List<AssetItem>();
         public static List<BaseNode> gameObjectTree = new List<BaseNode>();
         public static AssemblyLoader assemblyLoader = new AssemblyLoader();
+        public static List<MonoBehaviour> cubismMocList = new List<MonoBehaviour>();
         private static Dictionary<AssetStudio.Object, string> containers = new Dictionary<AssetStudio.Object, string>();
 
         static Studio()
@@ -125,14 +126,16 @@ namespace AssetStudioCLI
                             assetItem.Text = m_Shader.m_ParsedForm?.m_Name ?? m_Shader.m_Name;
                             break;
                         case MonoBehaviour m_MonoBehaviour:
-                            if (m_MonoBehaviour.m_Name == "" && m_MonoBehaviour.m_Script.TryGet(out var m_Script))
+                            var assetName = m_MonoBehaviour.m_Name;
+                            if (m_MonoBehaviour.m_Script.TryGet(out var m_Script))
                             {
-                                assetItem.Text = m_Script.m_ClassName;
+                                assetName = assetName == "" ? m_Script.m_ClassName : assetName;
+                                if (m_Script.m_ClassName == "CubismMoc")
+                                {
+                                    cubismMocList.Add(m_MonoBehaviour);
+                                }
                             }
-                            else
-                            {
-                                assetItem.Text = m_MonoBehaviour.m_Name;
-                            }
+                            assetItem.Text = assetName;
                             break;
                         case GameObject m_GameObject:
                             assetItem.Text = m_GameObject.m_Name;
@@ -620,63 +623,56 @@ namespace AssetStudioCLI
         public static void ExportLive2D()
         {
             var baseDestPath = Path.Combine(CLIOptions.o_outputFolder.Value, "Live2DOutput");
-            var useFullContainerPath = false;
+            var useFullContainerPath = true;
+            var mocPathList = new List<string>();
+            var basePathSet = new HashSet<string>();
             var motionMode = CLIOptions.o_l2dMotionMode.Value;
             var forceBezier = CLIOptions.f_l2dForceBezier.Value;
 
-            Progress.Reset();
-            Logger.Info($"Searching for Live2D files...");
-
-            var cubismMocs = parsedAssetsList.Where(x =>
-            {
-                if (x.Type == ClassIDType.MonoBehaviour)
-                {
-                    ((MonoBehaviour)x.Asset).m_Script.TryGet(out var m_Script);
-                    return m_Script?.m_ClassName == "CubismMoc";
-                }
-                return false;
-            }).Select(x => x.Asset).ToArray();
-
-            if (cubismMocs.Length == 0)
+            if (cubismMocList.Count == 0)
             {
                 Logger.Default.Log(LoggerEvent.Info, "Live2D Cubism models were not found.", ignoreLevel: true);
                 return;
             }
-            if (cubismMocs.Length > 1)
+
+            Progress.Reset();
+            Logger.Info($"Searching for Live2D files...");
+
+            foreach (var mocMonoBehaviour in cubismMocList)
             {
-                var basePathSet = cubismMocs.Select(x =>
-                {
-                    var pathLen = containers.TryGetValue(x, out var itemContainer) ? itemContainer.LastIndexOf("/") : 0;
-                    pathLen = pathLen < 0 ? containers[x].Length : pathLen;
-                    return itemContainer?.Substring(0, pathLen);
-                }).ToHashSet();
+                if (!containers.TryGetValue(mocMonoBehaviour, out var fullContainerPath))
+                    continue;
 
-                if (basePathSet.All(x => x == null))
-                {
-                    Logger.Error($"Live2D Cubism export error: Cannot find any model related files.");
-                    return;
-                }
-
-                if (basePathSet.Count != cubismMocs.Length)
-                {
-                    useFullContainerPath = true;
-                    Logger.Debug($"useFullContainerPath: {useFullContainerPath}");
-                }
+                var pathSepIndex = fullContainerPath.LastIndexOf('/');
+                var basePath = pathSepIndex > 0
+                    ? fullContainerPath.Substring(0, pathSepIndex)
+                    : fullContainerPath;
+                basePathSet.Add(basePath);
+                mocPathList.Add(fullContainerPath);
             }
 
-            var basePathList = cubismMocs.Select(x =>
+            if (mocPathList.Count == 0)
             {
-                containers.TryGetValue(x, out var container);
-                container = useFullContainerPath
-                    ? container
-                    : container?.Substring(0, container.LastIndexOf("/"));
-                return container;
-            }).Where(x => x != null).ToList();
+                Logger.Error("Live2D Cubism export error: Cannot find any model related files.");
+                return;
+            }
+            if (basePathSet.Count == mocPathList.Count)
+            {
+                mocPathList = basePathSet.ToList();
+                useFullContainerPath = false;
+                Logger.Debug($"useFullContainerPath: {useFullContainerPath}");
+            }
+            basePathSet.Clear();
 
             var lookup = containers.ToLookup(
-                x => basePathList.Find(b => x.Value.Contains(b) && x.Value.Split('/').Any(y => y == b.Substring(b.LastIndexOf("/") + 1))),
+                x => mocPathList.Find(b => x.Value.Contains(b) && x.Value.Split('/').Any(y => y == b.Substring(b.LastIndexOf("/") + 1))),
                 x => x.Key
             );
+
+            if (cubismMocList[0].serializedType?.m_Type == null && CLIOptions.o_assemblyPath.Value == "")
+            {
+                Logger.Warning("Specifying the assembly folder may be needed for proper extraction");
+            }
 
             var totalModelCount = lookup.LongCount(x => x.Key != null);
             Logger.Info($"Found {totalModelCount} model(s).");
@@ -691,11 +687,16 @@ namespace AssetStudioCLI
                 Logger.Info($"[{modelCounter + 1}/{totalModelCount}] Exporting Live2D: \"{srcContainer.Color(Ansi.BrightCyan)}\"");
                 try
                 {
-                    var modelName = useFullContainerPath ? Path.GetFileNameWithoutExtension(container) : container.Substring(container.LastIndexOf('/') + 1);
-                    container = Path.HasExtension(container) ? container.Replace(Path.GetExtension(container), "") : container;
+                    var modelName = useFullContainerPath
+                        ? Path.GetFileNameWithoutExtension(container)
+                        : container.Substring(container.LastIndexOf('/') + 1);
+                    container = Path.HasExtension(container)
+                        ? container.Replace(Path.GetExtension(container), "")
+                        : container;
                     var destPath = Path.Combine(baseDestPath, container) + Path.DirectorySeparatorChar;
 
-                    ExtractLive2D(assets, destPath, modelName, assemblyLoader, motionMode, forceBezier);
+                    var modelExtractor = new Live2DExtractor(assets);
+                    modelExtractor.ExtractCubismModel(destPath, modelName, motionMode, assemblyLoader, forceBezier);
                     modelCounter++;
                 }
                 catch (Exception ex)

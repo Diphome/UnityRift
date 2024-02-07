@@ -1012,18 +1012,16 @@ namespace AssetStudio
         private void CreateBonePathHash(Transform m_Transform)
         {
             var name = GetTransformPathByFather(m_Transform);
-            var crc = new SevenZip.CRC();
             var bytes = Encoding.UTF8.GetBytes(name);
-            crc.Update(bytes, 0, (uint)bytes.Length);
-            bonePathHash[crc.GetDigest()] = name;
+            var crc = SevenZip.CRC.CalculateDigest(bytes, 0, (uint)bytes.Length);
+            bonePathHash[crc] = name;
             int index;
             while ((index = name.IndexOf("/", StringComparison.Ordinal)) >= 0)
             {
                 name = name.Substring(index + 1);
-                crc = new SevenZip.CRC();
                 bytes = Encoding.UTF8.GetBytes(name);
-                crc.Update(bytes, 0, (uint)bytes.Length);
-                bonePathHash[crc.GetDigest()] = name;
+                crc = SevenZip.CRC.CalculateDigest(bytes, 0, (uint)bytes.Length);
+                bonePathHash[crc] = name;
             }
             foreach (var pptr in m_Transform.m_Children)
             {
