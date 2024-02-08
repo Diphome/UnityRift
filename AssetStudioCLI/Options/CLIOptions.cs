@@ -108,30 +108,31 @@ namespace AssetStudioCLI.Options
             InitOptions();
         }
 
-        private static void OptionGrouping(string name, string desc, HelpGroups group, bool isFlag)
+        private static void OptionGrouping(string name, string desc, string example, HelpGroups helpGroup, bool isFlag)
         {
             if (string.IsNullOrEmpty(name))
             {
                 return;
             }
 
-            var optionDict = new Dictionary<string, string>() { { name, desc } };
-            if (!optionGroups.ContainsKey(group))
+            var optionDesc = desc + example.Color(ColorConsole.BrightBlack);
+            var optionDict = new Dictionary<string, string>() { { name, optionDesc } };
+            if (optionGroups.TryGetValue(helpGroup, out Dictionary<string, string> groupDict))
             {
-                optionGroups.Add(group, optionDict);
+                groupDict.Add(name, optionDesc);
             }
             else
             {
-                optionGroups[group].Add(name, desc);
+                optionGroups.Add(helpGroup, optionDict);
             }
 
             if (isFlag)
             {
-                flagsDict.Add(name, desc);
+                flagsDict.Add(name, optionDesc);
             }
             else
             {
-                optionsDict.Add(name, desc);
+                optionsDict.Add(name, optionDesc);
             }
         }
 
@@ -172,8 +173,8 @@ namespace AssetStudioCLI.Options
                     "Dump - Makes asset dumps\n" +
                     "Info - Loads file(s), shows the number of available for export assets and exits\n" +
                     "Live2D - Exports Live2D Cubism 3 models\n" +
-                    "SplitObjects - Exports split objects (fbx)\n" +
-                    "Example: \"-m info\"\n",
+                    "SplitObjects - Exports split objects (fbx)\n",
+                optionExample: "Example: \"-m info\"\n",
                 optionHelpGroup: HelpGroups.General
             );
             o_exportAssetTypes = new GroupedOption<List<ClassIDType>>
@@ -184,8 +185,8 @@ namespace AssetStudioCLI.Options
                     "<Value(s): tex2d, sprite, textAsset, monoBehaviour, font, shader, movieTexture,\n" +
                     "audio, video, mesh | all(default)>\n" +
                     "All - export all asset types, which are listed in the values\n" +
-                    "*To specify multiple asset types, write them separated by ',' or ';' without spaces\n" +
-                    "Examples: \"-t sprite\" or \"-t tex2d,sprite,audio\" or \"-t tex2d;sprite;font\"\n",
+                    "*To specify multiple asset types, write them separated by ',' or ';' without spaces\n",
+                optionExample: "Examples: \"-t sprite\" or \"-t tex2d,sprite,audio\" or \"-t tex2d;sprite;font\"\n",
                 optionHelpGroup: HelpGroups.General
             );
             o_groupAssetsBy = new GroupedOption<AssetGroupOption>
@@ -198,8 +199,8 @@ namespace AssetStudioCLI.Options
                     "Type - Group exported assets by type name\n" +
                     "Container - Group exported assets by container path\n" +
                     "ContainerFull - Group exported assets by full container path (e.g. with prefab name)\n" +
-                    "Filename - Group exported assets by source file name\n" +
-                    "Example: \"-g container\"\n",
+                    "Filename - Group exported assets by source file name\n",
+                optionExample: "Example: \"-g container\"\n",
                 optionHelpGroup: HelpGroups.General
             );
             o_outputFolder = new GroupedOption<string>
@@ -208,6 +209,7 @@ namespace AssetStudioCLI.Options
                 optionName: "-o, --output <path>",
                 optionDescription: "Specify path to the output folder\n" +
                     "If path isn't specified, 'ASExport' folder will be created in the program's work folder\n",
+                optionExample: "",
                 optionHelpGroup: HelpGroups.General
             );
             o_displayHelp = new GroupedOption<bool>
@@ -215,6 +217,7 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: false,
                 optionName: "-h, --help",
                 optionDescription: "Display help and exit",
+                optionExample: "",
                 optionHelpGroup: HelpGroups.General
             );
             #endregion
@@ -225,8 +228,8 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: LoggerEvent.Info,
                 optionName: "--log-level <value>",
                 optionDescription: "Specify the log level\n" +
-                    "<Value: verbose | debug | info(default) | warning | error>\n" +
-                    "Example: \"--log-level warning\"\n",
+                    "<Value: verbose | debug | info(default) | warning | error>\n",
+                optionExample: "Example: \"--log-level warning\"\n",
                 optionHelpGroup: HelpGroups.Logger
             );
             o_logOutput = new GroupedOption<LogOutputMode> 
@@ -234,8 +237,8 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: LogOutputMode.Console,
                 optionName: "--log-output <value>",
                 optionDescription: "Specify the log output\n" +
-                    "<Value: console(default) | file | both>\n" +
-                    "Example: \"--log-output both\"",
+                    "<Value: console(default) | file | both>\n",
+                optionExample: "Example: \"--log-output both\"",
                 optionHelpGroup: HelpGroups.Logger
             );
             #endregion
@@ -248,8 +251,8 @@ namespace AssetStudioCLI.Options
                 optionName: "--image-format <value>",
                 optionDescription: "Specify the format for converting image assets\n" +
                     "<Value: none | jpg | png(default) | bmp | tga | webp>\n" +
-                    "None - Do not convert images and export them as texture data (.tex)\n" +
-                    "Example: \"--image-format jpg\"\n",
+                    "None - Do not convert images and export them as texture data (.tex)\n",
+                optionExample: "Example: \"--image-format jpg\"\n",
                 optionHelpGroup: HelpGroups.Convert
             );
             o_audioFormat = new GroupedOption<AudioFormat>
@@ -258,8 +261,8 @@ namespace AssetStudioCLI.Options
                 optionName: "--audio-format <value>",
                 optionDescription: "Specify the format for converting audio assets\n" +
                     "<Value: none | wav(default)>\n" +
-                    "None - Do not convert audios and export them in their own format\n" +
-                    "Example: \"--audio-format wav\"",
+                    "None - Do not convert audios and export them in their own format\n",
+                optionExample: "Example: \"--audio-format wav\"",
                 optionHelpGroup: HelpGroups.Convert
             );
             #endregion
@@ -273,8 +276,8 @@ namespace AssetStudioCLI.Options
                     "<Value: monoBehaviour(default) | animationClip>\n" +
                     "MonoBehaviour - Try to export motions from MonoBehaviour Fade motions\n" +
                     "If no Fade motions are found, the AnimationClip method will be used\n" +
-                    "AnimationClip - Try to export motions using AnimationClip assets\n" +
-                    "Example: \"--l2d-motion-mode animationClip\"\n",
+                    "AnimationClip - Try to export motions using AnimationClip assets\n",
+                optionExample: "Example: \"--l2d-motion-mode animationClip\"\n",
                 optionHelpGroup: HelpGroups.Live2D
             );
             f_l2dForceBezier = new GroupedOption<bool>
@@ -283,6 +286,7 @@ namespace AssetStudioCLI.Options
                 optionName: "--l2d-force-bezier",
                 optionDescription: "(Flag) If specified, Linear motion segments will be calculated as Bezier segments\n" +
                     "(May help if the exported motions look jerky/not smooth enough)",
+                optionExample: "",
                 optionHelpGroup: HelpGroups.Live2D,
                 isFlag: true
             );
@@ -294,8 +298,8 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: 1f,
                 optionName: "--fbx-scale-factor <value>",
                 optionDescription: "Specify the FBX Scale Factor\n" +
-                    "<Value: float number from 0 to 100 (default=1)\n" +
-                    "Example: \"--fbx-scale-factor 50\"\n",
+                    "<Value: float number from 0 to 100 (default=1)\n",
+                optionExample: "Example: \"--fbx-scale-factor 50\"\n",
                 optionHelpGroup: HelpGroups.FBX
             );
             o_fbxBoneSize = new GroupedOption<int>
@@ -303,8 +307,8 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: 10,
                 optionName: "--fbx-bone-size <value>",
                 optionDescription: "Specify the FBX Bone Size\n" +
-                    "<Value: integer number from 0 to 100 (default=10)\n" +
-                    "Example: \"--fbx-bone-size 10\"",
+                    "<Value: integer number from 0 to 100 (default=10)\n",
+                optionExample: "Example: \"--fbx-bone-size 10\"",
                 optionHelpGroup: HelpGroups.FBX
             );
             #endregion
@@ -315,8 +319,8 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: new List<string>(),
                 optionName: "--filter-by-name <text>",
                 optionDescription: "Specify the name by which assets should be filtered\n" +
-                    "*To specify multiple names write them separated by ',' or ';' without spaces\n" +
-                    "Example: \"--filter-by-name char\" or \"--filter-by-name char,bg\"\n",
+                    "*To specify multiple names write them separated by ',' or ';' without spaces\n",
+                optionExample: "Example: \"--filter-by-name char\" or \"--filter-by-name char,bg\"\n",
                 optionHelpGroup: HelpGroups.Filter
             );
             o_filterByContainer = new GroupedOption<List<string>>
@@ -324,8 +328,8 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: new List<string>(),
                 optionName: "--filter-by-container <text>",
                 optionDescription: "Specify the container by which assets should be filtered\n" +
-                    "*To specify multiple containers write them separated by ',' or ';' without spaces\n" +
-                    "Example: \"--filter-by-container arts\" or \"--filter-by-container arts,icons\"\n",
+                    "*To specify multiple containers write them separated by ',' or ';' without spaces\n",
+                optionExample: "Example: \"--filter-by-container arts\" or \"--filter-by-container arts,icons\"\n",
                 optionHelpGroup: HelpGroups.Filter
             );
             o_filterByPathID = new GroupedOption<List<string>>
@@ -333,8 +337,8 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: new List<string>(),
                 optionName: "--filter-by-pathid <text>",
                 optionDescription: "Specify the PathID by which assets should be filtered\n" +
-                    "*To specify multiple PathIDs write them separated by ',' or ';' without spaces\n" +
-                    "Example: \"--filter-by-pathid 7238605633795851352,-2430306240205277265\"\n",
+                    "*To specify multiple PathIDs write them separated by ',' or ';' without spaces\n",
+                optionExample: "Example: \"--filter-by-pathid 7238605633795851352,-2430306240205277265\"\n",
                 optionHelpGroup: HelpGroups.Filter
             );
             o_filterByText = new GroupedOption<List<string>>
@@ -343,8 +347,8 @@ namespace AssetStudioCLI.Options
                 optionName: "--filter-by-text <text>",
                 optionDescription: "Specify the text by which assets should be filtered\n" +
                     "Looks for assets that contain the specified text in their names or containers\n" +
-                    "*To specify multiple values write them separated by ',' or ';' without spaces\n" +
-                    "Example: \"--filter-by-text portrait\" or \"--filter-by-text portrait,art\"\n",
+                    "*To specify multiple values write them separated by ',' or ';' without spaces\n",
+                optionExample: "Example: \"--filter-by-text portrait\" or \"--filter-by-text portrait,art\"\n",
                 optionHelpGroup: HelpGroups.Filter
             );
             #endregion
@@ -356,8 +360,8 @@ namespace AssetStudioCLI.Options
                 optionName: "--export-asset-list <value>",
                 optionDescription: "Specify the format in which you want to export asset list\n" +
                     "<Value: none(default) | xml>\n" +
-                    "None - Do not export asset list\n" +
-                    "Example: \"--export-asset-list xml\"\n",
+                    "None - Do not export asset list\n",
+                optionExample: "Example: \"--export-asset-list xml\"\n",
                 optionHelpGroup: HelpGroups.Advanced
             );
             o_assemblyPath = new GroupedOption<string>
@@ -365,13 +369,15 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: "",
                 optionName: "--assembly-folder <path>",
                 optionDescription: "Specify the path to the assembly folder\n",
+                optionExample: "",
                 optionHelpGroup: HelpGroups.Advanced
             );
             o_unityVersion = new GroupedOption<string>
             (
                 optionDefaultValue: "",
                 optionName: "--unity-version <text>",
-                optionDescription: "Specify Unity version\nExample: \"--unity-version 2017.4.39f1\"\n",
+                optionDescription: "Specify Unity version\n",
+                optionExample: "Example: \"--unity-version 2017.4.39f1\"\n",
                 optionHelpGroup: HelpGroups.Advanced
             );
             f_notRestoreExtensionName = new GroupedOption<bool>
@@ -379,6 +385,7 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: false,
                 optionName: "--not-restore-extension",
                 optionDescription: "(Flag) If specified, AssetStudio will not try to use/restore original TextAsset\nextension name, and will just export all TextAssets with the \".txt\" extension\n",
+                optionExample: "",
                 optionHelpGroup: HelpGroups.Advanced,
                 isFlag: true
             );
@@ -387,6 +394,7 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: false,
                 optionName: "--load-all",
                 optionDescription: "(Flag) If specified, AssetStudio will load assets of all types\n(Only for Dump, Info and ExportRaw modes)",
+                optionExample: "",
                 optionHelpGroup: HelpGroups.Advanced,
                 isFlag: true
             );
@@ -900,7 +908,7 @@ namespace AssetStudioCLI.Options
         private static bool TryFindOptionDescription(string option, Dictionary<string, string> dict, bool isFlag = false)
         {
             var optionDesc = dict.Where(x => x.Key.Contains(option)).ToArray();
-            if (optionDesc.Any())
+            if (optionDesc.Length != 0)
             {
                 var arg = isFlag ? "flag" : "option";
                 var rand = new Random();
@@ -919,12 +927,12 @@ namespace AssetStudioCLI.Options
             var helpMessage = new StringBuilder();
             var usage = new StringBuilder();
             var appAssembly = typeof(Program).Assembly.GetName();
-            usage.Append($"Usage: {appAssembly.Name} <input path to asset file/folder> ");
+            usage.Append($"{"Usage:".Color(ColorConsole.BrightYellow)} {appAssembly.Name} <input path to asset file/folder> ");
 
             var i = 0;
             foreach (var optionsGroup in optionGroups.Keys)
             {
-                helpMessage.AppendLine($"{optionsGroup} Options:");
+                helpMessage.AppendLine($"{optionsGroup} Options:".Color(ColorConsole.BrightYellow));
                 foreach (var optionDict in optionGroups[optionsGroup])
                 {
                     var optionName = $"{optionDict.Key,-indent - 8}";
