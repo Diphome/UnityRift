@@ -1925,7 +1925,7 @@ namespace AssetStudioGUI
 
         private void toolStripMenuItem15_Click(object sender, EventArgs e)
         {
-            logger.ShowErrorMessage = toolStripMenuItem15.Checked;
+            logger.ShowDebugMessage = toolStripMenuItem15.Checked;
         }
 
         private void sceneTreeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)

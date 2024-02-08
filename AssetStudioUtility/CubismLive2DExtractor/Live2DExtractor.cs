@@ -258,7 +258,7 @@ namespace CubismLive2DExtractor
             }
             else
             {
-                Logger.Debug($"Exported {motions.Count} motion(s)");
+                Logger.Info($"Exported {motions.Count} motion(s)");
             }
             #endregion
 

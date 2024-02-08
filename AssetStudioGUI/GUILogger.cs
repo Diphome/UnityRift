@@ -9,7 +9,7 @@ namespace AssetStudioGUI
 {
     class GUILogger : ILogger
     {
-        public bool ShowErrorMessage = false;
+        public bool ShowDebugMessage = false;
         private bool IsFileLoggerRunning = false;
         private string LoggerInitString;
         private string FileLogName;
@@ -123,6 +123,8 @@ namespace AssetStudioGUI
             }
 
             //Console logger
+            if (!ShowDebugMessage && loggerEvent == LoggerEvent.Debug)
+                return;
             Console.WriteLine(FormatMessage(loggerEvent, message, toConsole: true));
 
             //GUI logger
@@ -132,14 +134,7 @@ namespace AssetStudioGUI
                     MessageBox.Show(message, "Error");
                     break;
                 case LoggerEvent.Warning:
-                    if (ShowErrorMessage)
-                    {
-                        MessageBox.Show(message, "Warning");
-                    }
-                    else
-                    {
-                        action("An error has occurred. Turn on \"Show all error messages\" to see details next time.");
-                    }
+                    action("Some warnings occurred. See Console Logger for details.");
                     break;
                 case LoggerEvent.Debug:
                     break;

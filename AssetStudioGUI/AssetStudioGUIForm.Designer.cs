@@ -599,8 +599,8 @@
             // debugMenuItem
             // 
             this.debugMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem15,
             this.showConsoleToolStripMenuItem,
+            this.toolStripMenuItem15,
             this.writeLogToFileToolStripMenuItem,
             this.exportClassStructuresMenuItem});
             this.debugMenuItem.Name = "debugMenuItem";
@@ -611,8 +611,8 @@
             // 
             this.toolStripMenuItem15.CheckOnClick = true;
             this.toolStripMenuItem15.Name = "toolStripMenuItem15";
-            this.toolStripMenuItem15.Size = new System.Drawing.Size(200, 22);
-            this.toolStripMenuItem15.Text = "Show all error messages";
+            this.toolStripMenuItem15.Size = new System.Drawing.Size(288, 22);
+            this.toolStripMenuItem15.Text = "Show debug messages in console logger";
             this.toolStripMenuItem15.Click += new System.EventHandler(this.toolStripMenuItem15_Click);
             // 
             // showConsoleToolStripMenuItem
@@ -621,7 +621,7 @@
             this.showConsoleToolStripMenuItem.CheckOnClick = true;
             this.showConsoleToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.showConsoleToolStripMenuItem.Name = "showConsoleToolStripMenuItem";
-            this.showConsoleToolStripMenuItem.Size = new System.Drawing.Size(200, 22);
+            this.showConsoleToolStripMenuItem.Size = new System.Drawing.Size(288, 22);
             this.showConsoleToolStripMenuItem.Text = "Show console logger";
             this.showConsoleToolStripMenuItem.Click += new System.EventHandler(this.showConsoleToolStripMenuItem_Click);
             // 
@@ -629,14 +629,14 @@
             // 
             this.writeLogToFileToolStripMenuItem.CheckOnClick = true;
             this.writeLogToFileToolStripMenuItem.Name = "writeLogToFileToolStripMenuItem";
-            this.writeLogToFileToolStripMenuItem.Size = new System.Drawing.Size(200, 22);
+            this.writeLogToFileToolStripMenuItem.Size = new System.Drawing.Size(288, 22);
             this.writeLogToFileToolStripMenuItem.Text = "Write log to file";
             this.writeLogToFileToolStripMenuItem.CheckedChanged += new System.EventHandler(this.writeLogToFileToolStripMenuItem_CheckedChanged);
             // 
             // exportClassStructuresMenuItem
             // 
             this.exportClassStructuresMenuItem.Name = "exportClassStructuresMenuItem";
-            this.exportClassStructuresMenuItem.Size = new System.Drawing.Size(200, 22);
+            this.exportClassStructuresMenuItem.Size = new System.Drawing.Size(288, 22);
             this.exportClassStructuresMenuItem.Text = "Export class structures";
             this.exportClassStructuresMenuItem.Click += new System.EventHandler(this.exportClassStructuresMenuItem_Click);
             // 
@@ -1284,7 +1284,7 @@
             this.goToSceneHierarchyToolStripMenuItem,
             this.showOriginalFileToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(332, 246);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(332, 224);
             // 
             // copyToolStripMenuItem
             // 

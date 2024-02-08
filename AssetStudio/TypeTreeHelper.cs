@@ -20,7 +20,7 @@ namespace AssetStudio
             var readed = reader.Position - reader.byteStart;
             if (readed != reader.byteSize)
             {
-                Logger.Info($"Error while read type, read {readed} bytes but expected {reader.byteSize} bytes");
+                Logger.Info($"Failed to read type, read {readed} bytes but expected {reader.byteSize} bytes");
             }
             return sb.ToString();
         }
@@ -177,7 +177,7 @@ namespace AssetStudio
             var readed = reader.Position - reader.byteStart;
             if (readed != reader.byteSize)
             {
-                Logger.Info($"Error while read type, read {readed} bytes but expected {reader.byteSize} bytes");
+                Logger.Info($"Failed to read type, read {readed} bytes but expected {reader.byteSize} bytes");
             }
             return obj;
         }
