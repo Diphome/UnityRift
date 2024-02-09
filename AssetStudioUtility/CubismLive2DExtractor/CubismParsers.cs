@@ -14,6 +14,7 @@ namespace CubismLive2DExtractor
             FadeMotion,
             Expression,
             Physics,
+            DisplayInfo,
         }
 
         public static string ParsePhysics(OrderedDictionary physicsDict)
@@ -142,6 +143,9 @@ namespace CubismLive2DExtractor
                     break;
                 case CubismMonoBehaviourType.Physics:
                     fieldName = "_rig";
+                    break;
+                case CubismMonoBehaviourType.DisplayInfo:
+                    fieldName = "name";
                     break;
             }
             if (m_Type.m_Nodes.FindIndex(x => x.m_Name.ToLower() == fieldName) < 0)

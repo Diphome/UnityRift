@@ -29,6 +29,8 @@ namespace CubismLive2DExtractor
         private MonoBehaviour MocMono { get; set; }
         private MonoBehaviour PhysicsMono { get; set; }
         private MonoBehaviour FadeMotionLst { get; set; }
+        private List<MonoBehaviour> ParametersCdi { get; set; }
+        private List<MonoBehaviour> PartsCdi { get; set; }
 
         public Live2DExtractor(IGrouping<string, AssetStudio.Object> assets, List<AnimationClip> inClipMotions = null, List<MonoBehaviour> inFadeMotions = null, MonoBehaviour inFadeMotionLst = null)
         {
@@ -42,6 +44,8 @@ namespace CubismLive2DExtractor
             ParameterNames = new HashSet<string>();
             PartNames = new HashSet<string>();
             FadeMotionLst = inFadeMotionLst;
+            ParametersCdi = new List<MonoBehaviour>();
+            PartsCdi = new List<MonoBehaviour>();
 
             Logger.Info("Sorting model assets..");
             foreach (var asset in assets)
@@ -96,6 +100,18 @@ namespace CubismLive2DExtractor
                                     if (m_MonoBehaviour.m_GameObject.TryGet(out var partGameObject))
                                     {
                                         PartNames.Add(partGameObject.m_Name);
+                                    }
+                                    break;
+                                case "CubismDisplayInfoParameterName":
+                                    if (m_MonoBehaviour.m_GameObject.TryGet(out _))
+                                    {
+                                        ParametersCdi.Add(m_MonoBehaviour);
+                                    }
+                                    break;
+                                case "CubismDisplayInfoPartName":
+                                    if (m_MonoBehaviour.m_GameObject.TryGet(out _))
+                                    {
+                                        PartsCdi.Add(m_MonoBehaviour);
                                     }
                                     break;
                             }
@@ -191,6 +207,59 @@ namespace CubismLive2DExtractor
                 else
                 {
                     PhysicsMono = null;
+                }
+            }
+            #endregion
+
+            #region cdi3.json
+            var isCdiParsed = false;
+            if (ParametersCdi.Count > 0 || PartsCdi.Count > 0)
+            {
+                var cdiJson = new CubismCdi3Json
+                {
+                    Version = 3,
+                    ParameterGroups = Array.Empty<CubismCdi3Json.ParamGroupArray>()
+                };
+
+                var parameters = new SortedSet<CubismCdi3Json.ParamGroupArray>();
+                foreach (var paramMono in ParametersCdi)
+                {
+                    var displayName = GetDisplayName(paramMono, assemblyLoader);
+                    if (displayName == null)
+                        break;
+
+                    paramMono.m_GameObject.TryGet(out var paramGameObject);
+                    var paramId = paramGameObject.m_Name;
+                    parameters.Add(new CubismCdi3Json.ParamGroupArray
+                    {
+                        Id = paramId,
+                        GroupId = "",
+                        Name = displayName
+                    });
+                }
+                cdiJson.Parameters = parameters.ToArray();
+
+                var parts = new SortedSet<CubismCdi3Json.PartArray>();
+                foreach (var partMono in PartsCdi)
+                {
+                    var displayName = GetDisplayName(partMono, assemblyLoader);
+                    if (displayName == null)
+                        break;
+
+                    partMono.m_GameObject.TryGet(out var partGameObject);
+                    var paramId = partGameObject.m_Name;
+                    parts.Add(new CubismCdi3Json.PartArray
+                    {
+                        Id = paramId,
+                        Name = displayName
+                    });
+                }
+                cdiJson.Parts = parts.ToArray();
+
+                if (parts.Count > 0 || parameters.Count > 0)
+                {
+                    File.WriteAllText($"{destPath}{modelName}.cdi3.json", JsonConvert.SerializeObject(cdiJson, Formatting.Indented));
+                    isCdiParsed = true;
                 }
             }
             #endregion
@@ -330,6 +399,7 @@ namespace CubismLive2DExtractor
                 {
                     Moc = $"{modelName}.moc3",
                     Textures = textures.ToArray(),
+                    DisplayInfo = isCdiParsed ? $"{modelName}.cdi3.json" : "",
                     Physics = PhysicsMono == null ? null : $"{modelName}.physics3.json",
                     Motions = JObject.FromObject(motions),
                     Expressions = expressions,
@@ -398,6 +468,21 @@ namespace CubismLive2DExtractor
                 motions.Add(animName, new JArray(motionPath));
                 File.WriteAllText($"{destMotionPath}{animName}.motion3.json", JsonConvert.SerializeObject(motionJson, Formatting.Indented, new MyJsonConverter()));
             }
+        }
+
+        private static string GetDisplayName(MonoBehaviour cdiMono, AssemblyLoader assemblyLoader)
+        {
+            var dict = ParseMonoBehaviour(cdiMono, CubismMonoBehaviourType.DisplayInfo, assemblyLoader);
+            if (dict == null)
+                return null;
+
+            var name = (string)dict["Name"];
+            if (dict.Contains("DisplayName"))
+            {
+                var displayName = (string)dict["DisplayName"];
+                name = displayName != "" ? displayName : name;
+            }
+            return name;
         }
     }
 }
