@@ -33,6 +33,7 @@ namespace AssetStudioGUI
             var defaultMotionMode = Properties.Settings.Default.l2dMotionMode.ToString();
             ((RadioButton)l2dMotionExportMethodPanel.Controls.Cast<Control>().First(x => x.AccessibleName == defaultMotionMode)).Checked = true;
             l2dForceBezierCheckBox.Checked = Properties.Settings.Default.l2dForceBezier;
+            filenameFormatComboBox.SelectedIndex = Properties.Settings.Default.filenameFormat;
         }
 
         private void OKbutton_Click(object sender, EventArgs e)
@@ -60,6 +61,7 @@ namespace AssetStudioGUI
             var checkedMotionMode = (RadioButton)l2dMotionExportMethodPanel.Controls.Cast<Control>().First(x => ((RadioButton)x).Checked);
             Properties.Settings.Default.l2dMotionMode = (CubismLive2DExtractor.Live2DMotionMode)Enum.Parse(typeof(CubismLive2DExtractor.Live2DMotionMode), checkedMotionMode.AccessibleName);
             Properties.Settings.Default.l2dForceBezier = l2dForceBezierCheckBox.Checked;
+            Properties.Settings.Default.filenameFormat = filenameFormatComboBox.SelectedIndex;
             Properties.Settings.Default.Save();
             DialogResult = DialogResult.OK;
             Close();

@@ -32,6 +32,8 @@
             this.OKbutton = new System.Windows.Forms.Button();
             this.Cancel = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.filenameFormatLabel = new System.Windows.Forms.Label();
+            this.filenameFormatComboBox = new System.Windows.Forms.ComboBox();
             this.exportSpriteWithAlphaMask = new System.Windows.Forms.CheckBox();
             this.openAfterExport = new System.Windows.Forms.CheckBox();
             this.restoreExtensionName = new System.Windows.Forms.CheckBox();
@@ -104,6 +106,8 @@
             // groupBox1
             // 
             this.groupBox1.AutoSize = true;
+            this.groupBox1.Controls.Add(this.filenameFormatLabel);
+            this.groupBox1.Controls.Add(this.filenameFormatComboBox);
             this.groupBox1.Controls.Add(this.exportSpriteWithAlphaMask);
             this.groupBox1.Controls.Add(this.openAfterExport);
             this.groupBox1.Controls.Add(this.restoreExtensionName);
@@ -118,6 +122,28 @@
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Export";
+            // 
+            // filenameFormatLabel
+            // 
+            this.filenameFormatLabel.AutoSize = true;
+            this.filenameFormatLabel.Location = new System.Drawing.Point(177, 18);
+            this.filenameFormatLabel.Name = "filenameFormatLabel";
+            this.filenameFormatLabel.Size = new System.Drawing.Size(84, 13);
+            this.filenameFormatLabel.TabIndex = 10;
+            this.filenameFormatLabel.Text = "File name format";
+            // 
+            // filenameFormatComboBox
+            // 
+            this.filenameFormatComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.filenameFormatComboBox.FormattingEnabled = true;
+            this.filenameFormatComboBox.Items.AddRange(new object[] {
+            "assetName",
+            "assetName@pathID",
+            "pathID"});
+            this.filenameFormatComboBox.Location = new System.Drawing.Point(177, 35);
+            this.filenameFormatComboBox.Name = "filenameFormatComboBox";
+            this.filenameFormatComboBox.Size = new System.Drawing.Size(118, 21);
+            this.filenameFormatComboBox.TabIndex = 9;
             // 
             // exportSpriteWithAlphaMask
             // 
@@ -646,5 +672,7 @@
         private System.Windows.Forms.RadioButton l2dAnimationClipRadioButton;
         private System.Windows.Forms.RadioButton l2dMonoBehaviourRadioButton;
         private System.Windows.Forms.Panel l2dMotionExportMethodPanel;
+        private System.Windows.Forms.ComboBox filenameFormatComboBox;
+        private System.Windows.Forms.Label filenameFormatLabel;
     }
 }

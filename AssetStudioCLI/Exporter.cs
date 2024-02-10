@@ -315,17 +315,30 @@ namespace AssetStudioCLI
         private static bool TryExportFile(string dir, AssetItem item, string extension, out string fullPath)
         {
             var fileName = FixFileName(item.Text);
+            var filenameFormat = CLIOptions.o_filenameFormat.Value;
+            switch (filenameFormat)
+            {
+                case FilenameFormat.AssetName_PathID:
+                    fileName = $"{fileName} @{item.m_PathID}";
+                    break;
+                case FilenameFormat.PathID:
+                    fileName = item.m_PathID.ToString();
+                    break;
+            }
             fullPath = Path.Combine(dir, fileName + extension);
             if (!File.Exists(fullPath))
             {
                 Directory.CreateDirectory(dir);
                 return true;
             }
-            fullPath = Path.Combine(dir, fileName + item.UniqueID + extension);
-            if (!File.Exists(fullPath))
+            if (filenameFormat == FilenameFormat.AssetName)
             {
-                Directory.CreateDirectory(dir);
-                return true;
+                fullPath = Path.Combine(dir, fileName + item.UniqueID + extension);
+                if (!File.Exists(fullPath))
+                {
+                    Directory.CreateDirectory(dir);
+                    return true;
+                }
             }
             Logger.Error($"Export error. File \"{fullPath.Color(ColorConsole.BrightRed)}\" already exist");
             return false;

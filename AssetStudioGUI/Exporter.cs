@@ -269,18 +269,32 @@ namespace AssetStudioGUI
         private static bool TryExportFile(string dir, AssetItem item, string extension, out string fullPath)
         {
             var fileName = FixFileName(item.Text);
+            var filenameFormatIndex = Properties.Settings.Default.filenameFormat;
+            switch (filenameFormatIndex)
+            {
+                case 1: //assetName@pathID
+                    fileName = $"{fileName} @{item.m_PathID}";
+                    break;
+                case 2: //pathID
+                    fileName = item.m_PathID.ToString();
+                    break;
+            }
             fullPath = Path.Combine(dir, fileName + extension);
             if (!File.Exists(fullPath))
             {
                 Directory.CreateDirectory(dir);
                 return true;
             }
-            fullPath = Path.Combine(dir, fileName + item.UniqueID + extension);
-            if (!File.Exists(fullPath))
+            if (filenameFormatIndex == 0) //assetName
             {
-                Directory.CreateDirectory(dir);
-                return true;
+                fullPath = Path.Combine(dir, fileName + item.UniqueID + extension);
+                if (!File.Exists(fullPath))
+                {
+                    Directory.CreateDirectory(dir);
+                    return true;
+                }
             }
+            Logger.Warning($"Export error. File \"{fullPath.Color(ColorConsole.BrightYellow)}\" already exist");
             return false;
         }
 

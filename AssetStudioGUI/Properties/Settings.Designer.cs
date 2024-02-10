@@ -346,5 +346,17 @@ namespace AssetStudioGUI.Properties {
                 this["buildTreeStructure"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int filenameFormat {
+            get {
+                return ((int)(this["filenameFormat"]));
+            }
+            set {
+                this["filenameFormat"] = value;
+            }
+        }
     }
 }

@@ -37,6 +37,13 @@ namespace AssetStudioCLI.Options
         SourceFileName,
     }
 
+    internal enum FilenameFormat
+    {
+        AssetName,
+        AssetName_PathID,
+        PathID,
+    }
+
     internal enum ExportListType
     {
         None,
@@ -75,6 +82,7 @@ namespace AssetStudioCLI.Options
         public static Option<WorkMode> o_workMode;
         public static Option<List<ClassIDType>> o_exportAssetTypes;
         public static Option<AssetGroupOption> o_groupAssetsBy;
+        public static Option<FilenameFormat> o_filenameFormat;
         public static Option<string> o_outputFolder;
         public static Option<bool> o_displayHelp;
         //logger
@@ -200,7 +208,19 @@ namespace AssetStudioCLI.Options
                     "Container - Group exported assets by container path\n" +
                     "ContainerFull - Group exported assets by full container path (e.g. with prefab name)\n" +
                     "Filename - Group exported assets by source file name\n",
-                optionExample: "Example: \"-g container\"\n",
+                optionExample: "Example: \"-g containerFull\"\n",
+                optionHelpGroup: HelpGroups.General
+            );
+            o_filenameFormat = new GroupedOption<FilenameFormat>
+            (
+                optionDefaultValue: FilenameFormat.AssetName,
+                optionName: "-f, --filename-format <value>",
+                optionDescription: "Specify the file name format for exported assets\n" +
+                                   "<Value: assetName(default) | assetName_pathID | pathID>\n" +
+                                   "AssetName - Asset file names will look like \"assetName.extension\"\n" +
+                                   "AssetName_pathID - Asset file names will look like \"assetName @pathID.extension\"\n" +
+                                   "PathID - Asset file names will look like \"pathID.extension\"\n",
+                optionExample: "Example: \"-f assetName_pathID\"\n",
                 optionHelpGroup: HelpGroups.General
             );
             o_outputFolder = new GroupedOption<string>
@@ -626,6 +646,25 @@ namespace AssetStudioCLI.Options
                                 default:
                                     Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported grouping option: [{value.Color(brightRed)}].\n");
                                     ShowOptionDescription(o_groupAssetsBy.Description);
+                                    return;
+                            }
+                            break;
+                        case "-f":
+                        case "--filename-format":
+                            switch (value.ToLower())
+                            {
+                                case "assetname":
+                                    o_filenameFormat.Value = FilenameFormat.AssetName;
+                                    break;
+                                case "assetname_pathid":
+                                    o_filenameFormat.Value = FilenameFormat.AssetName_PathID;
+                                    break;
+                                case "pathid":
+                                    o_filenameFormat.Value = FilenameFormat.PathID;
+                                    break;
+                                default:
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported file name format: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_filenameFormat.Description);
                                     return;
                             }
                             break;
