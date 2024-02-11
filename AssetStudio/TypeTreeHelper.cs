@@ -116,7 +116,7 @@ namespace AssetStudio
                     {
                         append = false;
                         var size = reader.ReadInt32();
-                        reader.ReadBytes(size);
+                        reader.BaseStream.Position += size;
                         i += 2;
                         sb.AppendFormat("{0}{1} {2}\r\n", (new string('\t', level)), varTypeStr, varNameStr);
                         sb.AppendFormat("{0}{1} {2} = {3}\r\n", (new string('\t', level)), "int", "size", size);

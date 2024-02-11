@@ -486,7 +486,8 @@ namespace AssetStudioGUI
                             break;
                     }
                     exportPath += Path.DirectorySeparatorChar;
-                    Logger.Info($"[{exportedCount + 1}/{toExportCount}] Exporting {asset.TypeString}: {asset.Text}");
+                    var mode = exportType == ExportType.Dump ? "Dumping" : "Exporting";
+                    Logger.Info($"[{exportedCount + 1}/{toExportCount}] {mode} {asset.TypeString}: {asset.Text}");
                     try
                     {
                         switch (exportType)
@@ -784,6 +785,10 @@ namespace AssetStudioGUI
             {
                 var type = MonoBehaviourToTypeTree(m_MonoBehaviour);
                 str = m_MonoBehaviour.Dump(type);
+            }
+            if (string.IsNullOrEmpty(str))
+            {
+                str = obj.DumpObject();
             }
             return str;
         }

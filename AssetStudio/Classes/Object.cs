@@ -1,4 +1,8 @@
-﻿using System.Collections.Specialized;
+﻿using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Reflection;
 
 namespace AssetStudio
 {
@@ -51,6 +55,25 @@ namespace AssetStudio
             return null;
         }
 
+        public string DumpObject()
+        {
+            string str = null;
+            try
+            {
+                str = JsonConvert.SerializeObject(this, new JsonSerializerSettings
+                {
+                    Formatting = Formatting.Indented,
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                    ContractResolver = new IgnorePropertiesResolver()
+                }).Replace("  ", "    ");
+            }
+            catch
+            {
+                //ignore
+            }
+            return str;
+        }
+
         public OrderedDictionary ToType()
         {
             if (serializedType?.m_Type != null)
@@ -73,6 +96,26 @@ namespace AssetStudio
         {
             reader.Reset();
             return reader.ReadBytes((int)byteSize);
+        }
+
+        private class IgnorePropertiesResolver : DefaultContractResolver
+        {
+            private static readonly HashSet<string> _ignoreProps;
+
+            static IgnorePropertiesResolver()
+            {
+                _ignoreProps = new HashSet<string> { "assetsFile", "reader", "version", "platform", "serializedType" };
+            }
+
+            protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
+            {
+                JsonProperty property = base.CreateProperty(member, memberSerialization);
+                if (_ignoreProps.Contains(property.PropertyName))
+                {
+                    property.ShouldSerialize = _ => false;
+                }
+                return property;
+            }
         }
     }
 }

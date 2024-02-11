@@ -359,6 +359,10 @@ namespace AssetStudioGUI
                 var m_Type = Studio.MonoBehaviourToTypeTree(m_MonoBehaviour);
                 str = m_MonoBehaviour.Dump(m_Type);
             }
+            if (string.IsNullOrEmpty(str))
+            {
+                str = item.Asset.DumpObject();
+            }
             if (str != null)
             {
                 File.WriteAllText(exportFullPath, str);

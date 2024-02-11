@@ -303,6 +303,10 @@ namespace AssetStudioCLI
                 var m_Type = m_MonoBehaviour.ConvertToTypeTree(Studio.assemblyLoader);
                 str = m_MonoBehaviour.Dump(m_Type);
             }
+            if (string.IsNullOrEmpty(str))
+            {
+                str = item.Asset.DumpObject();
+            }
             if (str != null)
             {
                 File.WriteAllText(exportFullPath, str);
