@@ -159,8 +159,6 @@ namespace AssetStudio
                 case FileType.ZipFile:
                     LoadZipFile(reader);
                     break;
-                default:
-                    return false;
             }
             return true;
         }
