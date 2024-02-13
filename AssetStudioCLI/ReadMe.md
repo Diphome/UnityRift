@@ -7,16 +7,17 @@ CLI version of AssetStudioMod.
 ```
 AssetStudioModCLI <input path to asset file/folder> [-m, --mode <value>]
                       [-t, --asset-type <value(s)>] [-g, --group-option <value>]
-                      [-o, --output <path>] [-h, --help]
-                      [--log-level <value>] [--log-output <value>]
-                      [--image-format <value>] [--audio-format <value>]
-                      [--l2d-motion-mode <value>] [--l2d-force-bezier]
-                      [--fbx-scale-factor <value>] [--fbx-bone-size <value>]
-                      [--filter-by-name <text>] [--filter-by-container <text>]
-                      [--filter-by-pathid <text>] [--filter-by-text <text>]
-                      [--export-asset-list <value>] [--assembly-folder <path>]
-                      [--unity-version <text>] [--not-restore-extension]
-                      [--load-all]
+                      [-f, --filename-format <value>] [-o, --output <path>]
+                      [-h, --help] [--log-level <value>]
+                      [--log-output <value>] [--image-format <value>]
+                      [--audio-format <value>] [--l2d-motion-mode <value>]
+                      [--l2d-force-bezier] [--fbx-scale-factor <value>]
+                      [--fbx-bone-size <value>] [--filter-by-name <text>]
+                      [--filter-by-container <text>] [--filter-by-pathid <text>]
+                      [--filter-by-text <text>] [--export-asset-list <value>]
+                      [--assembly-folder <path>] [--unity-version <text>]
+                      [--not-restore-extension] [--load-all]
+
 
 General Options:
   -m, --mode <value>            Specify working mode
@@ -37,13 +38,21 @@ General Options:
                                 Examples: "-t sprite" or "-t tex2d,sprite,audio" or "-t tex2d;sprite;font"
 
   -g, --group-option <value>    Specify the way in which exported assets should be grouped
-                                <Value: none | type | container(default) | containerFull | filename>
+                                <Value: none | type | container(default) | containerFull | filename | sceneHierarchy>
                                 None - Do not group exported assets
                                 Type - Group exported assets by type name
                                 Container - Group exported assets by container path
                                 ContainerFull - Group exported assets by full container path (e.g. with prefab name)
+                                SceneHierarchy - Group exported assets by their node path in scene hierarchy
                                 Filename - Group exported assets by source file name
-                                Example: "-g container"
+                                Example: "-g containerFull"
+
+  -f, --filename-format <value> Specify the file name format for exported assets
+                                <Value: assetName(default) | assetName_pathID | pathID>
+                                AssetName - Asset file names will look like "assetName.extension"
+                                AssetName_pathID - Asset file names will look like "assetName @pathID.extension"
+                                PathID - Asset file names will look like "pathID.extension"
+                                Example: "-f assetName_pathID"
 
   -o, --output <path>           Specify path to the output folder
                                 If path isn't specified, 'ASExport' folder will be created in the program's work folder
