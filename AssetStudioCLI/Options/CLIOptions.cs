@@ -35,6 +35,7 @@ namespace AssetStudioCLI.Options
         ContainerPath,
         ContainerPathFull,
         SourceFileName,
+        SceneHierarchy,
     }
 
     internal enum FilenameFormat
@@ -202,11 +203,12 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: AssetGroupOption.ContainerPath,
                 optionName: "-g, --group-option <value>",
                 optionDescription: "Specify the way in which exported assets should be grouped\n" +
-                    "<Value: none | type | container(default) | containerFull | filename>\n" +
+                    "<Value: none | type | container(default) | containerFull | filename | sceneHierarchy>\n" +
                     "None - Do not group exported assets\n" +
                     "Type - Group exported assets by type name\n" +
                     "Container - Group exported assets by container path\n" +
                     "ContainerFull - Group exported assets by full container path (e.g. with prefab name)\n" +
+                    "SceneHierarchy - Group exported assets by their node path in scene hierarchy\n" +
                     "Filename - Group exported assets by source file name\n",
                 optionExample: "Example: \"-g containerFull\"\n",
                 optionHelpGroup: HelpGroups.General
@@ -500,20 +502,16 @@ namespace AssetStudioCLI.Options
                         o_exportAssetTypes.Value = new List<ClassIDType>()
                         {
                             ClassIDType.AnimationClip,
-                            ClassIDType.GameObject,
                             ClassIDType.MonoBehaviour,
                             ClassIDType.Texture2D,
-                            ClassIDType.Transform,
                         };
                         break;
                     case "splitobjects":
                         o_workMode.Value = WorkMode.SplitObjects;
                         o_exportAssetTypes.Value = new List<ClassIDType>()
                         {
-                            ClassIDType.GameObject,
                             ClassIDType.Texture2D,
                             ClassIDType.Material,
-                            ClassIDType.Transform,
                             ClassIDType.Mesh,
                             ClassIDType.MeshRenderer,
                             ClassIDType.MeshFilter,
@@ -639,6 +637,9 @@ namespace AssetStudioCLI.Options
                                     break;
                                 case "filename":
                                     o_groupAssetsBy.Value = AssetGroupOption.SourceFileName;
+                                    break;
+                                case "scenehierarchy":
+                                    o_groupAssetsBy.Value = AssetGroupOption.SceneHierarchy;
                                     break;
                                 case "none":
                                     o_groupAssetsBy.Value = AssetGroupOption.None;
@@ -1051,6 +1052,7 @@ namespace AssetStudioCLI.Options
                     }
                     sb.AppendLine(ShowExportTypes());
                     sb.AppendLine($"# Asset Group Option: {o_groupAssetsBy}");
+                    sb.AppendLine($"# Filename format: {o_filenameFormat}");
                     if (o_workMode.Value == WorkMode.Export)
                     {
                         sb.AppendLine($"# Export Image Format: {o_imageFormat}");

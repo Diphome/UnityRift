@@ -277,7 +277,7 @@ namespace AssetStudioCLI
         private static void ExportFbx(IImported convert, string exportPath)
         {
             var eulerFilter = true;
-            var filterPrecision = (float)0.25f;
+            var filterPrecision = 0.25f;
             var exportAllNodes = true;
             var exportSkins = true;
             var exportAnimations = true;

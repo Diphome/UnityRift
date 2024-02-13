@@ -191,6 +191,7 @@
             "container path",
             "container path full (with name)",
             "source file name",
+            "scene hierarchy",
             "do not group"});
             this.assetGroupOptions.Location = new System.Drawing.Point(6, 35);
             this.assetGroupOptions.Name = "assetGroupOptions";

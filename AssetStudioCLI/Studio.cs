@@ -178,7 +178,7 @@ namespace AssetStudioCLI
                 }
             }
 
-            if (CLIOptions.o_workMode.Value == WorkMode.SplitObjects)
+            if (CLIOptions.o_workMode.Value == WorkMode.SplitObjects || CLIOptions.o_groupAssetsBy.Value == AssetGroupOption.SceneHierarchy)
             {
                 BuildTreeStructure(objectAssetItemDic);
             }
@@ -215,7 +215,7 @@ namespace AssetStudioCLI
             Progress.Reset();
             foreach (var assetsFile in assetsManager.assetsFileList)
             {
-                var fileNode = new BaseNode();  //RootNode
+                var fileNode = new BaseNode(assetsFile.fileName);  //RootNode
 
                 foreach (var obj in assetsFile.Objects)
                 {
@@ -250,7 +250,6 @@ namespace AssetStudioCLI
                         }
 
                         var parentNode = fileNode;
-
                         if (m_GameObject.m_Transform != null)
                         {
                             if (m_GameObject.m_Transform.m_Father.TryGet(out var m_Father))
@@ -266,14 +265,13 @@ namespace AssetStudioCLI
                                 }
                             }
                         }
-
                         parentNode.nodes.Add(currentNode);
-
                     }
                 }
 
                 if (fileNode.nodes.Count > 0)
                 {
+                    GenerateFullPath(fileNode, fileNode.Text);
                     gameObjectTree.Add(fileNode);
                 }
 
@@ -282,6 +280,22 @@ namespace AssetStudioCLI
 
             treeNodeDictionary.Clear();
             objectAssetItemDic.Clear();
+        }
+
+        private static void GenerateFullPath(BaseNode treeNode, string path)
+        {
+            treeNode.FullPath = path;
+            foreach (var node in treeNode.nodes)
+            {
+                if (node.nodes.Count > 0)
+                {
+                    GenerateFullPath(node, Path.Combine(path, node.Text));
+                }
+                else
+                {
+                    node.FullPath = Path.Combine(path, node.Text);
+                }
+            }
         }
 
         public static void ShowExportableAssetsInfo()
@@ -434,6 +448,16 @@ namespace AssetStudioCLI
                             exportPath = Path.Combine(savePath, Path.GetFileName(asset.SourceFile.originalPath) + "_export", asset.SourceFile.fileName);
                         }
                         break;
+                    case AssetGroupOption.SceneHierarchy:
+                        if (asset.Node != null)
+                        {
+                            exportPath = Path.Combine(savePath, asset.Node.FullPath);
+                        }
+                        else
+                        {
+                            exportPath = Path.Combine(savePath, "_sceneRoot", asset.TypeString);
+                        }
+                        break;
                     default:
                         exportPath = savePath;
                         break;
@@ -513,6 +537,7 @@ namespace AssetStudioCLI
                                     new XElement("Type", new XAttribute("id", (int)asset.Type), asset.TypeString),
                                     new XElement("PathID", asset.m_PathID),
                                     new XElement("Source", asset.SourceFile.fullName),
+                                    new XElement("TreeNode", asset.Node != null ? asset.Node.FullPath : ""),
                                     new XElement("Size", asset.FullSize)
                                 )
                             )
@@ -544,7 +569,7 @@ namespace AssetStudioCLI
                 {
                     if (isFiltered)
                     {
-                        if (!searchList.Any(searchText => j.gameObject.m_Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0))
+                        if (!searchList.Any(searchText => j.Text.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0))
                             continue;
                     }
                     var gameObjects = new List<GameObject>();

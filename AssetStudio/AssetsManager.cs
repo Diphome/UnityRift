@@ -30,6 +30,8 @@ namespace AssetStudio
                 {
                     ClassIDType.AssetBundle,
                     ClassIDType.ResourceManager,
+                    ClassIDType.GameObject,
+                    ClassIDType.Transform,
                 });
             }
 

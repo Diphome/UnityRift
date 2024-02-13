@@ -47,7 +47,8 @@ namespace AssetStudioGUI
         TypeName,
         ContainerPath,
         ContainerPathFull,
-        SourceFileName
+        SourceFileName,
+        SceneHierarchy,
     }
 
     internal enum ListSearchFilterMode
@@ -384,7 +385,6 @@ namespace AssetStudioGUI
                                 }
                             }
                         }
-
                         parentNode.Nodes.Add(currentNode);
                     }
                 }
@@ -481,6 +481,16 @@ namespace AssetStudioGUI
                                 exportPath = Path.Combine(savePath, Path.GetFileName(asset.SourceFile.originalPath) + "_export", asset.SourceFile.fileName);
                             }
                             break;
+                        case AssetGroupOption.SceneHierarchy:
+                            if (asset.TreeNode != null)
+                            {
+                                exportPath = Path.Combine(savePath, asset.TreeNode.FullPath);
+                            }
+                            else
+                            {
+                                exportPath = Path.Combine(savePath, "_sceneRoot", asset.TypeString);
+                            }
+                            break;
                         default:
                             exportPath = savePath;
                             break;
@@ -559,6 +569,7 @@ namespace AssetStudioGUI
                                         new XElement("Type", new XAttribute("id", (int)asset.Type), asset.TypeString),
                                         new XElement("PathID", asset.m_PathID),
                                         new XElement("Source", asset.SourceFile.fullName),
+                                        new XElement("TreeNode", asset.TreeNode != null ? asset.TreeNode.FullPath : ""),
                                         new XElement("Size", asset.FullSize)
                                     )
                                 )

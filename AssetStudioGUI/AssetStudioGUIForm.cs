@@ -1948,7 +1948,7 @@ namespace AssetStudioGUI
         private void clearSelectionToolStripMenuItem_Click(object sender, EventArgs e)
         {
             treeRecursionEnabled = false;
-            for(var i = 0; i < treeNodeSelectedList.Count; i++)
+            for (var i = 0; i < treeNodeSelectedList.Count; i++)
             {
                 treeNodeSelectedList[i].Checked = false;
             }
