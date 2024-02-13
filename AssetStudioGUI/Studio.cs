@@ -448,6 +448,7 @@ namespace AssetStudioGUI
                 int i = 0;
                 Progress.Reset();
                 var groupOption = (AssetGroupOption)Properties.Settings.Default.assetGroupOption;
+                var mode = exportType == ExportType.Dump ? "Dump" : "Export";
                 foreach (var asset in toExportAssets)
                 {
                     string exportPath;
@@ -496,41 +497,41 @@ namespace AssetStudioGUI
                             break;
                     }
                     exportPath += Path.DirectorySeparatorChar;
-                    var mode = exportType == ExportType.Dump ? "Dumping" : "Exporting";
-                    Logger.Info($"[{exportedCount + 1}/{toExportCount}] {mode} {asset.TypeString}: {asset.Text}");
+                    Logger.Info($"[{exportedCount + 1}/{toExportCount}] {mode}ing {asset.TypeString}: {asset.Text}");
+                    var isExported = false;
                     try
                     {
                         switch (exportType)
                         {
                             case ExportType.Raw:
-                                if (ExportRawFile(asset, exportPath))
-                                {
-                                    exportedCount++;
-                                }
+                                isExported = ExportRawFile(asset, exportPath);
                                 break;
                             case ExportType.Dump:
-                                if (ExportDumpFile(asset, exportPath))
-                                {
-                                    exportedCount++;
-                                }
+                                isExported = ExportDumpFile(asset, exportPath);
                                 break;
                             case ExportType.Convert:
-                                if (ExportConvertFile(asset, exportPath))
-                                {
-                                    exportedCount++;
-                                }
+                                isExported = ExportConvertFile(asset, exportPath);
                                 break;
                         }
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error($"Export {asset.Type}:{asset.Text} error", ex);
+                        Logger.Error($"{mode} {asset.TypeString}: {asset.Text} error", ex);
+                    }
+
+                    if (isExported)
+                    {
+                        exportedCount++;
+                    }
+                    else
+                    {
+                        Logger.Warning($"Unable to {mode.ToLower()} {asset.TypeString}: {asset.Text}");
                     }
 
                     Progress.Report(++i, toExportCount);
                 }
 
-                var statusText = exportedCount == 0 ? "Nothing exported." : $"Finished exporting {exportedCount} assets.";
+                var statusText = exportedCount == 0 ? "Nothing exported." : $"Finished {mode.ToLower()}ing {exportedCount} assets.";
 
                 if (toExportCount > exportedCount)
                 {
