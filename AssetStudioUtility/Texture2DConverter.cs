@@ -214,7 +214,7 @@ namespace AssetStudio
             }
             finally
             {
-                BigArrayPool<byte>.Shared.Return(buff);
+                BigArrayPool<byte>.Shared.Return(buff, clearArray: true);
             }
             return flag;
         }

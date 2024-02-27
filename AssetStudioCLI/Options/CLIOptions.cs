@@ -158,6 +158,7 @@ namespace AssetStudioCLI.Options
             exportableAssetTypes = new List<ClassIDType>
             {
                 ClassIDType.Texture2D,
+                ClassIDType.Texture2DArray,
                 ClassIDType.Sprite,
                 ClassIDType.TextAsset,
                 ClassIDType.MonoBehaviour,
@@ -590,6 +591,9 @@ namespace AssetStudioCLI.Options
                                 {
                                     case "tex2d":
                                         o_exportAssetTypes.Value.Add(ClassIDType.Texture2D);
+                                        break;
+                                    case "tex2darray":
+                                        o_exportAssetTypes.Value.Add(ClassIDType.Texture2DArray);
                                         break;
                                     case "audio":
                                         o_exportAssetTypes.Value.Add(ClassIDType.AudioClip);

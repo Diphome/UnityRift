@@ -18,6 +18,8 @@ namespace AssetStudio
         public SerializedType serializedType;
         public uint byteSize;
 
+        public Object() { }
+
         public Object(ObjectReader reader)
         {
             this.reader = reader;

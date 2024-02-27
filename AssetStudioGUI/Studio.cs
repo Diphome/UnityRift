@@ -179,6 +179,7 @@ namespace AssetStudioGUI
             var objectCount = assetsManager.assetsFileList.Sum(x => x.Objects.Count);
             var objectAssetItemDic = new Dictionary<Object, AssetItem>(objectCount);
             var containers = new List<(PPtr<Object>, string)>();
+            var tex2dArrayAssetList = new List<AssetItem>();
             l2dResourceContainers.Clear();
             var i = 0;
             Progress.Reset();
@@ -204,6 +205,13 @@ namespace AssetStudioGUI
                             if (!string.IsNullOrEmpty(m_Texture2D.m_StreamData?.path))
                                 assetItem.FullSize = asset.byteSize + m_Texture2D.m_StreamData.size;
                             assetItem.Text = m_Texture2D.m_Name;
+                            exportable = true;
+                            break;
+                        case Texture2DArray m_Texture2DArray:
+                            if (!string.IsNullOrEmpty(m_Texture2DArray.m_StreamData?.path))
+                                assetItem.FullSize = asset.byteSize + m_Texture2DArray.m_StreamData.size;
+                            assetItem.Text = m_Texture2DArray.m_Name;
+                            tex2dArrayAssetList.Add(assetItem);
                             exportable = true;
                             break;
                         case AudioClip m_AudioClip:
@@ -310,11 +318,28 @@ namespace AssetStudioGUI
                     }
                 }
             }
+            foreach (var tex2dAssetItem in tex2dArrayAssetList)
+            {
+                var m_Texture2DArray = (Texture2DArray)tex2dAssetItem.Asset;
+                for (var layer = 0; layer < m_Texture2DArray.m_Depth; layer++)
+                {
+                    var fakeObj = new Texture2D(m_Texture2DArray, layer);
+                    m_Texture2DArray.TextureList.Add(fakeObj);
+
+                    var fakeItem = new AssetItem(fakeObj)
+                    {
+                        Text = fakeObj.m_Name,
+                        Container = tex2dAssetItem.Container
+                    };
+                    exportableAssets.Add(fakeItem);
+                }
+            }
             foreach (var tmp in exportableAssets)
             {
                 tmp.SetSubItems();
             }
             containers.Clear();
+            tex2dArrayAssetList.Clear();
 
             visibleAssets = exportableAssets;
 

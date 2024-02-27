@@ -56,6 +56,7 @@ namespace AssetStudioCLI
             Logger.Info("Parse assets...");
 
             var fileAssetsList = new List<AssetItem>();
+            var tex2dArrayAssetList = new List<AssetItem>();
             var objectCount = assetsManager.assetsFileList.Sum(x => x.Objects.Count);
             var objectAssetItemDic = new Dictionary<AssetStudio.Object, AssetItem>(objectCount);
 
@@ -111,6 +112,12 @@ namespace AssetStudioCLI
                             if (!string.IsNullOrEmpty(m_Texture2D.m_StreamData?.path))
                                 assetItem.FullSize = asset.byteSize + m_Texture2D.m_StreamData.size;
                             assetItem.Text = m_Texture2D.m_Name;
+                            break;
+                        case Texture2DArray m_Texture2DArray:
+                            if (!string.IsNullOrEmpty(m_Texture2DArray.m_StreamData?.path))
+                                assetItem.FullSize = asset.byteSize + m_Texture2DArray.m_StreamData.size;
+                            assetItem.Text = m_Texture2DArray.m_Name;
+                            tex2dArrayAssetList.Add(assetItem);
                             break;
                         case AudioClip m_AudioClip:
                             if (!string.IsNullOrEmpty(m_AudioClip.m_Source))
@@ -170,8 +177,18 @@ namespace AssetStudioCLI
                         asset.Container = container;
                     }
                 }
+                foreach (var tex2dAssetItem in tex2dArrayAssetList)
+                {
+                    var m_Texture2DArray = (Texture2DArray)tex2dAssetItem.Asset;
+                    for (var layer = 0; layer < m_Texture2DArray.m_Depth; layer++)
+                    {
+                        var fakeObj = new Texture2D(m_Texture2DArray, layer);
+                        m_Texture2DArray.TextureList.Add(fakeObj);
+                    }
+                }
                 parsedAssetsList.AddRange(fileAssetsList);
                 fileAssetsList.Clear();
+                tex2dArrayAssetList.Clear();
                 if (CLIOptions.o_workMode.Value != WorkMode.ExportLive2D)
                 {
                     containers.Clear();

@@ -349,7 +349,7 @@ namespace AssetStudioGUI
                 if (e.Control)
                 {
                     var need = false;
-                    if (lastSelectedItem?.Type == ClassIDType.Texture2D)
+                    if (lastSelectedItem?.Type == ClassIDType.Texture2D || lastSelectedItem?.Type == ClassIDType.Texture2DArrayImage)
                     {
                         switch (e.KeyCode)
                         {
@@ -810,7 +810,11 @@ namespace AssetStudioGUI
                 switch (assetItem.Type)
                 {
                     case ClassIDType.Texture2D:
+                    case ClassIDType.Texture2DArrayImage:
                         PreviewTexture2D(assetItem, assetItem.Asset as Texture2D);
+                        break;
+                    case ClassIDType.Texture2DArray:
+                        PreviewTexture2DArray(assetItem, assetItem.Asset as Texture2DArray);
                         break;
                     case ClassIDType.AudioClip:
                         PreviewAudioClip(assetItem, assetItem.Asset as AudioClip);
@@ -868,6 +872,16 @@ namespace AssetStudioGUI
             {
                 MessageBox.Show($"Preview {assetItem.Type}:{assetItem.Text} error\r\n{e.Message}\r\n{e.StackTrace}");
             }
+        }
+
+        private void PreviewTexture2DArray(AssetItem assetItem, Texture2DArray m_Texture2DArray)
+        {
+            assetItem.InfoText = 
+                $"Width: {m_Texture2DArray.m_Width}\n" +
+                $"Height: {m_Texture2DArray.m_Height}\n" +
+                $"Graphics Format: {m_Texture2DArray.m_Format}\n" +
+                $"Texture Format: {m_Texture2DArray.m_Format.ToTextureFormat()}\n" +
+                $"Texture count: {m_Texture2DArray.m_Depth}";
         }
 
         private void PreviewTexture2D(AssetItem assetItem, Texture2D m_Texture2D)
