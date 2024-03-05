@@ -145,8 +145,7 @@ namespace AssetStudio
             switch (reader?.FileType)
             {
                 case FileType.AssetsFile:
-                    LoadAssetsFile(reader);
-                    break;
+                    return LoadAssetsFile(reader);
                 case FileType.BundleFile:
                     return LoadBundleFile(reader);
                 case FileType.WebFile:
@@ -165,7 +164,7 @@ namespace AssetStudio
             return true;
         }
 
-        private void LoadAssetsFile(FileReader reader)
+        private bool LoadAssetsFile(FileReader reader)
         {
             if (!assetsFileListHash.Contains(reader.FileName))
             {
@@ -173,6 +172,7 @@ namespace AssetStudio
                 try
                 {
                     var assetsFile = new SerializedFile(reader, this);
+                    var dirName = Path.GetDirectoryName(reader.FullPath);
                     CheckStrippedVersion(assetsFile);
                     assetsFileList.Add(assetsFile);
                     assetsFileListHash.Add(assetsFile.fileName);
@@ -183,12 +183,12 @@ namespace AssetStudio
 
                         if (!importFilesHash.Contains(sharedFileName))
                         {
-                            var sharedFilePath = Path.Combine(Path.GetDirectoryName(reader.FullPath), sharedFileName);
+                            var sharedFilePath = Path.Combine(dirName, sharedFileName);
                             if (!noexistFiles.Contains(sharedFilePath))
                             {
                                 if (!File.Exists(sharedFilePath))
                                 {
-                                    var findFiles = Directory.GetFiles(Path.GetDirectoryName(reader.FullPath), sharedFileName, SearchOption.AllDirectories);
+                                    var findFiles = Directory.GetFiles(dirName, sharedFileName, SearchOption.AllDirectories);
                                     if (findFiles.Length > 0)
                                     {
                                         sharedFilePath = findFiles[0];
@@ -211,10 +211,11 @@ namespace AssetStudio
                 {
                     Logger.Error(e.Message);
                     reader.Dispose();
+                    return false;
                 }
                 catch (Exception e)
                 {
-                    Logger.Warning($"Error while reading assets file {reader.FullPath}\r\n{e}");
+                    Logger.Warning($"Failed to read assets file {reader.FullPath}\r\n{e}");
                     reader.Dispose();
                 }
             }
@@ -223,9 +224,10 @@ namespace AssetStudio
                 Logger.Info($"Skipping {reader.FullPath}");
                 reader.Dispose();
             }
+            return true;
         }
 
-        private void LoadAssetsFromMemory(FileReader reader, string originalPath, string unityVersion = null)
+        private bool LoadAssetsFromMemory(FileReader reader, string originalPath, string unityVersion = null)
         {
             if (!assetsFileListHash.Contains(reader.FileName))
             {
@@ -245,15 +247,19 @@ namespace AssetStudio
                 {
                     Logger.Error(e.Message);
                     resourceFileReaders.Add(reader.FileName, reader);
+                    return false;
                 }
                 catch (Exception e)
                 {
-                    Logger.Warning($"Error while reading assets file {reader.FullPath} from {Path.GetFileName(originalPath)}\r\n{e}");
+                    Logger.Warning($"Failed to read assets file {reader.FullPath} from {Path.GetFileName(originalPath)}\r\n{e}");
                     resourceFileReaders.Add(reader.FileName, reader);
                 }
             }
             else
+            {
                 Logger.Info($"Skipping {originalPath} ({reader.FileName})");
+            }
+            return true;
         }
 
         private bool LoadBundleFile(FileReader reader, string originalPath = null)
@@ -268,7 +274,8 @@ namespace AssetStudio
                     var subReader = new FileReader(dummyPath, file.stream);
                     if (subReader.FileType == FileType.AssetsFile)
                     {
-                        LoadAssetsFromMemory(subReader, originalPath ?? reader.FullPath, bundleFile.m_Header.unityRevision);
+                        if (!LoadAssetsFromMemory(subReader, originalPath ?? reader.FullPath, bundleFile.m_Header.unityRevision))
+                            return false;
                     }
                     else if (!resourceFileReaders.ContainsKey(file.fileName))
                     {

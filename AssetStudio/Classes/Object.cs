@@ -1,20 +1,22 @@
-﻿using Newtonsoft.Json.Serialization;
-using Newtonsoft.Json;
-using System.Collections.Generic;
+﻿using Newtonsoft.Json;
 using System.Collections.Specialized;
-using System.Reflection;
 
 namespace AssetStudio
 {
     public class Object
     {
+        [JsonIgnore]
         public SerializedFile assetsFile;
+        [JsonIgnore]
         public ObjectReader reader;
         public long m_PathID;
+        [JsonIgnore]
         public int[] version;
         protected BuildType buildType;
+        [JsonIgnore]
         public BuildTarget platform;
         public ClassIDType type;
+        [JsonIgnore]
         public SerializedType serializedType;
         public uint byteSize;
 
@@ -66,7 +68,6 @@ namespace AssetStudio
                 {
                     Formatting = Formatting.Indented,
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                    ContractResolver = new IgnorePropertiesResolver()
                 }).Replace("  ", "    ");
             }
             catch
@@ -98,26 +99,6 @@ namespace AssetStudio
         {
             reader.Reset();
             return reader.ReadBytes((int)byteSize);
-        }
-
-        private class IgnorePropertiesResolver : DefaultContractResolver
-        {
-            private static readonly HashSet<string> _ignoreProps;
-
-            static IgnorePropertiesResolver()
-            {
-                _ignoreProps = new HashSet<string> { "assetsFile", "reader", "version", "platform", "serializedType" };
-            }
-
-            protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
-            {
-                JsonProperty property = base.CreateProperty(member, memberSerialization);
-                if (_ignoreProps.Contains(property.PropertyName))
-                {
-                    property.ShouldSerialize = _ => false;
-                }
-                return property;
-            }
         }
     }
 }
