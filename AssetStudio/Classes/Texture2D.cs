@@ -26,7 +26,7 @@ namespace AssetStudio
 
             m_Name = $"{m_Texture2DArray.m_Name}_{layer + 1}";
             type = ClassIDType.Texture2DArrayImage;
-            m_PathID = -1;
+            m_PathID = m_Texture2DArray.m_PathID;
 
             m_Width = m_Texture2DArray.m_Width;
             m_Height = m_Texture2DArray.m_Height;

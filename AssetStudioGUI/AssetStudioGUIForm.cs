@@ -1894,6 +1894,19 @@ namespace AssetStudioGUI
                             toExportAssets = visibleAssets;
                             break;
                     }
+
+                    if (toExportAssets != null && filterTypeToolStripMenuItem.DropDownItems.ContainsKey("Texture2DArray"))
+                    {
+                        var tex2dArrayImgPathIdSet = toExportAssets.FindAll(x => x.Type == ClassIDType.Texture2DArrayImage).Select(x => x.m_PathID).ToHashSet();
+                        foreach (var pathId in tex2dArrayImgPathIdSet)
+                        {
+                            toExportAssets = toExportAssets.Where(x => 
+                                x.Type != ClassIDType.Texture2DArray 
+                                || (x.Type == ClassIDType.Texture2DArray && x.m_PathID != pathId))
+                                .ToList();
+                        }
+                    }
+
                     Studio.ExportAssets(saveFolderDialog.Folder, toExportAssets, exportType);
                 }
             }
