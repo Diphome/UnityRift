@@ -11,8 +11,18 @@ namespace AssetStudio
         private long size;
         private BinaryReader reader;
 
-        public int Size => (int)size;
-        public int Offset => (int)offset;
+        public int Size
+        {
+            get => (int)size;
+            set => size = value;
+        }
+        public int Offset
+        {
+            get => (int)offset;
+            set => offset = value;
+        }
+
+        public ResourceReader() { }
 
         public ResourceReader(string path, SerializedFile assetsFile, long offset, long size)
         {

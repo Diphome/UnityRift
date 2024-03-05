@@ -171,7 +171,7 @@ namespace AssetStudio
             for (int i = 1; i < m_Nodes.Count; i++)
             {
                 var m_Node = m_Nodes[i];
-                var varNameStr = m_Node.m_Name;
+                var varNameStr = m_Node.m_Name.Replace("image data", "image_data");
                 obj[varNameStr] = ReadValue(m_Nodes, reader, ref i);
             }
             var readed = reader.Position - reader.byteStart;
@@ -262,7 +262,13 @@ namespace AssetStudio
                 case "TypelessData":
                     {
                         var size = reader.ReadInt32();
-                        value = reader.ReadBytes(size);
+                        var dic = new OrderedDictionary
+                        {
+                            { "Offset", reader.BaseStream.Position },
+                            { "Size", size }
+                        };
+                        value = dic;
+                        reader.BaseStream.Position += size;
                         i += 2;
                         break;
                     }

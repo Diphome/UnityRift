@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using Newtonsoft.Json;
 
 namespace AssetStudio
 {
@@ -47,6 +49,25 @@ namespace AssetStudio
                 : new ResourceReader(reader, offset, m_CompleteImageSize);
 
             byteSize = (uint)(m_Width * m_Height) * 4;
+        }
+
+        public Texture2D(ObjectReader reader, IDictionary typeDict) : base(reader)
+        {
+            var parsedTex2d = JsonConvert.DeserializeObject<Texture2D>(JsonConvert.SerializeObject(typeDict));
+            m_Width = parsedTex2d.m_Width;
+            m_Height = parsedTex2d.m_Height;
+            m_CompleteImageSize = parsedTex2d.m_CompleteImageSize;
+            m_TextureFormat = parsedTex2d.m_TextureFormat;
+            m_MipMap = parsedTex2d.m_MipMap;
+            m_MipCount = parsedTex2d.m_MipCount;
+            m_ImageCount = parsedTex2d.m_ImageCount;
+            m_TextureSettings = parsedTex2d.m_TextureSettings;
+            m_StreamData = parsedTex2d.m_StreamData;
+
+            image_data = !string.IsNullOrEmpty(m_StreamData?.path)
+                ? new ResourceReader(m_StreamData.path, assetsFile, m_StreamData.offset, m_StreamData.size)
+                : new ResourceReader(reader, parsedTex2d.image_data.Offset, parsedTex2d.image_data.Size);
+            typeDict.Clear();
         }
 
         public Texture2D(ObjectReader reader) : base(reader)
@@ -129,16 +150,9 @@ namespace AssetStudio
                 m_StreamData = new StreamingInfo(reader);
             }
 
-            ResourceReader resourceReader;
-            if (!string.IsNullOrEmpty(m_StreamData?.path))
-            {
-                resourceReader = new ResourceReader(m_StreamData.path, assetsFile, m_StreamData.offset, m_StreamData.size);
-            }
-            else
-            {
-                resourceReader = new ResourceReader(reader, reader.BaseStream.Position, image_data_size);
-            }
-            image_data = resourceReader;
+            image_data = !string.IsNullOrEmpty(m_StreamData?.path)
+                ? new ResourceReader(m_StreamData.path, assetsFile, m_StreamData.offset, m_StreamData.size)
+                : new ResourceReader(reader, reader.BaseStream.Position, image_data_size);
         }
 
         // https://docs.unity3d.com/2023.3/Documentation/Manual/class-TextureImporterOverride.html

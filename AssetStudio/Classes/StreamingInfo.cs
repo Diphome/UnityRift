@@ -6,6 +6,8 @@
         public uint size;
         public string path;
 
+        public StreamingInfo() { }
+
         public StreamingInfo(ObjectReader reader)
         {
             var version = reader.version;
