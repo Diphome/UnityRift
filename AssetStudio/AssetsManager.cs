@@ -572,7 +572,9 @@ namespace AssetStudio
                                     : new Texture2D(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader));
                                 break;
                             case ClassIDType.Texture2DArray:
-                                obj = new Texture2DArray(objectReader);
+                                obj = objectReader.serializedType?.m_Type == null
+                                    ? new Texture2DArray(objectReader)
+                                    : new Texture2DArray(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader));
                                 break;
                             case ClassIDType.Transform:
                                 obj = new Transform(objectReader);

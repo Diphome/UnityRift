@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace AssetStudio
 {
@@ -15,6 +17,8 @@ namespace AssetStudio
         public ResourceReader image_data;
         public StreamingInfo m_StreamData;
         public List<Texture2D> TextureList;
+
+        public Texture2DArray() { }
 
         public Texture2DArray(ObjectReader reader) : base(reader)
         {
@@ -39,14 +43,29 @@ namespace AssetStudio
                 m_StreamData = new StreamingInfo(reader);
             }
 
-            if (!string.IsNullOrEmpty(m_StreamData?.path))
-            {
-                image_data = new ResourceReader(m_StreamData.path, assetsFile, m_StreamData.offset, (int)m_StreamData.size);
-            }
-            else
-            {
-                image_data = new ResourceReader(reader, reader.BaseStream.Position, image_data_size);
-            }
+            image_data = !string.IsNullOrEmpty(m_StreamData?.path)
+                ? new ResourceReader(m_StreamData.path, assetsFile, m_StreamData.offset, (int)m_StreamData.size)
+                : new ResourceReader(reader, reader.BaseStream.Position, image_data_size);
+
+            TextureList = new List<Texture2D>();
+        }
+
+        public Texture2DArray(ObjectReader reader, IDictionary typeDict) : base(reader)
+        {
+            var parsedTex2dArray = JsonConvert.DeserializeObject<Texture2DArray>(JsonConvert.SerializeObject(typeDict));
+            m_Width = parsedTex2dArray.m_Width;
+            m_Height = parsedTex2dArray.m_Height;
+            m_Depth = parsedTex2dArray.m_Depth;
+            m_Format = parsedTex2dArray.m_Format;
+            m_MipCount = parsedTex2dArray.m_MipCount;
+            m_DataSize = parsedTex2dArray.m_DataSize;
+            m_TextureSettings = parsedTex2dArray.m_TextureSettings;
+            m_StreamData = parsedTex2dArray.m_StreamData;
+            
+            image_data = !string.IsNullOrEmpty(m_StreamData?.path)
+                ? new ResourceReader(m_StreamData.path, assetsFile, m_StreamData.offset, m_StreamData.size)
+                : new ResourceReader(reader, parsedTex2dArray.image_data.Offset, parsedTex2dArray.image_data.Size);
+            typeDict.Clear();
 
             TextureList = new List<Texture2D>();
         }
