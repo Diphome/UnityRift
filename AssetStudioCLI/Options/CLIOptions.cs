@@ -496,7 +496,7 @@ namespace AssetStudioCLI.Options
                 var option = resplittedArgs[workModeOptionIndex];
                 if (workModeOptionIndex + 1 >= resplittedArgs.Count)
                 {
-                    Console.WriteLine($"{"Error during parsing options:".Color(brightRed)} Value for [{option.Color(brightRed)}] option was not found.\n");
+                    Console.WriteLine($"{"Error during parsing options:".Color(brightRed)} Value for [{option.Color(brightYellow)}] option was not found.\n");
                     TryFindOptionDescription(option, optionsDict);
                     return;
                 }
@@ -538,8 +538,8 @@ namespace AssetStudioCLI.Options
                         };
                         break;
                     default:
-                        Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported working mode: [{value.Color(brightRed)}].\n");
-                        ShowOptionDescription(o_workMode.Description);
+                        Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported working mode: [{value.Color(brightRed)}].\n");
+                        ShowOptionDescription(o_workMode);
                         return;
                 }
                 resplittedArgs.RemoveRange(workModeOptionIndex, 2);
@@ -567,16 +567,16 @@ namespace AssetStudioCLI.Options
                                 resplittedArgs.RemoveAt(i);
                                 break;
                             default:
-                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
-                                ShowOptionDescription(f_loadAllAssets.Description, isFlag: true);
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
+                                ShowOptionDescription(f_loadAllAssets, isFlag: true);
                                 return;
                         }
                         break;
                     case "--l2d-force-bezier":
                         if (o_workMode.Value != WorkMode.ExportLive2D)
                         {
-                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
-                            ShowOptionDescription(o_workMode.Description);
+                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
+                            ShowOptionDescription(o_workMode);
                             return;
                         }
                         f_l2dForceBezier.Value = true;
@@ -635,12 +635,12 @@ namespace AssetStudioCLI.Options
                                         }
                                         else
                                         {
-                                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unknown asset type specified [{type.Color(brightRed)}].\n");
-                                            ShowOptionDescription(o_exportAssetTypes.Description);
+                                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unknown asset type specified [{type.Color(brightRed)}].\n");
+                                            ShowOptionDescription(o_exportAssetTypes);
                                             return;
                                         }
-                                        Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Asset type [{type.Color(brightRed)}] is not supported for exporting.\n");
-                                        ShowOptionDescription(o_exportAssetTypes.Description);
+                                        Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Asset type [{type.Color(brightRed)}] is not supported for exporting.\n");
+                                        ShowOptionDescription(o_exportAssetTypes);
                                         return;
                                 }
                             }
@@ -668,8 +668,8 @@ namespace AssetStudioCLI.Options
                                     o_groupAssetsBy.Value = AssetGroupOption.None;
                                     break;
                                 default:
-                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported grouping option: [{value.Color(brightRed)}].\n");
-                                    ShowOptionDescription(o_groupAssetsBy.Description);
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported grouping option: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_groupAssetsBy);
                                     return;
                             }
                             break;
@@ -687,8 +687,8 @@ namespace AssetStudioCLI.Options
                                     o_filenameFormat.Value = FilenameFormat.PathID;
                                     break;
                                 default:
-                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported file name format: [{value.Color(brightRed)}].\n");
-                                    ShowOptionDescription(o_filenameFormat.Description);
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported file name format: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_filenameFormat);
                                     return;
                             }
                             break;
@@ -738,8 +738,8 @@ namespace AssetStudioCLI.Options
                                     o_logLevel.Value = LoggerEvent.Error;
                                     break;
                                 default:
-                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported log level value: [{value.Color(brightRed)}].\n");
-                                    ShowOptionDescription(o_logLevel.Description);
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported log level value: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_logLevel);
                                     return;
                             }
                             break;
@@ -756,8 +756,8 @@ namespace AssetStudioCLI.Options
                                     o_logOutput.Value = LogOutputMode.Both;
                                     break;
                                 default:
-                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported log output mode: [{value.Color(brightRed)}].\n");
-                                    ShowOptionDescription(o_logOutput.Description);
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported log output mode: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_logOutput);
                                     return;
                             }
                             break;
@@ -784,8 +784,8 @@ namespace AssetStudioCLI.Options
                                     convertTexture = false;
                                     break;
                                 default:
-                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported image format: [{value.Color(brightRed)}].\n");
-                                    ShowOptionDescription(o_imageFormat.Description);
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported image format: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_imageFormat);
                                     return;
                             }
                             break;
@@ -800,16 +800,16 @@ namespace AssetStudioCLI.Options
                                     o_audioFormat.Value = AudioFormat.None;
                                     break;
                                 default:
-                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported audio format: [{value.Color(brightRed)}].\n");
-                                    ShowOptionDescription(o_audioFormat.Description);
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported audio format: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_audioFormat);
                                     return;
                             }
                             break;
                         case "--l2d-motion-mode":
                             if (o_workMode.Value != WorkMode.ExportLive2D)
                             {
-                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. This option is not suitable for the current working mode [{o_workMode.Value}].\n");
-                                ShowOptionDescription(o_workMode.Description);
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. This option is not suitable for the current working mode [{o_workMode.Value}].\n");
+                                ShowOptionDescription(o_workMode);
                                 return;
                             }
                             switch (value.ToLower())
@@ -826,8 +826,8 @@ namespace AssetStudioCLI.Options
                                     o_l2dMotionMode.Value = CubismLive2DExtractor.Live2DMotionMode.AnimationClipV1;
                                     break;
                                 default:
-                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported Live2D motion mode: [{value.Color(brightRed)}].\n");
-                                    ShowOptionDescription(o_l2dMotionMode.Description);
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported Live2D motion mode: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_l2dMotionMode);
                                     return;
                             }
                             break;
@@ -839,8 +839,8 @@ namespace AssetStudioCLI.Options
                             }
                             else
                             {
-                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported scale factor value: [{value.Color(brightRed)}].\n");
-                                ShowOptionDescription(o_fbxScaleFactor.Description);
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported scale factor value: [{value.Color(brightRed)}].\n");
+                                ShowOptionDescription(o_fbxScaleFactor);
                                 return;
                             }
                             break;
@@ -852,8 +852,8 @@ namespace AssetStudioCLI.Options
                             }
                             else
                             {
-                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported bone size value: [{value.Color(brightRed)}].\n");
-                                ShowOptionDescription(o_fbxBoneSize.Description);
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported bone size value: [{value.Color(brightRed)}].\n");
+                                ShowOptionDescription(o_fbxBoneSize);
                                 return;
                             }
                             break;
@@ -868,8 +868,8 @@ namespace AssetStudioCLI.Options
                                     o_customCompressionType.Value = CustomCompressionType.Lz4;
                                     break;
                                 default:
-                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported compression type: [{value.Color(brightRed)}].\n");
-                                    ShowOptionDescription(o_customCompressionType.Description);
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported compression type: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_customCompressionType);
                                     return;
                             }
                             break;
@@ -883,8 +883,8 @@ namespace AssetStudioCLI.Options
                                     o_exportAssetList.Value = ExportListType.None;
                                     break;
                                 default:
-                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported asset list export option: [{value.Color(brightRed)}].\n");
-                                    ShowOptionDescription(o_exportAssetList.Description);
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported asset list export option: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_exportAssetList);
                                     return;
                             }
                             break;
@@ -912,7 +912,7 @@ namespace AssetStudioCLI.Options
                             }
                             else
                             {
-                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Assembly folder [{value.Color(brightRed)}] was not found.");
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Assembly folder [{value.Color(brightRed)}] was not found.");
                                 return;
                             }
                             break;
@@ -929,11 +929,11 @@ namespace AssetStudioCLI.Options
                     }
                     i++;
                 }
-                catch (IndexOutOfRangeException)
+                catch (ArgumentOutOfRangeException)
                 {
                     if (optionsDict.Any(x => x.Key.Contains(option)))
                     {
-                        Console.WriteLine($"{"Error during parsing options:".Color(brightRed)} Value for [{option.Color(brightRed)}] option was not found.\n");
+                        Console.WriteLine($"{"Error during parsing options:".Color(brightRed)} Value for [{option.Color(brightYellow)}] option was not found.\n");
                         TryFindOptionDescription(option, optionsDict);
                     }
                     else if (flagsDict.Any(x => x.Key.Contains(option)))
@@ -978,10 +978,11 @@ namespace AssetStudioCLI.Options
             return value.Split(separator);
         }
 
-        private static void ShowOptionDescription(string desc, bool isFlag = false)
+        private static void ShowOptionDescription<T>(Option<T> option, bool isFlag = false)
         {
             var arg = isFlag ? "Flag" : "Option";
-            Console.WriteLine($"{arg} description:\n{desc}");
+            var optionDesc = option.Description + option.Example.Color(ColorConsole.BrightBlack);
+            Console.WriteLine($"{arg} description:\n{optionDesc}");
         }
 
         private static bool TryFindOptionDescription(string option, Dictionary<string, string> dict, bool isFlag = false)
