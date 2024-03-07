@@ -11,6 +11,7 @@ namespace AssetStudio
     public class AssetsManager
     {
         public string SpecifyUnityVersion;
+        public bool ZstdEnabled = true;
         public List<SerializedFile> assetsFileList = new List<SerializedFile>();
         private HashSet<ClassIDType> filteredAssetTypesList = new HashSet<ClassIDType>();
 
@@ -267,7 +268,7 @@ namespace AssetStudio
             Logger.Info("Loading " + reader.FullPath);
             try
             {
-                var bundleFile = new BundleFile(reader, SpecifyUnityVersion);
+                var bundleFile = new BundleFile(reader, ZstdEnabled, SpecifyUnityVersion);
                 foreach (var file in bundleFile.fileList)
                 {
                     var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), file.fileName);

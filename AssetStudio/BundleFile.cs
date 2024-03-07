@@ -1,4 +1,5 @@
 ﻿using K4os.Compression.LZ4;
+using ZstdSharp;
 using System;
 using System.IO;
 using System.Linq;
@@ -36,7 +37,8 @@ namespace AssetStudio
         Lzma,
         Lz4,
         Lz4HC,
-        Lzham
+        Lzham,
+        Custom,
     }
 
     public class BundleFile
@@ -74,7 +76,7 @@ namespace AssetStudio
 
         public StreamFile[] fileList;
 
-        public BundleFile(FileReader reader, string specUnityVer = "")
+        public BundleFile(FileReader reader, bool useZstd, string specUnityVer = "")
         {
             m_Header = new Header();
             m_Header.signature = reader.ReadStringToNull();
@@ -127,7 +129,7 @@ namespace AssetStudio
                     ReadBlocksInfoAndDirectory(reader, ver);
                     using (var blocksStream = CreateBlocksStream(reader.FullPath))
                     {
-                        ReadBlocks(reader, blocksStream);
+                        ReadBlocks(reader, blocksStream, useZstd);
                         ReadFiles(blocksStream, reader.FullPath);
                     }
                     break;
@@ -325,7 +327,7 @@ namespace AssetStudio
                     break;
                 }
                 default:
-                    throw new IOException($"Unsupported compression type {compressionType}");
+                    throw new IOException($"Unsupported block info compression type {compressionType}");
             }
 
             using (var blocksInfoReader = new EndianBinaryReader(blocksInfoUncompressedStream))
@@ -362,8 +364,10 @@ namespace AssetStudio
             }
         }
 
-        private void ReadBlocks(FileReader reader, Stream blocksStream)
+        private void ReadBlocks(FileReader reader, Stream blocksStream, bool useZstd)
         {
+            var zstdCodec = new Decompressor();
+            var i = 0;
             foreach (var blockInfo in m_BlocksInfo)
             {
                 var compressionType = (CompressionType)(blockInfo.flags & StorageBlockFlags.CompressionTypeMask);
@@ -381,6 +385,7 @@ namespace AssetStudio
                     }
                     case CompressionType.Lz4:
                     case CompressionType.Lz4HC:
+                    case CompressionType.Custom:
                     {
                         var compressedSize = (int)blockInfo.compressedSize;
                         var compressedBytes = BigArrayPool<byte>.Shared.Rent(compressedSize);
@@ -389,10 +394,30 @@ namespace AssetStudio
                         var uncompressedBytes = BigArrayPool<byte>.Shared.Rent(uncompressedSize);
                         try
                         {
-                            var numWrite = LZ4Codec.Decode(compressedBytes, 0, compressedSize, uncompressedBytes, 0, uncompressedSize);
+                            var compTypeStr = compressionType.ToString();
+                            if (compressionType == CompressionType.Custom)
+                            {
+                                compTypeStr = useZstd ? "Zstd" : "Lz4";
+                                if (i == 0)
+                                {
+                                    Logger.Debug($"Custom block compression type was detected. Trying to decompress as {compTypeStr} archive..");
+                                    i++;
+                                }
+                            }
+
+                            int numWrite;
+                            if (compressionType == CompressionType.Custom && useZstd)
+                            {
+                                numWrite = zstdCodec.Unwrap(compressedBytes, 0, compressedSize, uncompressedBytes, 0, uncompressedSize);
+                            }
+                            else
+                            {
+                                numWrite = LZ4Codec.Decode(compressedBytes, 0, compressedSize, uncompressedBytes, 0, uncompressedSize);
+                            }
+
                             if (numWrite != uncompressedSize)
                             {
-                                throw new IOException($"Lz4 decompression error, write {numWrite} bytes but expected {uncompressedSize} bytes");
+                                throw new IOException($"{compTypeStr} block decompression error, write {numWrite} bytes but expected {uncompressedSize} bytes");
                             }
                             blocksStream.Write(uncompressedBytes, 0, uncompressedSize);
                         }
@@ -404,7 +429,7 @@ namespace AssetStudio
                         break;
                     }
                     default:
-                        throw new IOException($"Unsupported compression type {compressionType}");
+                        throw new IOException($"Unsupported block compression type {compressionType}");
                 }
             }
             blocksStream.Position = 0;

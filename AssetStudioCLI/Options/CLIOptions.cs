@@ -67,6 +67,12 @@ namespace AssetStudioCLI.Options
         NameAndContainer,
     }
 
+    internal enum CustomCompressionType
+    {
+        Zstd,
+        Lz4,
+    }
+
     internal static class CLIOptions
     {
         public static bool isParsed;
@@ -105,6 +111,7 @@ namespace AssetStudioCLI.Options
         public static Option<List<string>> o_filterByPathID;
         public static Option<List<string>> o_filterByText;
         //advanced
+        public static Option<CustomCompressionType> o_customCompressionType;
         public static Option<ExportListType> o_exportAssetList;
         public static Option<string> o_assemblyPath;
         public static Option<string> o_unityVersion;
@@ -377,6 +384,18 @@ namespace AssetStudioCLI.Options
             #endregion
 
             #region Init Advanced Options
+            o_customCompressionType = new GroupedOption<CustomCompressionType>
+            (
+                optionDefaultValue: CustomCompressionType.Zstd,
+                optionName: "--custom-compression <value>",
+                optionDescription: "Specify the compression type for assets that use custom compression\n" + 
+                    "<Value: zstd(default) | lz4>\n" +
+                    "Zstd - Try to decompress as zstd archive\n" +
+                    "Lz4 - Try to decompress as lz4 archive\n",
+                optionExample: "Example: \"--custom-compression lz4\"\n",
+                optionHelpGroup: HelpGroups.Advanced
+            );
+
             o_exportAssetList = new GroupedOption<ExportListType>
             (
                 optionDefaultValue: ExportListType.None,
@@ -838,6 +857,22 @@ namespace AssetStudioCLI.Options
                                 return;
                             }
                             break;
+                        case "--custom-compression":
+                            switch (value.ToLower())
+                            {
+                                case "zstd":
+                                    o_customCompressionType.Value = CustomCompressionType.Zstd;
+                                    break;
+                                case "lz4":
+                                case "lz4hc":
+                                    o_customCompressionType.Value = CustomCompressionType.Lz4;
+                                    break;
+                                default:
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option}] option. Unsupported compression type: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_customCompressionType.Description);
+                                    return;
+                            }
+                            break;
                         case "--export-asset-list":
                             switch (value.ToLower())
                             {
@@ -1043,6 +1078,10 @@ namespace AssetStudioCLI.Options
             var sb = new StringBuilder();
             sb.AppendLine("[Current Options]");
             sb.AppendLine($"# Working Mode: {o_workMode}");
+            if (o_customCompressionType.Value != o_customCompressionType.DefaultValue)
+            {
+                sb.AppendLine($"# Custom Compression Type: {o_customCompressionType}");
+            }
             sb.AppendLine($"# Input Path: \"{inputPath}\"");
             switch (o_workMode.Value)
             {

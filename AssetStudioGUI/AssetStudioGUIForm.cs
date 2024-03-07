@@ -2267,6 +2267,18 @@ namespace AssetStudioGUI
             }
         }
 
+        private void customCompressionZstd_CheckedChanged(object sender, EventArgs e)
+        {
+            customCompressionLZ4ToolStripMenuItem.Checked = !customCompressionZstdToolStripMenuItem.Checked;
+            assetsManager.ZstdEnabled = customCompressionZstdToolStripMenuItem.Checked;
+        }
+
+        private void customCompressionLZ4_CheckedChanged(object sender, EventArgs e)
+        {
+            customCompressionZstdToolStripMenuItem.Checked = !customCompressionLZ4ToolStripMenuItem.Checked;
+            assetsManager.ZstdEnabled = customCompressionZstdToolStripMenuItem.Checked;
+        }
+
         #region FMOD
         private void FMODinit()
         {

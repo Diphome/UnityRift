@@ -124,7 +124,7 @@ namespace AssetStudioGUI
         private static int ExtractBundleFile(FileReader reader, string savePath)
         {
             Logger.Info($"Decompressing {reader.FileName} ...");
-            var bundleFile = new BundleFile(reader, assetsManager.SpecifyUnityVersion);
+            var bundleFile = new BundleFile(reader, assetsManager.ZstdEnabled, assetsManager.SpecifyUnityVersion);
             reader.Dispose();
             if (bundleFile.fileList.Length > 0)
             {
