@@ -932,6 +932,8 @@ namespace AssetStudioGUI
                         }
                     }
                 }
+                var switchSwizzled = m_Texture2D.m_PlatformBlob.Length != 0;
+                assetItem.InfoText += assetItem.Asset.platform == BuildTarget.Switch ? $"\nUses texture swizzling: {switchSwizzled}" : "";
                 PreviewTexture(bitmap);
 
                 StatusStripUpdate("'Ctrl'+'R'/'G'/'B'/'A' for Channel Toggle");

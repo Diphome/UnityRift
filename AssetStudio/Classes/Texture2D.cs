@@ -14,12 +14,13 @@ namespace AssetStudio
         public int m_MipCount;
         public GLTextureSettings m_TextureSettings;
         public int m_ImageCount;
+        public byte[] m_PlatformBlob;
         public ResourceReader image_data;
         public StreamingInfo m_StreamData;
 
         public Texture2D() { }
 
-        public Texture2D(Texture2DArray m_Texture2DArray, int layer)
+        public Texture2D(Texture2DArray m_Texture2DArray, int layer) // Texture2DArrayImage
         {
             reader = m_Texture2DArray.reader;
             assetsFile = m_Texture2DArray.assetsFile;
@@ -63,6 +64,7 @@ namespace AssetStudio
             m_ImageCount = parsedTex2d.m_ImageCount;
             m_TextureSettings = parsedTex2d.m_TextureSettings;
             m_StreamData = parsedTex2d.m_StreamData;
+            m_PlatformBlob = parsedTex2d.m_PlatformBlob ?? Array.Empty<byte>();
 
             image_data = !string.IsNullOrEmpty(m_StreamData?.path)
                 ? new ResourceReader(m_StreamData.path, assetsFile, m_StreamData.offset, m_StreamData.size)
@@ -141,8 +143,12 @@ namespace AssetStudio
             }
             if (version[0] > 2020 || (version[0] == 2020 && version[1] >= 2)) //2020.2 and up
             {
-                var m_PlatformBlob = reader.ReadUInt8Array();
+                m_PlatformBlob = reader.ReadUInt8Array();
                 reader.AlignStream();
+            }
+            else
+            {
+                m_PlatformBlob = Array.Empty<byte>();
             }
             var image_data_size = reader.ReadInt32();
             if (image_data_size == 0 && ((version[0] == 5 && version[1] >= 3) || version[0] > 5))//5.3.0 and up

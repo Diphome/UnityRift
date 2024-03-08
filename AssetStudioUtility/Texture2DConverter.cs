@@ -9,20 +9,74 @@ namespace AssetStudio
         private ResourceReader reader;
         private int m_Width;
         private int m_Height;
+        private int m_WidthCrop;
+        private int m_HeightCrop;
         private TextureFormat m_TextureFormat;
+        private byte[] m_PlatformBlob;
         private int[] version;
         private BuildTarget platform;
-        public int outPutSize;
+        private int outPutDataSize;
+
+        private bool switchSwizzled;
+        private int gobsPerBlock;
+        private SixLabors.ImageSharp.Size blockSize;
+
+        public int OutputDataSize => outPutDataSize;
+        public bool UsesSwitchSwizzle => switchSwizzled;
 
         public Texture2DConverter(Texture2D m_Texture2D)
         {
             reader = m_Texture2D.image_data;
-            m_Width = m_Texture2D.m_Width;
-            m_Height = m_Texture2D.m_Height;
+            m_WidthCrop = m_Texture2D.m_Width;
+            m_HeightCrop = m_Texture2D.m_Height;
             m_TextureFormat = m_Texture2D.m_TextureFormat;
+            m_PlatformBlob = m_Texture2D.m_PlatformBlob;
             version = m_Texture2D.version;
             platform = m_Texture2D.platform;
-            outPutSize = m_Width * m_Height * 4;
+            // not guaranteed, you can have a swizzled texture without m_PlatformBlob
+            // but officially, I don't think this can happen. maybe check which engine
+            // version this started happening in...
+            switchSwizzled = platform == BuildTarget.Switch && m_PlatformBlob.Length != 0;
+            if (switchSwizzled)
+            {
+                SetupSwitchSwizzle();
+            }
+            else
+            {
+                m_Width = m_WidthCrop;
+                m_Height = m_HeightCrop;
+            }
+            outPutDataSize = m_Width * m_Height * 4;
+        }
+
+        private void SetupSwitchSwizzle()
+        {
+            //apparently there is another value to worry about, but seeing as it's
+            //always 0 and I have nothing else to test against, this will probably
+            //work fine for now
+            gobsPerBlock = 1 << BitConverter.ToInt32(m_PlatformBlob, 8);
+
+            //in older versions of unity, rgb24 has a platformBlob which shouldn't
+            //be possible. it turns out in this case, the image is just rgba32.
+            //probably shouldn't be modifying the texture2d here, but eh, who cares
+            if (m_TextureFormat == TextureFormat.RGB24)
+            {
+                m_TextureFormat = TextureFormat.RGBA32;
+            }
+            else if (m_TextureFormat == TextureFormat.BGR24)
+            {
+                m_TextureFormat = TextureFormat.BGRA32;
+            }
+
+            blockSize = Texture2DSwitchDeswizzler.GetTextureFormatBlockSize(m_TextureFormat);
+            var realSize = Texture2DSwitchDeswizzler.GetPaddedTextureSize(m_WidthCrop, m_HeightCrop, blockSize.Width, blockSize.Height, gobsPerBlock);
+            m_Width = realSize.Width;
+            m_Height = realSize.Height;
+        }
+
+        public SixLabors.ImageSharp.Size GetUncroppedSize()
+        {
+            return new SixLabors.ImageSharp.Size(m_Width, m_Height);
         }
 
         public bool DecodeTexture2D(byte[] bytes)
@@ -36,6 +90,11 @@ namespace AssetStudio
             try
             {
                 reader.GetData(buff);
+                if (switchSwizzled)
+                {
+                    buff = Texture2DSwitchDeswizzler.Unswizzle(buff, GetUncroppedSize(), blockSize, gobsPerBlock);
+                }
+
                 switch (m_TextureFormat)
                 {
                     case TextureFormat.Alpha8: //test pass
@@ -275,7 +334,7 @@ namespace AssetStudio
 
         private bool DecodeRGBA32(byte[] image_data, byte[] buff)
         {
-            for (var i = 0; i < outPutSize; i += 4)
+            for (var i = 0; i < outPutDataSize; i += 4)
             {
                 buff[i] = image_data[i + 2];
                 buff[i + 1] = image_data[i + 1];
@@ -287,7 +346,7 @@ namespace AssetStudio
 
         private bool DecodeARGB32(byte[] image_data, byte[] buff)
         {
-            for (var i = 0; i < outPutSize; i += 4)
+            for (var i = 0; i < outPutDataSize; i += 4)
             {
                 buff[i] = image_data[i + 3];
                 buff[i + 1] = image_data[i + 2];
@@ -354,7 +413,7 @@ namespace AssetStudio
 
         private bool DecodeBGRA32(byte[] image_data, byte[] buff)
         {
-            for (var i = 0; i < outPutSize; i += 4)
+            for (var i = 0; i < outPutDataSize; i += 4)
             {
                 buff[i] = image_data[i];
                 buff[i + 1] = image_data[i + 1];
@@ -366,7 +425,7 @@ namespace AssetStudio
 
         private bool DecodeRHalf(byte[] image_data, byte[] buff)
         {
-            for (var i = 0; i < outPutSize; i += 4)
+            for (var i = 0; i < outPutDataSize; i += 4)
             {
                 buff[i] = 0;
                 buff[i + 1] = 0;
@@ -378,7 +437,7 @@ namespace AssetStudio
 
         private bool DecodeRGHalf(byte[] image_data, byte[] buff)
         {
-            for (var i = 0; i < outPutSize; i += 4)
+            for (var i = 0; i < outPutDataSize; i += 4)
             {
                 buff[i] = 0;
                 buff[i + 1] = (byte)Math.Round(Half.ToHalf(image_data, i + 2) * 255f);
@@ -390,7 +449,7 @@ namespace AssetStudio
 
         private bool DecodeRGBAHalf(byte[] image_data, byte[] buff)
         {
-            for (var i = 0; i < outPutSize; i += 4)
+            for (var i = 0; i < outPutDataSize; i += 4)
             {
                 buff[i] = (byte)Math.Round(Half.ToHalf(image_data, i * 2 + 4) * 255f);
                 buff[i + 1] = (byte)Math.Round(Half.ToHalf(image_data, i * 2 + 2) * 255f);
@@ -402,7 +461,7 @@ namespace AssetStudio
 
         private bool DecodeRFloat(byte[] image_data, byte[] buff)
         {
-            for (var i = 0; i < outPutSize; i += 4)
+            for (var i = 0; i < outPutDataSize; i += 4)
             {
                 buff[i] = 0;
                 buff[i + 1] = 0;
@@ -414,7 +473,7 @@ namespace AssetStudio
 
         private bool DecodeRGFloat(byte[] image_data, byte[] buff)
         {
-            for (var i = 0; i < outPutSize; i += 4)
+            for (var i = 0; i < outPutDataSize; i += 4)
             {
                 buff[i] = 0;
                 buff[i + 1] = (byte)Math.Round(BitConverter.ToSingle(image_data, i * 2 + 4) * 255f);
@@ -426,7 +485,7 @@ namespace AssetStudio
 
         private bool DecodeRGBAFloat(byte[] image_data, byte[] buff)
         {
-            for (var i = 0; i < outPutSize; i += 4)
+            for (var i = 0; i < outPutDataSize; i += 4)
             {
                 buff[i] = (byte)Math.Round(BitConverter.ToSingle(image_data, i * 4 + 8) * 255f);
                 buff[i + 1] = (byte)Math.Round(BitConverter.ToSingle(image_data, i * 4 + 4) * 255f);
@@ -474,7 +533,7 @@ namespace AssetStudio
 
         private bool DecodeRGB9e5Float(byte[] image_data, byte[] buff)
         {
-            for (var i = 0; i < outPutSize; i += 4)
+            for (var i = 0; i < outPutDataSize; i += 4)
             {
                 var n = BitConverter.ToInt32(image_data, i);
                 var scale = n >> 27 & 0x1f;
@@ -652,7 +711,7 @@ namespace AssetStudio
 
         private bool DecodeRG32(byte[] image_data, byte[] buff)
         {
-            for (var i = 0; i < outPutSize; i += 4)
+            for (var i = 0; i < outPutDataSize; i += 4)
             {
                 buff[i] = 0;                                                                          //b
                 buff[i + 1] = DownScaleFrom16BitTo8Bit(BitConverter.ToUInt16(image_data, i + 2));     //g
@@ -677,7 +736,7 @@ namespace AssetStudio
 
         private bool DecodeRGBA64(byte[] image_data, byte[] buff)
         {
-            for (var i = 0; i < outPutSize; i += 4)
+            for (var i = 0; i < outPutDataSize; i += 4)
             {
                 buff[i] = DownScaleFrom16BitTo8Bit(BitConverter.ToUInt16(image_data, i * 2 + 4));     //b
                 buff[i + 1] = DownScaleFrom16BitTo8Bit(BitConverter.ToUInt16(image_data, i * 2 + 2)); //g
