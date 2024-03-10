@@ -399,8 +399,8 @@ namespace CubismLive2DExtractor
                 {
                     Moc = $"{modelName}.moc3",
                     Textures = textures.ToArray(),
-                    DisplayInfo = isCdiParsed ? $"{modelName}.cdi3.json" : "",
-                    Physics = PhysicsMono == null ? null : $"{modelName}.physics3.json",
+                    DisplayInfo = isCdiParsed ? $"{modelName}.cdi3.json" : null,
+                    Physics = PhysicsMono != null ? $"{modelName}.physics3.json" : null,
                     Motions = JObject.FromObject(motions),
                     Expressions = expressions,
                 },
