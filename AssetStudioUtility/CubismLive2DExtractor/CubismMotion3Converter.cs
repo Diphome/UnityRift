@@ -7,6 +7,7 @@ namespace CubismLive2DExtractor
 {
     class CubismMotion3Converter
     {
+        private SerializedFile assetsFile;
         private Dictionary<uint, string> bonePathHash = new Dictionary<uint, string>();
         public List<ImportedKeyframedAnimation> AnimationList { get; protected set; } = new List<ImportedKeyframedAnimation>();
 
@@ -29,11 +30,12 @@ namespace CubismLive2DExtractor
             foreach (var animationClip in animationClips)
             {
                 var iAnim = new ImportedKeyframedAnimation();
+                assetsFile = animationClip.assetsFile;
                 AnimationList.Add(iAnim);
                 iAnim.Name = animationClip.m_Name;
                 iAnim.SampleRate = animationClip.m_SampleRate;
                 iAnim.Duration = animationClip.m_MuscleClip.m_StopTime;
-                var m_Clip = animationClip.m_MuscleClip.m_Clip;
+                var m_Clip = animationClip.m_MuscleClip.m_Clip.data;
                 var streamedFrames = m_Clip.m_StreamedClip.ReadData();
                 var m_ClipBindingConstant = animationClip.m_ClipBindingConstant;
                 for (int frameIndex = 1; frameIndex < streamedFrames.Count - 1; frameIndex++)
@@ -134,7 +136,7 @@ namespace CubismLive2DExtractor
                     target = "PartOpacity";
                 }
             }
-            else if (binding.script.TryGet(out MonoScript script))
+            else if (binding.script.TryGet(out MonoScript script, assetsFile))
             {
                 switch (script.m_ClassName)
                 {

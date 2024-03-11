@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,6 +16,8 @@ namespace AssetStudio
         public int weightedMode;
         public T inWeight;
         public T outWeight;
+
+        public Keyframe() { }
 
         public Keyframe(ObjectReader reader, Func<T> readerFunc)
         {
@@ -36,6 +40,8 @@ namespace AssetStudio
         public int m_PreInfinity;
         public int m_PostInfinity;
         public int m_RotationOrder;
+
+        public AnimationCurve() { }
 
         public AnimationCurve(ObjectReader reader, Func<T> readerFunc)
         {
@@ -61,6 +67,8 @@ namespace AssetStudio
         public AnimationCurve<Quaternion> curve;
         public string path;
 
+        public QuaternionCurve() { }
+
         public QuaternionCurve(ObjectReader reader)
         {
             curve = new AnimationCurve<Quaternion>(reader, reader.ReadQuaternion);
@@ -75,6 +83,8 @@ namespace AssetStudio
         public float m_Start;
         public byte[] m_Data;
         public byte m_BitSize;
+
+        public PackedFloatVector() { }
 
         public PackedFloatVector(ObjectReader reader)
         {
@@ -135,6 +145,8 @@ namespace AssetStudio
         public byte[] m_Data;
         public byte m_BitSize;
 
+        public PackedIntVector() { }
+
         public PackedIntVector(ObjectReader reader)
         {
             m_NumItems = reader.ReadUInt32();
@@ -178,6 +190,8 @@ namespace AssetStudio
     {
         public uint m_NumItems;
         public byte[] m_Data;
+
+        public PackedQuatVector() { }
 
         public PackedQuatVector(ObjectReader reader)
         {
@@ -263,6 +277,8 @@ namespace AssetStudio
         public int m_PreInfinity;
         public int m_PostInfinity;
 
+        public CompressedAnimationCurve() { }
+
         public CompressedAnimationCurve(ObjectReader reader)
         {
             m_Path = reader.ReadAlignedString();
@@ -279,6 +295,8 @@ namespace AssetStudio
         public AnimationCurve<Vector3> curve;
         public string path;
 
+        public Vector3Curve() { }
+
         public Vector3Curve(ObjectReader reader)
         {
             curve = new AnimationCurve<Vector3>(reader, reader.ReadVector3);
@@ -294,6 +312,8 @@ namespace AssetStudio
         public ClassIDType classID;
         public PPtr<MonoScript> script;
         public int flags;
+
+        public FloatCurve() { }
 
         public FloatCurve(ObjectReader reader)
         {
@@ -315,6 +335,8 @@ namespace AssetStudio
         public float time;
         public PPtr<Object> value;
 
+        public PPtrKeyframe() { }
+
         public PPtrKeyframe(ObjectReader reader)
         {
             time = reader.ReadSingle();
@@ -330,6 +352,8 @@ namespace AssetStudio
         public int classID;
         public PPtr<MonoScript> script;
         public int flags;
+
+        public PPtrCurve() { }
 
         public PPtrCurve(ObjectReader reader)
         {
@@ -357,6 +381,8 @@ namespace AssetStudio
         public Vector3 m_Center;
         public Vector3 m_Extent;
 
+        public AABB() { }
+
         public AABB(ObjectReader reader)
         {
             m_Center = reader.ReadVector3();
@@ -369,6 +395,8 @@ namespace AssetStudio
         public Vector3 t;
         public Quaternion q;
         public Vector3 s;
+
+        public xform() { }
 
         public xform(ObjectReader reader)
         {
@@ -388,6 +416,8 @@ namespace AssetStudio
         public float m_InOut;
         public float m_Grab;
 
+        public HandPose() { }
+
         public HandPose(ObjectReader reader)
         {
             m_GrabX = new xform(reader);
@@ -406,6 +436,8 @@ namespace AssetStudio
         public float m_WeightR;
         public Vector3 m_HintT;
         public float m_HintWeightT;
+
+        public HumanGoal() { }
 
         public HumanGoal(ObjectReader reader)
         {
@@ -431,6 +463,8 @@ namespace AssetStudio
         public HandPose m_RightHandPose;
         public float[] m_DoFArray;
         public Vector3[] m_TDoFArray;
+
+        public HumanPose() { }
 
         public HumanPose(ObjectReader reader)
         {
@@ -468,6 +502,8 @@ namespace AssetStudio
         public uint[] data;
         public uint curveCount;
 
+        public StreamedClip() { }
+
         public StreamedClip(ObjectReader reader)
         {
             data = reader.ReadUInt32Array();
@@ -482,6 +518,8 @@ namespace AssetStudio
             public float value;
             public float outSlope;
             public float inSlope;
+
+            public StreamedCurveKey() { }
 
             public StreamedCurveKey(BinaryReader reader)
             {
@@ -513,6 +551,8 @@ namespace AssetStudio
         {
             public float time;
             public StreamedCurveKey[] keyList;
+
+            public StreamedFrame() { }
 
             public StreamedFrame(BinaryReader reader)
             {
@@ -569,6 +609,8 @@ namespace AssetStudio
         public float m_BeginTime;
         public float[] m_SampleArray;
 
+        public DenseClip() { }
+
         public DenseClip(ObjectReader reader)
         {
             m_FrameCount = reader.ReadInt32();
@@ -583,6 +625,8 @@ namespace AssetStudio
     {
         public float[] data;
 
+        public ConstantClip() { }
+
         public ConstantClip(ObjectReader reader)
         {
             data = reader.ReadSingleArray();
@@ -595,6 +639,8 @@ namespace AssetStudio
         public uint m_TypeID;
         public uint m_Type;
         public uint m_Index;
+
+        public ValueConstant() { }
 
         public ValueConstant(ObjectReader reader)
         {
@@ -613,6 +659,8 @@ namespace AssetStudio
     {
         public ValueConstant[] m_ValueArray;
 
+        public ValueArrayConstant() { }
+
         public ValueArrayConstant(ObjectReader reader)
         {
             int numVals = reader.ReadInt32();
@@ -624,12 +672,26 @@ namespace AssetStudio
         }
     }
 
+    public class OffsetPtr
+    {
+        public Clip data;
+
+        public OffsetPtr() { }
+
+        public OffsetPtr(ObjectReader reader)
+        {
+            data = new Clip(reader);
+        }
+    }
+
     public class Clip
     {
         public StreamedClip m_StreamedClip;
         public DenseClip m_DenseClip;
         public ConstantClip m_ConstantClip;
         public ValueArrayConstant m_Binding;
+
+        public Clip() { }
 
         public Clip(ObjectReader reader)
         {
@@ -696,6 +758,8 @@ namespace AssetStudio
         public float m_Start;
         public float m_Stop;
 
+        public ValueDelta() { }
+
         public ValueDelta(ObjectReader reader)
         {
             m_Start = reader.ReadSingle();
@@ -713,7 +777,7 @@ namespace AssetStudio
         public xform m_MotionStartX;
         public xform m_MotionStopX;
         public Vector3 m_AverageSpeed;
-        public Clip m_Clip;
+        public OffsetPtr m_Clip;
         public float m_StartTime;
         public float m_StopTime;
         public float m_OrientationOffsetY;
@@ -735,6 +799,8 @@ namespace AssetStudio
         public bool m_KeepOriginalPositionXZ;
         public bool m_HeightFromFeet;
 
+        public ClipMuscleConstant() { }
+
         public ClipMuscleConstant(ObjectReader reader)
         {
             var version = reader.version;
@@ -752,7 +818,7 @@ namespace AssetStudio
                 m_MotionStopX = new xform(reader);
             }
             m_AverageSpeed = version[0] > 5 || (version[0] == 5 && version[1] >= 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
-            m_Clip = new Clip(reader);
+            m_Clip = new OffsetPtr(reader);
             m_StartTime = reader.ReadSingle();
             m_StopTime = reader.ReadSingle();
             m_OrientationOffsetY = reader.ReadSingle();
@@ -903,6 +969,8 @@ namespace AssetStudio
         public int intParameter;
         public int messageOptions;
 
+        public AnimationEvent() { }
+
         public AnimationEvent(ObjectReader reader)
         {
             var version = reader.version;
@@ -947,6 +1015,33 @@ namespace AssetStudio
         public ClipMuscleConstant m_MuscleClip;
         public AnimationClipBindingConstant m_ClipBindingConstant;
         public AnimationEvent[] m_Events;
+
+        public AnimationClip() { }
+
+        public AnimationClip(ObjectReader reader, IDictionary typeDict) : base(reader)
+        {
+            var parsedAnimClip = JsonConvert.DeserializeObject<AnimationClip>(JsonConvert.SerializeObject(typeDict));
+            m_AnimationType = parsedAnimClip.m_AnimationType;
+            m_Legacy = parsedAnimClip.m_Legacy;
+            m_Compressed = parsedAnimClip.m_Compressed;
+            m_UseHighQualityCurve = parsedAnimClip.m_UseHighQualityCurve;
+            m_RotationCurves = parsedAnimClip.m_RotationCurves;
+            m_CompressedRotationCurves = parsedAnimClip.m_CompressedRotationCurves;
+            m_EulerCurves = parsedAnimClip.m_EulerCurves;
+            m_PositionCurves = parsedAnimClip.m_PositionCurves;
+            m_ScaleCurves = parsedAnimClip.m_ScaleCurves;
+            m_FloatCurves = parsedAnimClip.m_FloatCurves;
+            m_PPtrCurves = parsedAnimClip.m_PPtrCurves;
+            m_SampleRate = parsedAnimClip.m_SampleRate;
+            m_WrapMode = parsedAnimClip.m_WrapMode;
+            m_Bounds = parsedAnimClip.m_Bounds;
+            m_MuscleClipSize = parsedAnimClip.m_MuscleClipSize;
+            m_MuscleClip = parsedAnimClip.m_MuscleClip;
+            m_ClipBindingConstant = parsedAnimClip.m_ClipBindingConstant;
+            m_Events = parsedAnimClip.m_Events;
+
+            typeDict.Clear();
+        }
 
         public AnimationClip(ObjectReader reader) : base(reader)
         {

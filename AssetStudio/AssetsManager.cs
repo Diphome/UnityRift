@@ -502,7 +502,9 @@ namespace AssetStudio
                                 obj = new Animation(objectReader);
                                 break;
                             case ClassIDType.AnimationClip:
-                                obj = new AnimationClip(objectReader);
+                                obj = objectReader.serializedType?.m_Type == null
+                                    ? new AnimationClip(objectReader)
+                                    : new AnimationClip(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader));
                                 break;
                             case ClassIDType.Animator:
                                 obj = new Animator(objectReader);
