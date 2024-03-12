@@ -103,6 +103,7 @@ namespace AssetStudio
                 if (version[0] > 2022 || (version[0] == 2022 && version[1] >= 2)) //2022.2 and up
                 {
                     var m_IgnoreMipmapLimit = reader.ReadBoolean();
+                    reader.AlignStream();
                 }
                 else
                 {
@@ -118,7 +119,6 @@ namespace AssetStudio
             }
             if (version[0] > 2022 || (version[0] == 2022 && version[1] >= 2)) //2022.2 and up
             {
-                reader.AlignStream();
                 var m_MipmapLimitGroupName = reader.ReadAlignedString();
             }
             if (version[0] > 2018 || (version[0] == 2018 && version[1] >= 2)) //2018.2 and up
