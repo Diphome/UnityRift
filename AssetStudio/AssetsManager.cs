@@ -12,6 +12,7 @@ namespace AssetStudio
     {
         public string SpecifyUnityVersion;
         public bool ZstdEnabled = true;
+        public bool LoadingViaTypeTreeEnabled = true;
         public List<SerializedFile> assetsFileList = new List<SerializedFile>();
         private HashSet<ClassIDType> filteredAssetTypesList = new HashSet<ClassIDType>();
 
@@ -502,9 +503,9 @@ namespace AssetStudio
                                 obj = new Animation(objectReader);
                                 break;
                             case ClassIDType.AnimationClip:
-                                obj = objectReader.serializedType?.m_Type == null
-                                    ? new AnimationClip(objectReader)
-                                    : new AnimationClip(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader));
+                                obj = objectReader.serializedType?.m_Type != null && LoadingViaTypeTreeEnabled
+                                    ? new AnimationClip(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader))
+                                    : new AnimationClip(objectReader);
                                 break;
                             case ClassIDType.Animator:
                                 obj = new Animator(objectReader);
@@ -577,14 +578,14 @@ namespace AssetStudio
                                 obj = new TextAsset(objectReader);
                                 break;
                             case ClassIDType.Texture2D:
-                                obj = objectReader.serializedType?.m_Type == null
-                                    ? new Texture2D(objectReader)
-                                    : new Texture2D(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader));
+                                obj = objectReader.serializedType?.m_Type != null && LoadingViaTypeTreeEnabled
+                                    ? new Texture2D(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader))
+                                    : new Texture2D(objectReader);
                                 break;
                             case ClassIDType.Texture2DArray:
-                                obj = objectReader.serializedType?.m_Type == null
-                                    ? new Texture2DArray(objectReader)
-                                    : new Texture2DArray(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader));
+                                obj = objectReader.serializedType?.m_Type != null && LoadingViaTypeTreeEnabled
+                                    ? new Texture2DArray(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader))
+                                    : new Texture2DArray(objectReader);
                                 break;
                             case ClassIDType.Transform:
                                 obj = new Transform(objectReader);

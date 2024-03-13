@@ -116,6 +116,7 @@ namespace AssetStudioCLI.Options
         public static Option<string> o_assemblyPath;
         public static Option<string> o_unityVersion;
         public static Option<bool> f_notRestoreExtensionName;
+        public static Option<bool> f_avoidLoadingViaTypetree;
         public static Option<bool> f_loadAllAssets;
 
         static CLIOptions()
@@ -431,6 +432,15 @@ namespace AssetStudioCLI.Options
                 optionHelpGroup: HelpGroups.Advanced,
                 isFlag: true
             );
+            f_avoidLoadingViaTypetree = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--avoid-typetree-loading",
+                optionDescription: "(Flag) If specified, AssetStudio will not try to load assets using their type tree\n",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.Advanced,
+                isFlag: true
+            );
             f_loadAllAssets = new GroupedOption<bool>
             (
                 optionDefaultValue: false,
@@ -553,8 +563,22 @@ namespace AssetStudioCLI.Options
 
                 switch(flag)
                 {
+                    case "--l2d-force-bezier":
+                        if (o_workMode.Value != WorkMode.ExportLive2D)
+                        {
+                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
+                            ShowOptionDescription(o_workMode);
+                            return;
+                        }
+                        f_l2dForceBezier.Value = true;
+                        resplittedArgs.RemoveAt(i);
+                        break;
                     case "--not-restore-extension":
                         f_notRestoreExtensionName.Value = true;
+                        resplittedArgs.RemoveAt(i);
+                        break;
+                    case "--avoid-typetree-loading":
+                        f_avoidLoadingViaTypetree.Value = true;
                         resplittedArgs.RemoveAt(i);
                         break;
                     case "--load-all":
@@ -571,16 +595,6 @@ namespace AssetStudioCLI.Options
                                 ShowOptionDescription(f_loadAllAssets, isFlag: true);
                                 return;
                         }
-                        break;
-                    case "--l2d-force-bezier":
-                        if (o_workMode.Value != WorkMode.ExportLive2D)
-                        {
-                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
-                            ShowOptionDescription(o_workMode);
-                            return;
-                        }
-                        f_l2dForceBezier.Value = true;
-                        resplittedArgs.RemoveAt(i);
                         break;
                 }
             }            
@@ -1083,6 +1097,7 @@ namespace AssetStudioCLI.Options
             {
                 sb.AppendLine($"# Custom Compression Type: {o_customCompressionType}");
             }
+            sb.AppendLine($"# Load Assets via Typetree: {!f_avoidLoadingViaTypetree.Value}");
             sb.AppendLine($"# Input Path: \"{inputPath}\"");
             switch (o_workMode.Value)
             {

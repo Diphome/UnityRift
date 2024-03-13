@@ -35,6 +35,7 @@ namespace AssetStudioCLI
             var isLoaded = false;
             assetsManager.SpecifyUnityVersion = CLIOptions.o_unityVersion.Value;
             assetsManager.ZstdEnabled = CLIOptions.o_customCompressionType.Value == CustomCompressionType.Zstd;
+            assetsManager.LoadingViaTypeTreeEnabled = !CLIOptions.f_avoidLoadingViaTypetree.Value;
             if (!CLIOptions.f_loadAllAssets.Value)
             {
                 assetsManager.SetAssetFilter(CLIOptions.o_exportAssetTypes.Value);

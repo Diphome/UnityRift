@@ -2281,6 +2281,11 @@ namespace AssetStudioGUI
             assetsManager.ZstdEnabled = customCompressionZstdToolStripMenuItem.Checked;
         }
 
+        private void disableAssetLoadingViaTypetreeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            assetsManager.LoadingViaTypeTreeEnabled = !disableAssetLoadingViaTypetreeToolStripMenuItem.Checked;
+        }
+
         #region FMOD
         private void FMODinit()
         {
