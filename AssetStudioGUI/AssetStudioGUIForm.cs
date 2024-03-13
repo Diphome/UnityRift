@@ -879,8 +879,8 @@ namespace AssetStudioGUI
             assetItem.InfoText = 
                 $"Width: {m_Texture2DArray.m_Width}\n" +
                 $"Height: {m_Texture2DArray.m_Height}\n" +
-                $"Graphics Format: {m_Texture2DArray.m_Format}\n" +
-                $"Texture Format: {m_Texture2DArray.m_Format.ToTextureFormat()}\n" +
+                $"Graphics format: {m_Texture2DArray.m_Format}\n" +
+                $"Texture format: {m_Texture2DArray.m_Format.ToTextureFormat()}\n" +
                 $"Texture count: {m_Texture2DArray.m_Depth}";
         }
 
@@ -894,9 +894,9 @@ namespace AssetStudioGUI
                 assetItem.InfoText = $"Width: {m_Texture2D.m_Width}\nHeight: {m_Texture2D.m_Height}\nFormat: {m_Texture2D.m_TextureFormat}";
                 switch (m_Texture2D.m_TextureSettings.m_FilterMode)
                 {
-                    case 0: assetItem.InfoText += "\nFilter Mode: Point "; break;
-                    case 1: assetItem.InfoText += "\nFilter Mode: Bilinear "; break;
-                    case 2: assetItem.InfoText += "\nFilter Mode: Trilinear "; break;
+                    case 0: assetItem.InfoText += "\nFilter mode: Point "; break;
+                    case 1: assetItem.InfoText += "\nFilter mode: Bilinear "; break;
+                    case 2: assetItem.InfoText += "\nFilter mode: Trilinear "; break;
                 }
                 assetItem.InfoText += $"\nAnisotropic level: {m_Texture2D.m_TextureSettings.m_Aniso}\nMip map bias: {m_Texture2D.m_TextureSettings.m_MipBias}";
                 switch (m_Texture2D.m_TextureSettings.m_WrapMode)

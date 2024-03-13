@@ -37,6 +37,7 @@ namespace AssetStudio
             m_MipCount = m_Texture2DArray.m_MipCount;
             m_TextureSettings = m_Texture2DArray.m_TextureSettings;
             m_StreamData = m_Texture2DArray.m_StreamData;
+            m_PlatformBlob = Array.Empty<byte>();
             m_MipMap = m_MipCount > 1;
             m_ImageCount = 1;
 
