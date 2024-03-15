@@ -441,12 +441,12 @@ namespace AssetStudioGUI
                         {
                             if (enablePreview.Checked && imageTexture != null)
                             {
-                                previewPanel.BackgroundImage = imageTexture.Bitmap;
+                                previewPanel.Image = imageTexture.Bitmap;
                             }
                             else
                             {
-                                previewPanel.BackgroundImage = Properties.Resources.preview;
-                                previewPanel.BackgroundImageLayout = ImageLayout.Center;
+                                previewPanel.Image = Properties.Resources.preview;
+                                previewPanel.SizeMode = PictureBoxSizeMode.CenterImage;
                             }
                         }
                         break;
@@ -644,7 +644,7 @@ namespace AssetStudioGUI
                 enableFiltering = false;
                 listSearch.Text = " Filter ";
                 listSearch.ForeColor = SystemColors.GrayText;
-                listSearch.BackColor = System.Drawing.Color.White;
+                listSearch.BackColor = SystemColors.Window;
             }
         }
 
@@ -743,8 +743,8 @@ namespace AssetStudioGUI
 
         private void selectAsset(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            previewPanel.BackgroundImage = Properties.Resources.preview;
-            previewPanel.BackgroundImageLayout = ImageLayout.Center;
+            previewPanel.Image = Properties.Resources.preview;
+            previewPanel.SizeMode = PictureBoxSizeMode.CenterImage;
             classTextBox.Visible = false;
             assetInfoLabel.Visible = false;
             assetInfoLabel.Text = null;
@@ -1354,11 +1354,11 @@ namespace AssetStudioGUI
         {
             imageTexture?.Dispose();
             imageTexture = bitmap;
-            previewPanel.BackgroundImage = imageTexture.Bitmap;
+            previewPanel.Image = imageTexture.Bitmap;
             if (imageTexture.Width > previewPanel.Width || imageTexture.Height > previewPanel.Height)
-                previewPanel.BackgroundImageLayout = ImageLayout.Zoom;
+                previewPanel.SizeMode = PictureBoxSizeMode.Zoom;
             else
-                previewPanel.BackgroundImageLayout = ImageLayout.Center;
+                previewPanel.SizeMode = PictureBoxSizeMode.CenterImage;
         }
 
         private void PreviewText(string text)
@@ -1421,10 +1421,10 @@ namespace AssetStudioGUI
             selectedAnimationAssetsList.Clear();
             selectedIndicesPrevList.Clear();
             cubismMocList.Clear();
-            previewPanel.BackgroundImage = Properties.Resources.preview;
+            previewPanel.Image = Properties.Resources.preview;
+            previewPanel.SizeMode = PictureBoxSizeMode.CenterImage;
             imageTexture?.Dispose();
             imageTexture = null;
-            previewPanel.BackgroundImageLayout = ImageLayout.Center;
             assetInfoLabel.Visible = false;
             assetInfoLabel.Text = null;
             textPreviewBox.Visible = false;
@@ -1436,7 +1436,7 @@ namespace AssetStudioGUI
             enableFiltering = false;
             listSearch.Text = " Filter ";
             listSearch.ForeColor = SystemColors.GrayText;
-            listSearch.BackColor = System.Drawing.Color.White;
+            listSearch.BackColor = SystemColors.Window;
             if (tabControl1.SelectedIndex == 1)
                 assetListView.Select();
 
@@ -1854,16 +1854,16 @@ namespace AssetStudioGUI
                             {
                                 visibleAssets = visibleAssets.FindAll(x => Regex.IsMatch(x.SubItems[1].Text, pattern, regexOptions));
                             }
-                            listSearch.BackColor = System.Drawing.Color.PaleGreen;
+                            listSearch.BackColor = SystemInformation.HighContrast ? listSearch.BackColor : System.Drawing.Color.PaleGreen;
                         }
                         catch (ArgumentException e)
                         {
-                            listSearch.BackColor = System.Drawing.Color.FromArgb(255, 160, 160);
+                            listSearch.BackColor = SystemInformation.HighContrast ? listSearch.BackColor : System.Drawing.Color.FromArgb(255, 160, 160);
                             StatusStripUpdate($"Regex error: {e.Message}");
                         }
                         catch (RegexMatchTimeoutException)
                         {
-                            listSearch.BackColor = System.Drawing.Color.FromArgb(255, 160, 160);
+                            listSearch.BackColor = SystemInformation.HighContrast ? listSearch.BackColor : System.Drawing.Color.FromArgb(255, 160, 160);
                             StatusStripUpdate($"Timeout error");
                         }
                         break;
@@ -2020,7 +2020,7 @@ namespace AssetStudioGUI
 
         private void listSearchFilterMode_SelectedIndexChanged(object sender, EventArgs e)
         {
-            listSearch.BackColor = System.Drawing.Color.White;
+            listSearch.BackColor = SystemColors.Window;
             if (listSearch.Text != " Filter ")
             {
                 FilterAssetList();

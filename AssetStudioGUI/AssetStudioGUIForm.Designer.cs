@@ -115,7 +115,7 @@
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.tabControl2 = new System.Windows.Forms.TabControl();
             this.tabPage4 = new System.Windows.Forms.TabPage();
-            this.previewPanel = new System.Windows.Forms.Panel();
+            this.previewPanel = new System.Windows.Forms.PictureBox();
             this.assetInfoLabel = new System.Windows.Forms.Label();
             this.FMODpanel = new System.Windows.Forms.Panel();
             this.FMODcopyright = new System.Windows.Forms.Label();
@@ -170,6 +170,7 @@
             this.progressbarPanel.SuspendLayout();
             this.tabControl2.SuspendLayout();
             this.tabPage4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.previewPanel)).BeginInit();
             this.previewPanel.SuspendLayout();
             this.FMODpanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.FMODprogressBar)).BeginInit();
@@ -844,7 +845,7 @@
             this.listSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.listSearch.BackColor = System.Drawing.Color.White;
+            this.listSearch.BackColor = System.Drawing.SystemColors.Window;
             this.listSearch.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.listSearch.DetectUrls = false;
             this.listSearch.ForeColor = System.Drawing.SystemColors.GrayText;
@@ -974,8 +975,6 @@
             // previewPanel
             // 
             this.previewPanel.BackColor = System.Drawing.SystemColors.ControlDark;
-            this.previewPanel.BackgroundImage = global::AssetStudioGUI.Properties.Resources.preview;
-            this.previewPanel.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.previewPanel.Controls.Add(this.assetInfoLabel);
             this.previewPanel.Controls.Add(this.FMODpanel);
             this.previewPanel.Controls.Add(this.fontPreviewBox);
@@ -983,17 +982,20 @@
             this.previewPanel.Controls.Add(this.textPreviewBox);
             this.previewPanel.Controls.Add(this.classTextBox);
             this.previewPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.previewPanel.Image = global::AssetStudioGUI.Properties.Resources.preview;
             this.previewPanel.Location = new System.Drawing.Point(0, 0);
             this.previewPanel.Name = "previewPanel";
             this.previewPanel.Size = new System.Drawing.Size(768, 607);
+            this.previewPanel.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.previewPanel.TabIndex = 1;
+            this.previewPanel.TabStop = false;
             this.previewPanel.Resize += new System.EventHandler(this.preview_Resize);
             // 
             // assetInfoLabel
             // 
             this.assetInfoLabel.AutoSize = true;
             this.assetInfoLabel.BackColor = System.Drawing.Color.Transparent;
-            this.assetInfoLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.assetInfoLabel.ForeColor = System.Drawing.Color.White;
             this.assetInfoLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.assetInfoLabel.Location = new System.Drawing.Point(4, 8);
             this.assetInfoLabel.Name = "assetInfoLabel";
@@ -1036,7 +1038,7 @@
             // 
             this.FMODinfoLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODinfoLabel.AutoSize = true;
-            this.FMODinfoLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.FMODinfoLabel.ForeColor = System.Drawing.SystemColors.HighlightText;
             this.FMODinfoLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODinfoLabel.Location = new System.Drawing.Point(275, 255);
             this.FMODinfoLabel.Name = "FMODinfoLabel";
@@ -1047,7 +1049,7 @@
             // 
             this.FMODtimerLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODtimerLabel.AutoSize = true;
-            this.FMODtimerLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.FMODtimerLabel.ForeColor = System.Drawing.SystemColors.HighlightText;
             this.FMODtimerLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODtimerLabel.Location = new System.Drawing.Point(457, 253);
             this.FMODtimerLabel.Name = "FMODtimerLabel";
@@ -1059,7 +1061,7 @@
             // 
             this.FMODstatusLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODstatusLabel.AutoSize = true;
-            this.FMODstatusLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.FMODstatusLabel.ForeColor = System.Drawing.SystemColors.HighlightText;
             this.FMODstatusLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODstatusLabel.Location = new System.Drawing.Point(214, 255);
             this.FMODstatusLabel.Name = "FMODstatusLabel";
@@ -1441,6 +1443,7 @@
             this.progressbarPanel.ResumeLayout(false);
             this.tabControl2.ResumeLayout(false);
             this.tabPage4.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.previewPanel)).EndInit();
             this.previewPanel.ResumeLayout(false);
             this.previewPanel.PerformLayout();
             this.FMODpanel.ResumeLayout(false);
@@ -1475,7 +1478,7 @@
         private System.Windows.Forms.ToolStripMenuItem exportToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportAllAssetsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSelectedAssetsMenuItem;
-        private System.Windows.Forms.Panel previewPanel;
+        private System.Windows.Forms.PictureBox previewPanel;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
