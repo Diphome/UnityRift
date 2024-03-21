@@ -118,7 +118,7 @@ namespace AssetStudioCLI
                 var buffer = converter.ConvertToWav(m_AudioData);
                 if (buffer == null)
                 {
-                    Logger.Error($"Export error. \"{item.Text}\": Failed to convert to Wav");
+                    Logger.Error($"Export error. \"{item.Text}\": Failed to convert fmod audio to Wav");
                     return false;
                 }
                 File.WriteAllBytes(exportFullPath, buffer);
@@ -127,6 +127,17 @@ namespace AssetStudioCLI
             {
                 if (!TryExportFile(exportPath, item, converter.GetExtensionName(), out exportFullPath))
                     return false;
+                
+                if (CLIOptions.o_logLevel.Value <= LoggerEvent.Debug)
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine($"Exporting non-fmod {item.TypeString} \"{m_AudioClip.m_Name}\"..");
+                    sb.AppendLine(m_AudioClip.version[0] < 5 ? $"AudioClip type: {m_AudioClip.m_Type}" : $"AudioClip compression format: {m_AudioClip.m_CompressionFormat}");
+                    sb.AppendLine($"AudioClip channel count: {m_AudioClip.m_Channels}");
+                    sb.AppendLine($"AudioClip sample rate: {m_AudioClip.m_Frequency}");
+                    sb.AppendLine($"AudioClip bit depth: {m_AudioClip.m_BitsPerSample}");
+                    Logger.Debug(sb.ToString());
+                }
                 File.WriteAllBytes(exportFullPath, m_AudioData);
             }
 

@@ -290,9 +290,9 @@ namespace AssetStudioCLI.Options
             (
                 optionDefaultValue: AudioFormat.Wav,
                 optionName: "--audio-format <value>",
-                optionDescription: "Specify the format for converting audio assets\n" +
+                optionDescription: "Specify the format for converting FMOD audio assets\n" +
                     "<Value: none | wav(default)>\n" +
-                    "None - Do not convert audios and export them in their own format\n",
+                    "None - Do not convert fmod audios and export them in their own format\n",
                 optionExample: "Example: \"--audio-format wav\"",
                 optionHelpGroup: HelpGroups.Convert
             );

@@ -7,6 +7,8 @@ namespace AssetStudio
 {
     public class AudioClipConverter
     {
+        public bool IsSupport => m_AudioClip.IsConvertSupport();
+
         private AudioClip m_AudioClip;
 
         public AudioClipConverter(AudioClip audioClip)
@@ -96,7 +98,7 @@ namespace AssetStudio
             {
                 switch (m_AudioClip.m_Type)
                 {
-                    case FMODSoundType.ACC:
+                    case FMODSoundType.AAC:
                         return ".m4a";
                     case FMODSoundType.AIFF:
                         return ".aif";
@@ -152,40 +154,40 @@ namespace AssetStudio
 
             return ".AudioClip";
         }
+    }
 
-        public bool IsSupport
+    public static class AudioClipExtension
+    {
+        public static bool IsConvertSupport(this AudioClip m_AudioClip)
         {
-            get
+            if (m_AudioClip.version[0] < 5)
             {
-                if (m_AudioClip.version[0] < 5)
+                switch (m_AudioClip.m_Type)
                 {
-                    switch (m_AudioClip.m_Type)
-                    {
-                        case FMODSoundType.AIFF:
-                        case FMODSoundType.IT:
-                        case FMODSoundType.MOD:
-                        case FMODSoundType.S3M:
-                        case FMODSoundType.XM:
-                        case FMODSoundType.XMA:
-                        case FMODSoundType.AUDIOQUEUE:
-                            return true;
-                        default:
-                            return false;
-                    }
+                    case FMODSoundType.AIFF:
+                    case FMODSoundType.IT:
+                    case FMODSoundType.MOD:
+                    case FMODSoundType.S3M:
+                    case FMODSoundType.XM:
+                    case FMODSoundType.XMA:
+                    case FMODSoundType.AUDIOQUEUE:
+                        return true;
+                    default:
+                        return false;
                 }
-                else
+            }
+            else
+            {
+                switch (m_AudioClip.m_CompressionFormat)
                 {
-                    switch (m_AudioClip.m_CompressionFormat)
-                    {
-                        case AudioCompressionFormat.PCM:
-                        case AudioCompressionFormat.Vorbis:
-                        case AudioCompressionFormat.ADPCM:
-                        case AudioCompressionFormat.MP3:
-                        case AudioCompressionFormat.XMA:
-                            return true;
-                        default:
-                            return false;
-                    }
+                    case AudioCompressionFormat.PCM:
+                    case AudioCompressionFormat.Vorbis:
+                    case AudioCompressionFormat.ADPCM:
+                    case AudioCompressionFormat.MP3:
+                    case AudioCompressionFormat.XMA:
+                        return true;
+                    default:
+                        return false;
                 }
             }
         }

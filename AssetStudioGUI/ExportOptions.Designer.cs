@@ -214,9 +214,9 @@
             this.convertAudio.CheckState = System.Windows.Forms.CheckState.Checked;
             this.convertAudio.Location = new System.Drawing.Point(6, 173);
             this.convertAudio.Name = "convertAudio";
-            this.convertAudio.Size = new System.Drawing.Size(179, 17);
+            this.convertAudio.Size = new System.Drawing.Size(213, 17);
             this.convertAudio.TabIndex = 7;
-            this.convertAudio.Text = "Convert AudioClip to WAV(PCM)";
+            this.convertAudio.Text = "Convert FMOD AudioClip to WAV(PCM)";
             this.convertAudio.UseVisualStyleBackColor = true;
             // 
             // panel1

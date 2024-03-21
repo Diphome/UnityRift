@@ -95,7 +95,7 @@ namespace AssetStudio
     public enum FMODSoundType
     {
         UNKNOWN = 0,
-        ACC = 1,
+        AAC = 1,
         AIFF = 2,
         ASF = 3,
         AT3 = 4,
