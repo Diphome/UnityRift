@@ -4,10 +4,12 @@
 ////
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using AssetStudio;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -47,7 +49,7 @@ namespace CubismLive2DExtractor
             ParametersCdi = new List<MonoBehaviour>();
             PartsCdi = new List<MonoBehaviour>();
 
-            Logger.Info("Sorting model assets..");
+            Logger.Debug("Sorting model assets..");
             foreach (var asset in assets)
             {
                 switch (asset)
@@ -133,7 +135,7 @@ namespace CubismLive2DExtractor
             }
         }
 
-        public void ExtractCubismModel(string destPath, string modelName, Live2DMotionMode motionMode, AssemblyLoader assemblyLoader, bool forceBezier = false)
+        public void ExtractCubismModel(string destPath, string modelName, Live2DMotionMode motionMode, AssemblyLoader assemblyLoader, bool forceBezier = false, int parallelTaskCount = 1)
         {
             Directory.CreateDirectory(destPath);
 
@@ -174,17 +176,24 @@ namespace CubismLive2DExtractor
                 Directory.CreateDirectory(destTexturePath);
             }
 
-            foreach (var texture2D in Texture2Ds)
+            var textureBag = new ConcurrentBag<string>();
+            var savePathHash = new ConcurrentDictionary<string, bool>();
+            Parallel.ForEach(Texture2Ds, new ParallelOptions { MaxDegreeOfParallelism = parallelTaskCount }, texture2D =>
             {
+                var savePath = $"{destTexturePath}{texture2D.m_Name}.png";
+                if (!savePathHash.TryAdd(savePath, true))
+                    return;
+
                 using (var image = texture2D.ConvertToImage(flip: true))
                 {
-                    using (var file = File.OpenWrite($"{destTexturePath}{texture2D.m_Name}.png"))
+                    using (var file = File.OpenWrite(savePath))
                     {
                         image.WriteToStream(file, ImageFormat.Png);
                     }
-                    textures.Add($"textures/{texture2D.m_Name}.png");
+                    textureBag.Add($"textures/{texture2D.m_Name}.png");
                 }
-            }
+            });
+            textures.UnionWith(textureBag);
             #endregion
 
             #region physics3.json

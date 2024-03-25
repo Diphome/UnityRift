@@ -10,24 +10,34 @@ namespace AssetStudio
         public bool IsSupport => m_AudioClip.IsConvertSupport();
 
         private AudioClip m_AudioClip;
+        private static FMOD.System system;
+
+        static AudioClipConverter()
+        {
+            var result = Factory.System_Create(out system);
+            if (result != RESULT.OK)
+            {
+                Logger.Error($"FMOD error! {result} - {Error.String(result)}");
+            }
+            result = system.init(1, INITFLAGS.NORMAL, IntPtr.Zero);
+            if (result != RESULT.OK)
+            {
+                Logger.Error($"FMOD error! {result} - {Error.String(result)}");
+            }
+        }
 
         public AudioClipConverter(AudioClip audioClip)
         {
             m_AudioClip = audioClip;
         }
 
-        public byte[] ConvertToWav(byte[] m_AudioData)
+        public byte[] ConvertToWav(byte[] m_AudioData, out string debugLog)
         {
+            debugLog = "";
             var exinfo = new CREATESOUNDEXINFO();
-            var result = Factory.System_Create(out var system);
-            if (result != RESULT.OK)
-                return null;
-            result = system.init(1, INITFLAGS.NORMAL, IntPtr.Zero);
-            if (result != RESULT.OK)
-                return null;
             exinfo.cbsize = Marshal.SizeOf(exinfo);
             exinfo.length = (uint)m_AudioClip.m_Size;
-            result = system.createSound(m_AudioData, MODE.OPENMEMORY, ref exinfo, out var sound);
+            var result = system.createSound(m_AudioData, MODE.OPENMEMORY, ref exinfo, out var sound);
             if (result != RESULT.OK)
                 return null;
             result = sound.getNumSubSounds(out var numsubsounds);
@@ -39,28 +49,29 @@ namespace AssetStudio
                 result = sound.getSubSound(0, out var subsound);
                 if (result != RESULT.OK)
                     return null;
-                buff = SoundToWav(subsound);
+                buff = SoundToWav(subsound, out debugLog);
                 subsound.release();
+                subsound.clearHandle();
             }
             else
             {
-                buff = SoundToWav(sound);
+                buff = SoundToWav(sound, out debugLog);
             }
             sound.release();
-            system.release();
+            sound.clearHandle();
             return buff;
         }
 
-        public byte[] SoundToWav(Sound sound)
+        public byte[] SoundToWav(Sound sound, out string debugLog)
         {
-            Logger.Debug($"[Fmod] Detecting sound format..\n");
+            debugLog = "[Fmod] Detecting sound format..\n";
             var result = sound.getFormat(out SOUND_TYPE soundType, out SOUND_FORMAT soundFormat, out int channels, out int bits);
             if (result != RESULT.OK)
                 return null;
-            Logger.Debug($"Detected sound type: {soundType}\n" +
-                $"Detected sound format: {soundFormat}\n" +
-                $"Detected channels: {channels}\n" +
-                $"Detected bit depth: {bits}");
+            debugLog += $"Detected sound type: {soundType}\n" +
+                        $"Detected sound format: {soundFormat}\n" +
+                        $"Detected channels: {channels}\n" +
+                        $"Detected bit depth: {bits}\n";
             result = sound.getDefaults(out var frequency, out _);
             if (result != RESULT.OK)
                 return null;
@@ -71,11 +82,11 @@ namespace AssetStudio
             result = sound.@lock(0, length, out var ptr1, out var ptr2, out var len1, out var len2);
             if (result != RESULT.OK)
                 return null;
-            byte[] buffer = new byte[len1 + 44];
+            var buffer = new byte[len1 + 44];
             //添加wav头
-            Encoding.UTF8.GetBytes("RIFF").CopyTo(buffer, 0);
+            Encoding.ASCII.GetBytes("RIFF").CopyTo(buffer, 0);
             BitConverter.GetBytes(len1 + 36).CopyTo(buffer, 4);
-            Encoding.UTF8.GetBytes("WAVEfmt ").CopyTo(buffer, 8);
+            Encoding.ASCII.GetBytes("WAVEfmt ").CopyTo(buffer, 8);
             BitConverter.GetBytes(16).CopyTo(buffer, 16);
             BitConverter.GetBytes((short)1).CopyTo(buffer, 20);
             BitConverter.GetBytes((short)channels).CopyTo(buffer, 22);
@@ -83,7 +94,7 @@ namespace AssetStudio
             BitConverter.GetBytes(sampleRate * channels * bits / 8).CopyTo(buffer, 28);
             BitConverter.GetBytes((short)(channels * bits / 8)).CopyTo(buffer, 32);
             BitConverter.GetBytes((short)bits).CopyTo(buffer, 34);
-            Encoding.UTF8.GetBytes("data").CopyTo(buffer, 36);
+            Encoding.ASCII.GetBytes("data").CopyTo(buffer, 36);
             BitConverter.GetBytes(len1).CopyTo(buffer, 40);
             Marshal.Copy(ptr1, buffer, 44, (int)len1);
             result = sound.unlock(ptr1, ptr2, len1, len2);
@@ -151,7 +162,6 @@ namespace AssetStudio
                         return ".fsb";
                 }
             }
-
             return ".AudioClip";
         }
     }

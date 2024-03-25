@@ -1966,7 +1966,7 @@ namespace AssetStudioGUI
 
         private void toolStripMenuItem15_Click(object sender, EventArgs e)
         {
-            logger.ShowDebugMessage = toolStripMenuItem15.Checked;
+            GUILogger.ShowDebugMessage = toolStripMenuItem15.Checked;
         }
 
         private void sceneTreeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)

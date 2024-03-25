@@ -24,7 +24,7 @@ namespace AssetStudioCLI.Options
         ExportRaw,
         Dump,
         Info,
-        ExportLive2D,
+        Live2D,
         SplitObjects,
     }
 
@@ -112,6 +112,7 @@ namespace AssetStudioCLI.Options
         public static Option<List<string>> o_filterByText;
         //advanced
         public static Option<CustomCompressionType> o_customCompressionType;
+        public static Option<int> o_maxParallelExportTasks;
         public static Option<ExportListType> o_exportAssetList;
         public static Option<string> o_assemblyPath;
         public static Option<string> o_unityVersion;
@@ -190,7 +191,7 @@ namespace AssetStudioCLI.Options
                     "ExportRaw - Exports raw data\n" +
                     "Dump - Makes asset dumps\n" +
                     "Info - Loads file(s), shows the number of available for export assets and exits\n" +
-                    "Live2D - Exports Live2D Cubism 3 models\n" +
+                    "Live2D - Exports Live2D Cubism models\n" +
                     "SplitObjects - Exports split objects (fbx)\n",
                 optionExample: "Example: \"-m info\"\n",
                 optionHelpGroup: HelpGroups.General
@@ -329,7 +330,7 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: 1f,
                 optionName: "--fbx-scale-factor <value>",
                 optionDescription: "Specify the FBX Scale Factor\n" +
-                    "<Value: float number from 0 to 100 (default=1)\n",
+                    "<Value: float number from 0 to 100 (default=1)>\n",
                 optionExample: "Example: \"--fbx-scale-factor 50\"\n",
                 optionHelpGroup: HelpGroups.FBX
             );
@@ -338,7 +339,7 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: 10,
                 optionName: "--fbx-bone-size <value>",
                 optionDescription: "Specify the FBX Bone Size\n" +
-                    "<Value: integer number from 0 to 100 (default=10)\n",
+                    "<Value: integer number from 0 to 100 (default=10)>\n",
                 optionExample: "Example: \"--fbx-bone-size 10\"",
                 optionHelpGroup: HelpGroups.FBX
             );
@@ -394,6 +395,17 @@ namespace AssetStudioCLI.Options
                     "Zstd - Try to decompress as zstd archive\n" +
                     "Lz4 - Try to decompress as lz4 archive\n",
                 optionExample: "Example: \"--custom-compression lz4\"\n",
+                optionHelpGroup: HelpGroups.Advanced
+            );
+
+            o_maxParallelExportTasks = new GroupedOption<int>
+            (
+                optionDefaultValue: Environment.ProcessorCount - 1,
+                optionName: "--max-export-tasks <value>",
+                optionDescription: "Specify the number of parallel tasks for asset export\n" +
+                    "<Value: integer number from 1 to max number of cores (default=max)>\n" +
+                    "Max - Number of cores in your CPU\n",
+                optionExample: "Example: \"--max-export-tasks 8\"\n",
                 optionHelpGroup: HelpGroups.Advanced
             );
 
@@ -528,7 +540,7 @@ namespace AssetStudioCLI.Options
                         break;
                     case "l2d":
                     case "live2d":
-                        o_workMode.Value = WorkMode.ExportLive2D;
+                        o_workMode.Value = WorkMode.Live2D;
                         o_exportAssetTypes.Value = new List<ClassIDType>()
                         {
                             ClassIDType.AnimationClip,
@@ -564,7 +576,7 @@ namespace AssetStudioCLI.Options
                 switch(flag)
                 {
                     case "--l2d-force-bezier":
-                        if (o_workMode.Value != WorkMode.ExportLive2D)
+                        if (o_workMode.Value != WorkMode.Live2D)
                         {
                             Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
                             ShowOptionDescription(o_workMode);
@@ -611,7 +623,7 @@ namespace AssetStudioCLI.Options
                     {
                         case "-t":
                         case "--asset-type":
-                            if (o_workMode.Value == WorkMode.ExportLive2D || o_workMode.Value == WorkMode.SplitObjects)
+                            if (o_workMode.Value == WorkMode.Live2D || o_workMode.Value == WorkMode.SplitObjects)
                             {
                                 i++;
                                 continue;
@@ -820,7 +832,7 @@ namespace AssetStudioCLI.Options
                             }
                             break;
                         case "--l2d-motion-mode":
-                            if (o_workMode.Value != WorkMode.ExportLive2D)
+                            if (o_workMode.Value != WorkMode.Live2D)
                             {
                                 Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. This option is not suitable for the current working mode [{o_workMode.Value}].\n");
                                 ShowOptionDescription(o_workMode);
@@ -846,7 +858,8 @@ namespace AssetStudioCLI.Options
                             }
                             break;
                         case "--fbx-scale-factor":
-                            var isFloat = float.TryParse(value, out float floatValue);
+                        {
+                            var isFloat = float.TryParse(value, out var floatValue);
                             if (isFloat && floatValue >= 0 && floatValue <= 100)
                             {
                                 o_fbxScaleFactor.Value = floatValue;
@@ -858,8 +871,10 @@ namespace AssetStudioCLI.Options
                                 return;
                             }
                             break;
+                        }
                         case "--fbx-bone-size":
-                            var isInt = int.TryParse(value, out int intValue);
+                        {
+                            var isInt = int.TryParse(value, out var intValue);
                             if (isInt && intValue >= 0 && intValue <= 100)
                             {
                                 o_fbxBoneSize.Value = intValue;
@@ -871,6 +886,7 @@ namespace AssetStudioCLI.Options
                                 return;
                             }
                             break;
+                        }
                         case "--custom-compression":
                             switch (value.ToLower())
                             {
@@ -887,6 +903,29 @@ namespace AssetStudioCLI.Options
                                     return;
                             }
                             break;
+                        case "--max-export-tasks":
+                        {
+                            var processorCount = Environment.ProcessorCount;
+                            if (value.ToLower() == "max")
+                            {
+                                o_maxParallelExportTasks.Value = processorCount - 1;
+                            }
+                            else
+                            {
+                                var isInt = int.TryParse(value, out var intValue);
+                                if (isInt && intValue >= 0 && intValue <= processorCount)
+                                {
+                                    o_maxParallelExportTasks.Value = Math.Min(intValue, processorCount - 1);
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported number of parallel tasks: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_maxParallelExportTasks);
+                                    return;
+                                }
+                            }
+                            break;
+                        }
                         case "--export-asset-list":
                             switch (value.ToLower())
                             {
@@ -1125,6 +1164,7 @@ namespace AssetStudioCLI.Options
                     sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
                     if (o_workMode.Value == WorkMode.Export)
                     {
+                        sb.AppendLine($"# Max Parallel Export Tasks: {o_maxParallelExportTasks}");
                         sb.AppendLine($"# Restore TextAsset Extension: {!f_notRestoreExtensionName.Value}");
                     }
                     break;
@@ -1137,7 +1177,7 @@ namespace AssetStudioCLI.Options
                     sb.AppendLine(ShowCurrentFilter());
                     sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
                     break;
-                case WorkMode.ExportLive2D:
+                case WorkMode.Live2D:
                 case WorkMode.SplitObjects:
                     sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");
                     sb.AppendLine($"# Log Level: {o_logLevel}");

@@ -72,6 +72,9 @@
             this.exportAllNodes = new System.Windows.Forms.CheckBox();
             this.eulerFilter = new System.Windows.Forms.CheckBox();
             this.optionTooltip = new System.Windows.Forms.ToolTip(this.components);
+            this.parallelExportUpDown = new System.Windows.Forms.NumericUpDown();
+            this.parallelExportCheckBox = new System.Windows.Forms.CheckBox();
+            this.parallelExportMaxLabel = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.l2dGroupBox.SuspendLayout();
@@ -80,6 +83,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.scaleFactor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.boneSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.filterPrecision)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.parallelExportUpDown)).BeginInit();
             this.SuspendLayout();
             // 
             // OKbutton
@@ -106,6 +110,9 @@
             // groupBox1
             // 
             this.groupBox1.AutoSize = true;
+            this.groupBox1.Controls.Add(this.parallelExportMaxLabel);
+            this.groupBox1.Controls.Add(this.parallelExportCheckBox);
+            this.groupBox1.Controls.Add(this.parallelExportUpDown);
             this.groupBox1.Controls.Add(this.filenameFormatLabel);
             this.groupBox1.Controls.Add(this.filenameFormatComboBox);
             this.groupBox1.Controls.Add(this.exportSpriteWithAlphaMask);
@@ -593,6 +600,53 @@
             this.eulerFilter.Text = "EulerFilter";
             this.eulerFilter.UseVisualStyleBackColor = true;
             // 
+            // parallelExportUpDown
+            // 
+            this.parallelExportUpDown.Location = new System.Drawing.Point(209, 218);
+            this.parallelExportUpDown.Maximum = new decimal(new int[] {
+            8,
+            0,
+            0,
+            0});
+            this.parallelExportUpDown.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.parallelExportUpDown.Name = "parallelExportUpDown";
+            this.parallelExportUpDown.Size = new System.Drawing.Size(42, 20);
+            this.parallelExportUpDown.TabIndex = 13;
+            this.parallelExportUpDown.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // parallelExportCheckBox
+            // 
+            this.parallelExportCheckBox.AutoSize = true;
+            this.parallelExportCheckBox.Checked = true;
+            this.parallelExportCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.parallelExportCheckBox.Location = new System.Drawing.Point(6, 219);
+            this.parallelExportCheckBox.Name = "parallelExportCheckBox";
+            this.parallelExportCheckBox.Size = new System.Drawing.Size(203, 17);
+            this.parallelExportCheckBox.TabIndex = 15;
+            this.parallelExportCheckBox.Text = "Export in parallel with number of tasks";
+            this.optionTooltip.SetToolTip(this.parallelExportCheckBox, "*Requires slightly more RAM than in single-task mode");
+            this.parallelExportCheckBox.UseVisualStyleBackColor = true;
+            this.parallelExportCheckBox.CheckedChanged += new System.EventHandler(this.parallelExportCheckBox_CheckedChanged);
+            // 
+            // parallelExportMaxLabel
+            // 
+            this.parallelExportMaxLabel.AutoSize = true;
+            this.parallelExportMaxLabel.ForeColor = System.Drawing.SystemColors.ControlDark;
+            this.parallelExportMaxLabel.Location = new System.Drawing.Point(256, 221);
+            this.parallelExportMaxLabel.Name = "parallelExportMaxLabel";
+            this.parallelExportMaxLabel.Size = new System.Drawing.Size(33, 13);
+            this.parallelExportMaxLabel.TabIndex = 16;
+            this.parallelExportMaxLabel.Text = "Max: ";
+            this.optionTooltip.SetToolTip(this.parallelExportMaxLabel, "*The maximum number matches the number of CPU cores");
+            // 
             // ExportOptions
             // 
             this.AcceptButton = this.OKbutton;
@@ -626,6 +680,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.scaleFactor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.boneSize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.filterPrecision)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.parallelExportUpDown)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -675,5 +730,8 @@
         private System.Windows.Forms.Panel l2dMotionExportMethodPanel;
         private System.Windows.Forms.ComboBox filenameFormatComboBox;
         private System.Windows.Forms.Label filenameFormatLabel;
+        private System.Windows.Forms.NumericUpDown parallelExportUpDown;
+        private System.Windows.Forms.CheckBox parallelExportCheckBox;
+        private System.Windows.Forms.Label parallelExportMaxLabel;
     }
 }

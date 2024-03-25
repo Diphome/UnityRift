@@ -2,9 +2,12 @@
 using AssetStudioCLI.Options;
 using CubismLive2DExtractor;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using static AssetStudioCLI.Exporter;
 using Ansi = AssetStudio.ColorConsole;
@@ -191,7 +194,7 @@ namespace AssetStudioCLI
                 parsedAssetsList.AddRange(fileAssetsList);
                 fileAssetsList.Clear();
                 tex2dArrayAssetList.Clear();
-                if (CLIOptions.o_workMode.Value != WorkMode.ExportLive2D)
+                if (CLIOptions.o_workMode.Value != WorkMode.Live2D)
                 {
                     containers.Clear();
                 }
@@ -364,7 +367,7 @@ namespace AssetStudioCLI
         {
             switch (CLIOptions.o_workMode.Value)
             {
-                case WorkMode.ExportLive2D:
+                case WorkMode.Live2D:
                 case WorkMode.SplitObjects:
                     break;
                 default:
@@ -434,7 +437,10 @@ namespace AssetStudioCLI
             var exportedCount = 0;
 
             var groupOption = CLIOptions.o_groupAssetsBy.Value;
-            foreach (var asset in parsedAssetsList)
+            var parallelExportCount = CLIOptions.o_maxParallelExportTasks.Value;
+            var toExportAssetDict = new ConcurrentDictionary<AssetItem, string>();
+            var toParallelExportAssetDict = new ConcurrentDictionary<AssetItem, string>();
+            Parallel.ForEach(parsedAssetsList, asset =>
             {
                 string exportPath;
                 switch (groupOption)
@@ -481,32 +487,61 @@ namespace AssetStudioCLI
                         exportPath = savePath;
                         break;
                 }
-
                 exportPath += Path.DirectorySeparatorChar;
+
+                if (CLIOptions.o_workMode.Value == WorkMode.Export)
+                {
+                    switch (asset.Type)
+                    {
+                        case ClassIDType.Texture2D:
+                        case ClassIDType.Sprite:
+                        case ClassIDType.AudioClip:
+                            toParallelExportAssetDict.TryAdd(asset, exportPath);
+                            break;
+                        case ClassIDType.Texture2DArray:
+                            var m_Texture2DArray = (Texture2DArray)asset.Asset;
+                            toExportCount += m_Texture2DArray.TextureList.Count - 1;
+                            foreach (var texture in m_Texture2DArray.TextureList)
+                            {
+                                var fakeItem = new AssetItem(texture)
+                                {
+                                    Text = texture.m_Name,
+                                    Container = asset.Container,
+                                };
+                                toParallelExportAssetDict.TryAdd(fakeItem, exportPath);
+                            }
+                            break;
+                        default:
+                            toExportAssetDict.TryAdd(asset, exportPath);
+                            break;
+                    }
+                }
+                else
+                {
+                    toExportAssetDict.TryAdd(asset, exportPath);
+                }
+            });
+            
+            foreach (var toExportAsset in toExportAssetDict)
+            {
+                var asset = toExportAsset.Key;
+                var exportPath = toExportAsset.Value;
+                var isExported = false;
                 try
                 {
                     switch (CLIOptions.o_workMode.Value)
                     {
                         case WorkMode.ExportRaw:
                             Logger.Debug($"{CLIOptions.o_workMode}: {asset.Type} : {asset.Container} : {asset.Text}");
-                            if (ExportRawFile(asset, exportPath))
-                            {
-                                exportedCount++;
-                            }
+                            isExported = ExportRawFile(asset, exportPath);
                             break;
                         case WorkMode.Dump:
                             Logger.Debug($"{CLIOptions.o_workMode}: {asset.Type} : {asset.Container} : {asset.Text}");
-                            if (ExportDumpFile(asset, exportPath))
-                            {
-                                exportedCount++;
-                            }
+                            isExported = ExportDumpFile(asset, exportPath);
                             break;
                         case WorkMode.Export:
                             Logger.Debug($"{CLIOptions.o_workMode}: {asset.Type} : {asset.Container} : {asset.Text}");
-                            if (ExportConvertFile(asset, exportPath))
-                            {
-                                exportedCount++;
-                            }
+                            isExported = ExportConvertFile(asset, exportPath);
                             break;
                     }
                 }
@@ -514,8 +549,33 @@ namespace AssetStudioCLI
                 {
                     Logger.Error($"{asset.SourceFile.originalPath}: [{$"{asset.Type}: {asset.Text}".Color(Ansi.BrightRed)}] : Export error\n{ex}");
                 }
+
+                if (isExported)
+                {
+                    exportedCount++;
+                }
                 Console.Write($"Exported [{exportedCount}/{toExportCount}]\r");
             }
+
+            Parallel.ForEach(toParallelExportAssetDict, new ParallelOptions { MaxDegreeOfParallelism = parallelExportCount }, toExportAsset =>
+            {
+                var asset = toExportAsset.Key;
+                var exportPath = toExportAsset.Value;
+                try
+                {
+                    if (ParallelExporter.ParallelExportConvertFile(asset, exportPath, out var debugLog))
+                    {
+                        Interlocked.Increment(ref exportedCount);
+                        Logger.Debug(debugLog);
+                        Console.Write($"Exported [{exportedCount}/{toExportCount}]\r");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"{asset.SourceFile.originalPath}: [{$"{asset.Type}: {asset.Text}".Color(Ansi.BrightRed)}] : Export error\n{ex}");
+                }
+            });
+            ParallelExporter.ClearHash();
             Console.WriteLine("");
 
             if (exportedCount == 0)
@@ -708,7 +768,7 @@ namespace AssetStudioCLI
             }
             basePathSet.Clear();
 
-            var lookup = containers.ToLookup(
+            var lookup = containers.AsParallel().ToLookup(
                 x => mocPathList.Find(b => x.Value.Contains(b) && x.Value.Split('/').Any(y => y == b.Substring(b.LastIndexOf("/") + 1))),
                 x => x.Key
             );
@@ -720,6 +780,7 @@ namespace AssetStudioCLI
 
             var totalModelCount = lookup.LongCount(x => x.Key != null);
             Logger.Info($"Found {totalModelCount} model(s).");
+            var parallelTaskCount = CLIOptions.o_maxParallelExportTasks.Value;
             var modelCounter = 0;
             foreach (var assets in lookup)
             {
@@ -740,7 +801,7 @@ namespace AssetStudioCLI
                     var destPath = Path.Combine(baseDestPath, container) + Path.DirectorySeparatorChar;
 
                     var modelExtractor = new Live2DExtractor(assets);
-                    modelExtractor.ExtractCubismModel(destPath, modelName, motionMode, assemblyLoader, forceBezier);
+                    modelExtractor.ExtractCubismModel(destPath, modelName, motionMode, assemblyLoader, forceBezier, parallelTaskCount);
                     modelCounter++;
                 }
                 catch (Exception ex)

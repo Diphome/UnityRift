@@ -1,20 +1,26 @@
 ﻿using AssetStudio;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace AssetStudioGUI
 {
     class GUILogger : ILogger
     {
-        public bool ShowDebugMessage = false;
-        private bool IsFileLoggerRunning = false;
-        private string LoggerInitString;
-        private string FileLogName;
-        private string FileLogPath;
+        public static bool ShowDebugMessage = false;
+
+        private bool isFileLoggerRunning = false;
+        private string loggerInitString;
+        private string fileLogName;
+        private string fileLogPath;
         private Action<string> action;
+        private CancellationTokenSource tokenSource;
+        private BlockingCollection<string> consoleLogMessageCollection = new BlockingCollection<string>();
+        private BlockingCollection<string> fileLogMessageCollection = new BlockingCollection<string>();
 
         private bool _useFileLogger = false;
         public bool UseFileLogger
@@ -23,19 +29,23 @@ namespace AssetStudioGUI
             set
             {
                 _useFileLogger = value;
-                if (_useFileLogger && !IsFileLoggerRunning)
+                if (_useFileLogger && !isFileLoggerRunning)
                 {
                     var appAssembly = typeof(Program).Assembly.GetName();
-                    FileLogName = $"{appAssembly.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log";
-                    FileLogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FileLogName);
+                    fileLogName = $"{appAssembly.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log";
+                    fileLogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileLogName);
+                    tokenSource = new CancellationTokenSource();
+                    isFileLoggerRunning = true;
 
-                    LogToFile(LoggerEvent.Verbose, $"# {LoggerInitString} - Logger launched #");
-                    IsFileLoggerRunning = true;
+                    ConcurrentFileWriter(tokenSource.Token);
+                    LogToFile(LoggerEvent.Verbose, $"# {loggerInitString} - Logger launched #");
                 }
-                else if (!_useFileLogger && IsFileLoggerRunning)
+                else if (!_useFileLogger && isFileLoggerRunning)
                 {
                     LogToFile(LoggerEvent.Verbose, "# Logger closed #");
-                    IsFileLoggerRunning = false;
+                    isFileLoggerRunning = false;
+                    tokenSource.Cancel();
+                    tokenSource.Dispose();
                 }
             }
         }
@@ -47,7 +57,7 @@ namespace AssetStudioGUI
             var appAssembly = typeof(Program).Assembly.GetName();
             var arch = Environment.Is64BitProcess ? "x64" : "x32";
             var frameworkName = AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName;
-            LoggerInitString = $"{appAssembly.Name} v{appAssembly.Version} [{arch}] [{frameworkName}]";
+            loggerInitString = $"{appAssembly.Name} v{appAssembly.Version} [{arch}] [{frameworkName}]";
             try
             {
                 Console.Title = $"Console Logger - {appAssembly.Name} v{appAssembly.Version}";
@@ -57,7 +67,9 @@ namespace AssetStudioGUI
             {
                 // ignored
             }
-            Console.WriteLine($"# {LoggerInitString}");
+
+            ConcurrentConsoleWriter();
+            Console.WriteLine($"# {loggerInitString}");
         }
 
         private static string ColorLogLevel(LoggerEvent logLevel)
@@ -79,7 +91,7 @@ namespace AssetStudioGUI
         private static string FormatMessage(LoggerEvent logMsgLevel, string message, bool toConsole)
         {
             message = message.TrimEnd();
-            var multiLine = message.Contains('\n');
+            var multiLine = message.Contains("\n");
 
             string formattedMessage;
             if (toConsole)
@@ -88,7 +100,7 @@ namespace AssetStudioGUI
                 formattedMessage = $"{colorLogLevel} {message}";
                 if (multiLine)
                 {
-                    formattedMessage = formattedMessage.Replace("\n", $"\n{colorLogLevel} ");
+                    formattedMessage = formattedMessage.Replace("\n", $"\n{colorLogLevel} ") + $"\n{colorLogLevel}";
                 }
             }
             else
@@ -99,19 +111,48 @@ namespace AssetStudioGUI
                 formattedMessage = $"{curTime} | {logLevel} | {message}";
                 if (multiLine)
                 {
-                    formattedMessage = formattedMessage.Replace("\n", $"\n{curTime} | {logLevel} | ");
+                    formattedMessage = formattedMessage.Replace("\n", $"\n{curTime} | {logLevel} | ") + $"\n{curTime} | {logLevel} |";
                 }
             }
-
             return formattedMessage;
         }
 
-        private async void LogToFile(LoggerEvent logMsgLevel, string message)
+        private void ConcurrentFileWriter(CancellationToken token)
         {
-            using (var sw = new StreamWriter(FileLogPath, append: true, System.Text.Encoding.UTF8))
+            Task.Run(() =>
             {
-                await sw.WriteLineAsync(FormatMessage(logMsgLevel, message, toConsole: false));
-            }
+                using (var sw = new StreamWriter(fileLogPath, append: true, System.Text.Encoding.UTF8))
+                {
+                    sw.AutoFlush = true;
+                    foreach (var msg in fileLogMessageCollection.GetConsumingEnumerable())
+                    {
+                        sw.WriteLine(msg);
+                        if (token.IsCancellationRequested)
+                            break;
+                    }
+                }
+            }, token);
+        }
+
+        private void ConcurrentConsoleWriter()
+        {
+            Task.Run(() =>
+            {
+                foreach (var msg in consoleLogMessageCollection.GetConsumingEnumerable())
+                {
+                    Console.WriteLine(msg);
+                }
+            });
+        }
+
+        private void LogToFile(LoggerEvent logMsgLevel, string message)
+        {
+            fileLogMessageCollection.Add(FormatMessage(logMsgLevel, message, toConsole: false));
+        }
+
+        private void LogToConsole(LoggerEvent logMsgLevel, string message)
+        {
+            consoleLogMessageCollection.Add(FormatMessage(logMsgLevel, message, toConsole: true));
         }
 
         public void Log(LoggerEvent loggerEvent, string message, bool ignoreLevel)
@@ -125,7 +166,7 @@ namespace AssetStudioGUI
             //Console logger
             if (!ShowDebugMessage && loggerEvent == LoggerEvent.Debug)
                 return;
-            Console.WriteLine(FormatMessage(loggerEvent, message, toConsole: true));
+            LogToConsole(loggerEvent, message);
 
             //GUI logger
             switch (loggerEvent)

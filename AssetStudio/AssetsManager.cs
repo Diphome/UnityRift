@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -17,7 +18,7 @@ namespace AssetStudio
         private HashSet<ClassIDType> filteredAssetTypesList = new HashSet<ClassIDType>();
 
         internal Dictionary<string, int> assetsFileIndexCache = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        internal Dictionary<string, BinaryReader> resourceFileReaders = new Dictionary<string, BinaryReader>(StringComparer.OrdinalIgnoreCase);
+        internal ConcurrentDictionary<string, BinaryReader> resourceFileReaders = new ConcurrentDictionary<string, BinaryReader>(StringComparer.OrdinalIgnoreCase);
 
         private List<string> importFiles = new List<string>();
         private HashSet<string> importFilesHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -248,13 +249,13 @@ namespace AssetStudio
                 catch (NotSupportedException e)
                 {
                     Logger.Error(e.Message);
-                    resourceFileReaders.Add(reader.FileName, reader);
+                    resourceFileReaders.TryAdd(reader.FileName, reader);
                     return false;
                 }
                 catch (Exception e)
                 {
                     Logger.Warning($"Failed to read assets file {reader.FullPath} from {Path.GetFileName(originalPath)}\r\n{e}");
-                    resourceFileReaders.Add(reader.FileName, reader);
+                    resourceFileReaders.TryAdd(reader.FileName, reader);
                 }
             }
             else
@@ -279,9 +280,9 @@ namespace AssetStudio
                         if (!LoadAssetsFromMemory(subReader, originalPath ?? reader.FullPath, bundleFile.m_Header.unityRevision))
                             return false;
                     }
-                    else if (!resourceFileReaders.ContainsKey(file.fileName))
+                    else
                     {
-                        resourceFileReaders.Add(file.fileName, subReader);
+                        resourceFileReaders.TryAdd(file.fileName, subReader);
                     }
                 }
                 return true;
@@ -424,10 +425,7 @@ namespace AssetStudio
                             if (entryReader.FileType == FileType.ResourceFile)
                             {
                                 entryReader.Position = 0;
-                                if (!resourceFileReaders.ContainsKey(entry.Name))
-                                {
-                                    resourceFileReaders.Add(entry.Name, entryReader);
-                                }
+                                resourceFileReaders.TryAdd(entry.Name, entryReader);
                             }
                             Progress.Report(++k, progressCount);
                         }

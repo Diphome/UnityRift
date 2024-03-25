@@ -63,8 +63,12 @@ namespace AssetStudio
                 if (File.Exists(resourceFilePath))
                 {
                     needSearch = false;
+                    if (assetsFile.assetsManager.resourceFileReaders.TryGetValue(resourceFileName, out reader))
+                    {
+                        return reader;
+                    }
                     reader = new BinaryReader(File.OpenRead(resourceFilePath));
-                    assetsFile.assetsManager.resourceFileReaders.Add(resourceFileName, reader);
+                    assetsFile.assetsManager.resourceFileReaders.TryAdd(resourceFileName, reader);
                     return reader;
                 }
                 throw new FileNotFoundException($"Can't find the resource file {resourceFileName}");
@@ -78,15 +82,21 @@ namespace AssetStudio
         public byte[] GetData()
         {
             var binaryReader = GetReader();
-            binaryReader.BaseStream.Position = offset;
-            return binaryReader.ReadBytes((int)size);
+            lock (binaryReader)
+            {
+                binaryReader.BaseStream.Position = offset;
+                return binaryReader.ReadBytes((int) size);
+            }
         }
 
         public void GetData(byte[] buff)
         {
             var binaryReader = GetReader();
-            binaryReader.BaseStream.Position = offset;
-            binaryReader.Read(buff, 0, (int)size);
+            lock (binaryReader)
+            {
+                binaryReader.BaseStream.Position = offset;
+                binaryReader.Read(buff, 0, (int) size);
+            }
         }
 
         public void WriteData(string path)

@@ -1,9 +1,10 @@
 ﻿using AssetStudio;
 using AssetStudioCLI.Options;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace AssetStudioCLI
 {
@@ -16,20 +17,28 @@ namespace AssetStudioCLI
 
     internal class CLILogger : ILogger
     {
-        private readonly LogOutputMode logOutput;
-        private readonly LoggerEvent logMinLevel;
         public string LogName;
         public string LogPath;
+
+        private static BlockingCollection<string> logMessageCollection = new BlockingCollection<string>();
+        private readonly LogOutputMode logOutput;
+        private readonly LoggerEvent logMinLevel;
 
         public CLILogger()
         {
             logOutput = CLIOptions.o_logOutput.Value;
             logMinLevel = CLIOptions.o_logLevel.Value;
+            
             var appAssembly = typeof(Program).Assembly.GetName();
+            var arch = Environment.Is64BitProcess ? "x64" : "x32";
             LogName = $"{appAssembly.Name}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.log";
             LogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogName);
-            var arch = Environment.Is64BitProcess ? "x64" : "x32";
             Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+            if (logOutput != LogOutputMode.Console)
+            {
+                ConcurrentFileWriter();
+            }
 
             LogToFile(LoggerEvent.Verbose, $"---{appAssembly.Name} v{appAssembly.Version} [{arch}] | Logger launched---\n" +
                                            $"CMD Args: {string.Join(" ", CLIOptions.cliArgs)}");
@@ -55,7 +64,7 @@ namespace AssetStudioCLI
         {
             var curTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             message = message.TrimEnd();
-            var multiLine = message.Contains('\n');
+            var multiLine = message.Contains("\n");
             
             string formattedMessage;
             if (consoleMode)
@@ -64,7 +73,7 @@ namespace AssetStudioCLI
                 formattedMessage = $"{colorLogLevel} {message}";
                 if (multiLine)
                 {
-                    formattedMessage = formattedMessage.Replace("\n", $"\n{colorLogLevel} ");
+                    formattedMessage = formattedMessage.Replace("\n", $"\n{colorLogLevel} ") + $"\n{colorLogLevel}";
                 }
             }
             else
@@ -74,7 +83,7 @@ namespace AssetStudioCLI
                 formattedMessage = $"{curTime} | {logLevel} | {message}";
                 if (multiLine)
                 {
-                    formattedMessage = formattedMessage.Replace("\n", $"\n{curTime} | {logLevel} | ");
+                    formattedMessage = formattedMessage.Replace("\n", $"\n{curTime} | {logLevel} | ") + $"\n{curTime} | {logLevel} |";
                 }
             }
             return formattedMessage;
@@ -88,15 +97,27 @@ namespace AssetStudioCLI
             }
         }
 
-        public async void LogToFile(LoggerEvent logMsgLevel, string message)
+        public void LogToFile(LoggerEvent logMsgLevel, string message)
         {
             if (logOutput != LogOutputMode.Console)
             {
+                logMessageCollection.Add(FormatMessage(logMsgLevel, message));
+            }
+        }
+
+        private void ConcurrentFileWriter()
+        {
+            Task.Run(() =>
+            {
                 using (var sw = new StreamWriter(LogPath, append: true, System.Text.Encoding.UTF8))
                 {
-                    await sw.WriteLineAsync(FormatMessage(logMsgLevel, message));
+                    sw.AutoFlush = true;
+                    foreach (var msg in logMessageCollection.GetConsumingEnumerable())
+                    {
+                        sw.WriteLine(msg);
+                    }
                 }
-            }
+            });
         }
 
         public void Log(LoggerEvent logMsgLevel, string message, bool ignoreLevel)
