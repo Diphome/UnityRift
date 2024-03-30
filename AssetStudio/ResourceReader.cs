@@ -7,7 +7,6 @@ namespace AssetStudio
         private bool needSearch;
         private string path;
         private SerializedFile assetsFile;
-        private long offset;
         private long size;
         private BinaryReader reader;
 
@@ -16,11 +15,7 @@ namespace AssetStudio
             get => (int)size;
             set => size = value;
         }
-        public int Offset
-        {
-            get => (int)offset;
-            set => offset = value;
-        }
+        public long Offset { get; set; }
 
         public ResourceReader() { }
 
@@ -29,14 +24,14 @@ namespace AssetStudio
             needSearch = true;
             this.path = path;
             this.assetsFile = assetsFile;
-            this.offset = offset;
+            this.Offset = offset;
             this.size = size;
         }
 
         public ResourceReader(BinaryReader reader, long offset, long size)
         {
             this.reader = reader;
-            this.offset = offset;
+            this.Offset = offset;
             this.size = size;
         }
 
@@ -84,7 +79,7 @@ namespace AssetStudio
             var binaryReader = GetReader();
             lock (binaryReader)
             {
-                binaryReader.BaseStream.Position = offset;
+                binaryReader.BaseStream.Position = Offset;
                 return binaryReader.ReadBytes((int) size);
             }
         }
@@ -94,7 +89,7 @@ namespace AssetStudio
             var binaryReader = GetReader();
             lock (binaryReader)
             {
-                binaryReader.BaseStream.Position = offset;
+                binaryReader.BaseStream.Position = Offset;
                 binaryReader.Read(buff, 0, (int) size);
             }
         }
@@ -102,7 +97,7 @@ namespace AssetStudio
         public void WriteData(string path)
         {
             var binaryReader = GetReader();
-            binaryReader.BaseStream.Position = offset;
+            binaryReader.BaseStream.Position = Offset;
             using (var writer = File.OpenWrite(path))
             {
                 binaryReader.BaseStream.CopyTo(writer, size);
