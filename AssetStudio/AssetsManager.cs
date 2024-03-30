@@ -270,7 +270,7 @@ namespace AssetStudio
                     {
                         assetsFile.SetVersion(assetBundleUnityVer);
                     }
-                    CheckStrippedVersion(assetsFile);
+                    CheckStrippedVersion(assetsFile, assetBundleUnityVer);
                     assetsFileList.Add(assetsFile);
                     assetsFileListHash.Add(assetsFile.fileName);
                 }
@@ -474,11 +474,14 @@ namespace AssetStudio
             }
         }
 
-        public void CheckStrippedVersion(SerializedFile assetsFile)
+        public void CheckStrippedVersion(SerializedFile assetsFile, UnityVersion bundleUnityVer = null)
         {
             if (assetsFile.version.IsStripped && specifiedUnityVersion == null)
             {
-                throw new NotSupportedException("The asset's Unity version has been stripped, please set the version in the options");
+                var msg = "The asset's Unity version has been stripped, please set the version in the options.";
+                if (bundleUnityVer != null && !bundleUnityVer.IsStripped)
+                    msg += $"\n\nAssumed Unity version based on asset bundle: {bundleUnityVer}";
+                throw new NotSupportedException(msg);
             }
             if (specifiedUnityVersion != null)
             {
