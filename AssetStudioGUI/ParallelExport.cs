@@ -117,7 +117,7 @@ namespace AssetStudioGUI
                     {
                         var sb = new StringBuilder();
                         sb.AppendLine($"Converting {item.TypeString} \"{m_AudioClip.m_Name}\" to wav..");
-                        sb.AppendLine(m_AudioClip.version[0] < 5
+                        sb.AppendLine(m_AudioClip.version < 5
                             ? $"AudioClip type: {m_AudioClip.m_Type}"
                             : $"AudioClip compression format: {m_AudioClip.m_CompressionFormat}");
                         sb.AppendLine($"AudioClip channel count: {m_AudioClip.m_Channels}");
@@ -144,7 +144,7 @@ namespace AssetStudioGUI
                     {
                         var sb = new StringBuilder();
                         sb.AppendLine($"Exporting non-fmod {item.TypeString} \"{m_AudioClip.m_Name}\"..");
-                        sb.AppendLine(m_AudioClip.version[0] < 5
+                        sb.AppendLine(m_AudioClip.version < 5
                             ? $"AudioClip type: {m_AudioClip.m_Type}"
                             : $"AudioClip compression format: {m_AudioClip.m_CompressionFormat}");
                         sb.AppendLine($"AudioClip channel count: {m_AudioClip.m_Channels}");

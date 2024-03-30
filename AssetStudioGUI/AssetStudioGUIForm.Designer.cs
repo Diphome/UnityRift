@@ -316,7 +316,7 @@
             this.customCompressionZstdToolStripMenuItem.CheckOnClick = true;
             this.customCompressionZstdToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.customCompressionZstdToolStripMenuItem.Name = "customCompressionZstdToolStripMenuItem";
-            this.customCompressionZstdToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.customCompressionZstdToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.customCompressionZstdToolStripMenuItem.Text = "Zstd";
             this.customCompressionZstdToolStripMenuItem.ToolTipText = "If selected, Zstd-decompression will be used for assets with custom compression t" +
     "ype";
@@ -326,7 +326,7 @@
             // 
             this.customCompressionLZ4ToolStripMenuItem.CheckOnClick = true;
             this.customCompressionLZ4ToolStripMenuItem.Name = "customCompressionLZ4ToolStripMenuItem";
-            this.customCompressionLZ4ToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.customCompressionLZ4ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.customCompressionLZ4ToolStripMenuItem.Text = "Lz4/Lz4HC";
             this.customCompressionLZ4ToolStripMenuItem.ToolTipText = "If selected, Lz4-decompression will be used for assets with custom compression ty" +
     "pe";
@@ -339,6 +339,7 @@
             this.toolStripMenuItem14.Name = "toolStripMenuItem14";
             this.toolStripMenuItem14.Size = new System.Drawing.Size(213, 22);
             this.toolStripMenuItem14.Text = "Specify Unity version";
+            this.toolStripMenuItem14.DropDownClosed += new System.EventHandler(this.specifyUnityVersion_Close);
             // 
             // specifyUnityVersion
             // 

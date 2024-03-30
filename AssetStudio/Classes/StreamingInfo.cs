@@ -12,7 +12,7 @@
         {
             var version = reader.version;
 
-            if (version[0] >= 2020) //2020.1 and up
+            if (version >= 2020) //2020.1 and up
             {
                 offset = reader.ReadInt64();
             }

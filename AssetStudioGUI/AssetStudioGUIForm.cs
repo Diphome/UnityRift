@@ -172,7 +172,6 @@ namespace AssetStudioGUI
                     }
                 }
             }
-            assetsManager.SpecifyUnityVersion = specifyUnityVersion.Text;
             await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, paths));
             saveDirectoryBackup = openDirectoryBackup;
             BuildAssetStructures();
@@ -184,7 +183,6 @@ namespace AssetStudioGUI
             if (openFileDialog1.ShowDialog(this) == DialogResult.OK)
             {
                 ResetForm();
-                assetsManager.SpecifyUnityVersion = specifyUnityVersion.Text;
                 await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, openFileDialog1.FileNames));
                 BuildAssetStructures();
             }
@@ -197,9 +195,26 @@ namespace AssetStudioGUI
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
                 ResetForm();
-                assetsManager.SpecifyUnityVersion = specifyUnityVersion.Text;
                 await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, openFolderDialog.Folder));
                 BuildAssetStructures();
+            }
+        }
+
+        private void specifyUnityVersion_Close(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(specifyUnityVersion.Text))
+            {
+                assetsManager.SpecifyUnityVersion = null;
+                return;
+            }
+            
+            try
+            {
+                assetsManager.SpecifyUnityVersion = new UnityVersion(specifyUnityVersion.Text);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex.Message);
             }
         }
 
@@ -288,7 +303,7 @@ namespace AssetStudioGUI
             allToolStripMenuItem.Checked = true;
             var log = $"Finished loading {assetsManager.assetsFileList.Count} file(s) with {assetListView.Items.Count} exportable assets";
             var unityVer = assetsManager.assetsFileList[0].version;
-            var m_ObjectsCount = unityVer[0] > 2020 ?
+            var m_ObjectsCount = unityVer > 2020 ?
                 assetsManager.assetsFileList.Sum(x => x.m_Objects.LongCount(y => y.classID != (int)ClassIDType.Shader)) :
                 assetsManager.assetsFileList.Sum(x => x.m_Objects.Count);
             var objectsCount = assetsManager.assetsFileList.Sum(x => x.Objects.Count);
@@ -948,7 +963,7 @@ namespace AssetStudioGUI
         {
             //Info
             assetItem.InfoText = "Compression format: ";
-            if (m_AudioClip.version[0] < 5)
+            if (m_AudioClip.version < 5)
             {
                 switch (m_AudioClip.m_Type)
                 {

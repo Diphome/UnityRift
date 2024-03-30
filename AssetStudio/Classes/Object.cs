@@ -11,7 +11,7 @@ namespace AssetStudio
         public ObjectReader reader;
         public long m_PathID;
         [JsonIgnore]
-        public int[] version;
+        public UnityVersion version;
         protected BuildType buildType;
         [JsonIgnore]
         public BuildTarget platform;

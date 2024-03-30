@@ -105,7 +105,7 @@ namespace AssetStudio
 
         public string GetExtensionName()
         {
-            if (m_AudioClip.version[0] < 5)
+            if (m_AudioClip.version < 5)
             {
                 switch (m_AudioClip.m_Type)
                 {
@@ -170,7 +170,7 @@ namespace AssetStudio
     {
         public static bool IsConvertSupport(this AudioClip m_AudioClip)
         {
-            if (m_AudioClip.version[0] < 5)
+            if (m_AudioClip.version < 5)
             {
                 switch (m_AudioClip.m_Type)
                 {

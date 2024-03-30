@@ -11,19 +11,47 @@ namespace AssetStudio
 {
     public class AssetsManager
     {
-        public string SpecifyUnityVersion;
         public bool ZstdEnabled = true;
         public bool LoadingViaTypeTreeEnabled = true;
         public List<SerializedFile> assetsFileList = new List<SerializedFile>();
-        private HashSet<ClassIDType> filteredAssetTypesList = new HashSet<ClassIDType>();
 
         internal Dictionary<string, int> assetsFileIndexCache = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         internal ConcurrentDictionary<string, BinaryReader> resourceFileReaders = new ConcurrentDictionary<string, BinaryReader>(StringComparer.OrdinalIgnoreCase);
 
+        private UnityVersion specifiedUnityVersion;
         private List<string> importFiles = new List<string>();
+        private HashSet<ClassIDType> filteredAssetTypesList = new HashSet<ClassIDType>();
         private HashSet<string> importFilesHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private HashSet<string> noexistFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private HashSet<string> assetsFileListHash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        public UnityVersion SpecifyUnityVersion
+        {
+            get => specifiedUnityVersion;
+            set
+            {
+                if (specifiedUnityVersion == value)
+                {
+                    return;
+                }
+                if (value == null)
+                {
+                    specifiedUnityVersion = null;
+                    Logger.Info("Specified Unity version: None");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(value.BuildType))
+                {
+                    throw new NotSupportedException("Specified Unity version is not in a correct format.\n" +
+                        "Specify full Unity version, including letters at the end.\n" +
+                        "Example: 2017.4.39f1");
+                }
+
+                specifiedUnityVersion = value;
+                Logger.Info($"Specified Unity version: {specifiedUnityVersion}");
+            }
+        }
 
         public void SetAssetFilter(params ClassIDType[] classIDTypes)
         {
@@ -230,7 +258,7 @@ namespace AssetStudio
             return true;
         }
 
-        private bool LoadAssetsFromMemory(FileReader reader, string originalPath, string unityVersion = null)
+        private bool LoadAssetsFromMemory(FileReader reader, string originalPath, UnityVersion assetBundleUnityVer = null)
         {
             if (!assetsFileListHash.Contains(reader.FileName))
             {
@@ -238,9 +266,9 @@ namespace AssetStudio
                 {
                     var assetsFile = new SerializedFile(reader, this);
                     assetsFile.originalPath = originalPath;
-                    if (!string.IsNullOrEmpty(unityVersion) && assetsFile.header.m_Version < SerializedFileFormatVersion.Unknown_7)
+                    if (assetBundleUnityVer != null && assetsFile.header.m_Version < SerializedFileFormatVersion.Unknown_7)
                     {
-                        assetsFile.SetVersion(unityVersion);
+                        assetsFile.SetVersion(assetBundleUnityVer);
                     }
                     CheckStrippedVersion(assetsFile);
                     assetsFileList.Add(assetsFile);
@@ -270,7 +298,7 @@ namespace AssetStudio
             Logger.Info("Loading " + reader.FullPath);
             try
             {
-                var bundleFile = new BundleFile(reader, ZstdEnabled, SpecifyUnityVersion);
+                var bundleFile = new BundleFile(reader, ZstdEnabled, specifiedUnityVersion);
                 foreach (var file in bundleFile.fileList)
                 {
                     var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), file.fileName);
@@ -448,11 +476,11 @@ namespace AssetStudio
 
         public void CheckStrippedVersion(SerializedFile assetsFile)
         {
-            if (assetsFile.IsVersionStripped && string.IsNullOrEmpty(SpecifyUnityVersion))
+            if (assetsFile.version.IsStripped && specifiedUnityVersion == null)
             {
-                throw new NotSupportedException("The Unity version has been stripped, please set the version in the options");
+                throw new NotSupportedException("The asset's Unity version has been stripped, please set the version in the options");
             }
-            if (!string.IsNullOrEmpty(SpecifyUnityVersion))
+            if (specifiedUnityVersion != null)
             {
                 assetsFile.SetVersion(SpecifyUnityVersion);
             }
@@ -560,7 +588,7 @@ namespace AssetStudio
                                 obj = new RectTransform(objectReader);
                                 break;
                             case ClassIDType.Shader:
-                                if (objectReader.version[0] < 2021)
+                                if (objectReader.version < 2021)
                                     obj = new Shader(objectReader);
                                 break;
                             case ClassIDType.SkinnedMeshRenderer:

@@ -30,7 +30,7 @@ namespace AssetStudio
             m_MipCount = reader.ReadInt32();
             m_DataSize = reader.ReadUInt32();
             m_TextureSettings = new GLTextureSettings(reader);
-            if (version[0] > 2020 || (version[0] == 2020 && version[1] >= 2)) //2020.2 and up
+            if (version >= (2020, 2)) //2020.2 and up
             {
                 var m_UsageMode = reader.ReadInt32();
             }

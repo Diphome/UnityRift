@@ -3,7 +3,6 @@ using ZstdSharp;
 using System;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace AssetStudio
 {
@@ -48,7 +47,7 @@ namespace AssetStudio
             public string signature;
             public uint version;
             public string unityVersion;
-            public string unityRevision;
+            public UnityVersion unityRevision;
             public long size;
             public uint compressedBlocksInfoSize;
             public uint uncompressedBlocksInfoSize;
@@ -76,13 +75,13 @@ namespace AssetStudio
 
         public StreamFile[] fileList;
 
-        public BundleFile(FileReader reader, bool useZstd, string specUnityVer = "")
+        public BundleFile(FileReader reader, bool useZstd, UnityVersion specUnityVer = null)
         {
             m_Header = new Header();
             m_Header.signature = reader.ReadStringToNull();
             m_Header.version = reader.ReadUInt32();
             m_Header.unityVersion = reader.ReadStringToNull();
-            m_Header.unityRevision = reader.ReadStringToNull();
+            m_Header.unityRevision = new UnityVersion(reader.ReadStringToNull());
             switch (m_Header.signature)
             {
                 case "UnityArchive":
@@ -104,15 +103,25 @@ namespace AssetStudio
                     ReadHeader(reader);
 
                     var isUnityCnEnc = false;
-                    var unityVerStr = string.IsNullOrEmpty(specUnityVer) ? m_Header.unityRevision : specUnityVer;
-                    int[] ver = Regex.Matches(unityVerStr, @"\d+").Cast<Match>().Select(x => int.Parse(x.Value)).ToArray();
-                    if (ver.Length > 0 && ver[0] != 0)
+                    var unityVer = m_Header.unityRevision;
+                    if (specUnityVer != null)
+                    {
+                        if (!unityVer.IsStripped && specUnityVer != unityVer)
+                        {
+                            Logger.Warning($"Detected Unity version is different from the specified one ({specUnityVer.FullVersion.Color(ColorConsole.BrightCyan)}).\n" +
+                                $"Assets may load with errors.\n" +
+                                $"It is recommended to specify the detected Unity version: {unityVer.FullVersion.Color(ColorConsole.BrightCyan)}");
+                        }
+                        unityVer = specUnityVer;
+                    }
+
+                    if (!unityVer.IsStripped)
                     {
                         // https://issuetracker.unity3d.com/issues/files-within-assetbundles-do-not-start-on-aligned-boundaries-breaking-patching-on-nintendo-switch
-                        if (ver[0] < 2020
-                            || (ver[0] == 2020 && ver[1] <= 3 && ver[2] < 34)
-                            || (ver[0] == 2021 && ver[1] <= 3 && ver[2] < 2)
-                            || (ver[0] == 2022 && ver[1] <= 1 && ver[2] < 1))
+                        if (unityVer < 2020
+                            || unityVer.IsInRange(2020, (2020, 3, 34))
+                            || unityVer.IsInRange(2021, (2021, 3, 2))
+                            || unityVer.IsInRange(2022, (2022, 1, 1)))
                         {
                             isUnityCnEnc = ((CnEncryptionFlags)m_Header.flags & CnEncryptionFlags.OldFlag) != 0;
                         }
@@ -123,10 +132,14 @@ namespace AssetStudio
                     }
                     if (isUnityCnEnc)
                     {
-                        throw new NotSupportedException("Unsupported bundle file. UnityCN encryption was detected.");
+                        var msg = "Unsupported bundle file. ";
+                        msg += specUnityVer != null
+                            ? "UnityCN encryption was detected or the specified Unity version is incorrect."
+                            : "UnityCN encryption was detected.";
+                        throw new NotSupportedException(msg);
                     }
 
-                    ReadBlocksInfoAndDirectory(reader, ver);
+                    ReadBlocksInfoAndDirectory(reader, unityVer);
                     using (var blocksStream = CreateBlocksStream(reader.FullPath))
                     {
                         ReadBlocks(reader, blocksStream, useZstd);
@@ -261,7 +274,7 @@ namespace AssetStudio
             }
         }
 
-        private void ReadBlocksInfoAndDirectory(FileReader reader, int[] unityVer)
+        private void ReadBlocksInfoAndDirectory(FileReader reader, UnityVersion unityVer)
         {
             byte[] blocksInfoBytes;
 
@@ -269,7 +282,7 @@ namespace AssetStudio
             {
                 reader.AlignStream(16);
             }
-            else if (unityVer[0] >= 2019 && unityVer[1] >= 4)
+            else if (unityVer >= (2019, 4))
             {
                 //check if we need to align the reader
                 //- align to 16 bytes and check if all are 0

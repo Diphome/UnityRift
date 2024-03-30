@@ -25,7 +25,7 @@ namespace AssetStudio
             value = readerFunc();
             inSlope = readerFunc();
             outSlope = readerFunc();
-            if (reader.version[0] >= 2018) //2018 and up
+            if (reader.version >= 2018) //2018 and up
             {
                 weightedMode = reader.ReadInt32();
                 inWeight = readerFunc();
@@ -55,7 +55,7 @@ namespace AssetStudio
 
             m_PreInfinity = reader.ReadInt32();
             m_PostInfinity = reader.ReadInt32();
-            if (version[0] > 5 || (version[0] == 5 && version[1] >= 3))//5.3 and up
+            if (version >= (5, 3)) //5.3 and up
             {
                 m_RotationOrder = reader.ReadInt32();
             }
@@ -323,7 +323,7 @@ namespace AssetStudio
             path = reader.ReadAlignedString();
             classID = (ClassIDType)reader.ReadInt32();
             script = new PPtr<MonoScript>(reader);
-            if (version[0] > 2022 || (version[0] == 2022 && version[1] >= 2)) //2022.2 and up
+            if (version >= (2022, 2)) //2022.2 and up
             {
                 flags = reader.ReadInt32();
             }
@@ -369,7 +369,7 @@ namespace AssetStudio
             path = reader.ReadAlignedString();
             classID = reader.ReadInt32();
             script = new PPtr<MonoScript>(reader);
-            if (version[0] > 2022 || (version[0] == 2022 && version[1] >= 2)) //2022.2 and up
+            if (version >= (2022, 2)) //2022.2 and up
             {
                 flags = reader.ReadInt32();
             }
@@ -401,9 +401,9 @@ namespace AssetStudio
         public xform(ObjectReader reader)
         {
             var version = reader.version;
-            t = version[0] > 5 || (version[0] == 5 && version[1] >= 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
+            t = version >= (5, 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
             q = reader.ReadQuaternion();
-            s = version[0] > 5 || (version[0] == 5 && version[1] >= 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
+            s = version >= (5, 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
         }
     }
 
@@ -445,9 +445,9 @@ namespace AssetStudio
             m_X = new xform(reader);
             m_WeightT = reader.ReadSingle();
             m_WeightR = reader.ReadSingle();
-            if (version[0] >= 5)//5.0 and up
+            if (version >= 5)//5.0 and up
             {
-                m_HintT = version[0] > 5 || (version[0] == 5 && version[1] >= 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
+                m_HintT = version >= (5, 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
                 m_HintWeightT = reader.ReadSingle();
             }
         }
@@ -470,7 +470,7 @@ namespace AssetStudio
         {
             var version = reader.version;
             m_RootX = new xform(reader);
-            m_LookAtPosition = version[0] > 5 || (version[0] == 5 && version[1] >= 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
+            m_LookAtPosition = version >= (5, 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
             m_LookAtWeight = reader.ReadVector4();
 
             int numGoals = reader.ReadInt32();
@@ -485,13 +485,13 @@ namespace AssetStudio
 
             m_DoFArray = reader.ReadSingleArray();
 
-            if (version[0] > 5 || (version[0] == 5 && version[1] >= 2))//5.2 and up
+            if (version >= (5, 2))//5.2 and up
             {
                 int numTDof = reader.ReadInt32();
                 m_TDoFArray = new Vector3[numTDof];
                 for (int i = 0; i < numTDof; i++)
                 {
-                    m_TDoFArray[i] = version[0] > 5 || (version[0] == 5 && version[1] >= 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
+                    m_TDoFArray[i] = version >= (5, 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
                 }
             }
         }
@@ -646,7 +646,7 @@ namespace AssetStudio
         {
             var version = reader.version;
             m_ID = reader.ReadUInt32();
-            if (version[0] < 5 || (version[0] == 5 && version[1] < 5))//5.5 down
+            if (version < (5, 5)) //5.5 down
             {
                 m_TypeID = reader.ReadUInt32();
             }
@@ -698,11 +698,11 @@ namespace AssetStudio
             var version = reader.version;
             m_StreamedClip = new StreamedClip(reader);
             m_DenseClip = new DenseClip(reader);
-            if (version[0] > 4 || (version[0] == 4 && version[1] >= 3)) //4.3 and up
+            if (version >= (4, 3)) //4.3 and up
             {
                 m_ConstantClip = new ConstantClip(reader);
             }
-            if (version[0] < 2018 || (version[0] == 2018 && version[1] < 3)) //2018.3 down
+            if (version < (2018, 3)) //2018.3 down
             {
                 m_Binding = new ValueArrayConstant(reader);
             }
@@ -806,18 +806,18 @@ namespace AssetStudio
             var version = reader.version;
             m_DeltaPose = new HumanPose(reader);
             m_StartX = new xform(reader);
-            if (version[0] > 5 || (version[0] == 5 && version[1] >= 5))//5.5 and up
+            if (version >= (5, 5)) //5.5 and up
             {
                 m_StopX = new xform(reader);
             }
             m_LeftFootStartX = new xform(reader);
             m_RightFootStartX = new xform(reader);
-            if (version[0] < 5)//5.0 down
+            if (version < 5)//5.0 down
             {
                 m_MotionStartX = new xform(reader);
                 m_MotionStopX = new xform(reader);
             }
-            m_AverageSpeed = version[0] > 5 || (version[0] == 5 && version[1] >= 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
+            m_AverageSpeed = version >= (5, 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
             m_Clip = new OffsetPtr(reader);
             m_StartTime = reader.ReadSingle();
             m_StopTime = reader.ReadSingle();
@@ -827,7 +827,7 @@ namespace AssetStudio
             m_AverageAngularSpeed = reader.ReadSingle();
 
             m_IndexArray = reader.ReadInt32Array();
-            if (version[0] < 4 || (version[0] == 4 && version[1] < 3)) //4.3 down
+            if (version < (4, 3)) //4.3 down
             {
                 var m_AdditionalCurveIndexArray = reader.ReadInt32Array();
             }
@@ -837,13 +837,13 @@ namespace AssetStudio
             {
                 m_ValueArrayDelta[i] = new ValueDelta(reader);
             }
-            if (version[0] > 5 || (version[0] == 5 && version[1] >= 3))//5.3 and up
+            if (version >= (5, 3))//5.3 and up
             {
                 m_ValueArrayReferencePose = reader.ReadSingleArray();
             }
 
             m_Mirror = reader.ReadBoolean();
-            if (version[0] > 4 || (version[0] == 4 && version[1] >= 3)) //4.3 and up
+            if (version >= (4, 3)) //4.3 and up
             {
                 m_LoopTime = reader.ReadBoolean();
             }
@@ -851,7 +851,7 @@ namespace AssetStudio
             m_LoopBlendOrientation = reader.ReadBoolean();
             m_LoopBlendPositionY = reader.ReadBoolean();
             m_LoopBlendPositionXZ = reader.ReadBoolean();
-            if (version[0] > 5 || (version[0] == 5 && version[1] >= 5))//5.5 and up
+            if (version >= (5, 5))//5.5 and up
             {
                 m_StartAtOrigin = reader.ReadBoolean();
             }
@@ -881,7 +881,7 @@ namespace AssetStudio
             path = reader.ReadUInt32();
             attribute = reader.ReadUInt32();
             script = new PPtr<Object>(reader);
-            if (version[0] > 5 || (version[0] == 5 && version[1] >= 6)) //5.6 and up
+            if (version >= (5, 6)) //5.6 and up
             {
                 typeID = (ClassIDType)reader.ReadInt32();
             }
@@ -891,7 +891,7 @@ namespace AssetStudio
             }
             customType = reader.ReadByte();
             isPPtrCurve = reader.ReadByte();
-            if (version[0] > 2022 || (version[0] == 2022 && version[1] >= 1)) //2022.1 and up
+            if (version >= (2022, 1)) //2022.1 and up
             {
                 isIntCurve = reader.ReadByte();
             }
@@ -980,7 +980,7 @@ namespace AssetStudio
             data = reader.ReadAlignedString();
             objectReferenceParameter = new PPtr<Object>(reader);
             floatParameter = reader.ReadSingle();
-            if (version[0] >= 3) //3 and up
+            if (version >= 3) //3 and up
             {
                 intParameter = reader.ReadInt32();
             }
@@ -1045,11 +1045,11 @@ namespace AssetStudio
 
         public AnimationClip(ObjectReader reader) : base(reader)
         {
-            if (version[0] >= 5)//5.0 and up
+            if (version >= 5)//5.0 and up
             {
                 m_Legacy = reader.ReadBoolean();
             }
-            else if (version[0] >= 4)//4.0 and up
+            else if (version >= 4)//4.0 and up
             {
                 m_AnimationType = (AnimationType)reader.ReadInt32();
                 if (m_AnimationType == AnimationType.Legacy)
@@ -1060,7 +1060,7 @@ namespace AssetStudio
                 m_Legacy = true;
             }
             m_Compressed = reader.ReadBoolean();
-            if (version[0] > 4 || (version[0] == 4 && version[1] >= 3))//4.3 and up
+            if (version >= (4, 3))//4.3 and up
             {
                 m_UseHighQualityCurve = reader.ReadBoolean();
             }
@@ -1079,7 +1079,7 @@ namespace AssetStudio
                 m_CompressedRotationCurves[i] = new CompressedAnimationCurve(reader);
             }
 
-            if (version[0] > 5 || (version[0] == 5 && version[1] >= 3))//5.3 and up
+            if (version >= (5, 3))//5.3 and up
             {
                 int numEulerCurves = reader.ReadInt32();
                 m_EulerCurves = new Vector3Curve[numEulerCurves];
@@ -1110,7 +1110,7 @@ namespace AssetStudio
                 m_FloatCurves[i] = new FloatCurve(reader);
             }
 
-            if (version[0] > 4 || (version[0] == 4 && version[1] >= 3)) //4.3 and up
+            if (version >= (4, 3)) //4.3 and up
             {
                 int numPtrCurves = reader.ReadInt32();
                 m_PPtrCurves = new PPtrCurve[numPtrCurves];
@@ -1122,20 +1122,20 @@ namespace AssetStudio
 
             m_SampleRate = reader.ReadSingle();
             m_WrapMode = reader.ReadInt32();
-            if (version[0] > 3 || (version[0] == 3 && version[1] >= 4)) //3.4 and up
+            if (version >= (3, 4)) //3.4 and up
             {
                 m_Bounds = new AABB(reader);
             }
-            if (version[0] >= 4)//4.0 and up
+            if (version >= 4)//4.0 and up
             {
                 m_MuscleClipSize = reader.ReadUInt32();
                 m_MuscleClip = new ClipMuscleConstant(reader);
             }
-            if (version[0] > 4 || (version[0] == 4 && version[1] >= 3)) //4.3 and up
+            if (version >= (4, 3)) //4.3 and up
             {
                 m_ClipBindingConstant = new AnimationClipBindingConstant(reader);
             }
-            if (version[0] > 2018 || (version[0] == 2018 && version[1] >= 3)) //2018.3 and up
+            if (version >= (2018, 3)) //2018.3 and up
             {
                 var m_HasGenericRootTransform = reader.ReadBoolean();
                 var m_HasMotionFloatCurves = reader.ReadBoolean();
@@ -1147,7 +1147,7 @@ namespace AssetStudio
             {
                 m_Events[i] = new AnimationEvent(reader);
             }
-            if (version[0] >= 2017) //2017 and up
+            if (version >= 2017) //2017 and up
             {
                 reader.AlignStream();
             }

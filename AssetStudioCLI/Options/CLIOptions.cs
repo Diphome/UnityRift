@@ -115,7 +115,7 @@ namespace AssetStudioCLI.Options
         public static Option<int> o_maxParallelExportTasks;
         public static Option<ExportListType> o_exportAssetList;
         public static Option<string> o_assemblyPath;
-        public static Option<string> o_unityVersion;
+        public static Option<UnityVersion> o_unityVersion;
         public static Option<bool> f_notRestoreExtensionName;
         public static Option<bool> f_avoidLoadingViaTypetree;
         public static Option<bool> f_loadAllAssets;
@@ -427,9 +427,9 @@ namespace AssetStudioCLI.Options
                 optionExample: "",
                 optionHelpGroup: HelpGroups.Advanced
             );
-            o_unityVersion = new GroupedOption<string>
+            o_unityVersion = new GroupedOption<UnityVersion>
             (
-                optionDefaultValue: "",
+                optionDefaultValue: null,
                 optionName: "--unity-version <text>",
                 optionDescription: "Specify Unity version\n",
                 optionExample: "Example: \"--unity-version 2017.4.39f1\"\n",
@@ -970,7 +970,16 @@ namespace AssetStudioCLI.Options
                             }
                             break;
                         case "--unity-version":
-                            o_unityVersion.Value = value;
+                            try
+                            {
+                                o_unityVersion.Value = new UnityVersion(value);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option with value [{value.Color(brightRed)}].\n{e.Message}\n");
+                                ShowOptionDescription(o_unityVersion);
+                                return;
+                            }
                             break;
                         default:
                             Console.WriteLine($"{"Error:".Color(brightRed)} Unknown option [{option.Color(brightRed)}].\n");

@@ -208,7 +208,7 @@ namespace AssetStudioCLI
             var log = $"Finished loading {assetsManager.assetsFileList.Count} files with {parsedAssetsList.Count} exportable assets";
             var unityVer = assetsManager.assetsFileList[0].version;
             long m_ObjectsCount;
-            if (unityVer[0] > 2020)
+            if (unityVer > 2020)
             {
                 m_ObjectsCount = assetsManager.assetsFileList.Sum(x => x.m_Objects.LongCount(y =>
                     y.classID != (int)ClassIDType.Shader

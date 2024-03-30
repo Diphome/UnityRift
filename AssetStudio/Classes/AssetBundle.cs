@@ -42,7 +42,7 @@ namespace AssetStudio
 
             var m_MainAsset = new AssetInfo(reader);
 
-            if (version[0] == 5 && version[1] == 4) //5.4.x
+            if (version == (5, 4)) //5.4.x
             {
                 var m_ClassVersionMapSize = reader.ReadInt32();
                 for (var i = 0; i < m_ClassVersionMapSize; i++)
@@ -52,12 +52,12 @@ namespace AssetStudio
                 }
             }
 
-            if (version[0] > 4 || (version[0] == 4 && version[1] >= 2)) //4.2 and up
+            if (version >= (4, 2)) //4.2 and up
             {
                 var m_RuntimeCompatibility = reader.ReadUInt32();
             }
 
-            if (version[0] >= 5) //5.0 and up
+            if (version >= 5) //5.0 and up
             {
                 m_AssetBundleName = reader.ReadAlignedString();
 
