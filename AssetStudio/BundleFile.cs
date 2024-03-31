@@ -282,7 +282,7 @@ namespace AssetStudio
             {
                 reader.AlignStream(16);
             }
-            else if (unityVer >= (2019, 4))
+            else if (unityVer >= (2019, 4) && m_Header.flags != ArchiveFlags.BlocksAndDirectoryInfoCombined)
             {
                 //check if we need to align the reader
                 //- align to 16 bytes and check if all are 0
