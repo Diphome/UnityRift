@@ -448,7 +448,7 @@ namespace AssetStudioCLI.Options
             (
                 optionDefaultValue: false,
                 optionName: "--avoid-typetree-loading",
-                optionDescription: "(Flag) If specified, AssetStudio will not try to load assets using their type tree\n",
+                optionDescription: "(Flag) If specified, AssetStudio will not try to parse assets at load time\nusing their type tree\n",
                 optionExample: "",
                 optionHelpGroup: HelpGroups.Advanced,
                 isFlag: true
@@ -1145,7 +1145,7 @@ namespace AssetStudioCLI.Options
             {
                 sb.AppendLine($"# Custom Compression Type: {o_customCompressionType}");
             }
-            sb.AppendLine($"# Load Assets via Typetree: {!f_avoidLoadingViaTypetree.Value}");
+            sb.AppendLine($"# Parse Assets Using TypeTree: {!f_avoidLoadingViaTypetree.Value}");
             sb.AppendLine($"# Input Path: \"{inputPath}\"");
             switch (o_workMode.Value)
             {

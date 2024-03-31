@@ -135,6 +135,7 @@ namespace AssetStudioGUI
             enablePreview.Checked = Properties.Settings.Default.enablePreview;
             showConsoleToolStripMenuItem.Checked = Properties.Settings.Default.showConsole;
             buildTreeStructureToolStripMenuItem.Checked = Properties.Settings.Default.buildTreeStructure;
+            useAssetLoadingViaTypetreeToolStripMenuItem.Checked = Properties.Settings.Default.useTypetreeLoading;
             FMODinit();
             listSearchFilterMode.SelectedIndex = 0;
 
@@ -2308,9 +2309,12 @@ namespace AssetStudioGUI
             assetsManager.ZstdEnabled = customCompressionZstdToolStripMenuItem.Checked;
         }
 
-        private void disableAssetLoadingViaTypetreeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void useAssetLoadingViaTypetreeToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
         {
-            assetsManager.LoadingViaTypeTreeEnabled = !disableAssetLoadingViaTypetreeToolStripMenuItem.Checked;
+            var isEnabled = useAssetLoadingViaTypetreeToolStripMenuItem.Checked;
+            assetsManager.LoadingViaTypeTreeEnabled = isEnabled;
+            Properties.Settings.Default.useTypetreeLoading = isEnabled;
+            Properties.Settings.Default.Save();
         }
 
         #region FMOD

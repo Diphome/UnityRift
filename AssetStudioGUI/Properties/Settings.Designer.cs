@@ -382,5 +382,17 @@ namespace AssetStudioGUI.Properties {
                 this["parallelExportCount"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool useTypetreeLoading {
+            get {
+                return ((bool)(this["useTypetreeLoading"]));
+            }
+            set {
+                this["useTypetreeLoading"] = value;
+            }
+        }
     }
 }
