@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using static AssetStudio.EndianSpanReader;
 
@@ -27,8 +28,10 @@ namespace AssetStudio
         public uint ParamCount { get; }
         public HashSet<string> PartNames { get; }
         public HashSet<string> ParamNames { get; }
-        public byte[] ModelData { get; }
-        private static bool IsBigEndian { get; set; }
+        
+        private byte[] modelData;
+        private int modelDataSize;
+        private bool isBigEndian;
 
         public CubismModel(MonoBehaviour moc)
         {
@@ -36,11 +39,11 @@ namespace AssetStudio
             reader.Reset();
             reader.Position += 28; //PPtr<GameObject> m_GameObject, m_Enabled, PPtr<MonoScript>
             reader.ReadAlignedString(); //m_Name
-            var modelDataSize = (int)reader.ReadUInt32();
-            ModelData = BigArrayPool<byte>.Shared.Rent(modelDataSize);
-            _ = reader.Read(ModelData, 0, modelDataSize);
+            modelDataSize = (int)reader.ReadUInt32();
+            modelData = BigArrayPool<byte>.Shared.Rent(modelDataSize);
+            _ = reader.Read(modelData, 0, modelDataSize);
 
-            var sdkVer = ModelData[4];
+            var sdkVer = modelData[4];
             if (Enum.IsDefined(typeof(CubismSDKVersion), sdkVer))
             {
                 Version = (CubismSDKVersion)sdkVer;
@@ -54,26 +57,37 @@ namespace AssetStudio
                 Logger.Warning($"Live2D model \"{moc.m_Name}\": " + msg);
                 return;
             }
-            IsBigEndian = BitConverter.ToBoolean(ModelData, 5);
+            isBigEndian = BitConverter.ToBoolean(modelData, 5);
 
             //offsets
-            var countInfoTableOffset = (int)SpanToUint32(ModelData, 64, IsBigEndian);
-            var canvasInfoOffset = (int)SpanToUint32(ModelData, 68, IsBigEndian);
-            var partIdsOffset = SpanToUint32(ModelData, 76, IsBigEndian);
-            var parameterIdsOffset = SpanToUint32(ModelData, 264, IsBigEndian);
+            var countInfoTableOffset = (int)SpanToUint32(modelData, 64, isBigEndian);
+            var canvasInfoOffset = (int)SpanToUint32(modelData, 68, isBigEndian);
+            var partIdsOffset = SpanToUint32(modelData, 76, isBigEndian);
+            var parameterIdsOffset = SpanToUint32(modelData, 264, isBigEndian);
 
             //canvas
-            PixelPerUnit = ToSingle(ModelData, canvasInfoOffset);
-            CentralPosX = ToSingle(ModelData, canvasInfoOffset + 4);
-            CentralPosY = ToSingle(ModelData, canvasInfoOffset + 8);
-            CanvasWidth = ToSingle(ModelData, canvasInfoOffset + 12);
-            CanvasHeight = ToSingle(ModelData, canvasInfoOffset + 16);
+            PixelPerUnit = ToSingle(modelData, canvasInfoOffset, isBigEndian);
+            CentralPosX = ToSingle(modelData, canvasInfoOffset + 4, isBigEndian);
+            CentralPosY = ToSingle(modelData, canvasInfoOffset + 8, isBigEndian);
+            CanvasWidth = ToSingle(modelData, canvasInfoOffset + 12, isBigEndian);
+            CanvasHeight = ToSingle(modelData, canvasInfoOffset + 16, isBigEndian);
 
             //model
-            PartCount = SpanToUint32(ModelData, countInfoTableOffset, IsBigEndian);
-            ParamCount = SpanToUint32(ModelData, countInfoTableOffset + 20, IsBigEndian);
-            PartNames = ReadMocStringHashSet(ModelData, (int)partIdsOffset, (int)PartCount);
-            ParamNames = ReadMocStringHashSet(ModelData, (int)parameterIdsOffset, (int)ParamCount);
+            PartCount = SpanToUint32(modelData, countInfoTableOffset, isBigEndian);
+            ParamCount = SpanToUint32(modelData, countInfoTableOffset + 20, isBigEndian);
+            PartNames = ReadMocStringHashSet(modelData, (int)partIdsOffset, (int)PartCount);
+            ParamNames = ReadMocStringHashSet(modelData, (int)parameterIdsOffset, (int)ParamCount);
+        }
+
+        public void SaveMoc3(string savePath)
+        {
+            if (!savePath.EndsWith(".moc3"))
+                savePath += ".moc3";
+
+            using (var file = File.OpenWrite(savePath))
+            {
+                file.Write(modelData, 0, modelDataSize);
+            }
         }
 
         private string ParseVersion()
@@ -95,10 +109,10 @@ namespace AssetStudio
             }
         }
 
-        private static float ToSingle(ReadOnlySpan<byte> data, int index)  //net framework ver
+        private static float ToSingle(ReadOnlySpan<byte> data, int index, bool isBigEndian)  //net framework ver
         {
             var bytes = data.Slice(index, index + 4).ToArray();
-            if ((IsBigEndian && BitConverter.IsLittleEndian) || (!IsBigEndian && !BitConverter.IsLittleEndian))
+            if ((isBigEndian && BitConverter.IsLittleEndian) || (!isBigEndian && !BitConverter.IsLittleEndian))
                 (bytes[0], bytes[1], bytes[2], bytes[3]) = (bytes[3], bytes[2], bytes[1], bytes[0]);
 
             return BitConverter.ToSingle(bytes, 0);
@@ -123,7 +137,7 @@ namespace AssetStudio
         {
             if (disposing)
             {
-                BigArrayPool<byte>.Shared.Return(ModelData);
+                BigArrayPool<byte>.Shared.Return(modelData, clearArray: true);
             }
         }
 

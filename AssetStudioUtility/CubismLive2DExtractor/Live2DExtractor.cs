@@ -159,7 +159,7 @@ namespace CubismLive2DExtractor
                     ParameterNames = cubismModel.ParamNames;
                     PartNames = cubismModel.PartNames;
                 }
-                File.WriteAllBytes($"{destPath}{modelName}.moc3", cubismModel.ModelData);
+                cubismModel.SaveMoc3($"{destPath}{modelName}.moc3");
             }
             #endregion
 
