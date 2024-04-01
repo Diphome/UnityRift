@@ -43,10 +43,8 @@ namespace AssetStudio
             return (a + b - 1) / b;
         }
 
-        internal static byte[] Unswizzle(byte[] data, Size imageSize, Size blockSize, int gobsPerBlock)
+        internal static void Unswizzle(byte[] data, Size imageSize, Size blockSize, int gobsPerBlock, byte[] newData)
         {
-            byte[] newData = new byte[data.Length];
-
             int width = imageSize.Width;
             int height = imageSize.Height;
 
@@ -71,14 +69,13 @@ namespace AssetStudio
                             int gobDstY = (i * gobsPerBlock + k) * GOB_Y_TEXEL_COUNT + gobY;
                             int gobDstLinPos = gobDstY * blockCountX * TEXEL_BYTE_SIZE + gobDstX * TEXEL_BYTE_SIZE;
 
-                            Array.Copy(data, srcPos, newData, gobDstLinPos, TEXEL_BYTE_SIZE);
+                            Buffer.BlockCopy(data, srcPos, newData, gobDstLinPos, TEXEL_BYTE_SIZE);
 
                             srcPos += TEXEL_BYTE_SIZE;
                         }
                     }
                 }
             }
-            return newData;
         }
 
         //this should be the amount of pixels that can fit 16 bytes

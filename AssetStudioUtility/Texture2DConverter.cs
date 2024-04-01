@@ -92,7 +92,18 @@ namespace AssetStudio
                 reader.GetData(buff);
                 if (switchSwizzled)
                 {
-                    buff = Texture2DSwitchDeswizzler.Unswizzle(buff, GetUncroppedSize(), blockSize, gobsPerBlock);
+                    var unswizzledData = BigArrayPool<byte>.Shared.Rent(reader.Size);
+                    try
+                    {
+                        Texture2DSwitchDeswizzler.Unswizzle(buff, GetUncroppedSize(), blockSize, gobsPerBlock, unswizzledData);
+                        BigArrayPool<byte>.Shared.Return(buff, clearArray: true);
+                        buff = unswizzledData;
+                    }
+                    catch (Exception e)
+                    {
+                        BigArrayPool<byte>.Shared.Return(unswizzledData, clearArray: true);
+                        Logger.Error(e.Message, e);
+                    }
                 }
 
                 switch (m_TextureFormat)
