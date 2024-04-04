@@ -14,10 +14,11 @@ AssetStudioModCLI <input path to asset file/folder> [-m, --mode <value>]
                       [--l2d-force-bezier] [--fbx-scale-factor <value>]
                       [--fbx-bone-size <value>] [--filter-by-name <text>]
                       [--filter-by-container <text>] [--filter-by-pathid <text>]
-                      [--filter-by-text <text>] [--export-asset-list <value>]
+                      [--filter-by-text <text>] [--custom-compression <value>]
+                      [--max-export-tasks <value>] [--export-asset-list <value>]
                       [--assembly-folder <path>] [--unity-version <text>]
-                      [--not-restore-extension] [--load-all]
-
+                      [--not-restore-extension] [--avoid-typetree-loading]
+                      [--load-all]
 
 General Options:
   -m, --mode <value>            Specify working mode
@@ -26,13 +27,13 @@ General Options:
                                 ExportRaw - Exports raw data
                                 Dump - Makes asset dumps
                                 Info - Loads file(s), shows the number of available for export assets and exits
-                                Live2D - Exports Live2D Cubism 3 models
+                                Live2D - Exports Live2D Cubism models
                                 SplitObjects - Exports split objects (fbx)
                                 Example: "-m info"
 
   -t, --asset-type <value(s)>   Specify asset type(s) to export
-                                <Value(s): tex2d, sprite, textAsset, monoBehaviour, font, shader, movieTexture,
-                                audio, video, mesh | all(default)>
+                                <Value(s): tex2d, tex2dArray, sprite, textAsset, monoBehaviour, font, shader
+                                movieTexture, audio, video, mesh | all(default)>
                                 All - export all asset types, which are listed in the values
                                 *To specify multiple asset types, write them separated by ',' or ';' without spaces
                                 Examples: "-t sprite" or "-t tex2d,sprite,audio" or "-t tex2d;sprite;font"
@@ -74,9 +75,9 @@ Convert Options:
                                 None - Do not convert images and export them as texture data (.tex)
                                 Example: "--image-format jpg"
 
-  --audio-format <value>        Specify the format for converting audio assets
+  --audio-format <value>        Specify the format for converting FMOD audio assets
                                 <Value: none | wav(default)>
-                                None - Do not convert audios and export them in their own format
+                                None - Do not convert fmod audios and export them in their own format
                                 Example: "--audio-format wav"
 
 Live2D Options:
@@ -92,11 +93,11 @@ Live2D Options:
 
 FBX Options:
   --fbx-scale-factor <value>    Specify the FBX Scale Factor
-                                <Value: float number from 0 to 100 (default=1)
+                                <Value: float number from 0 to 100 (default=1)>
                                 Example: "--fbx-scale-factor 50"
 
   --fbx-bone-size <value>       Specify the FBX Bone Size
-                                <Value: integer number from 0 to 100 (default=10)
+                                <Value: integer number from 0 to 100 (default=10)>
                                 Example: "--fbx-bone-size 10"
 
 Filter Options:
@@ -119,6 +120,17 @@ Filter Options:
 
 
 Advanced Options:
+  --custom-compression <value>  Specify the compression type for assets that use custom compression
+                                <Value: zstd(default) | lz4>
+                                Zstd - Try to decompress as zstd archive
+                                Lz4 - Try to decompress as lz4 archive
+                                Example: "--custom-compression lz4"
+
+  --max-export-tasks <value>    Specify the number of parallel tasks for asset export
+                                <Value: integer number from 1 to max number of cores (default=max)>
+                                Max - Number of cores in your CPU
+                                Example: "--max-export-tasks 8"
+
   --export-asset-list <value>   Specify the format in which you want to export asset list
                                 <Value: none(default) | xml>
                                 None - Do not export asset list
@@ -131,6 +143,9 @@ Advanced Options:
 
   --not-restore-extension       (Flag) If specified, AssetStudio will not try to use/restore original TextAsset
                                 extension name, and will just export all TextAssets with the ".txt" extension
+
+  --avoid-typetree-loading      (Flag) If specified, AssetStudio will not try to parse assets at load time
+                                using their type tree
 
   --load-all                    (Flag) If specified, AssetStudio will load assets of all types
                                 (Only for Dump, Info and ExportRaw modes)

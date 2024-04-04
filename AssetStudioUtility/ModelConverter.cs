@@ -16,7 +16,7 @@ namespace AssetStudio
 
         private ImageFormat imageFormat;
         private Avatar avatar;
-        private AnimationClip[] animationClipUniqArray = Array.Empty<AnimationClip>();
+        private AnimationClip[] animationClipUniqArray = Array.Empty<AnimationClip>(); //TODO: a proper AnimationClip equality comparer
         private Dictionary<AnimationClip, string> boundAnimationPathDic = new Dictionary<AnimationClip, string>();
         private Dictionary<uint, string> bonePathHash = new Dictionary<uint, string>();
         private Dictionary<Texture2D, string> textureNameDictionary = new Dictionary<Texture2D, string>();

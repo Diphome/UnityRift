@@ -1,13 +1,12 @@
 # AssetStudioMod
 
-[![Build status](https://ci.appveyor.com/api/projects/status/5qyai0hqs0ktyara/branch/AssetStudioMod?svg=true)](https://ci.appveyor.com/project/aelurum/assetstudiomod/branch/AssetStudioMod)
+[![Release](https://img.shields.io/github/v/release/aelurum/AssetStudio)](https://github.com/aelurum/AssetStudio/releases/latest) [![Downloads](https://img.shields.io/github/downloads/aelurum/AssetStudio/total?color=blue)](https://github.com/aelurum/AssetStudio/releases/latest) [![Download latest release](https://img.shields.io/badge/Download_latest_release-blue)](https://github.com/aelurum/AssetStudio/releases/latest)
+
+[![Build status](https://ci.appveyor.com/api/projects/status/5qyai0hqs0ktyara/branch/AssetStudioMod?svg=true)](https://ci.appveyor.com/project/aelurum/assetstudiomod/branch/AssetStudioMod) [![Download latest build](https://img.shields.io/badge/Download_latest_build-brightgreen)](https://ci.appveyor.com/project/aelurum/assetstudiomod/branch/AssetStudioMod/artifacts)
 
 **AssetStudioMod** - modified version of Perfare's [AssetStudio](https://github.com/Perfare/AssetStudio), mainly focused on UI optimization and some functionality enhancements.
 
 **Neither the repository, nor the tool, nor the author of the tool, nor the author of the modification is affiliated with, sponsored, or authorized by Unity Technologies or its affiliates.**
-
-Since the original repo has been archived, it's worth saying that you shouldn't expect support for newer versions of Unity from this fork. 
-Unfortunately, I can't continue Perfare's work and keep AssetStudio up to date.
 
 ## Game specific modifications
 
@@ -16,9 +15,9 @@ Unfortunately, I can't continue Perfare's work and keep AssetStudio up to date.
 ## AssetStudio Features
 
 - Support version:
-  - 3.4 - 2022.3
+  - 3.4 - 2023.2
 - Support asset types:
-  - **Texture2D** : convert to png, tga, jpeg, bmp, webp
+  - **Texture2D**, **Texture2DArray** : convert to png, tga, jpeg, bmp, webp
   - **Sprite** : crop Texture2D to png, tga, jpeg, bmp, webp
   - **AudioClip** : mp3, ogg, wav, m4a, fsb. Support converting FSB file to WAV(PCM)
   - **Font** : ttf, otf
@@ -39,10 +38,11 @@ Unfortunately, I can't continue Perfare's work and keep AssetStudio up to date.
 - Support of Live2D Cubism model export
    - Ported from my fork of Perfare's [UnityLive2DExtractor](https://github.com/aelurum/UnityLive2DExtractor)
    - Using the Live2D export in AssetStudio allows you to specify a Unity version and assembly folder if needed
+- Support of swizzled Switch textures
+    - Ported from nesrak1's [AssetStudio fork](https://github.com/nesrak1/AssetStudio/tree/switch-tex-deswizzle)
 - Detecting bundles with UnityCN encryption
    - Detection only. If you want to open them, please use Razmoth's [Studio](https://github.com/RazTools/Studio)
 - Some UI optimizations and bug fixes (See [CHANGELOG](https://github.com/aelurum/AssetStudio/blob/AssetStudioMod/CHANGELOG.md) for details)
-
 
 ## Requirements
 
@@ -51,9 +51,6 @@ Unfortunately, I can't continue Perfare's work and keep AssetStudio up to date.
 - AssetStudioMod.net6
    - GUI/CLI (Windows) - [.NET Desktop Runtime 6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
    - CLI (Linux/Mac) - [.NET Runtime 6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
-- AssetStudioMod.net7
-   - GUI/CLI (Windows) - [.NET Desktop Runtime 7.0](https://dotnet.microsoft.com/download/dotnet/7.0)
-   - CLI (Linux/Mac) - [.NET Runtime 7.0](https://dotnet.microsoft.com/download/dotnet/7.0)
 - AssetStudioMod.net8
    - GUI/CLI (Windows) - [.NET Desktop Runtime 8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
    - CLI (Linux/Mac) - [.NET Runtime 8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
