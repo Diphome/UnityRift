@@ -58,7 +58,7 @@ namespace AssetStudio
         public bool TryGet(out T result, SerializedFile assetsFile = null)
         {
             _assetsFile = _assetsFile ?? assetsFile;
-            if (TryGetAssetsFile(out var sourceFile))
+            if (!IsNull && TryGetAssetsFile(out var sourceFile))
             {
                 if (sourceFile.ObjectsDic.TryGetValue(m_PathID, out var obj))
                 {
@@ -77,7 +77,7 @@ namespace AssetStudio
         public bool TryGet<T2>(out T2 result, SerializedFile assetsFile = null) where T2 : Object
         {
             _assetsFile = _assetsFile ?? assetsFile;
-            if (TryGetAssetsFile(out var sourceFile))
+            if (!IsNull && TryGetAssetsFile(out var sourceFile))
             {
                 if (sourceFile.ObjectsDic.TryGetValue(m_PathID, out var obj))
                 {

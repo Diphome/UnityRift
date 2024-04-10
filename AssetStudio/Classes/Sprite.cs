@@ -99,10 +99,7 @@ namespace AssetStudio
             var version = reader.version;
 
             texture = new PPtr<Texture2D>(reader);
-            if (version >= (5, 2)) //5.2 and up
-            {
-                alphaTexture = new PPtr<Texture2D>(reader);
-            }
+            alphaTexture = version >= (5, 2) ? new PPtr<Texture2D>(reader) : new PPtr<Texture2D>(); //5.2 and up
 
             if (version >= 2019) //2019 and up
             {
