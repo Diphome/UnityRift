@@ -1,6 +1,6 @@
 ## AssetStudioModCLI
 CLI version of AssetStudioMod.
-- Supported asset types for export: `Texture2D`, `Sprite`, `TextAsset`, `MonoBehaviour`, `Font`, `Shader`, `MovieTexture`, `AudioClip`, `VideoClip`, `Mesh`.
+- Supported asset types for export: `Texture2D`, `Texture2DArray`, `Sprite`, `TextAsset`, `MonoBehaviour`, `Font`, `Shader`, `MovieTexture`, `AudioClip`, `VideoClip`, `Mesh`.
 - *There are no plans to add support for `AnimationClip`, `Animator` for now.*
 
 ### Usage
