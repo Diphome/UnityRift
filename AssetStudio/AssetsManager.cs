@@ -358,7 +358,7 @@ namespace AssetStudio
                             LoadWebFile(subReader);
                             break;
                         case FileType.ResourceFile:
-                            resourceFileReaders[file.fileName] = subReader; //TODO
+                            resourceFileReaders.TryAdd(file.fileName, subReader);
                             break;
                     }
                 }
