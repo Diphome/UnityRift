@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace AssetStudio
 {
@@ -19,6 +21,20 @@ namespace AssetStudio
         [JsonIgnore]
         public SerializedType serializedType;
         public uint byteSize;
+        private static JsonSerializerOptions jsonOptions;
+
+        static Object()
+        {
+            jsonOptions = new JsonSerializerOptions
+            {
+                Converters = { new JsonConverterHelper.FloatConverter() },
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                IncludeFields = true,
+                WriteIndented = true,
+            };
+        }
 
         public Object() { }
 
@@ -41,34 +57,12 @@ namespace AssetStudio
             }
         }
 
-        public string Dump()
-        {
-            if (serializedType?.m_Type != null)
-            {
-                return TypeTreeHelper.ReadTypeString(serializedType.m_Type, reader);
-            }
-            return null;
-        }
-
-        public string Dump(TypeTree m_Type)
-        {
-            if (m_Type != null)
-            {
-                return TypeTreeHelper.ReadTypeString(m_Type, reader);
-            }
-            return null;
-        }
-
         public string DumpObject()
         {
             string str = null;
             try
             {
-                str = JsonConvert.SerializeObject(this, new JsonSerializerSettings
-                {
-                    Formatting = Formatting.Indented,
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                }).Replace("  ", "    ");
+                str = JsonSerializer.Serialize(this, GetType(), jsonOptions).Replace("  ", "    ");
             }
             catch
             {
@@ -77,22 +71,22 @@ namespace AssetStudio
             return str;
         }
 
-        public OrderedDictionary ToType()
+        public string Dump(TypeTree m_Type = null)
         {
-            if (serializedType?.m_Type != null)
-            {
-                return TypeTreeHelper.ReadType(serializedType.m_Type, reader);
-            }
-            return null;
+            m_Type = m_Type ?? serializedType?.m_Type;
+            if (m_Type == null)
+                return null;
+
+            return TypeTreeHelper.ReadTypeString(m_Type, reader);
         }
 
-        public OrderedDictionary ToType(TypeTree m_Type)
+        public OrderedDictionary ToType(TypeTree m_Type = null)
         {
-            if (m_Type != null)
-            {
-                return TypeTreeHelper.ReadType(m_Type, reader);
-            }
-            return null;
+            m_Type = m_Type ?? serializedType?.m_Type;
+            if (m_Type == null)
+                return null;
+
+            return TypeTreeHelper.ReadType(m_Type, reader);
         }
 
         public byte[] GetRawData()

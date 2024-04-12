@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace AssetStudio
 {
@@ -50,9 +50,9 @@ namespace AssetStudio
             TextureList = new List<Texture2D>();
         }
 
-        public Texture2DArray(ObjectReader reader, IDictionary typeDict) : base(reader)
+        public Texture2DArray(ObjectReader reader, IDictionary typeDict, JsonSerializerOptions jsonOptions) : base(reader)
         {
-            var parsedTex2dArray = JsonConvert.DeserializeObject<Texture2DArray>(JsonConvert.SerializeObject(typeDict));
+            var parsedTex2dArray = JsonSerializer.Deserialize<Texture2DArray>(JsonSerializer.SerializeToUtf8Bytes(typeDict, jsonOptions), jsonOptions);
             m_Width = parsedTex2dArray.m_Width;
             m_Height = parsedTex2dArray.m_Height;
             m_Depth = parsedTex2dArray.m_Depth;

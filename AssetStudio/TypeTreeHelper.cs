@@ -281,13 +281,13 @@ namespace AssetStudio
                             var vector = GetNodes(m_Nodes, i);
                             i += vector.Count - 1;
                             var size = reader.ReadInt32();
-                            var list = new List<object>(size);
+                            var array = new object[size];
                             for (int j = 0; j < size; j++)
                             {
                                 int tmp = 3;
-                                list.Add(ReadValue(vector, reader, ref tmp));
+                                array[j] = ReadValue(vector, reader, ref tmp);
                             }
-                            value = list;
+                            value = array;
                             break;
                         }
                         else //Class

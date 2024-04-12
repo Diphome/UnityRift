@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 namespace AssetStudio
 {
@@ -1018,9 +1018,9 @@ namespace AssetStudio
 
         public AnimationClip() { }
 
-        public AnimationClip(ObjectReader reader, IDictionary typeDict) : base(reader)
+        public AnimationClip(ObjectReader reader, IDictionary typeDict, JsonSerializerOptions jsonOptions) : base(reader)
         {
-            var parsedAnimClip = JsonConvert.DeserializeObject<AnimationClip>(JsonConvert.SerializeObject(typeDict));
+            var parsedAnimClip = JsonSerializer.Deserialize<AnimationClip>(JsonSerializer.SerializeToUtf8Bytes(typeDict, jsonOptions), jsonOptions);
             m_AnimationType = parsedAnimClip.m_AnimationType;
             m_Legacy = parsedAnimClip.m_Legacy;
             m_Compressed = parsedAnimClip.m_Compressed;

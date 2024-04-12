@@ -5,6 +5,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 using static AssetStudio.ImportHelper;
 
 namespace AssetStudio
@@ -511,6 +513,13 @@ namespace AssetStudio
         {
             Logger.Info("Read assets...");
 
+            var jsonOptions = new JsonSerializerOptions
+            {
+                Converters = { new JsonConverterHelper.ByteArrayConverter() },
+                NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
+                IncludeFields = true,
+            };
+
             var progressCount = assetsFileList.Sum(x => x.m_Objects.Count);
             int i = 0;
             Progress.Reset();
@@ -533,7 +542,7 @@ namespace AssetStudio
                                 break;
                             case ClassIDType.AnimationClip:
                                 obj = objectReader.serializedType?.m_Type != null && LoadingViaTypeTreeEnabled
-                                    ? new AnimationClip(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader))
+                                    ? new AnimationClip(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader), jsonOptions)
                                     : new AnimationClip(objectReader);
                                 break;
                             case ClassIDType.Animator:
@@ -608,12 +617,12 @@ namespace AssetStudio
                                 break;
                             case ClassIDType.Texture2D:
                                 obj = objectReader.serializedType?.m_Type != null && LoadingViaTypeTreeEnabled
-                                    ? new Texture2D(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader))
+                                    ? new Texture2D(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader), jsonOptions)
                                     : new Texture2D(objectReader);
                                 break;
                             case ClassIDType.Texture2DArray:
                                 obj = objectReader.serializedType?.m_Type != null && LoadingViaTypeTreeEnabled
-                                    ? new Texture2DArray(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader))
+                                    ? new Texture2DArray(objectReader, TypeTreeHelper.ReadType(objectReader.serializedType.m_Type, objectReader), jsonOptions)
                                     : new Texture2DArray(objectReader);
                                 break;
                             case ClassIDType.Transform:

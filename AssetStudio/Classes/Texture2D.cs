@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace AssetStudio
 {
@@ -53,9 +53,9 @@ namespace AssetStudio
             byteSize = (uint)(m_Width * m_Height) * 4;
         }
 
-        public Texture2D(ObjectReader reader, IDictionary typeDict) : base(reader)
+        public Texture2D(ObjectReader reader, IDictionary typeDict, JsonSerializerOptions jsonOptions) : base(reader)
         {
-            var parsedTex2d = JsonConvert.DeserializeObject<Texture2D>(JsonConvert.SerializeObject(typeDict));
+            var parsedTex2d = JsonSerializer.Deserialize<Texture2D>(JsonSerializer.SerializeToUtf8Bytes(typeDict, jsonOptions), jsonOptions);
             m_Width = parsedTex2d.m_Width;
             m_Height = parsedTex2d.m_Height;
             m_CompleteImageSize = parsedTex2d.m_CompleteImageSize;
