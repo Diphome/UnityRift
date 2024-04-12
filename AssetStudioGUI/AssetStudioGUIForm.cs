@@ -1055,11 +1055,14 @@ namespace AssetStudioGUI
 
             if (!m_AudioClip.IsConvertSupport())
             {
-                assetItem.InfoText += 
-                    $"\nLength: {m_AudioClip.m_Length:.0##}\n" +
-                    $"Channel count: {m_AudioClip.m_Channels}\n" +
-                    $"Sample rate: {m_AudioClip.m_Frequency}\n" +
-                    $"Bit depth: {m_AudioClip.m_BitsPerSample}";
+                if (m_AudioClip.version >= 5)
+                {
+                    assetItem.InfoText += 
+                        $"\nLength: {m_AudioClip.m_Length:0.0##}\n" +
+                        $"Channel count: {m_AudioClip.m_Channels}\n" +
+                        $"Sample rate: {m_AudioClip.m_Frequency}\n" +
+                        $"Bit depth: {m_AudioClip.m_BitsPerSample}";
+                }
                 StatusStripUpdate("Preview is not available for non-fmod sounds. Try to export instead.");
                 return;
             }
