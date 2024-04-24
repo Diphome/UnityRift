@@ -288,15 +288,20 @@ namespace AssetStudioGUI
             typeMap.Clear();
             classesListView.EndUpdate();
 
-            var types = exportableAssets.Select(x => x.Type).Distinct().OrderBy(x => x.ToString()).ToArray();
-            foreach (var type in types)
+            var types = new SortedSet<string>();
+            types.UnionWith(exportableAssets.Select(x => x.TypeString));
+            if (Studio.cubismMocList.Count > 0)
+            {
+                types.Add("MonoBehaviour (Live2D Model)");
+            }
+            foreach (var typeString in types)
             {
                 var typeItem = new ToolStripMenuItem
                 {
                     CheckOnClick = true,
-                    Name = type.ToString(),
+                    Name = typeString,
                     Size = new Size(180, 22),
-                    Text = type.ToString()
+                    Text = typeString
                 };
                 typeItem.Click += typeToolStripMenuItem_Click;
                 filterTypeToolStripMenuItem.DropDownItems.Add(typeItem);
@@ -321,6 +326,22 @@ namespace AssetStudioGUI
             if (typeItem != allToolStripMenuItem)
             {
                 allToolStripMenuItem.Checked = false;
+
+                var monoBehaviourItemArray = filterTypeToolStripMenuItem.DropDownItems.Find("MonoBehaviour", false);
+                var monoBehaviourMocItemArray = filterTypeToolStripMenuItem.DropDownItems.Find("MonoBehaviour (Live2D Model)", false);
+                if (monoBehaviourItemArray.Length > 0 && monoBehaviourMocItemArray.Length > 0)
+                {
+                    var monoBehaviourItem = (ToolStripMenuItem)monoBehaviourItemArray[0];
+                    var monoBehaviourMocItem = (ToolStripMenuItem)monoBehaviourMocItemArray[0];
+                    if (typeItem == monoBehaviourItem && monoBehaviourItem.Checked)
+                    {
+                        monoBehaviourMocItem.Checked = false;
+                    }
+                    else if (typeItem == monoBehaviourMocItem && monoBehaviourMocItem.Checked)
+                    {
+                        monoBehaviourItem.Checked = false;
+                    }
+                }
             }
             else if (allToolStripMenuItem.Checked)
             {
@@ -1837,6 +1858,7 @@ namespace AssetStudioGUI
             assetListView.BeginUpdate();
             assetListView.SelectedIndices.Clear();
             var show = new List<ClassIDType>();
+            var filterMoc = false;
             if (!allToolStripMenuItem.Checked)
             {
                 for (var i = 1; i < filterTypeToolStripMenuItem.DropDownItems.Count; i++)
@@ -1844,10 +1866,15 @@ namespace AssetStudioGUI
                     var item = (ToolStripMenuItem)filterTypeToolStripMenuItem.DropDownItems[i];
                     if (item.Checked)
                     {
-                        show.Add((ClassIDType)Enum.Parse(typeof(ClassIDType), item.Text));
+                        if (item.Name == "MonoBehaviour (Live2D Model)")
+                            filterMoc = true;
+                        else
+                            show.Add((ClassIDType)Enum.Parse(typeof(ClassIDType), item.Text));
                     }
                 }
-                visibleAssets = exportableAssets.FindAll(x => show.Contains(x.Type));
+                visibleAssets = filterMoc
+                    ? exportableAssets.FindAll(x => cubismMocList.Contains(x.Asset) || show.Contains(x.Type))
+                    : exportableAssets.FindAll(x => show.Contains(x.Type));
             }
             else
             {
@@ -1859,16 +1886,16 @@ namespace AssetStudioGUI
                 switch (mode)
                 {
                     case ListSearchFilterMode.Include:
-                        visibleAssets = visibleAssets.FindAll(
-                            x => x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                            x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                            x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+                        visibleAssets = visibleAssets.FindAll(x =>
+                            x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0
+                            || x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0
+                            || x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0);
                         break;
                     case ListSearchFilterMode.Exclude:
-                        visibleAssets = visibleAssets.FindAll(
-                            x => x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0 &&
-                            x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0 &&
-                            x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0);
+                        visibleAssets = visibleAssets.FindAll(x =>
+                            x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0
+                            && x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0
+                            && x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0);
                         break;
                     case ListSearchFilterMode.RegexName:
                     case ListSearchFilterMode.RegexContainer:
@@ -1939,7 +1966,6 @@ namespace AssetStudioGUI
                                 .ToList();
                         }
                     }
-
                     Studio.ExportAssets(saveFolderDialog.Folder, toExportAssets, exportType);
                 }
             }
