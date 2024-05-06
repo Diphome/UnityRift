@@ -122,6 +122,7 @@
             this.FMODcopyright = new System.Windows.Forms.Label();
             this.FMODinfoLabel = new System.Windows.Forms.Label();
             this.FMODtimerLabel = new System.Windows.Forms.Label();
+            this.FMODloopLabel = new System.Windows.Forms.Label();
             this.FMODstatusLabel = new System.Windows.Forms.Label();
             this.FMODprogressBar = new System.Windows.Forms.TrackBar();
             this.FMODvolumeBar = new System.Windows.Forms.TrackBar();
@@ -1020,6 +1021,7 @@
             this.FMODpanel.Controls.Add(this.FMODcopyright);
             this.FMODpanel.Controls.Add(this.FMODinfoLabel);
             this.FMODpanel.Controls.Add(this.FMODtimerLabel);
+            this.FMODpanel.Controls.Add(this.FMODloopLabel);
             this.FMODpanel.Controls.Add(this.FMODstatusLabel);
             this.FMODpanel.Controls.Add(this.FMODprogressBar);
             this.FMODpanel.Controls.Add(this.FMODvolumeBar);
@@ -1068,6 +1070,17 @@
             this.FMODtimerLabel.Size = new System.Drawing.Size(102, 13);
             this.FMODtimerLabel.TabIndex = 7;
             this.FMODtimerLabel.Text = "00:00.00 / 00:00.00";
+            // 
+            // FMODloopLabel
+            // 
+            this.FMODloopLabel.AutoSize = true;
+            this.FMODloopLabel.ForeColor = System.Drawing.SystemColors.HighlightText;
+            this.FMODloopLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.FMODloopLabel.Location = new System.Drawing.Point(4, 24);
+            this.FMODloopLabel.Name = "FMODloopLabel";
+            this.FMODloopLabel.Size = new System.Drawing.Size(102, 13);
+            this.FMODloopLabel.TabIndex = 10;
+            this.FMODloopLabel.Text = "00:00.00 / 00:00.00";
             // 
             // FMODstatusLabel
             // 
@@ -1509,6 +1522,7 @@
         private System.Windows.Forms.TrackBar FMODprogressBar;
         private System.Windows.Forms.Label FMODstatusLabel;
         private System.Windows.Forms.Label FMODtimerLabel;
+        private System.Windows.Forms.Label FMODloopLabel;
         private System.Windows.Forms.Label FMODinfoLabel;
         private System.Windows.Forms.Timer timer;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;

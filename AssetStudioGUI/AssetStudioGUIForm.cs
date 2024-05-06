@@ -43,6 +43,8 @@ namespace AssetStudioGUI
         private FMOD.SoundGroup masterSoundGroup;
         private FMOD.MODE loopMode = FMOD.MODE.LOOP_OFF;
         private uint FMODlenms;
+        private uint FMODloopstartms;
+        private uint FMODloopendms;
         private float FMODVolume = 0.8f;
 
         #region SpriteControl
@@ -1110,6 +1112,9 @@ namespace AssetStudioGUI
             result = sound.getLength(out FMODlenms, FMOD.TIMEUNIT.MS);
             if (ERRCHECK(result)) return;
 
+            result = sound.getLoopPoints(out FMODloopstartms, FMOD.TIMEUNIT.MS, out FMODloopendms, FMOD.TIMEUNIT.MS);
+            if (ERRCHECK(result)) return;
+
             _ = system.getMasterChannelGroup(out var channelGroup);
             result = system.playSound(sound, channelGroup, true, out channel);
             if (ERRCHECK(result)) return;
@@ -1121,6 +1126,8 @@ namespace AssetStudioGUI
 
             FMODinfoLabel.Text = frequency + " Hz";
             FMODtimerLabel.Text = $"00:00.00 / {(FMODlenms / 1000 / 60):00}:{(FMODlenms / 1000 % 60):00}.{(FMODlenms / 10 % 100):00}";
+            FMODloopLabel.Text = $"Loop Start: {(FMODloopstartms / 1000 / 60):00}:{(FMODloopstartms / 1000 % 60):00}.{(FMODloopstartms / 10 % 100):00} - " +
+                                $"Loop End: {(FMODloopendms / 1000 / 60):00}:{(FMODloopendms / 1000 % 60):00}.{(FMODloopendms / 10 % 100):00}";
         }
 
         private void PreviewVideoClip(AssetItem assetItem, VideoClip m_VideoClip)
@@ -2377,6 +2384,7 @@ namespace AssetStudioGUI
             timer.Stop();
             FMODprogressBar.Value = 0;
             FMODtimerLabel.Text = "00:00.00 / 00:00.00";
+            FMODloopLabel.Text = $"Loop Start: 00:00.00 - Loop End: 00:00.00";
             FMODstatusLabel.Text = "Stopped";
             FMODinfoLabel.Text = "";
 
@@ -2483,6 +2491,7 @@ namespace AssetStudioGUI
                     timer.Stop();
                     FMODprogressBar.Value = 0;
                     FMODtimerLabel.Text = "00:00.00 / 00:00.00";
+                    FMODloopLabel.Text = $"Loop Start: 00:00.00 - Loop End: 00:00.00";
                     FMODstatusLabel.Text = "Stopped";
                     FMODpauseButton.Text = "Pause";
                 }
