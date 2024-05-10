@@ -25,6 +25,7 @@ namespace AssetStudioCLI
 
         static Studio()
         {
+            Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
             Progress.Default = new Progress<int>(ShowCurProgressValue);
         }
 
