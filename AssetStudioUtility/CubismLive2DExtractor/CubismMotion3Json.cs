@@ -122,8 +122,8 @@ namespace CubismLive2DExtractor
             // Motion curves.
             Curves = new SerializableCurve[Meta.CurveCount];
 
-            var totalSegmentCount = 1;
-            var totalPointCount = 1;
+            var totalSegmentCount = 0;
+            var totalPointCount = 0;
             var actualCurveCount = 0;
             for (var i = 0; i < fadeMotion.ParameterCurves.Length; i++)
             {
@@ -182,6 +182,7 @@ namespace CubismLive2DExtractor
                     AddSegments(curve, preCurve, nextCurve, Curves[actualCurveCount], forceBezier, ref totalPointCount, ref totalSegmentCount, ref j);
                 }
                 actualCurveCount++;
+                totalPointCount++;
             }
 
             // The total number of segments (from all curves).
@@ -210,8 +211,8 @@ namespace CubismLive2DExtractor
             };
             Curves = new SerializableCurve[Meta.CurveCount];
 
-            var totalSegmentCount = 1;
-            var totalPointCount = 1;
+            var totalSegmentCount = 0;
+            var totalPointCount = 0;
             for (var i = 0; i < Meta.CurveCount; i++)
             {
                 var track = animation.TrackList[i];
@@ -235,6 +236,7 @@ namespace CubismLive2DExtractor
                     var nextCurve = next != null ? new CubismKeyframeData(next) : new CubismKeyframeData();
                     AddSegments(curve, preCurve, nextCurve, Curves[i], forceBezier, ref totalPointCount, ref totalSegmentCount, ref j);
                 }
+                totalPointCount++;
             }
             Meta.TotalSegmentCount = totalSegmentCount;
             Meta.TotalPointCount = totalPointCount;
