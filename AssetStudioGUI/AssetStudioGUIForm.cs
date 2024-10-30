@@ -1076,27 +1076,36 @@ namespace AssetStudioGUI
             if (m_AudioData == null || m_AudioData.Length == 0)
                 return;
 
-            if (!m_AudioClip.IsConvertSupport())
-            {
-                if (m_AudioClip.version >= 5)
-                {
-                    assetItem.InfoText += 
-                        $"\nLength: {m_AudioClip.m_Length:0.0##}\n" +
-                        $"Channel count: {m_AudioClip.m_Channels}\n" +
-                        $"Sample rate: {m_AudioClip.m_Frequency}\n" +
-                        $"Bit depth: {m_AudioClip.m_BitsPerSample}";
-                }
-                StatusStripUpdate("Preview is not available for non-fmod sounds. Try to export instead.");
-                return;
-            }
-
             var exinfo = new FMOD.CREATESOUNDEXINFO();
 
             exinfo.cbsize = Marshal.SizeOf(exinfo);
             exinfo.length = (uint)m_AudioClip.m_Size;
 
             var result = system.createSound(m_AudioData, FMOD.MODE.OPENMEMORY | loopMode, ref exinfo, out sound);
-            if (ERRCHECK(result)) return;
+            if (result != FMOD.RESULT.OK)
+            {
+                if (m_AudioClip.version < (2, 6) || m_AudioClip.version >= 5)
+                {
+                    var legacyFormat = m_AudioClip.IsLegacyConvertSupport()
+                        ? "\nLegacy audio format: Raw wav data"
+                        : "";
+                    var channels = m_AudioClip.m_Channels > 0
+                        ? $"\nChannel count: {m_AudioClip.m_Channels}"
+                        : "";
+                    var bits = m_AudioClip.version >= 5
+                        ? $"\nBit depth: {m_AudioClip.m_BitsPerSample}"
+                        : "";
+                    assetItem.InfoText +=
+                        legacyFormat +
+                        $"\nLength: {m_AudioClip.m_Length:0.0##}" +
+                        $"\nSample rate: {m_AudioClip.m_Frequency}" +
+                        channels +
+                        bits;
+                }
+                StatusStripUpdate("Preview not available: Unsupported fmod audio format. Try to export instead.");
+                FMODreset();
+                return;
+            }
 
             sound.getNumSubSounds(out var numsubsounds);
 
