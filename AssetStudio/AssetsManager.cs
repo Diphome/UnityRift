@@ -515,7 +515,7 @@ namespace AssetStudio
 
             var jsonOptions = new JsonSerializerOptions
             {
-                Converters = { new JsonConverterHelper.ByteArrayConverter(), new JsonConverterHelper.PPtrConverter() },
+                Converters = { new JsonConverterHelper.ByteArrayConverter(), new JsonConverterHelper.PPtrConverter(), new JsonConverterHelper.KVPConverter() },
                 NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
                 PropertyNameCaseInsensitive = true,
                 IncludeFields = true,
