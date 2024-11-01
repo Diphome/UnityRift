@@ -1,6 +1,7 @@
 ﻿using System.Collections.Specialized;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace AssetStudio
@@ -32,6 +33,7 @@ namespace AssetStudio
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                 NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
                 ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                PropertyNameCaseInsensitive = true,
                 IncludeFields = true,
                 WriteIndented = true,
             };
@@ -63,7 +65,8 @@ namespace AssetStudio
             string str = null;
             try
             {
-                str = JsonSerializer.Serialize(this, GetType(), jsonOptions).Replace("  ", "    ");
+                str = JsonSerializer.Deserialize<JsonObject>(JsonSerializer.SerializeToUtf8Bytes(this, GetType(), jsonOptions))
+                    .ToJsonString(jsonOptions).Replace("  ", "    ");
             }
             catch
             {

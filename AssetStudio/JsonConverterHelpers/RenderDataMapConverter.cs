@@ -32,17 +32,17 @@ namespace AssetStudio
                     var strKey = $"{kv.Key.Key}, {kv.Key.Value}";
                     jsonDict.Add(strKey, kv.Value);
                 }
-                var strValue = JsonSerializer.Serialize(jsonDict, options).Replace("  ", "    ");
+                var strValue = JsonSerializer.SerializeToUtf8Bytes(jsonDict, options);
                 writer.WriteRawValue(strValue);
             }
         }
 
         private class GUID
         {
-            [JsonPropertyName("data[0]")] public uint data0;
-            [JsonPropertyName("data[1]")] public uint data1;
-            [JsonPropertyName("data[2]")] public uint data2;
-            [JsonPropertyName("data[3]")] public uint data3;
+            [JsonPropertyName("data[0]")] public uint data0 { get; set; }
+            [JsonPropertyName("data[1]")] public uint data1 { get; set; }
+            [JsonPropertyName("data[2]")] public uint data2 { get; set; }
+            [JsonPropertyName("data[3]")] public uint data3 { get; set; }
 
             public Guid Convert()
             {

@@ -32,7 +32,7 @@ namespace AssetStudio
                 }
                 else
                 {
-                    writer.WriteNumberValue((decimal)value);
+                    writer.WriteNumberValue((decimal)value + 0.0m);
                 }
             }
         }

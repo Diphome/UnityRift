@@ -517,6 +517,7 @@ namespace AssetStudio
             {
                 Converters = { new JsonConverterHelper.ByteArrayConverter(), new JsonConverterHelper.PPtrConverter() },
                 NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
+                PropertyNameCaseInsensitive = true,
                 IncludeFields = true,
             };
 

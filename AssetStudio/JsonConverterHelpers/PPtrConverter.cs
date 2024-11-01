@@ -45,7 +45,7 @@ namespace AssetStudio
 
             public override void Write(Utf8JsonWriter writer, PPtr<T> value, JsonSerializerOptions options)
             {
-                JsonSerializer.Serialize(value);
+                throw new NotImplementedException();
             }
         }
     }
