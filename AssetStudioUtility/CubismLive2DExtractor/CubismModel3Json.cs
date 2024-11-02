@@ -13,8 +13,9 @@ namespace CubismLive2DExtractor
         {
             public string Moc;
             public string[] Textures;
-            public string DisplayInfo;
             public string Physics;
+            public string Pose;
+            public string DisplayInfo;
             public JObject Motions;
             public JArray Expressions;
         }

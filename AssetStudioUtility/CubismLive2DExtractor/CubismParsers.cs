@@ -15,6 +15,7 @@ namespace CubismLive2DExtractor
             Expression,
             Physics,
             DisplayInfo,
+            PosePart,
         }
 
         public static string ParsePhysics(OrderedDictionary physicsDict)
@@ -146,6 +147,9 @@ namespace CubismLive2DExtractor
                     break;
                 case CubismMonoBehaviourType.DisplayInfo:
                     fieldName = "name";
+                    break;
+                case CubismMonoBehaviourType.PosePart:
+                    fieldName = "groupindex";
                     break;
             }
             if (m_Type.m_Nodes.FindIndex(x => x.m_Name.ToLower() == fieldName) < 0)

@@ -33,6 +33,7 @@ namespace CubismLive2DExtractor
         private MonoBehaviour FadeMotionLst { get; set; }
         private List<MonoBehaviour> ParametersCdi { get; set; }
         private List<MonoBehaviour> PartsCdi { get; set; }
+        private List<MonoBehaviour> PoseParts { get; set; }
 
         public Live2DExtractor(IGrouping<string, AssetStudio.Object> assets, List<AnimationClip> inClipMotions = null, List<MonoBehaviour> inFadeMotions = null, MonoBehaviour inFadeMotionLst = null)
         {
@@ -48,6 +49,7 @@ namespace CubismLive2DExtractor
             FadeMotionLst = inFadeMotionLst;
             ParametersCdi = new List<MonoBehaviour>();
             PartsCdi = new List<MonoBehaviour>();
+            PoseParts = new List<MonoBehaviour>();
 
             Logger.Debug("Sorting model assets..");
             foreach (var asset in assets)
@@ -114,6 +116,12 @@ namespace CubismLive2DExtractor
                                     if (m_MonoBehaviour.m_GameObject.TryGet(out _))
                                     {
                                         PartsCdi.Add(m_MonoBehaviour);
+                                    }
+                                    break;
+                                case "CubismPosePart":
+                                    if (m_MonoBehaviour.m_GameObject.TryGet(out _))
+                                    {
+                                        PoseParts.Add(m_MonoBehaviour);
                                     }
                                     break;
                             }
@@ -366,6 +374,21 @@ namespace CubismLive2DExtractor
             }
             #endregion
 
+            #region pose3.json
+            var isPoseExported = false;
+            if (PoseParts.Count > 0)
+            {
+                try
+                {
+                    isPoseExported = ExportPoseJson(destPath, modelName, assemblyLoader);
+                }
+                catch (Exception e)
+                {
+                    Logger.Warning($"An error occurred while exporting pose3.json\n{e}");
+                }
+            }
+            #endregion
+
             #region model3.json
             var groups = new List<CubismModel3Json.SerializableGroup>();
 
@@ -408,8 +431,9 @@ namespace CubismLive2DExtractor
                 {
                     Moc = $"{modelName}.moc3",
                     Textures = textures.ToArray(),
-                    DisplayInfo = isCdiParsed ? $"{modelName}.cdi3.json" : null,
                     Physics = PhysicsMono != null ? $"{modelName}.physics3.json" : null,
+                    Pose = isPoseExported ? $"{modelName}.pose3.json" : null,
+                    DisplayInfo = isCdiParsed ? $"{modelName}.cdi3.json" : null,
                     Motions = JObject.FromObject(motions),
                     Expressions = expressions,
                 },
@@ -477,6 +501,51 @@ namespace CubismLive2DExtractor
                 motions.Add(animName, new JArray(motionPath));
                 File.WriteAllText($"{destMotionPath}{animName}.motion3.json", JsonConvert.SerializeObject(motionJson, Formatting.Indented, new MyJsonConverter()));
             }
+        }
+
+        private bool ExportPoseJson(string destPath, string modelName, AssemblyLoader assemblyLoader)
+        {
+            var groupDict = new SortedDictionary<int, List<CubismPose3Json.ControlNode>>();
+            foreach (var posePartMono in PoseParts)
+            {
+                var posePartDict = ParseMonoBehaviour(posePartMono, CubismMonoBehaviourType.PosePart, assemblyLoader);
+                if (posePartDict == null)
+                    continue;
+
+                if (!posePartMono.m_GameObject.TryGet(out var partObj))
+                    continue;
+
+                var poseNode = new CubismPose3Json.ControlNode
+                {
+                    Id = partObj.m_Name,
+                    Link = Array.ConvertAll((object[])posePartDict["Link"], x => x?.ToString())
+                };
+                var groupIndex = (int)posePartDict["GroupIndex"];
+                if (groupDict.ContainsKey(groupIndex))
+                {
+                    groupDict[groupIndex].Add(poseNode);
+                }
+                else
+                {
+                    groupDict.Add(groupIndex, new List<CubismPose3Json.ControlNode> {poseNode});
+                }
+            }
+
+            if (groupDict.Count == 0)
+                return false;
+
+            var poseJson = new CubismPose3Json
+            {
+                Type = "Live2D Pose",
+                Groups = new CubismPose3Json.ControlNode[groupDict.Count][]
+            };
+            var i = 0;
+            foreach (var nodeList in groupDict.Values)
+            {
+                poseJson.Groups[i++] = nodeList.ToArray();
+            }
+            File.WriteAllText($"{destPath}{modelName}.pose3.json", JsonConvert.SerializeObject(poseJson, Formatting.Indented));
+            return true;
         }
 
         private static string GetDisplayName(MonoBehaviour cdiMono, AssemblyLoader assemblyLoader)
