@@ -6,6 +6,7 @@ namespace AssetStudio
     {
         public int m_FileID;
         public long m_PathID;
+        public string Name => TryGet(out var result) ? result.Name : string.Empty;
 
         private SerializedFile _assetsFile;
         private int _index = -2; //-2 - Prepare, -1 - Missing

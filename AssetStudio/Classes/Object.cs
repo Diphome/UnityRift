@@ -23,6 +23,8 @@ namespace AssetStudio
         public SerializedType serializedType;
         public int classID;
         public uint byteSize;
+        [JsonIgnore]
+        public string Name;
         private static JsonSerializerOptions jsonOptions;
 
         static Object()

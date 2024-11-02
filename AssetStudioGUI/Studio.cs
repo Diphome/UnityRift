@@ -301,6 +301,7 @@ namespace AssetStudioGUI
                     {
                         exportableAssets.Add(assetItem);
                     }
+                    asset.Name = assetItem.Text;
                     Progress.Report(++i, objectCount);
                 }
             }

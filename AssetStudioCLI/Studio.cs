@@ -174,6 +174,7 @@ namespace AssetStudioCLI
                         fileAssetsList.Add(assetItem);
                     }
 
+                    asset.Name = assetItem.Text;
                     Progress.Report(++i, objectCount);
                 }
                 foreach (var asset in fileAssetsList)
