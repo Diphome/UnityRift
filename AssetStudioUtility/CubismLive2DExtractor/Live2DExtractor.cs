@@ -205,6 +205,7 @@ namespace CubismLive2DExtractor
             #endregion
 
             #region physics3.json
+            var isPhysicsExported = false;
             if (PhysicsMono != null)
             {
                 var physicsDict = ParseMonoBehaviour(PhysicsMono, CubismMonoBehaviourType.Physics, assemblyLoader);
@@ -214,69 +215,27 @@ namespace CubismLive2DExtractor
                     {
                         var buff = ParsePhysics(physicsDict);
                         File.WriteAllText($"{destPath}{modelName}.physics3.json", buff);
+                        isPhysicsExported = true;
                     }
                     catch (Exception e)
                     {
                         Logger.Warning($"Error in parsing physics data: {e.Message}");
-                        PhysicsMono = null;
                     }
-                }
-                else
-                {
-                    PhysicsMono = null;
                 }
             }
             #endregion
 
             #region cdi3.json
-            var isCdiParsed = false;
+            var isCdiExported = false;
             if (ParametersCdi.Count > 0 || PartsCdi.Count > 0)
             {
-                var cdiJson = new CubismCdi3Json
+                try
                 {
-                    Version = 3,
-                    ParameterGroups = Array.Empty<CubismCdi3Json.ParamGroupArray>()
-                };
-
-                var parameters = new SortedSet<CubismCdi3Json.ParamGroupArray>();
-                foreach (var paramMono in ParametersCdi)
-                {
-                    var displayName = GetDisplayName(paramMono, assemblyLoader);
-                    if (displayName == null)
-                        break;
-
-                    paramMono.m_GameObject.TryGet(out var paramGameObject);
-                    var paramId = paramGameObject.m_Name;
-                    parameters.Add(new CubismCdi3Json.ParamGroupArray
-                    {
-                        Id = paramId,
-                        GroupId = "",
-                        Name = displayName
-                    });
+                    isCdiExported = ExportCdiJson(destPath, modelName, assemblyLoader);
                 }
-                cdiJson.Parameters = parameters.ToArray();
-
-                var parts = new SortedSet<CubismCdi3Json.PartArray>();
-                foreach (var partMono in PartsCdi)
+                catch (Exception e)
                 {
-                    var displayName = GetDisplayName(partMono, assemblyLoader);
-                    if (displayName == null)
-                        break;
-
-                    partMono.m_GameObject.TryGet(out var partGameObject);
-                    var paramId = partGameObject.m_Name;
-                    parts.Add(new CubismCdi3Json.PartArray
-                    {
-                        Id = paramId,
-                        Name = displayName
-                    });
-                }
-                cdiJson.Parts = parts.ToArray();
-
-                if (parts.Count > 0 || parameters.Count > 0)
-                {
-                    File.WriteAllText($"{destPath}{modelName}.cdi3.json", JsonConvert.SerializeObject(cdiJson, Formatting.Indented));
-                    isCdiParsed = true;
+                    Logger.Warning($"An error occurred while exporting cdi3.json\n{e}");
                 }
             }
             #endregion
@@ -431,9 +390,9 @@ namespace CubismLive2DExtractor
                 {
                     Moc = $"{modelName}.moc3",
                     Textures = textures.ToArray(),
-                    Physics = PhysicsMono != null ? $"{modelName}.physics3.json" : null,
+                    Physics = isPhysicsExported ? $"{modelName}.physics3.json" : null,
                     Pose = isPoseExported ? $"{modelName}.pose3.json" : null,
-                    DisplayInfo = isCdiParsed ? $"{modelName}.cdi3.json" : null,
+                    DisplayInfo = isCdiExported ? $"{modelName}.cdi3.json" : null,
                     Motions = JObject.FromObject(motions),
                     Expressions = expressions,
                 },
@@ -510,7 +469,7 @@ namespace CubismLive2DExtractor
             {
                 var posePartDict = ParseMonoBehaviour(posePartMono, CubismMonoBehaviourType.PosePart, assemblyLoader);
                 if (posePartDict == null)
-                    continue;
+                    break;
 
                 if (!posePartMono.m_GameObject.TryGet(out var partObj))
                     continue;
@@ -545,6 +504,56 @@ namespace CubismLive2DExtractor
                 poseJson.Groups[i++] = nodeList.ToArray();
             }
             File.WriteAllText($"{destPath}{modelName}.pose3.json", JsonConvert.SerializeObject(poseJson, Formatting.Indented));
+            return true;
+        }
+
+        private bool ExportCdiJson(string destPath, string modelName, AssemblyLoader assemblyLoader)
+        {
+            var cdiJson = new CubismCdi3Json
+            {
+                Version = 3,
+                ParameterGroups = Array.Empty<CubismCdi3Json.ParamGroupArray>()
+            };
+
+            var parameters = new SortedSet<CubismCdi3Json.ParamGroupArray>();
+            foreach (var paramMono in ParametersCdi)
+            {
+                var displayName = GetDisplayName(paramMono, assemblyLoader);
+                if (displayName == null)
+                    break;
+
+                paramMono.m_GameObject.TryGet(out var paramGameObject);
+                var paramId = paramGameObject.m_Name;
+                parameters.Add(new CubismCdi3Json.ParamGroupArray
+                {
+                    Id = paramId,
+                    GroupId = "",
+                    Name = displayName
+                });
+            }
+            cdiJson.Parameters = parameters.ToArray();
+
+            var parts = new SortedSet<CubismCdi3Json.PartArray>();
+            foreach (var partMono in PartsCdi)
+            {
+                var displayName = GetDisplayName(partMono, assemblyLoader);
+                if (displayName == null)
+                    break;
+
+                partMono.m_GameObject.TryGet(out var partGameObject);
+                var paramId = partGameObject.m_Name;
+                parts.Add(new CubismCdi3Json.PartArray
+                {
+                    Id = paramId,
+                    Name = displayName
+                });
+            }
+            cdiJson.Parts = parts.ToArray();
+
+            if (parts.Count == 0 && parameters.Count == 0) 
+                return false;
+
+            File.WriteAllText($"{destPath}{modelName}.cdi3.json", JsonConvert.SerializeObject(cdiJson, Formatting.Indented));
             return true;
         }
 
