@@ -53,6 +53,7 @@ namespace AssetStudio
         PS5,
         EmbeddedLinux,
         QNX,
+        VisionOS,
         UnknownPlatform = 9999
     }
 }
