@@ -8,7 +8,7 @@ namespace AssetStudio
     {
         public int m_Width;
         public int m_Height;
-        public int m_CompleteImageSize;
+        public uint m_CompleteImageSize;
         public TextureFormat m_TextureFormat;
         public bool m_MipMap;
         public int m_MipCount;
@@ -18,6 +18,7 @@ namespace AssetStudio
         [JsonPropertyName("image data")]
         public ResourceReader image_data;
         public StreamingInfo m_StreamData;
+        public StreamingInfo m_DataStreamData; //Tuanjie
 
         public Texture2D() { }
 
@@ -44,7 +45,7 @@ namespace AssetStudio
 
             //var imgActualDataSize = GetImageDataSize(m_TextureFormat);
             //var mipmapSize = (int)(m_Texture2DArray.m_DataSize / m_Texture2DArray.m_Depth - imgActualDataSize);
-            m_CompleteImageSize = (int)m_Texture2DArray.m_DataSize / m_Texture2DArray.m_Depth;
+            m_CompleteImageSize = (uint)(m_Texture2DArray.m_DataSize / m_Texture2DArray.m_Depth);
             var offset = layer * m_CompleteImageSize + m_Texture2DArray.image_data.Offset;
             
             image_data = !string.IsNullOrEmpty(m_StreamData?.path) 
@@ -77,10 +78,23 @@ namespace AssetStudio
         {
             m_Width = reader.ReadInt32();
             m_Height = reader.ReadInt32();
-            m_CompleteImageSize = reader.ReadInt32();
+            m_CompleteImageSize = reader.ReadUInt32();
             if (version >= 2020) //2020.1 and up
             {
                 var m_MipsStripped = reader.ReadInt32();
+            }
+            if (version.IsTuanjie)
+            {
+                var m_WebStreaming = reader.ReadBoolean();
+                reader.AlignStream();
+                var m_PriorityLevel = reader.ReadInt32();
+                var m_UploadedMode = reader.ReadInt32();
+                m_DataStreamData = new StreamingInfo //sample is needed
+                {
+                    offset = 0,
+                    size = reader.ReadUInt32(),
+                    path = reader.ReadAlignedString()
+                };
             }
             m_TextureFormat = (TextureFormat)reader.ReadInt32();
             if (version < (5, 2)) //5.2 down
