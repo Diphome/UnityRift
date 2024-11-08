@@ -18,6 +18,7 @@ namespace AssetStudio
         public SerializedFileHeader header;
         private byte m_FileEndianess;
         public BuildTarget m_TargetPlatform = BuildTarget.UnknownPlatform;
+        public string targetPlatformString;
         private bool m_EnableTypeTree = true;
         public List<SerializedType> m_Types;
         public int bigIDEnabled = 0;
@@ -76,11 +77,17 @@ namespace AssetStudio
             }
             if (header.m_Version >= SerializedFileFormatVersion.Unknown_8)
             {
-                m_TargetPlatform = (BuildTarget)reader.ReadInt32();
+                var target = reader.ReadInt32();
+                
+                m_TargetPlatform = (BuildTarget)target;
                 if (!Enum.IsDefined(typeof(BuildTarget), m_TargetPlatform))
                 {
                     m_TargetPlatform = BuildTarget.UnknownPlatform;
                 }
+
+                targetPlatformString = version.IsTuanjie && Enum.IsDefined(typeof(TuanjieBuildTarget), target)
+                    ? ((TuanjieBuildTarget)target).ToString()
+                    : m_TargetPlatform.ToString();
             }
             if (header.m_Version >= SerializedFileFormatVersion.HasTypeTreeHashes)
             {

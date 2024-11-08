@@ -266,7 +266,7 @@ namespace AssetStudioGUI
             var typeMap = await Task.Run(() => BuildClassStructure());
             productName = string.IsNullOrEmpty(productName) ? "no productName" : productName;
 
-            Text = $"{guiTitle} - {productName} - {assetsManager.assetsFileList[0].version} - {assetsManager.assetsFileList[0].m_TargetPlatform}";
+            Text = $"{guiTitle} - {productName} - {assetsManager.assetsFileList[0].version} - {assetsManager.assetsFileList[0].targetPlatformString}";
 
             assetListView.VirtualListSize = visibleAssets.Count;
 
