@@ -1,4 +1,6 @@
-﻿namespace AssetStudio
+﻿using System.Text.Json.Serialization;
+
+namespace AssetStudio
 {
     public class GLTextureSettings
     {
@@ -6,6 +8,8 @@
         public int m_Aniso;
         public float m_MipBias;
         public int m_WrapMode;
+        [JsonInclude]
+        private int m_WrapU { set => m_WrapMode = value; }
 
         public GLTextureSettings() { }
 
@@ -19,8 +23,8 @@
             if (version >= 2017)//2017.x and up
             {
                 m_WrapMode = reader.ReadInt32(); //m_WrapU
-                int m_WrapV = reader.ReadInt32();
-                int m_WrapW = reader.ReadInt32();
+                var m_WrapV = reader.ReadInt32();
+                var m_WrapW = reader.ReadInt32();
             }
             else
             {

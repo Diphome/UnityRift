@@ -23,23 +23,46 @@ namespace AssetStudio
 
         public Texture2DArray(ObjectReader reader) : base(reader)
         {
-            m_ColorSpace = reader.ReadInt32();
-            m_Format = (GraphicsFormat)reader.ReadInt32();
+            if (version >= 2019) //2019 and up
+            {
+                m_ColorSpace = reader.ReadInt32();
+                m_Format = (GraphicsFormat)reader.ReadInt32();
+            }
             m_Width = reader.ReadInt32();
             m_Height = reader.ReadInt32();
             m_Depth = reader.ReadInt32();
+            if (version < 2019) //2019 down
+            {
+                m_Format = (GraphicsFormat)reader.ReadInt32();
+            }
             m_MipCount = reader.ReadInt32();
+            if (version >= (2023, 2)) //2023.2 and up
+            {
+                var m_MipsStripped = reader.ReadInt32();
+            }
             m_DataSize = reader.ReadUInt32();
             m_TextureSettings = new GLTextureSettings(reader);
+            if (version < 2019) //2019 down
+            {
+                m_ColorSpace = reader.ReadInt32();
+            }
             if (version >= (2020, 2)) //2020.2 and up
             {
                 var m_UsageMode = reader.ReadInt32();
             }
             var m_IsReadable = reader.ReadBoolean();
-            reader.AlignStream(); 
-
+            if (version > (2023, 2)) //2023.2 and up
+            {
+                var m_IgnoreMipmapLimit = reader.ReadBoolean();
+                reader.AlignStream();
+                var m_MipmapLimitGroupName = reader.ReadAlignedString();
+            }
+            else
+            {
+                reader.AlignStream();
+            }
             var image_data_size = reader.ReadInt32();
-            if (image_data_size == 0)
+            if (image_data_size == 0 && version >= (5, 6)) //5.6 and up
             {
                 m_StreamData = new StreamingInfo(reader);
             }
