@@ -16,6 +16,13 @@ using Object = AssetStudio.Object;
 
 namespace AssetStudioGUI
 {
+    internal enum GuiColorTheme
+    {
+        System,
+        Light,
+        Dark
+    }
+
     internal enum ExportType
     {
         Convert,

@@ -92,6 +92,10 @@
             this.writeLogToFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportClassStructuresMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.colorThemeToolStripMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.colorThemeAutoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.colorThemeLightToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.colorThemeDarkToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
@@ -184,6 +188,7 @@
             // 
             // menuStrip1
             // 
+            this.menuStrip1.BackColor = System.Drawing.SystemColors.MenuBar;
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.optionsToolStripMenuItem,
@@ -191,7 +196,8 @@
             this.exportToolStripMenuItem,
             this.filterTypeToolStripMenuItem,
             this.debugMenuItem,
-            this.aboutToolStripMenuItem});
+            this.aboutToolStripMenuItem,
+            this.colorThemeToolStripMenu});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1264, 24);
@@ -705,6 +711,39 @@
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
+            // colorThemeToolStripMenu
+            // 
+            this.colorThemeToolStripMenu.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.colorThemeToolStripMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.colorThemeAutoToolStripMenuItem,
+            this.colorThemeLightToolStripMenuItem,
+            this.colorThemeDarkToolStripMenuItem});
+            this.colorThemeToolStripMenu.Name = "colorThemeToolStripMenu";
+            this.colorThemeToolStripMenu.Size = new System.Drawing.Size(87, 20);
+            this.colorThemeToolStripMenu.Text = "Color Theme";
+            this.colorThemeToolStripMenu.Visible = false;
+            // 
+            // colorThemeAutoToolStripMenuItem
+            // 
+            this.colorThemeAutoToolStripMenuItem.Name = "colorThemeAutoToolStripMenuItem";
+            this.colorThemeAutoToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.colorThemeAutoToolStripMenuItem.Text = "Use system setting";
+            this.colorThemeAutoToolStripMenuItem.Click += new System.EventHandler(this.colorThemeAutoToolStripMenuItem_Click);
+            // 
+            // colorThemeLightToolStripMenuItem
+            // 
+            this.colorThemeLightToolStripMenuItem.Name = "colorThemeLightToolStripMenuItem";
+            this.colorThemeLightToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.colorThemeLightToolStripMenuItem.Text = "Light";
+            this.colorThemeLightToolStripMenuItem.Click += new System.EventHandler(this.colorThemeLightToolStripMenuItem_Click);
+            // 
+            // colorThemeDarkToolStripMenuItem
+            // 
+            this.colorThemeDarkToolStripMenuItem.Name = "colorThemeDarkToolStripMenuItem";
+            this.colorThemeDarkToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.colorThemeDarkToolStripMenuItem.Text = "Dark";
+            this.colorThemeDarkToolStripMenuItem.Click += new System.EventHandler(this.colorThemeDarkToolStripMenuItem_Click);
+            // 
             // splitContainer1
             // 
             this.splitContainer1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -756,6 +795,8 @@
             // 
             // sceneTreeView
             // 
+            this.sceneTreeView.BackColor = System.Drawing.SystemColors.Window;
+            this.sceneTreeView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.sceneTreeView.CheckBoxes = true;
             this.sceneTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.sceneTreeView.HideSelection = false;
@@ -793,6 +834,7 @@
             // 
             // assetListView
             // 
+            this.assetListView.BackColor = System.Drawing.SystemColors.Window;
             this.assetListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeaderName,
             this.columnHeaderContainer,
@@ -955,6 +997,7 @@
             // progressBar1
             // 
             this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.progressBar1.ForeColor = System.Drawing.SystemColors.MenuHighlight;
             this.progressBar1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.progressBar1.Location = new System.Drawing.Point(1, 3);
             this.progressBar1.Name = "progressBar1";
@@ -1038,7 +1081,8 @@
             // 
             this.FMODcopyright.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODcopyright.AutoSize = true;
-            this.FMODcopyright.ForeColor = System.Drawing.SystemColors.ControlLight;
+            this.FMODcopyright.BackColor = System.Drawing.Color.Transparent;
+            this.FMODcopyright.ForeColor = System.Drawing.Color.White;
             this.FMODcopyright.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODcopyright.Location = new System.Drawing.Point(214, 365);
             this.FMODcopyright.Name = "FMODcopyright";
@@ -1050,7 +1094,8 @@
             // 
             this.FMODinfoLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODinfoLabel.AutoSize = true;
-            this.FMODinfoLabel.ForeColor = System.Drawing.SystemColors.HighlightText;
+            this.FMODinfoLabel.BackColor = System.Drawing.Color.Transparent;
+            this.FMODinfoLabel.ForeColor = System.Drawing.Color.White;
             this.FMODinfoLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODinfoLabel.Location = new System.Drawing.Point(275, 255);
             this.FMODinfoLabel.Name = "FMODinfoLabel";
@@ -1061,7 +1106,8 @@
             // 
             this.FMODtimerLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODtimerLabel.AutoSize = true;
-            this.FMODtimerLabel.ForeColor = System.Drawing.SystemColors.HighlightText;
+            this.FMODtimerLabel.BackColor = System.Drawing.Color.Transparent;
+            this.FMODtimerLabel.ForeColor = System.Drawing.Color.White;
             this.FMODtimerLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODtimerLabel.Location = new System.Drawing.Point(457, 253);
             this.FMODtimerLabel.Name = "FMODtimerLabel";
@@ -1073,7 +1119,8 @@
             // 
             this.FMODstatusLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODstatusLabel.AutoSize = true;
-            this.FMODstatusLabel.ForeColor = System.Drawing.SystemColors.HighlightText;
+            this.FMODstatusLabel.BackColor = System.Drawing.Color.Transparent;
+            this.FMODstatusLabel.ForeColor = System.Drawing.Color.White;
             this.FMODstatusLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODstatusLabel.Location = new System.Drawing.Point(214, 255);
             this.FMODstatusLabel.Name = "FMODstatusLabel";
@@ -1113,6 +1160,7 @@
             // 
             this.FMODloopButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODloopButton.Appearance = System.Windows.Forms.Appearance.Button;
+            this.FMODloopButton.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.FMODloopButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODloopButton.Location = new System.Drawing.Point(399, 303);
             this.FMODloopButton.Name = "FMODloopButton";
@@ -1120,48 +1168,51 @@
             this.FMODloopButton.TabIndex = 3;
             this.FMODloopButton.Text = "Loop";
             this.FMODloopButton.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.FMODloopButton.UseVisualStyleBackColor = true;
+            this.FMODloopButton.UseVisualStyleBackColor = false;
             this.FMODloopButton.CheckedChanged += new System.EventHandler(this.FMODloopButton_CheckedChanged);
             // 
             // FMODstopButton
             // 
             this.FMODstopButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.FMODstopButton.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.FMODstopButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODstopButton.Location = new System.Drawing.Point(338, 303);
             this.FMODstopButton.Name = "FMODstopButton";
             this.FMODstopButton.Size = new System.Drawing.Size(55, 46);
             this.FMODstopButton.TabIndex = 2;
             this.FMODstopButton.Text = "Stop";
-            this.FMODstopButton.UseVisualStyleBackColor = true;
+            this.FMODstopButton.UseVisualStyleBackColor = false;
             this.FMODstopButton.Click += new System.EventHandler(this.FMODstopButton_Click);
             // 
             // FMODpauseButton
             // 
             this.FMODpauseButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.FMODpauseButton.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.FMODpauseButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODpauseButton.Location = new System.Drawing.Point(277, 303);
             this.FMODpauseButton.Name = "FMODpauseButton";
             this.FMODpauseButton.Size = new System.Drawing.Size(55, 46);
             this.FMODpauseButton.TabIndex = 1;
             this.FMODpauseButton.Text = "Pause";
-            this.FMODpauseButton.UseVisualStyleBackColor = true;
+            this.FMODpauseButton.UseVisualStyleBackColor = false;
             this.FMODpauseButton.Click += new System.EventHandler(this.FMODpauseButton_Click);
             // 
             // FMODplayButton
             // 
             this.FMODplayButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.FMODplayButton.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.FMODplayButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODplayButton.Location = new System.Drawing.Point(216, 303);
             this.FMODplayButton.Name = "FMODplayButton";
             this.FMODplayButton.Size = new System.Drawing.Size(55, 46);
             this.FMODplayButton.TabIndex = 0;
             this.FMODplayButton.Text = "Play";
-            this.FMODplayButton.UseVisualStyleBackColor = true;
+            this.FMODplayButton.UseVisualStyleBackColor = false;
             this.FMODplayButton.Click += new System.EventHandler(this.FMODplayButton_Click);
             // 
             // fontPreviewBox
             // 
-            this.fontPreviewBox.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.fontPreviewBox.BackColor = System.Drawing.SystemColors.Window;
             this.fontPreviewBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.fontPreviewBox.Location = new System.Drawing.Point(0, 0);
             this.fontPreviewBox.Name = "fontPreviewBox";
@@ -1191,6 +1242,7 @@
             // 
             // textPreviewBox
             // 
+            this.textPreviewBox.BackColor = System.Drawing.SystemColors.Window;
             this.textPreviewBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.textPreviewBox.Font = new System.Drawing.Font("Consolas", 9.75F);
             this.textPreviewBox.Location = new System.Drawing.Point(0, 0);
@@ -1205,6 +1257,7 @@
             // 
             // classTextBox
             // 
+            this.classTextBox.BackColor = System.Drawing.SystemColors.Window;
             this.classTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.classTextBox.Location = new System.Drawing.Point(0, 0);
             this.classTextBox.Multiline = true;
@@ -1228,6 +1281,7 @@
             // 
             // dumpTextBox
             // 
+            this.dumpTextBox.BackColor = System.Drawing.SystemColors.Window;
             this.dumpTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dumpTextBox.Location = new System.Drawing.Point(0, 0);
             this.dumpTextBox.Multiline = true;
@@ -1240,6 +1294,7 @@
             // 
             // statusStrip1
             // 
+            this.statusStrip1.BackColor = System.Drawing.SystemColors.MenuBar;
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
             this.statusStrip1.Location = new System.Drawing.Point(0, 633);
@@ -1250,6 +1305,7 @@
             // 
             // toolStripStatusLabel1
             // 
+            this.toolStripStatusLabel1.BackColor = System.Drawing.Color.Transparent;
             this.toolStripStatusLabel1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(761, 17);
@@ -1603,6 +1659,10 @@
         private System.Windows.Forms.ToolStripMenuItem customCompressionLZ4ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem useAssetLoadingViaTypetreeToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator assetLoadingToolStripSeparator;
+        private System.Windows.Forms.ToolStripMenuItem colorThemeToolStripMenu;
+        private System.Windows.Forms.ToolStripMenuItem colorThemeAutoToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem colorThemeLightToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem colorThemeDarkToolStripMenuItem;
     }
 }
 

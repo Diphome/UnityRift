@@ -118,13 +118,14 @@ namespace AssetStudioGUI
         [DllImport("gdi32.dll")]
         private static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
 
-        private string guiTitle = string.Empty;
+        private string guiTitle;
 
         public AssetStudioGUIForm()
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             ConsoleWindow.RunConsole(Properties.Settings.Default.showConsole);
             InitializeComponent();
+            ApplyColorTheme();
 
             var appAssembly = typeof(Program).Assembly.GetName();
             guiTitle = $"{appAssembly.Name} v{appAssembly.Version}";
@@ -262,8 +263,8 @@ namespace AssetStudioGUI
                 return;
             }
 
-            var (productName, treeNodeCollection) = await Task.Run(() => BuildAssetData());
-            var typeMap = await Task.Run(() => BuildClassStructure());
+            var (productName, treeNodeCollection) = await Task.Run(BuildAssetData);
+            var typeMap = await Task.Run(BuildClassStructure);
             productName = string.IsNullOrEmpty(productName) ? "no productName" : productName;
 
             Text = $"{guiTitle} - {productName} - {assetsManager.assetsFileList[0].version} - {assetsManager.assetsFileList[0].targetPlatformString}";
@@ -2362,6 +2363,85 @@ namespace AssetStudioGUI
             assetsManager.LoadingViaTypeTreeEnabled = isEnabled;
             Properties.Settings.Default.useTypetreeLoading = isEnabled;
             Properties.Settings.Default.Save();
+        }
+
+        private void ApplyColorTheme()
+        {
+#if NET9_0_OR_GREATER
+#pragma warning disable WFO5001 //for evaluation purposes only
+            var currentTheme = Properties.Settings.Default.guiColorTheme;
+            colorThemeToolStripMenu.Visible = true;
+            try
+            {
+                switch (currentTheme)
+                {
+                    case GuiColorTheme.System:
+                        Application.SetColorMode(SystemColorMode.System);
+                        colorThemeAutoToolStripMenuItem.Checked = true;
+                        break;
+                    case GuiColorTheme.Light:
+                        colorThemeLightToolStripMenuItem.Checked = true;
+                        break;
+                    case GuiColorTheme.Dark:
+                        Application.SetColorMode(SystemColorMode.Dark);
+                        colorThemeDarkToolStripMenuItem.Checked = true;
+                        assetListView.GridLines = false;
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                //skip
+            }
+#pragma warning restore WFO5001
+#endif
+        }
+
+        private void colorThemeAutoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!colorThemeAutoToolStripMenuItem.Checked)
+            {
+                colorThemeAutoToolStripMenuItem.Checked = true;
+                colorThemeLightToolStripMenuItem.Checked = false;
+                colorThemeDarkToolStripMenuItem.Checked = false;
+                Properties.Settings.Default.guiColorTheme = GuiColorTheme.System;
+                Properties.Settings.Default.Save();
+                ShowThemeChangingMsg();
+            }
+        }
+
+        private void colorThemeLightToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!colorThemeLightToolStripMenuItem.Checked)
+            {
+                colorThemeAutoToolStripMenuItem.Checked = false;
+                colorThemeLightToolStripMenuItem.Checked = true;
+                colorThemeDarkToolStripMenuItem.Checked = false;
+                Properties.Settings.Default.guiColorTheme = GuiColorTheme.Light;
+                Properties.Settings.Default.Save();
+                ShowThemeChangingMsg();
+            }
+        }
+
+        private void colorThemeDarkToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!colorThemeDarkToolStripMenuItem.Checked)
+            {
+                colorThemeAutoToolStripMenuItem.Checked = false;
+                colorThemeLightToolStripMenuItem.Checked = false;
+                colorThemeDarkToolStripMenuItem.Checked = true;
+                Properties.Settings.Default.guiColorTheme = GuiColorTheme.Dark;
+                Properties.Settings.Default.Save();
+                ShowThemeChangingMsg();
+            }
+        }
+
+        private static void ShowThemeChangingMsg()
+        {
+            var msg = "Color theme will be changed after restarting the application.\n\n" +
+                      "Dark theme support for WinForms is not yet fully implemented and is for evaluation purposes only.\n" +
+                      "Better Dark theme support should be added in future .NET versions.";
+            MessageBox.Show(msg, "Info", MessageBoxButtons.OK);
         }
 
         #region FMOD

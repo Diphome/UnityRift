@@ -84,7 +84,7 @@
             // 
             // tabPage1
             // 
-            this.tabPage1.BackColor = System.Drawing.Color.White;
+            this.tabPage1.BackColor = System.Drawing.SystemColors.Window;
             this.tabPage1.Controls.Add(this.panel1);
             this.tabPage1.Controls.Add(this.textBox2);
             this.tabPage1.Controls.Add(this.label11);
@@ -111,6 +111,7 @@
             // 
             // label2
             // 
+            this.label2.BackColor = System.Drawing.SystemColors.Window;
             this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label2.Location = new System.Drawing.Point(0, 0);
             this.label2.Name = "label2";
@@ -160,11 +161,11 @@
             // 
             // tableLayoutPanel2
             // 
-            this.tableLayoutPanel2.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tableLayoutPanel2.BackColor = System.Drawing.SystemColors.Menu;
             this.tableLayoutPanel2.ColumnCount = 3;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 41.37931F));
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 58.62069F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 112F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 113F));
             this.tableLayoutPanel2.Controls.Add(this.label16, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this.label17, 1, 0);
             this.tableLayoutPanel2.Controls.Add(this.gitPerfareLinkLabel, 2, 0);
@@ -204,7 +205,8 @@
             // 
             this.gitPerfareLinkLabel.AutoSize = true;
             this.gitPerfareLinkLabel.BackColor = System.Drawing.Color.Transparent;
-            this.gitPerfareLinkLabel.Location = new System.Drawing.Point(238, 2);
+            this.gitPerfareLinkLabel.LinkColor = System.Drawing.SystemColors.MenuHighlight;
+            this.gitPerfareLinkLabel.Location = new System.Drawing.Point(237, 2);
             this.gitPerfareLinkLabel.Name = "gitPerfareLinkLabel";
             this.gitPerfareLinkLabel.Size = new System.Drawing.Size(67, 13);
             this.gitPerfareLinkLabel.TabIndex = 11;
@@ -236,7 +238,8 @@
             // 
             this.gitAelurumLinkLabel.AutoSize = true;
             this.gitAelurumLinkLabel.BackColor = System.Drawing.Color.Transparent;
-            this.gitAelurumLinkLabel.Location = new System.Drawing.Point(238, 20);
+            this.gitAelurumLinkLabel.LinkColor = System.Drawing.SystemColors.MenuHighlight;
+            this.gitAelurumLinkLabel.Location = new System.Drawing.Point(237, 20);
             this.gitAelurumLinkLabel.Name = "gitAelurumLinkLabel";
             this.gitAelurumLinkLabel.Size = new System.Drawing.Size(67, 13);
             this.gitAelurumLinkLabel.TabIndex = 14;
@@ -246,11 +249,11 @@
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tableLayoutPanel1.BackColor = System.Drawing.SystemColors.Menu;
             this.tableLayoutPanel1.ColumnCount = 3;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 41.37931F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 58.62069F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 112F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 113F));
             this.tableLayoutPanel1.Controls.Add(this.label5, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.productNamelabel, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.label7, 0, 1);
@@ -337,7 +340,8 @@
             // 
             this.checkUpdatesLinkLabel.AutoSize = true;
             this.checkUpdatesLinkLabel.BackColor = System.Drawing.Color.Transparent;
-            this.checkUpdatesLinkLabel.Location = new System.Drawing.Point(238, 20);
+            this.checkUpdatesLinkLabel.LinkColor = System.Drawing.SystemColors.MenuHighlight;
+            this.checkUpdatesLinkLabel.Location = new System.Drawing.Point(237, 20);
             this.checkUpdatesLinkLabel.Name = "checkUpdatesLinkLabel";
             this.checkUpdatesLinkLabel.Size = new System.Drawing.Size(96, 13);
             this.checkUpdatesLinkLabel.TabIndex = 6;
@@ -358,7 +362,7 @@
             // 
             // licenseRichTextBox
             // 
-            this.licenseRichTextBox.BackColor = System.Drawing.Color.White;
+            this.licenseRichTextBox.BackColor = System.Drawing.SystemColors.Window;
             this.licenseRichTextBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.licenseRichTextBox.DetectUrls = false;
             this.licenseRichTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -396,6 +400,7 @@
             // 
             // CloseButton
             // 
+            this.CloseButton.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.CloseButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.CloseButton.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.CloseButton.Location = new System.Drawing.Point(0, 422);
@@ -403,7 +408,7 @@
             this.CloseButton.Size = new System.Drawing.Size(384, 39);
             this.CloseButton.TabIndex = 1;
             this.CloseButton.Text = "Close";
-            this.CloseButton.UseVisualStyleBackColor = true;
+            this.CloseButton.UseVisualStyleBackColor = false;
             // 
             // productVersionLabel
             // 

@@ -32,6 +32,9 @@
             this.OKbutton = new System.Windows.Forms.Button();
             this.Cancel = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.parallelExportMaxLabel = new System.Windows.Forms.Label();
+            this.parallelExportCheckBox = new System.Windows.Forms.CheckBox();
+            this.parallelExportUpDown = new System.Windows.Forms.NumericUpDown();
             this.filenameFormatLabel = new System.Windows.Forms.Label();
             this.filenameFormatComboBox = new System.Windows.Forms.ComboBox();
             this.exportSpriteWithAlphaMask = new System.Windows.Forms.CheckBox();
@@ -72,10 +75,8 @@
             this.exportAllNodes = new System.Windows.Forms.CheckBox();
             this.eulerFilter = new System.Windows.Forms.CheckBox();
             this.optionTooltip = new System.Windows.Forms.ToolTip(this.components);
-            this.parallelExportUpDown = new System.Windows.Forms.NumericUpDown();
-            this.parallelExportCheckBox = new System.Windows.Forms.CheckBox();
-            this.parallelExportMaxLabel = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.parallelExportUpDown)).BeginInit();
             this.panel1.SuspendLayout();
             this.l2dGroupBox.SuspendLayout();
             this.l2dMotionExportMethodPanel.SuspendLayout();
@@ -83,28 +84,29 @@
             ((System.ComponentModel.ISupportInitialize)(this.scaleFactor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.boneSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.filterPrecision)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.parallelExportUpDown)).BeginInit();
             this.SuspendLayout();
             // 
             // OKbutton
             // 
-            this.OKbutton.Location = new System.Drawing.Point(381, 380);
+            this.OKbutton.BackColor = System.Drawing.SystemColors.ButtonFace;
+            this.OKbutton.Location = new System.Drawing.Point(396, 380);
             this.OKbutton.Name = "OKbutton";
             this.OKbutton.Size = new System.Drawing.Size(75, 23);
             this.OKbutton.TabIndex = 4;
             this.OKbutton.Text = "OK";
-            this.OKbutton.UseVisualStyleBackColor = true;
+            this.OKbutton.UseVisualStyleBackColor = false;
             this.OKbutton.Click += new System.EventHandler(this.OKbutton_Click);
             // 
             // Cancel
             // 
+            this.Cancel.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.Cancel.Location = new System.Drawing.Point(462, 380);
+            this.Cancel.Location = new System.Drawing.Point(477, 380);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
             this.Cancel.TabIndex = 5;
             this.Cancel.Text = "Cancel";
-            this.Cancel.UseVisualStyleBackColor = true;
+            this.Cancel.UseVisualStyleBackColor = false;
             this.Cancel.Click += new System.EventHandler(this.Cancel_Click);
             // 
             // groupBox1
@@ -125,10 +127,57 @@
             this.groupBox1.Controls.Add(this.converttexture);
             this.groupBox1.Location = new System.Drawing.Point(12, 13);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(301, 272);
+            this.groupBox1.Size = new System.Drawing.Size(316, 272);
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Export";
+            // 
+            // parallelExportMaxLabel
+            // 
+            this.parallelExportMaxLabel.AutoSize = true;
+            this.parallelExportMaxLabel.ForeColor = System.Drawing.SystemColors.ControlDark;
+            this.parallelExportMaxLabel.Location = new System.Drawing.Point(260, 221);
+            this.parallelExportMaxLabel.Name = "parallelExportMaxLabel";
+            this.parallelExportMaxLabel.Size = new System.Drawing.Size(33, 13);
+            this.parallelExportMaxLabel.TabIndex = 13;
+            this.parallelExportMaxLabel.Text = "Max: ";
+            this.optionTooltip.SetToolTip(this.parallelExportMaxLabel, "*The maximum number matches the number of CPU cores");
+            // 
+            // parallelExportCheckBox
+            // 
+            this.parallelExportCheckBox.AutoSize = true;
+            this.parallelExportCheckBox.Checked = true;
+            this.parallelExportCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.parallelExportCheckBox.Location = new System.Drawing.Point(6, 219);
+            this.parallelExportCheckBox.Name = "parallelExportCheckBox";
+            this.parallelExportCheckBox.Size = new System.Drawing.Size(203, 17);
+            this.parallelExportCheckBox.TabIndex = 11;
+            this.parallelExportCheckBox.Text = "Export in parallel with number of tasks";
+            this.optionTooltip.SetToolTip(this.parallelExportCheckBox, "*Requires slightly more RAM than in single-task mode");
+            this.parallelExportCheckBox.UseVisualStyleBackColor = true;
+            this.parallelExportCheckBox.CheckedChanged += new System.EventHandler(this.parallelExportCheckBox_CheckedChanged);
+            // 
+            // parallelExportUpDown
+            // 
+            this.parallelExportUpDown.Location = new System.Drawing.Point(211, 218);
+            this.parallelExportUpDown.Maximum = new decimal(new int[] {
+            8,
+            0,
+            0,
+            0});
+            this.parallelExportUpDown.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.parallelExportUpDown.Name = "parallelExportUpDown";
+            this.parallelExportUpDown.Size = new System.Drawing.Size(42, 20);
+            this.parallelExportUpDown.TabIndex = 12;
+            this.parallelExportUpDown.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             // 
             // filenameFormatLabel
             // 
@@ -136,7 +185,7 @@
             this.filenameFormatLabel.Location = new System.Drawing.Point(177, 18);
             this.filenameFormatLabel.Name = "filenameFormatLabel";
             this.filenameFormatLabel.Size = new System.Drawing.Size(84, 13);
-            this.filenameFormatLabel.TabIndex = 10;
+            this.filenameFormatLabel.TabIndex = 3;
             this.filenameFormatLabel.Text = "File name format";
             // 
             // filenameFormatComboBox
@@ -149,8 +198,8 @@
             "pathID"});
             this.filenameFormatComboBox.Location = new System.Drawing.Point(177, 35);
             this.filenameFormatComboBox.Name = "filenameFormatComboBox";
-            this.filenameFormatComboBox.Size = new System.Drawing.Size(118, 21);
-            this.filenameFormatComboBox.TabIndex = 9;
+            this.filenameFormatComboBox.Size = new System.Drawing.Size(120, 21);
+            this.filenameFormatComboBox.TabIndex = 4;
             // 
             // exportSpriteWithAlphaMask
             // 
@@ -160,7 +209,7 @@
             this.exportSpriteWithAlphaMask.Location = new System.Drawing.Point(6, 150);
             this.exportSpriteWithAlphaMask.Name = "exportSpriteWithAlphaMask";
             this.exportSpriteWithAlphaMask.Size = new System.Drawing.Size(205, 17);
-            this.exportSpriteWithAlphaMask.TabIndex = 6;
+            this.exportSpriteWithAlphaMask.TabIndex = 8;
             this.exportSpriteWithAlphaMask.Text = "Export sprites with alpha mask applied";
             this.exportSpriteWithAlphaMask.UseVisualStyleBackColor = true;
             // 
@@ -172,7 +221,7 @@
             this.openAfterExport.Location = new System.Drawing.Point(6, 196);
             this.openAfterExport.Name = "openAfterExport";
             this.openAfterExport.Size = new System.Drawing.Size(137, 17);
-            this.openAfterExport.TabIndex = 8;
+            this.openAfterExport.TabIndex = 10;
             this.openAfterExport.Text = "Open folder after export";
             this.openAfterExport.UseVisualStyleBackColor = true;
             // 
@@ -184,7 +233,7 @@
             this.restoreExtensionName.Location = new System.Drawing.Point(6, 63);
             this.restoreExtensionName.Name = "restoreExtensionName";
             this.restoreExtensionName.Size = new System.Drawing.Size(275, 17);
-            this.restoreExtensionName.TabIndex = 3;
+            this.restoreExtensionName.TabIndex = 5;
             this.restoreExtensionName.Text = "Try to restore/Use original TextAsset extension name";
             this.optionTooltip.SetToolTip(this.restoreExtensionName, "If not checked, AssetStudio will export all TextAssets with the \".txt\" extension");
             this.restoreExtensionName.UseVisualStyleBackColor = true;
@@ -222,7 +271,7 @@
             this.convertAudio.Location = new System.Drawing.Point(6, 173);
             this.convertAudio.Name = "convertAudio";
             this.convertAudio.Size = new System.Drawing.Size(213, 17);
-            this.convertAudio.TabIndex = 7;
+            this.convertAudio.TabIndex = 9;
             this.convertAudio.Text = "Convert FMOD AudioClip to WAV(PCM)";
             this.convertAudio.UseVisualStyleBackColor = true;
             // 
@@ -235,13 +284,13 @@
             this.panel1.Controls.Add(this.tobmp);
             this.panel1.Location = new System.Drawing.Point(18, 111);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(260, 33);
-            this.panel1.TabIndex = 5;
+            this.panel1.Size = new System.Drawing.Size(279, 33);
+            this.panel1.TabIndex = 7;
             // 
             // towebp
             // 
             this.towebp.AutoSize = true;
-            this.towebp.Location = new System.Drawing.Point(201, 7);
+            this.towebp.Location = new System.Drawing.Point(207, 7);
             this.towebp.Name = "towebp";
             this.towebp.Size = new System.Drawing.Size(54, 17);
             this.towebp.TabIndex = 4;
@@ -251,7 +300,7 @@
             // totga
             // 
             this.totga.AutoSize = true;
-            this.totga.Location = new System.Drawing.Point(150, 7);
+            this.totga.Location = new System.Drawing.Point(154, 7);
             this.totga.Name = "totga";
             this.totga.Size = new System.Drawing.Size(44, 17);
             this.totga.TabIndex = 3;
@@ -261,7 +310,7 @@
             // tojpg
             // 
             this.tojpg.AutoSize = true;
-            this.tojpg.Location = new System.Drawing.Point(97, 7);
+            this.tojpg.Location = new System.Drawing.Point(99, 7);
             this.tojpg.Name = "tojpg";
             this.tojpg.Size = new System.Drawing.Size(48, 17);
             this.tojpg.TabIndex = 2;
@@ -272,7 +321,7 @@
             // 
             this.topng.AutoSize = true;
             this.topng.Checked = true;
-            this.topng.Location = new System.Drawing.Point(50, 7);
+            this.topng.Location = new System.Drawing.Point(52, 7);
             this.topng.Name = "topng";
             this.topng.Size = new System.Drawing.Size(44, 17);
             this.topng.TabIndex = 1;
@@ -298,7 +347,7 @@
             this.converttexture.Location = new System.Drawing.Point(6, 87);
             this.converttexture.Name = "converttexture";
             this.converttexture.Size = new System.Drawing.Size(116, 17);
-            this.converttexture.TabIndex = 4;
+            this.converttexture.TabIndex = 6;
             this.converttexture.Text = "Convert Texture2D";
             this.converttexture.UseVisualStyleBackColor = true;
             // 
@@ -309,7 +358,7 @@
             this.l2dGroupBox.Controls.Add(this.l2dForceBezierCheckBox);
             this.l2dGroupBox.Location = new System.Drawing.Point(12, 275);
             this.l2dGroupBox.Name = "l2dGroupBox";
-            this.l2dGroupBox.Size = new System.Drawing.Size(301, 100);
+            this.l2dGroupBox.Size = new System.Drawing.Size(316, 100);
             this.l2dGroupBox.TabIndex = 2;
             this.l2dGroupBox.TabStop = false;
             this.l2dGroupBox.Text = "Cubism Live2D";
@@ -320,7 +369,7 @@
             this.l2dMotionExportMethodPanel.Controls.Add(this.l2dAnimationClipRadioButton);
             this.l2dMotionExportMethodPanel.Location = new System.Drawing.Point(18, 40);
             this.l2dMotionExportMethodPanel.Name = "l2dMotionExportMethodPanel";
-            this.l2dMotionExportMethodPanel.Size = new System.Drawing.Size(263, 27);
+            this.l2dMotionExportMethodPanel.Size = new System.Drawing.Size(279, 27);
             this.l2dMotionExportMethodPanel.TabIndex = 2;
             // 
             // l2dMonoBehaviourRadioButton
@@ -341,7 +390,7 @@
             // 
             this.l2dAnimationClipRadioButton.AccessibleName = "AnimationClipV2";
             this.l2dAnimationClipRadioButton.AutoSize = true;
-            this.l2dAnimationClipRadioButton.Location = new System.Drawing.Point(172, 5);
+            this.l2dAnimationClipRadioButton.Location = new System.Drawing.Point(178, 5);
             this.l2dAnimationClipRadioButton.Name = "l2dAnimationClipRadioButton";
             this.l2dAnimationClipRadioButton.Size = new System.Drawing.Size(88, 17);
             this.l2dAnimationClipRadioButton.TabIndex = 1;
@@ -388,7 +437,7 @@
             this.groupBox2.Controls.Add(this.castToBone);
             this.groupBox2.Controls.Add(this.exportAllNodes);
             this.groupBox2.Controls.Add(this.eulerFilter);
-            this.groupBox2.Location = new System.Drawing.Point(313, 13);
+            this.groupBox2.Location = new System.Drawing.Point(328, 13);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(224, 362);
             this.groupBox2.TabIndex = 3;
@@ -600,60 +649,13 @@
             this.eulerFilter.Text = "EulerFilter";
             this.eulerFilter.UseVisualStyleBackColor = true;
             // 
-            // parallelExportUpDown
-            // 
-            this.parallelExportUpDown.Location = new System.Drawing.Point(209, 218);
-            this.parallelExportUpDown.Maximum = new decimal(new int[] {
-            8,
-            0,
-            0,
-            0});
-            this.parallelExportUpDown.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.parallelExportUpDown.Name = "parallelExportUpDown";
-            this.parallelExportUpDown.Size = new System.Drawing.Size(42, 20);
-            this.parallelExportUpDown.TabIndex = 13;
-            this.parallelExportUpDown.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            // 
-            // parallelExportCheckBox
-            // 
-            this.parallelExportCheckBox.AutoSize = true;
-            this.parallelExportCheckBox.Checked = true;
-            this.parallelExportCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.parallelExportCheckBox.Location = new System.Drawing.Point(6, 219);
-            this.parallelExportCheckBox.Name = "parallelExportCheckBox";
-            this.parallelExportCheckBox.Size = new System.Drawing.Size(203, 17);
-            this.parallelExportCheckBox.TabIndex = 15;
-            this.parallelExportCheckBox.Text = "Export in parallel with number of tasks";
-            this.optionTooltip.SetToolTip(this.parallelExportCheckBox, "*Requires slightly more RAM than in single-task mode");
-            this.parallelExportCheckBox.UseVisualStyleBackColor = true;
-            this.parallelExportCheckBox.CheckedChanged += new System.EventHandler(this.parallelExportCheckBox_CheckedChanged);
-            // 
-            // parallelExportMaxLabel
-            // 
-            this.parallelExportMaxLabel.AutoSize = true;
-            this.parallelExportMaxLabel.ForeColor = System.Drawing.SystemColors.ControlDark;
-            this.parallelExportMaxLabel.Location = new System.Drawing.Point(256, 221);
-            this.parallelExportMaxLabel.Name = "parallelExportMaxLabel";
-            this.parallelExportMaxLabel.Size = new System.Drawing.Size(33, 13);
-            this.parallelExportMaxLabel.TabIndex = 16;
-            this.parallelExportMaxLabel.Text = "Max: ";
-            this.optionTooltip.SetToolTip(this.parallelExportMaxLabel, "*The maximum number matches the number of CPU cores");
-            // 
             // ExportOptions
             // 
             this.AcceptButton = this.OKbutton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.Cancel;
-            this.ClientSize = new System.Drawing.Size(549, 416);
+            this.ClientSize = new System.Drawing.Size(564, 416);
             this.Controls.Add(this.l2dGroupBox);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -669,6 +671,7 @@
             this.TopMost = true;
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.parallelExportUpDown)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.l2dGroupBox.ResumeLayout(false);
@@ -680,7 +683,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.scaleFactor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.boneSize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.filterPrecision)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.parallelExportUpDown)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

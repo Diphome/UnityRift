@@ -95,5 +95,8 @@
     <Setting Name="useTypetreeLoading" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="guiColorTheme" Type="AssetStudioGUI.GuiColorTheme" Scope="User">
+      <Value Profile="(Default)">Light</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
