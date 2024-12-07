@@ -69,6 +69,7 @@ namespace CubismLive2DExtractor
             public int TotalInputCount;
             public int TotalOutputCount;
             public int VertexCount;
+            public float Fps;
             public SerializableEffectiveForces EffectiveForces;
             public SerializablePhysicsDictionary[] PhysicsDictionary;
         }

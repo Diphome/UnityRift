@@ -277,5 +277,100 @@ namespace AssetStudio
             nodes.Add(new TypeTreeNode("PropertyName", name, indent, false));
             AddString(nodes, "id", indent + 1);
         }
+
+        #region CubismLive2D
+        public void AddMonoCubismModel(List<TypeTreeNode> nodes, int indent)
+        {
+            AddPPtr(nodes, "CubismMoc", "_moc", indent);
+        }
+
+        public void AddMonoCubismMoc(List<TypeTreeNode> nodes, int indent)
+        {
+            nodes.Add(new TypeTreeNode("vector", "_bytes", indent, align: true));
+            AddArray(nodes, indent + 2);
+            nodes.Add(new TypeTreeNode("UInt8", "data", indent + 2, false));
+        }
+
+        public void AddMonoCubismPosePart(List<TypeTreeNode> nodes, int indent)
+        {
+            nodes.Add(new TypeTreeNode("int", "GroupIndex", indent, false));
+            nodes.Add(new TypeTreeNode("int", "PartIndex", indent, false));
+            nodes.Add(new TypeTreeNode("vector", "Link", indent, align: false));
+            AddArray(nodes, indent + 2);
+            AddString(nodes, "data", indent + 2);
+        }
+
+        public void AddMonoCubismDisplayInfo(List<TypeTreeNode> nodes, int indent)
+        {
+            AddString(nodes, "Name", indent);
+            AddString(nodes, "DisplayName", indent);
+        }
+
+        public void AddMonoCubismFadeController(List<TypeTreeNode> nodes, int indent)
+        {
+            AddPPtr(nodes, "CubismFadeMotionList", "CubismFadeMotionList", indent);
+        }
+
+        public void AddMonoCubismFadeList(List<TypeTreeNode> nodes, int indent)
+        {
+            nodes.Add(new TypeTreeNode("vector", "MotionInstanceIds", indent, align: false));
+            AddArray(nodes, indent + 2);
+            nodes.Add(new TypeTreeNode("int", "data", indent + 2, align: false));
+            nodes.Add(new TypeTreeNode("vector", "CubismFadeMotionObjects", indent, align: false));
+            AddArray(nodes, indent + 2);
+            AddPPtr(nodes, "CubismFadeMotionData", "data", indent + 2);
+        }
+        
+        public void AddMonoCubismFadeData(List<TypeTreeNode> nodes, int indent)
+        {
+            AddString(nodes, "MotionName", indent);
+            nodes.Add(new TypeTreeNode("float", "FadeInTime", indent, false));
+            nodes.Add(new TypeTreeNode("float", "FadeOutTime", indent, false));
+            nodes.Add(new TypeTreeNode("vector", "ParameterIds", indent, align: false));
+            AddArray(nodes, indent + 2);
+            AddString(nodes, "data", indent + 2);
+            nodes.Add(new TypeTreeNode("vector", "ParameterCurves", indent, align: false));
+            AddArray(nodes, indent + 2);
+            AddAnimationCurve(nodes, "data", indent + 2);
+            nodes.Add(new TypeTreeNode("vector", "ParameterFadeInTimes", indent, align: false));
+            AddArray(nodes, indent + 2);
+            nodes.Add(new TypeTreeNode("float", "data", indent + 2, align: false));
+            nodes.Add(new TypeTreeNode("vector", "ParameterFadeOutTimes", indent, align: false));
+            AddArray(nodes, indent + 2);
+            nodes.Add(new TypeTreeNode("float", "data", indent + 2, align: false));
+            nodes.Add(new TypeTreeNode("float", "MotionLength", indent , align: false));
+        }
+
+        public void AddMonoCubismExpressionController(List<TypeTreeNode> nodes, int indent)
+        {
+            AddPPtr(nodes, "CubismExpressionList", "ExpressionsList", indent);
+            nodes.Add(new TypeTreeNode("int", "CurrentExpressionIndex", indent, false));
+        }
+
+        public void AddMonoCubismExpressionList(List<TypeTreeNode> nodes, int indent)
+        {
+            nodes.Add(new TypeTreeNode("vector", "CubismExpressionObjects", indent, align: false));
+            AddArray(nodes, indent + 2);
+            AddPPtr(nodes, "CubismExpressionData", "data", indent + 2);
+        }
+
+        private void AddMonoCubismExpressionParameter(List<TypeTreeNode> nodes, string name, int indent)
+        {
+            nodes.Add(new TypeTreeNode("SerializableExpressionParameter", name, indent, false));
+            AddString(nodes, "Id", indent + 1);
+            nodes.Add(new TypeTreeNode("float", "Value", indent + 1, false));
+            nodes.Add(new TypeTreeNode("int", "Blend", indent + 1, false));
+        }
+
+        public void AddMonoCubismExpressionData(List<TypeTreeNode> nodes, int indent)
+        {
+            AddString(nodes, "Type", indent);
+            nodes.Add(new TypeTreeNode("float", "FadeInTime", indent, false));
+            nodes.Add(new TypeTreeNode("float", "FadeOutTime", indent, false));
+            nodes.Add(new TypeTreeNode("SerializableExpressionParameter", "Parameters", indent, align: false));
+            AddArray(nodes, indent + 2);
+            AddMonoCubismExpressionParameter(nodes, "data", indent + 2);
+        }
+        #endregion
     }
 }

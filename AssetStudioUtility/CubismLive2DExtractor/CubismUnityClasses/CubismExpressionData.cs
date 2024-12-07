@@ -1,6 +1,8 @@
-﻿namespace CubismLive2DExtractor
+﻿using AssetStudio;
+
+namespace CubismLive2DExtractor.CubismUnityClasses
 {
-    public class CubismExpression3Json
+    public sealed class CubismExpressionData : MonoBehaviour
     {
         public string Type { get; set; }
         public float FadeInTime { get; set; }

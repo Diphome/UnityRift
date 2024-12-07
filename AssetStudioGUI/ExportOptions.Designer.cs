@@ -51,6 +51,9 @@
             this.tobmp = new System.Windows.Forms.RadioButton();
             this.converttexture = new System.Windows.Forms.CheckBox();
             this.l2dGroupBox = new System.Windows.Forms.GroupBox();
+            this.l2dAssetSearchByFilenameCheckBox = new System.Windows.Forms.CheckBox();
+            this.l2dModelGroupComboBox = new System.Windows.Forms.ComboBox();
+            this.l2dModelGroupLabel = new System.Windows.Forms.Label();
             this.l2dMotionExportMethodPanel = new System.Windows.Forms.Panel();
             this.l2dMonoBehaviourRadioButton = new System.Windows.Forms.RadioButton();
             this.l2dAnimationClipRadioButton = new System.Windows.Forms.RadioButton();
@@ -89,7 +92,7 @@
             // OKbutton
             // 
             this.OKbutton.BackColor = System.Drawing.SystemColors.ButtonFace;
-            this.OKbutton.Location = new System.Drawing.Point(396, 380);
+            this.OKbutton.Location = new System.Drawing.Point(396, 430);
             this.OKbutton.Name = "OKbutton";
             this.OKbutton.Size = new System.Drawing.Size(75, 23);
             this.OKbutton.TabIndex = 4;
@@ -101,7 +104,7 @@
             // 
             this.Cancel.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.Cancel.Location = new System.Drawing.Point(477, 380);
+            this.Cancel.Location = new System.Drawing.Point(477, 430);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
             this.Cancel.TabIndex = 5;
@@ -193,8 +196,8 @@
             this.filenameFormatComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.filenameFormatComboBox.FormattingEnabled = true;
             this.filenameFormatComboBox.Items.AddRange(new object[] {
-            "assetName",
-            "assetName@pathID",
+            "asset name",
+            "asset name@pathID",
             "pathID"});
             this.filenameFormatComboBox.Location = new System.Drawing.Point(177, 35);
             this.filenameFormatComboBox.Name = "filenameFormatComboBox";
@@ -353,24 +356,59 @@
             // 
             // l2dGroupBox
             // 
+            this.l2dGroupBox.Controls.Add(this.l2dAssetSearchByFilenameCheckBox);
+            this.l2dGroupBox.Controls.Add(this.l2dModelGroupComboBox);
+            this.l2dGroupBox.Controls.Add(this.l2dModelGroupLabel);
             this.l2dGroupBox.Controls.Add(this.l2dMotionExportMethodPanel);
             this.l2dGroupBox.Controls.Add(this.l2dMotionExportMethodLabel);
             this.l2dGroupBox.Controls.Add(this.l2dForceBezierCheckBox);
             this.l2dGroupBox.Location = new System.Drawing.Point(12, 275);
             this.l2dGroupBox.Name = "l2dGroupBox";
-            this.l2dGroupBox.Size = new System.Drawing.Size(316, 100);
+            this.l2dGroupBox.Size = new System.Drawing.Size(316, 149);
             this.l2dGroupBox.TabIndex = 2;
             this.l2dGroupBox.TabStop = false;
             this.l2dGroupBox.Text = "Cubism Live2D";
+            // 
+            // l2dAssetSearchByFilenameCheckBox
+            // 
+            this.l2dAssetSearchByFilenameCheckBox.AutoSize = true;
+            this.l2dAssetSearchByFilenameCheckBox.Location = new System.Drawing.Point(6, 45);
+            this.l2dAssetSearchByFilenameCheckBox.Name = "l2dAssetSearchByFilenameCheckBox";
+            this.l2dAssetSearchByFilenameCheckBox.Size = new System.Drawing.Size(270, 17);
+            this.l2dAssetSearchByFilenameCheckBox.TabIndex = 3;
+            this.l2dAssetSearchByFilenameCheckBox.Text = "Search for model-related Live2D assets by file name";
+            this.optionTooltip.SetToolTip(this.l2dAssetSearchByFilenameCheckBox, "Preferred option when all model-related assets are stored in a single file");
+            this.l2dAssetSearchByFilenameCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // l2dModelGroupComboBox
+            // 
+            this.l2dModelGroupComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.l2dModelGroupComboBox.FormattingEnabled = true;
+            this.l2dModelGroupComboBox.Items.AddRange(new object[] {
+            "container path",
+            "source file name"});
+            this.l2dModelGroupComboBox.Location = new System.Drawing.Point(142, 18);
+            this.l2dModelGroupComboBox.Name = "l2dModelGroupComboBox";
+            this.l2dModelGroupComboBox.Size = new System.Drawing.Size(154, 21);
+            this.l2dModelGroupComboBox.TabIndex = 2;
+            // 
+            // l2dModelGroupLabel
+            // 
+            this.l2dModelGroupLabel.AutoSize = true;
+            this.l2dModelGroupLabel.Location = new System.Drawing.Point(6, 21);
+            this.l2dModelGroupLabel.Name = "l2dModelGroupLabel";
+            this.l2dModelGroupLabel.Size = new System.Drawing.Size(130, 13);
+            this.l2dModelGroupLabel.TabIndex = 1;
+            this.l2dModelGroupLabel.Text = "Group exported models by";
             // 
             // l2dMotionExportMethodPanel
             // 
             this.l2dMotionExportMethodPanel.Controls.Add(this.l2dMonoBehaviourRadioButton);
             this.l2dMotionExportMethodPanel.Controls.Add(this.l2dAnimationClipRadioButton);
-            this.l2dMotionExportMethodPanel.Location = new System.Drawing.Point(18, 40);
+            this.l2dMotionExportMethodPanel.Location = new System.Drawing.Point(18, 89);
             this.l2dMotionExportMethodPanel.Name = "l2dMotionExportMethodPanel";
             this.l2dMotionExportMethodPanel.Size = new System.Drawing.Size(279, 27);
-            this.l2dMotionExportMethodPanel.TabIndex = 2;
+            this.l2dMotionExportMethodPanel.TabIndex = 5;
             // 
             // l2dMonoBehaviourRadioButton
             // 
@@ -400,19 +438,19 @@
             // l2dMotionExportMethodLabel
             // 
             this.l2dMotionExportMethodLabel.AutoSize = true;
-            this.l2dMotionExportMethodLabel.Location = new System.Drawing.Point(6, 21);
+            this.l2dMotionExportMethodLabel.Location = new System.Drawing.Point(6, 70);
             this.l2dMotionExportMethodLabel.Name = "l2dMotionExportMethodLabel";
             this.l2dMotionExportMethodLabel.Size = new System.Drawing.Size(109, 13);
-            this.l2dMotionExportMethodLabel.TabIndex = 1;
+            this.l2dMotionExportMethodLabel.TabIndex = 4;
             this.l2dMotionExportMethodLabel.Text = "Motion export method";
             // 
             // l2dForceBezierCheckBox
             // 
             this.l2dForceBezierCheckBox.AutoSize = true;
-            this.l2dForceBezierCheckBox.Location = new System.Drawing.Point(6, 77);
+            this.l2dForceBezierCheckBox.Location = new System.Drawing.Point(6, 122);
             this.l2dForceBezierCheckBox.Name = "l2dForceBezierCheckBox";
             this.l2dForceBezierCheckBox.Size = new System.Drawing.Size(278, 17);
-            this.l2dForceBezierCheckBox.TabIndex = 3;
+            this.l2dForceBezierCheckBox.TabIndex = 6;
             this.l2dForceBezierCheckBox.Text = "Calculate Linear motion segments as Bezier segments";
             this.optionTooltip.SetToolTip(this.l2dForceBezierCheckBox, "May help if the exported motions look jerky/not smooth enough");
             this.l2dForceBezierCheckBox.UseVisualStyleBackColor = true;
@@ -439,7 +477,7 @@
             this.groupBox2.Controls.Add(this.eulerFilter);
             this.groupBox2.Location = new System.Drawing.Point(328, 13);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(224, 362);
+            this.groupBox2.Size = new System.Drawing.Size(224, 411);
             this.groupBox2.TabIndex = 3;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Fbx";
@@ -655,7 +693,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.Cancel;
-            this.ClientSize = new System.Drawing.Size(564, 416);
+            this.ClientSize = new System.Drawing.Size(564, 461);
             this.Controls.Add(this.l2dGroupBox);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -735,5 +773,8 @@
         private System.Windows.Forms.NumericUpDown parallelExportUpDown;
         private System.Windows.Forms.CheckBox parallelExportCheckBox;
         private System.Windows.Forms.Label parallelExportMaxLabel;
+        private System.Windows.Forms.Label l2dModelGroupLabel;
+        private System.Windows.Forms.ComboBox l2dModelGroupComboBox;
+        private System.Windows.Forms.CheckBox l2dAssetSearchByFilenameCheckBox;
     }
 }

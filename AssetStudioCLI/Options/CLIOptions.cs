@@ -100,6 +100,8 @@ namespace AssetStudioCLI.Options
         public static Option<ImageFormat> o_imageFormat;
         public static Option<AudioFormat> o_audioFormat;
         //live2d
+        public static Option<CubismLive2DExtractor.Live2DModelGroupOption> o_l2dGroupOption;
+        public static Option<bool> f_l2dAssetSearchByFilename;
         public static Option<CubismLive2DExtractor.Live2DMotionMode> o_l2dMotionMode;
         public static Option<bool> f_l2dForceBezier;
         //fbx
@@ -228,10 +230,10 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: FilenameFormat.AssetName,
                 optionName: "-f, --filename-format <value>",
                 optionDescription: "Specify the file name format for exported assets\n" +
-                                   "<Value: assetName(default) | assetName_pathID | pathID>\n" +
-                                   "AssetName - Asset file names will look like \"assetName.extension\"\n" +
-                                   "AssetName_pathID - Asset file names will look like \"assetName @pathID.extension\"\n" +
-                                   "PathID - Asset file names will look like \"pathID.extension\"\n",
+                    "<Value: assetName(default) | assetName_pathID | pathID>\n" +
+                    "AssetName - Asset file names will look like \"assetName.extension\"\n" +
+                    "AssetName_pathID - Asset file names will look like \"assetName @pathID.extension\"\n" +
+                    "PathID - Asset file names will look like \"pathID.extension\"\n",
                 optionExample: "Example: \"-f assetName_pathID\"\n",
                 optionHelpGroup: HelpGroups.General
             );
@@ -293,13 +295,24 @@ namespace AssetStudioCLI.Options
                 optionName: "--audio-format <value>",
                 optionDescription: "Specify the format for converting FMOD audio assets\n" +
                     "<Value: none | wav(default)>\n" +
-                    "None - Do not convert fmod audios and export them in their own format\n",
+                    "None - Do not convert FMOD audios and export them in their own format\n",
                 optionExample: "Example: \"--audio-format wav\"",
                 optionHelpGroup: HelpGroups.Convert
             );
             #endregion
 
             #region Init Cubism Live2D Options
+            o_l2dGroupOption = new GroupedOption<CubismLive2DExtractor.Live2DModelGroupOption>
+            (
+                optionDefaultValue: CubismLive2DExtractor.Live2DModelGroupOption.ContainerPath,
+                optionName: "--l2d-group-option <value>",
+                optionDescription: "Specify the way in which exported models should be grouped\n" +
+                    "<Value: container(default) | filename >\n" +
+                    "Container - Group exported models by container path\n" +
+                    "Filename - Group exported models by source file name\n",
+                optionExample: "Example: \"--l2d-group-option filename\"\n",
+                optionHelpGroup: HelpGroups.Live2D
+            );
             o_l2dMotionMode = new GroupedOption<CubismLive2DExtractor.Live2DMotionMode>
             (
                 optionDefaultValue: CubismLive2DExtractor.Live2DMotionMode.MonoBehaviour,
@@ -311,6 +324,17 @@ namespace AssetStudioCLI.Options
                     "AnimationClip - Try to export motions using AnimationClip assets\n",
                 optionExample: "Example: \"--l2d-motion-mode animationClip\"\n",
                 optionHelpGroup: HelpGroups.Live2D
+            );
+            f_l2dAssetSearchByFilename = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--l2d-search-by-filename",
+                optionDescription: "(Flag) If specified, Studio will search for model-related Live2D assets by file name\n" + 
+                    "rather than by container\n" +
+                    "(Preferred option when all model-related assets are stored in a single file)\n",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.Live2D,
+                isFlag: true
             );
             f_l2dForceBezier = new GroupedOption<bool>
             (
@@ -569,12 +593,22 @@ namespace AssetStudioCLI.Options
             #endregion
 
             #region Parse Flags
-            for (int i = 0; i < resplittedArgs.Count; i++) 
+            for (var i = 0; i < resplittedArgs.Count; i++) 
             {
-                string flag = resplittedArgs[i].ToLower();
+                var flag = resplittedArgs[i].ToLower();
 
                 switch(flag)
                 {
+                    case "--l2d-search-by-filename":
+                        if (o_workMode.Value != WorkMode.Live2D)
+                        {
+                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
+                            ShowOptionDescription(o_workMode);
+                            return;
+                        }
+                        f_l2dAssetSearchByFilename.Value = true;
+                        resplittedArgs.RemoveAt(i);
+                        break;
                     case "--l2d-force-bezier":
                         if (o_workMode.Value != WorkMode.Live2D)
                         {
@@ -828,6 +862,27 @@ namespace AssetStudioCLI.Options
                                 default:
                                     Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported audio format: [{value.Color(brightRed)}].\n");
                                     ShowOptionDescription(o_audioFormat);
+                                    return;
+                            }
+                            break;
+                        case "--l2d-group-option":
+                            if (o_workMode.Value != WorkMode.Live2D)
+                            {
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. This option is not suitable for the current working mode [{o_workMode.Value}].\n");
+                                ShowOptionDescription(o_workMode);
+                                return;
+                            }
+                            switch (value.ToLower())
+                            {
+                                case "container":
+                                    o_l2dGroupOption.Value = CubismLive2DExtractor.Live2DModelGroupOption.ContainerPath;
+                                    break;
+                                case "filename":
+                                    o_l2dGroupOption.Value = CubismLive2DExtractor.Live2DModelGroupOption.SourceFileName;
+                                    break;
+                                default:
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported model grouping option: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_l2dGroupOption);
                                     return;
                             }
                             break;
@@ -1199,7 +1254,9 @@ namespace AssetStudioCLI.Options
                     }
                     else
                     {
-                        sb.AppendLine($"# Live2D Motion Export Method: {o_l2dMotionMode}");
+                        sb.AppendLine($"# Model Group Option: {o_l2dGroupOption}");
+                        sb.AppendFormat("# Search model-related assets by: {0}", f_l2dAssetSearchByFilename.Value ? "Filename" : "Container");
+                        sb.AppendLine($"# Motion Export Method: {o_l2dMotionMode}");
                         sb.AppendLine($"# Force Bezier: {f_l2dForceBezier }");
                         sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");
                     }

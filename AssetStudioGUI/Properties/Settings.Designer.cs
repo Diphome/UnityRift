@@ -406,5 +406,29 @@ namespace AssetStudioGUI.Properties {
                 this["guiColorTheme"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("ContainerPath")]
+        public global::CubismLive2DExtractor.Live2DModelGroupOption l2dModelGroupOption {
+            get {
+                return ((global::CubismLive2DExtractor.Live2DModelGroupOption)(this["l2dModelGroupOption"]));
+            }
+            set {
+                this["l2dModelGroupOption"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool l2dAssetSearchByFilename {
+            get {
+                return ((bool)(this["l2dAssetSearchByFilename"]));
+            }
+            set {
+                this["l2dAssetSearchByFilename"] = value;
+            }
+        }
     }
 }

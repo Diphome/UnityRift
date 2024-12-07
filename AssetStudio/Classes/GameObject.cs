@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text.Json.Serialization;
 
 namespace AssetStudio
 {
@@ -16,6 +13,8 @@ namespace AssetStudio
         public SkinnedMeshRenderer m_SkinnedMeshRenderer;
         public Animator m_Animator;
         public Animation m_Animation;
+        [JsonIgnore]
+        public CubismModel CubismModel;
 
         public GameObject(ObjectReader reader) : base(reader)
         {

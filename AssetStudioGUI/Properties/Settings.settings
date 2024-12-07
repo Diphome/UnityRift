@@ -98,5 +98,11 @@
     <Setting Name="guiColorTheme" Type="AssetStudioGUI.GuiColorTheme" Scope="User">
       <Value Profile="(Default)">Light</Value>
     </Setting>
+    <Setting Name="l2dModelGroupOption" Type="CubismLive2DExtractor.Live2DModelGroupOption" Scope="User">
+      <Value Profile="(Default)">ContainerPath</Value>
+    </Setting>
+    <Setting Name="l2dAssetSearchByFilename" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

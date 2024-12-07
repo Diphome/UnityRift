@@ -24,17 +24,26 @@ namespace AssetStudio
         public static string ReadTypeString(TypeTree m_Type, ObjectReader reader)
         {
             reader.Reset();
+            var readed = 0L;
             var sb = new StringBuilder();
             var m_Nodes = m_Type.m_Nodes;
-            for (int i = 0; i < m_Nodes.Count; i++)
+            try
             {
-                ReadStringValue(sb, m_Nodes, reader, ref i);
+                for (int i = 0; i < m_Nodes.Count; i++)
+                {
+                    ReadStringValue(sb, m_Nodes, reader, ref i);
+                }
+                readed = reader.Position - reader.byteStart;
             }
-            var readed = reader.Position - reader.byteStart;
+            catch (Exception)
+            {
+                //Ignore
+            }
             if (readed != reader.byteSize)
             {
                 Logger.Info($"Failed to read type, read {readed} bytes but expected {reader.byteSize} bytes");
             }
+
             return sb.ToString();
         }
 

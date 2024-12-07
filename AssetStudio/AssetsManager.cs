@@ -701,6 +701,34 @@ namespace AssetStudio
                                     case Animation m_Animation:
                                         m_GameObject.m_Animation = m_Animation;
                                         break;
+                                    case MonoBehaviour m_MonoBehaviour:
+                                        if (m_MonoBehaviour.m_Script.TryGet(out var m_Script))
+                                        {
+                                            switch (m_Script.m_ClassName)
+                                            {
+                                                case "CubismModel":
+                                                    if (m_GameObject.m_Transform == null)
+                                                        break;
+                                                    m_GameObject.CubismModel = new CubismModel(m_GameObject)
+                                                    {
+                                                        CubismModelMono = m_MonoBehaviour
+                                                    };
+                                                    break;
+                                                case "CubismPhysicsController":
+                                                    if (m_GameObject.CubismModel != null)
+                                                        m_GameObject.CubismModel.PhysicsController = m_MonoBehaviour;
+                                                    break;
+                                                case "CubismFadeController":
+                                                    if (m_GameObject.CubismModel != null)
+                                                        m_GameObject.CubismModel.FadeController = m_MonoBehaviour;
+                                                    break;
+                                                case "CubismExpressionController":
+                                                    if (m_GameObject.CubismModel != null)
+                                                        m_GameObject.CubismModel.ExpressionController = m_MonoBehaviour;
+                                                    break;
+                                            }
+                                        }
+                                        break;
                                 }
                             }
                         }

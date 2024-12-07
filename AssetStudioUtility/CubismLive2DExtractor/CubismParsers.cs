@@ -2,6 +2,7 @@
 using System.Collections.Specialized;
 using System.Linq;
 using AssetStudio;
+using CubismLive2DExtractor.CubismUnityClasses;
 using Newtonsoft.Json;
 
 namespace CubismLive2DExtractor
@@ -10,20 +11,25 @@ namespace CubismLive2DExtractor
     {
         public enum CubismMonoBehaviourType
         {
+            FadeController,
             FadeMotionList,
             FadeMotion,
+            ExpressionController,
+            ExpressionList,
             Expression,
             Physics,
             DisplayInfo,
             PosePart,
+            Model,
+            RenderTexture,
         }
 
-        public static string ParsePhysics(OrderedDictionary physicsDict)
+        public static string ParsePhysics(OrderedDictionary physicsDict, float motionFps)
         {
-            var cubismPhysicsRig = JsonConvert.DeserializeObject<CubismPhysics>(JsonConvert.SerializeObject(physicsDict))._rig;
+            var cubismPhysicsRig = JsonConvert.DeserializeObject<CubismPhysics>(JsonConvert.SerializeObject(physicsDict)).Rig;
 
             var physicsSettings = new CubismPhysics3Json.SerializablePhysicsSettings[cubismPhysicsRig.SubRigs.Length];
-            for (int i = 0; i < physicsSettings.Length; i++)
+            for (var i = 0; i < physicsSettings.Length; i++)
             {
                 var subRigs = cubismPhysicsRig.SubRigs[i];
                 physicsSettings[i] = new CubismPhysics3Json.SerializablePhysicsSettings
@@ -48,7 +54,7 @@ namespace CubismLive2DExtractor
                         }
                     }
                 };
-                for (int j = 0; j < subRigs.Input.Length; j++)
+                for (var j = 0; j < subRigs.Input.Length; j++)
                 {
                     var input = subRigs.Input[j];
                     physicsSettings[i].Input[j] = new CubismPhysics3Json.SerializableInput
@@ -63,7 +69,7 @@ namespace CubismLive2DExtractor
                         Reflect = input.IsInverted
                     };
                 }
-                for (int j = 0; j < subRigs.Output.Length; j++)
+                for (var j = 0; j < subRigs.Output.Length; j++)
                 {
                     var output = subRigs.Output[j];
                     physicsSettings[i].Output[j] = new CubismPhysics3Json.SerializableOutput
@@ -80,7 +86,7 @@ namespace CubismLive2DExtractor
                         Reflect = output.IsInverted
                     };
                 }
-                for (int j = 0; j < subRigs.Particles.Length; j++)
+                for (var j = 0; j < subRigs.Particles.Length; j++)
                 {
                     var particles = subRigs.Particles[j];
                     physicsSettings[i].Vertices[j] = new CubismPhysics3Json.SerializableVertex
@@ -94,7 +100,7 @@ namespace CubismLive2DExtractor
                 }
             }
             var physicsDictionary = new CubismPhysics3Json.SerializablePhysicsDictionary[physicsSettings.Length];
-            for (int i = 0; i < physicsSettings.Length; i++)
+            for (var i = 0; i < physicsSettings.Length; i++)
             {
                 physicsDictionary[i] = new CubismPhysics3Json.SerializablePhysicsDictionary
                 {
@@ -102,6 +108,8 @@ namespace CubismLive2DExtractor
                     Name = $"Dummy{i + 1}"
                 };
             }
+
+            var fps = cubismPhysicsRig.Fps == 0 ? motionFps : cubismPhysicsRig.Fps;
             var physicsJson = new CubismPhysics3Json
             {
                 Version = 3,
@@ -111,6 +119,7 @@ namespace CubismLive2DExtractor
                     TotalInputCount = cubismPhysicsRig.SubRigs.Sum(x => x.Input.Length),
                     TotalOutputCount = cubismPhysicsRig.SubRigs.Sum(x => x.Output.Length),
                     VertexCount = cubismPhysicsRig.SubRigs.Sum(x => x.Particles.Length),
+                    Fps = fps == 0 ? 30f : fps,
                     EffectiveForces = new CubismPhysics3Json.SerializableEffectiveForces
                     {
                         Gravity = cubismPhysicsRig.Gravity,
@@ -133,11 +142,20 @@ namespace CubismLive2DExtractor
             var m_Type = m_MonoBehaviour.ConvertToTypeTree(assemblyLoader);
             switch (cubismMonoBehaviourType)
             {
+                case CubismMonoBehaviourType.FadeController:
+                    fieldName = "cubismfademotionlist";
+                    break;
                 case CubismMonoBehaviourType.FadeMotionList:
                     fieldName = "cubismfademotionobjects";
                     break;
                 case CubismMonoBehaviourType.FadeMotion:
                     fieldName = "parameterids";
+                    break;
+                case CubismMonoBehaviourType.ExpressionController:
+                    fieldName = "expressionslist";
+                    break;
+                case CubismMonoBehaviourType.ExpressionList:
+                    fieldName = "cubismexpressionobjects";
                     break;
                 case CubismMonoBehaviourType.Expression:
                     fieldName = "parameters";
@@ -150,6 +168,12 @@ namespace CubismLive2DExtractor
                     break;
                 case CubismMonoBehaviourType.PosePart:
                     fieldName = "groupindex";
+                    break;
+                case CubismMonoBehaviourType.Model:
+                    fieldName = "_moc";
+                    break;
+                case CubismMonoBehaviourType.RenderTexture:
+                    fieldName = "_maintexture";
                     break;
             }
             if (m_Type.m_Nodes.FindIndex(x => x.m_Name.ToLower() == fieldName) < 0)

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AssetStudio;
 
 namespace CubismLive2DExtractor
 {
@@ -45,9 +46,9 @@ namespace CubismLive2DExtractor
         }
 
         private static void AddSegments(
-            CubismKeyframeData curve,
-            CubismKeyframeData preCurve,
-            CubismKeyframeData nextCurve,
+            Keyframe<float> curve,
+            Keyframe<float> preCurve,
+            Keyframe<float> nextCurve,
             SerializableCurve cubismCurve,
             bool forceBezier,
             ref int totalPointCount,
@@ -97,7 +98,7 @@ namespace CubismLive2DExtractor
             totalSegmentCount++;
         }
 
-        public CubismMotion3Json(CubismFadeMotion fadeMotion, HashSet<string> paramNames, HashSet<string> partNames, bool forceBezier)
+        public CubismMotion3Json(CubismUnityClasses.CubismFadeMotionData fadeMotion, HashSet<string> paramNames, HashSet<string> partNames, bool forceBezier)
         {
             Version = 3;
             Meta = new SerializableMeta
@@ -151,7 +152,7 @@ namespace CubismLive2DExtractor
                         else
                         {
                             target = paramId.ToLower().Contains("part") ? "PartOpacity" : "Parameter";
-                            AssetStudio.Logger.Warning($"[{fadeMotion.m_Name}] Binding error: Unable to find \"{paramId}\" among the model parts/parameters");
+                            Logger.Warning($"[{fadeMotion.m_Name}] Binding error: Unable to find \"{paramId}\" among the model parts/parameters");
                         }
                         break;
                 }
@@ -178,7 +179,7 @@ namespace CubismLive2DExtractor
                     var curve = fadeMotion.ParameterCurves[i].m_Curve[j];
                     var preCurve = fadeMotion.ParameterCurves[i].m_Curve[j - 1];
                     var next = fadeMotion.ParameterCurves[i].m_Curve.ElementAtOrDefault(j + 1);
-                    var nextCurve = next ?? new CubismKeyframeData();
+                    var nextCurve = next ?? new Keyframe<float>();
                     AddSegments(curve, preCurve, nextCurve, Curves[actualCurveCount], forceBezier, ref totalPointCount, ref totalSegmentCount, ref j);
                 }
                 actualCurveCount++;
@@ -230,10 +231,10 @@ namespace CubismLive2DExtractor
                 };
                 for (var j = 1; j < track.Curve.Count; j++)
                 {
-                    var curve = new CubismKeyframeData(track.Curve[j]);
-                    var preCurve = new CubismKeyframeData(track.Curve[j - 1]);
+                    var curve = CreateKeyFrame(track.Curve[j]);
+                    var preCurve = CreateKeyFrame(track.Curve[j - 1]);
                     var next = track.Curve.ElementAtOrDefault(j + 1);
-                    var nextCurve = next != null ? new CubismKeyframeData(next) : new CubismKeyframeData();
+                    var nextCurve = next != null ? CreateKeyFrame(next) : new Keyframe<float>();
                     AddSegments(curve, preCurve, nextCurve, Curves[i], forceBezier, ref totalPointCount, ref totalSegmentCount, ref j);
                 }
                 totalPointCount++;
@@ -254,6 +255,20 @@ namespace CubismLive2DExtractor
                 totalUserDataSize += @event.value.Length;
             }
             Meta.TotalUserDataSize = totalUserDataSize;
+        }
+
+        private static Keyframe<float> CreateKeyFrame(ImportedKeyframe<float> iKeyframe)
+        {
+            return new Keyframe<float>
+            {
+                time = iKeyframe.time,
+                value = iKeyframe.value,
+                inSlope = iKeyframe.inSlope,
+                outSlope = iKeyframe.outSlope,
+                weightedMode = 0,
+                inWeight = 0,
+                outWeight = 0,
+            };
         }
     }
 }

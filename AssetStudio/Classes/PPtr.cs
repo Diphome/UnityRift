@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace AssetStudio
 {
@@ -6,10 +7,16 @@ namespace AssetStudio
     {
         public int m_FileID;
         public long m_PathID;
-        public string Name => TryGet(out var result) ? result.Name : string.Empty;
+        public string Name => _assetsFile != null && TryGet(out var result) ? result.Name : string.Empty;
 
-        private SerializedFile _assetsFile;
         private int _index = -2; //-2 - Prepare, -1 - Missing
+        private SerializedFile _assetsFile;
+        [JsonIgnore]
+        public SerializedFile AssetsFile
+        {
+            get => _assetsFile;
+            set => _assetsFile = value;
+        }
 
         public PPtr(ObjectReader reader)
         {
@@ -19,11 +26,6 @@ namespace AssetStudio
         }
 
         public PPtr() { }
-
-        public void SetAssetsFile(SerializedFile assetsFile)
-        {
-            _assetsFile = assetsFile;
-        }
 
         private bool TryGetAssetsFile(out SerializedFile result)
         {

@@ -293,7 +293,7 @@ namespace AssetStudioGUI
 
             var types = new SortedSet<string>();
             types.UnionWith(exportableAssets.Select(x => x.TypeString));
-            if (Studio.cubismMocList.Count > 0)
+            if (Studio.l2dModelDict.Count > 0)
             {
                 types.Add("MonoBehaviour (Live2D Model)");
             }
@@ -1181,19 +1181,19 @@ namespace AssetStudioGUI
 
         private void PreviewMoc(AssetItem assetItem, MonoBehaviour m_MonoBehaviour)
         {
-            using (var cubismModel = new CubismModel(m_MonoBehaviour))
+            using (var cubismMoc = new CubismMoc(m_MonoBehaviour))
             {
                 var sb = new StringBuilder();
-                sb.AppendLine($"SDK Version: {cubismModel.VersionDescription}");
-                if (cubismModel.Version > 0)
+                sb.AppendLine($"SDK Version: {cubismMoc.VersionDescription}");
+                if (cubismMoc.Version > 0)
                 {
-                    sb.AppendLine($"Canvas Width: {cubismModel.CanvasWidth}");
-                    sb.AppendLine($"Canvas Height: {cubismModel.CanvasHeight}");
-                    sb.AppendLine($"Center X: {cubismModel.CentralPosX}");
-                    sb.AppendLine($"Center Y: {cubismModel.CentralPosY}");
-                    sb.AppendLine($"Pixel Per Unit: {cubismModel.PixelPerUnit}");
-                    sb.AppendLine($"Parameter Count: {cubismModel.ParamCount}");
-                    sb.AppendLine($"Part Count: {cubismModel.PartCount}");
+                    sb.AppendLine($"Canvas Width: {cubismMoc.CanvasWidth}");
+                    sb.AppendLine($"Canvas Height: {cubismMoc.CanvasHeight}");
+                    sb.AppendLine($"Center X: {cubismMoc.CentralPosX}");
+                    sb.AppendLine($"Center Y: {cubismMoc.CentralPosY}");
+                    sb.AppendLine($"Pixel Per Unit: {cubismMoc.PixelPerUnit}");
+                    sb.AppendLine($"Parameter Count: {cubismMoc.ParamCount}");
+                    sb.AppendLine($"Part Count: {cubismMoc.PartCount}");
                 }
                 assetItem.InfoText = sb.ToString();
             }
@@ -1484,6 +1484,7 @@ namespace AssetStudioGUI
             assemblyLoader.Clear();
             exportableAssets.Clear();
             visibleAssets.Clear();
+            l2dModelDict.Clear();
             sceneTreeView.Nodes.Clear();
             assetListView.VirtualListSize = 0;
             assetListView.Items.Clear();
@@ -1491,7 +1492,6 @@ namespace AssetStudioGUI
             classesListView.Groups.Clear();
             selectedAnimationAssetsList.Clear();
             selectedIndicesPrevList.Clear();
-            cubismMocList.Clear();
             previewPanel.Image = Properties.Resources.preview;
             previewPanel.SizeMode = PictureBoxSizeMode.CenterImage;
             imageTexture?.Dispose();
@@ -1556,7 +1556,7 @@ namespace AssetStudioGUI
                         switch (asset.Asset)
                         {
                             case MonoBehaviour m_MonoBehaviour:
-                                if (Studio.cubismMocList.Count > 0 && m_MonoBehaviour.m_Script.TryGet(out var m_Script))
+                                if (Studio.l2dModelDict.Count > 0 && m_MonoBehaviour.m_Script.TryGet(out var m_Script))
                                 {
                                     if (m_Script.m_ClassName == "CubismMoc")
                                     {
@@ -1892,7 +1892,7 @@ namespace AssetStudioGUI
                     }
                 }
                 visibleAssets = filterMoc
-                    ? exportableAssets.FindAll(x => cubismMocList.Contains(x.Asset) || show.Contains(x.Type))
+                    ? exportableAssets.FindAll(x => (x.Asset is MonoBehaviour monoBehaviour && l2dModelDict.ContainsKey(monoBehaviour)) || show.Contains(x.Type))
                     : exportableAssets.FindAll(x => show.Contains(x.Type));
             }
             else
@@ -2217,7 +2217,7 @@ namespace AssetStudioGUI
         {
             if (exportableAssets.Count > 0)
             {
-                if (Studio.cubismMocList.Count == 0)
+                if (Studio.l2dModelDict.Count == 0)
                 {
                     Logger.Info("Live2D Cubism models were not found.");
                     return;
@@ -2257,7 +2257,7 @@ namespace AssetStudioGUI
                 Logger.Info("No exportable assets loaded");
                 return;
             }
-            if (Studio.cubismMocList.Count == 0)
+            if (Studio.l2dModelDict.Count == 0)
             {
                 Logger.Info("Live2D Cubism models were not found.");
                 return;
