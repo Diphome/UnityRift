@@ -933,6 +933,11 @@ namespace AssetStudioGUI
 
         public static void OpenFolderInExplorer(string path)
         {
+            if (!path.EndsWith($"{Path.DirectorySeparatorChar}"))
+                path += Path.DirectorySeparatorChar;
+            if (!Directory.Exists(path))
+                return;
+
             var info = new ProcessStartInfo(path);
             info.UseShellExecute = true;
             Process.Start(info);
