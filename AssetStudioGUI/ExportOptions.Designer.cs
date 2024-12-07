@@ -115,6 +115,7 @@
             // groupBox1
             // 
             this.groupBox1.AutoSize = true;
+            this.groupBox1.BackColor = System.Drawing.SystemColors.Menu;
             this.groupBox1.Controls.Add(this.parallelExportMaxLabel);
             this.groupBox1.Controls.Add(this.parallelExportCheckBox);
             this.groupBox1.Controls.Add(this.parallelExportUpDown);
@@ -138,7 +139,7 @@
             // parallelExportMaxLabel
             // 
             this.parallelExportMaxLabel.AutoSize = true;
-            this.parallelExportMaxLabel.ForeColor = System.Drawing.SystemColors.ControlDark;
+            this.parallelExportMaxLabel.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
             this.parallelExportMaxLabel.Location = new System.Drawing.Point(260, 221);
             this.parallelExportMaxLabel.Name = "parallelExportMaxLabel";
             this.parallelExportMaxLabel.Size = new System.Drawing.Size(33, 13);
@@ -356,6 +357,7 @@
             // 
             // l2dGroupBox
             // 
+            this.l2dGroupBox.BackColor = System.Drawing.SystemColors.Menu;
             this.l2dGroupBox.Controls.Add(this.l2dAssetSearchByFilenameCheckBox);
             this.l2dGroupBox.Controls.Add(this.l2dModelGroupComboBox);
             this.l2dGroupBox.Controls.Add(this.l2dModelGroupLabel);
@@ -458,6 +460,7 @@
             // groupBox2
             // 
             this.groupBox2.AutoSize = true;
+            this.groupBox2.BackColor = System.Drawing.SystemColors.Menu;
             this.groupBox2.Controls.Add(this.exportAllUvsAsDiffuseMaps);
             this.groupBox2.Controls.Add(this.exportBlendShape);
             this.groupBox2.Controls.Add(this.exportAnimations);
@@ -692,6 +695,7 @@
             this.AcceptButton = this.OKbutton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.SystemColors.Menu;
             this.CancelButton = this.Cancel;
             this.ClientSize = new System.Drawing.Size(564, 461);
             this.Controls.Add(this.l2dGroupBox);

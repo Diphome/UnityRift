@@ -46,6 +46,7 @@ namespace AssetStudioGUI
         private uint FMODloopstartms;
         private uint FMODloopendms;
         private float FMODVolume = 0.8f;
+        private bool isDarkMode;
 
         #region SpriteControl
         private SpriteMaskMode spriteMaskVisibleMode = SpriteMaskMode.On;
@@ -125,7 +126,7 @@ namespace AssetStudioGUI
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             ConsoleWindow.RunConsole(Properties.Settings.Default.showConsole);
             InitializeComponent();
-            ApplyColorTheme();
+            ApplyColorTheme(out isDarkMode);
 
             var appAssembly = typeof(Program).Assembly.GetName();
             guiTitle = $"{appAssembly.Name} v{appAssembly.Version}";
@@ -1909,12 +1910,14 @@ namespace AssetStudioGUI
                             x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0
                             || x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0
                             || x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+                        listSearch.ForeColor = SystemColors.WindowText;
                         break;
                     case ListSearchFilterMode.Exclude:
                         visibleAssets = visibleAssets.FindAll(x =>
                             x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0
                             && x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0
                             && x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0);
+                        listSearch.ForeColor = SystemColors.WindowText;
                         break;
                     case ListSearchFilterMode.RegexName:
                     case ListSearchFilterMode.RegexContainer:
@@ -1932,15 +1935,18 @@ namespace AssetStudioGUI
                                 visibleAssets = visibleAssets.FindAll(x => Regex.IsMatch(x.SubItems[1].Text, pattern, regexOptions));
                             }
                             listSearch.BackColor = SystemInformation.HighContrast ? listSearch.BackColor : System.Drawing.Color.PaleGreen;
+                            listSearch.ForeColor = isDarkMode ? System.Drawing.Color.Black : listSearch.ForeColor;
                         }
                         catch (ArgumentException e)
                         {
                             listSearch.BackColor = SystemInformation.HighContrast ? listSearch.BackColor : System.Drawing.Color.FromArgb(255, 160, 160);
+                            listSearch.ForeColor = isDarkMode ? System.Drawing.Color.Black : listSearch.ForeColor;
                             StatusStripUpdate($"Regex error: {e.Message}");
                         }
                         catch (RegexMatchTimeoutException)
                         {
                             listSearch.BackColor = SystemInformation.HighContrast ? listSearch.BackColor : System.Drawing.Color.FromArgb(255, 160, 160);
+                            listSearch.ForeColor = isDarkMode ? System.Drawing.Color.Black : listSearch.ForeColor;
                             StatusStripUpdate($"Timeout error");
                         }
                         break;
@@ -2365,8 +2371,12 @@ namespace AssetStudioGUI
             Properties.Settings.Default.Save();
         }
 
-        private void ApplyColorTheme()
+        private void ApplyColorTheme(out bool isDarkMode)
         {
+            isDarkMode = false;
+            if (SystemInformation.HighContrast)
+                return;
+
 #if NET9_0_OR_GREATER
 #pragma warning disable WFO5001 //for evaluation purposes only
             var currentTheme = Properties.Settings.Default.guiColorTheme;
@@ -2378,6 +2388,7 @@ namespace AssetStudioGUI
                     case GuiColorTheme.System:
                         Application.SetColorMode(SystemColorMode.System);
                         colorThemeAutoToolStripMenuItem.Checked = true;
+                        isDarkMode = Application.IsDarkModeEnabled;
                         break;
                     case GuiColorTheme.Light:
                         colorThemeLightToolStripMenuItem.Checked = true;
@@ -2385,13 +2396,17 @@ namespace AssetStudioGUI
                     case GuiColorTheme.Dark:
                         Application.SetColorMode(SystemColorMode.Dark);
                         colorThemeDarkToolStripMenuItem.Checked = true;
-                        assetListView.GridLines = false;
+                        isDarkMode = true;
                         break;
                 }
             }
             catch (Exception)
             {
                 //skip
+            }
+            if (isDarkMode)
+            {
+                assetListView.GridLines = false;
             }
 #pragma warning restore WFO5001
 #endif
