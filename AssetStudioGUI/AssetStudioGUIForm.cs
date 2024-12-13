@@ -1104,7 +1104,10 @@ namespace AssetStudioGUI
                         channels +
                         bits;
                 }
-                StatusStripUpdate("Preview not available: Unsupported fmod audio format. Try to export instead.");
+                var errorMsg = result == FMOD.RESULT.ERR_VERSION
+                    ? "Unsupported fmod version. Try to export raw and convert with an external tool instead."
+                    : $"Preview not available, try to export instead. {FMOD.Error.String(result)}";
+                StatusStripUpdate(errorMsg);
                 FMODreset();
                 return;
             }

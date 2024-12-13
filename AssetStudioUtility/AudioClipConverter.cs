@@ -39,16 +39,16 @@ namespace AssetStudio
             exinfo.cbsize = Marshal.SizeOf(exinfo);
             exinfo.length = (uint)m_AudioClip.m_Size;
             var result = system.createSound(m_AudioData, MODE.OPENMEMORY, ref exinfo, out var sound);
-            if (result != RESULT.OK)
+            if (ErrorCheck(result, out debugLog))
                 return null;
             result = sound.getNumSubSounds(out var numsubsounds);
-            if (result != RESULT.OK)
+            if (ErrorCheck(result, out debugLog))
                 return null;
             byte[] buff;
             if (numsubsounds > 0)
             {
                 result = sound.getSubSound(0, out var subsound);
-                if (result != RESULT.OK)
+                if (ErrorCheck(result, out debugLog))
                     return null;
                 buff = SoundToWav(subsound, out debugLog);
                 subsound.release();
@@ -67,30 +67,41 @@ namespace AssetStudio
         {
             debugLog = "[Fmod] Detecting sound format..\n";
             var result = sound.getFormat(out SOUND_TYPE soundType, out SOUND_FORMAT soundFormat, out int channels, out int bits);
-            if (result != RESULT.OK)
+            if (ErrorCheck(result, out debugLog))
                 return null;
             debugLog += $"Detected sound type: {soundType}\n" +
                         $"Detected sound format: {soundFormat}\n" +
                         $"Detected channels: {channels}\n" +
                         $"Detected bit depth: {bits}\n";
             result = sound.getDefaults(out var frequency, out _);
-            if (result != RESULT.OK)
+            if (ErrorCheck(result, out debugLog))
                 return null;
             var sampleRate = (int)frequency;
             result = sound.getLength(out var length, TIMEUNIT.PCMBYTES);
-            if (result != RESULT.OK)
+            if (ErrorCheck(result, out debugLog))
                 return null;
             result = sound.@lock(0, length, out var ptr1, out var ptr2, out var len1, out var len2);
-            if (result != RESULT.OK)
+            if (ErrorCheck(result, out debugLog))
                 return null;
             var buffer = new byte[len1 + 44];
             //添加wav头
             WriteWavHeader(buffer, len1, sampleRate, channels, bits);
             Marshal.Copy(ptr1, buffer, 44, (int)len1);
             result = sound.unlock(ptr1, ptr2, len1, len2);
-            if (result != RESULT.OK)
+            if (ErrorCheck(result, out debugLog))
                 return null;
             return buffer;
+        }
+
+        private static bool ErrorCheck(RESULT result, out string log)
+        {
+            log = string.Empty;
+            if (result != RESULT.OK)
+            {
+                log += $"FMOD error! {result} - {Error.String(result)}\n";
+                return true;
+            }
+            return false;
         }
 
         public byte[] RawAudioClipToWav(out string debugLog)
