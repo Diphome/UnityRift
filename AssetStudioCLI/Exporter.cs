@@ -160,6 +160,27 @@ namespace AssetStudioCLI
         {
             if (!TryExportFile(exportPath, item, ".dat", out var exportFullPath, mode: "ExportRaw"))
                 return false;
+            switch (item.Asset)
+            {
+                case Texture2D m_Texture2D:
+                    if (!string.IsNullOrEmpty(m_Texture2D.m_StreamData?.path))
+                    {
+                        File.WriteAllBytes(exportFullPath.Replace(".dat", "_data.dat"), m_Texture2D.image_data.GetData());
+                    }
+                    break;
+                case AudioClip m_AudioClip:
+                    if (!string.IsNullOrEmpty(m_AudioClip.m_Source))
+                    {
+                        File.WriteAllBytes(exportFullPath.Replace(".dat", "_data.dat"), m_AudioClip.m_AudioData.GetData());
+                    }
+                    break;
+                case VideoClip m_VideoClip:
+                    if (!string.IsNullOrEmpty(m_VideoClip.m_ExternalResources.m_Source))
+                    {
+                        File.WriteAllBytes(exportFullPath.Replace(".dat", "_data.dat"), m_VideoClip.m_VideoData.GetData());
+                    }
+                    break;
+            }
             File.WriteAllBytes(exportFullPath, item.Asset.GetRawData());
 
             Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
