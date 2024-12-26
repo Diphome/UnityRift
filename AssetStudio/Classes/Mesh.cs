@@ -444,6 +444,49 @@ namespace AssetStudio
         }
     }
 
+    public class VGPackedHierarchyNode
+    {
+        public Vector4[] LODBounds = new Vector4[8];
+        public Vector3[] BoxBoundsCenter = new Vector3[8];
+        public uint[] MinLODError_MaxParentLODError = new uint[8];
+        public Vector3[] BoxBoundsExtent = new Vector3[8];
+        public uint[] ChildStartReference = new uint[8];
+        public uint[] ResourcePageIndex_NumPages_GroupPartSize = new uint[8];
+
+        public VGPackedHierarchyNode(BinaryReader reader)
+        {
+            for (var i = 0; i < 8; i++)
+            {
+                LODBounds[i] = reader.ReadVector4();
+                BoxBoundsCenter[i] = reader.ReadVector3();
+                MinLODError_MaxParentLODError[i] = reader.ReadUInt32();
+                BoxBoundsExtent[i] = reader.ReadVector3();
+                ChildStartReference[i] = reader.ReadUInt32();
+                ResourcePageIndex_NumPages_GroupPartSize[i] = reader.ReadUInt32();
+            }
+        }
+    }
+
+    public class VGPageStreamingState
+    {
+        public uint BulkOffset;
+        public uint BulkSize;
+        public uint PageSize;
+        public uint DependenciesStart;
+        public uint DependenciesNum;
+        public uint Flags;
+
+        public VGPageStreamingState(BinaryReader reader)
+        {
+            BulkOffset = reader.ReadUInt32();
+            BulkSize = reader.ReadUInt32();
+            PageSize = reader.ReadUInt32();
+            DependenciesStart = reader.ReadUInt32();
+            DependenciesNum = reader.ReadUInt32();
+            Flags = reader.ReadUInt32();
+        }
+    }
+
     public sealed class Mesh : NamedObject
     {
         private bool m_Use16BitIndices = true;
@@ -541,6 +584,36 @@ namespace AssetStudio
                     var m_IsReadable = reader.ReadBoolean();
                     var m_KeepVertices = reader.ReadBoolean();
                     var m_KeepIndices = reader.ReadBoolean();
+                }
+                if (version.IsTuanjie)
+                {
+                    var m_LightmapUseUV1 = reader.ReadInt32();
+                    var m_fileScale = reader.ReadSingle();
+                    var NumInputTriangles = reader.ReadUInt32();
+                    var NumInputVertices = reader.ReadUInt32();
+                    var NumInputMeshes = reader.ReadUInt16();
+                    var NumInputTexCoords = reader.ReadUInt16();
+                    var ResourceFlags = reader.ReadUInt32();
+                    var RootClusterPageSize = reader.ReadInt32();
+                    reader.Position += RootClusterPageSize; //skip byte[] RootClusterPage
+                    var ImposterAtlasSize = reader.ReadInt32();
+                    reader.Position += ImposterAtlasSize * 2; //skip ushort[] ImposterAtlas
+                    var HierarchyNodesSize = reader.ReadInt32();
+                    for (var i = 0; i < HierarchyNodesSize; i++)
+                    {
+                        _ = new VGPackedHierarchyNode(reader);
+                    }
+                    var HierarchyRootOffsetsSize = reader.ReadInt32();
+                    reader.Position += HierarchyRootOffsetsSize * 4; //skip uint[] HierarchyRootOffsets
+                    var PageStreamingStatesSize = reader.ReadInt32();
+                    for (var i = 0; i < PageStreamingStatesSize; i++)
+                    {
+                        _ = new VGPageStreamingState(reader);
+                    }
+                    var PageDependenciesSize = reader.ReadInt32();
+                    reader.Position += PageDependenciesSize * 4; //skip uint[] PageDependencies
+                    var streamableClusterPageSize = reader.ReadInt32();
+                    reader.Position += streamableClusterPageSize; //skip byte[] streamableClusterPageSize
                 }
                 reader.AlignStream();
 
