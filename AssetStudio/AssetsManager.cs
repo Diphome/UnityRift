@@ -544,7 +544,7 @@ namespace AssetStudio
                                 break;
                             case ClassIDType.AnimationClip:
                                 obj = objectReader.serializedType?.m_Type != null && LoadingViaTypeTreeEnabled
-                                    ? new AnimationClip(objectReader, TypeTreeHelper.ReadTypeByteArray(objectReader.serializedType.m_Type, objectReader), jsonOptions)
+                                    ? new AnimationClip(objectReader, TypeTreeHelper.ReadTypeByteArray(objectReader.serializedType.m_Type, objectReader), jsonOptions, objectInfo)
                                     : new AnimationClip(objectReader);
                                 break;
                             case ClassIDType.Animator:
