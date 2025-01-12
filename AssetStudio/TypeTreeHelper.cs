@@ -198,13 +198,21 @@ namespace AssetStudio
             reader.Reset();
             var obj = new OrderedDictionary();
             var m_Nodes = m_Types.m_Nodes;
-            for (int i = 1; i < m_Nodes.Count; i++)
+            var readed = 0L;
+            try
             {
-                var m_Node = m_Nodes[i];
-                var varNameStr = m_Node.m_Name;
-                obj[varNameStr] = ReadValue(m_Nodes, reader, ref i);
+                for (int i = 1; i < m_Nodes.Count; i++)
+                {
+                    var m_Node = m_Nodes[i];
+                    var varNameStr = m_Node.m_Name;
+                    obj[varNameStr] = ReadValue(m_Nodes, reader, ref i);
+                }
+                readed = reader.Position - reader.byteStart;
             }
-            var readed = reader.Position - reader.byteStart;
+            catch (Exception)
+            {
+                //Ignore
+            }
             if (readed != reader.byteSize)
             {
                 Logger.Info($"Failed to read type, read {readed} bytes but expected {reader.byteSize} bytes");

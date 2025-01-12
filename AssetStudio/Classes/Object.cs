@@ -25,7 +25,7 @@ namespace AssetStudio
         public uint byteSize;
         [JsonIgnore]
         public string Name;
-        private static JsonSerializerOptions jsonOptions;
+        private static readonly JsonSerializerOptions jsonOptions;
 
         static Object()
         {
@@ -93,6 +93,24 @@ namespace AssetStudio
                 return null;
 
             return TypeTreeHelper.ReadType(m_Type, reader);
+        }
+
+        public JsonDocument ToJsonDoc(TypeTree m_Type = null)
+        {
+            var typeDict = ToType(m_Type);
+            try
+            {
+                if (typeDict != null)
+                {
+                    return JsonSerializer.SerializeToDocument(typeDict);
+                }
+                return JsonSerializer.SerializeToDocument(this, GetType(), jsonOptions);
+            }
+            catch
+            {
+                //ignore
+            }
+            return null;
         }
 
         public byte[] GetRawData()

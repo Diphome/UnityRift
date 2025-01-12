@@ -34,6 +34,7 @@ namespace AssetStudioGUI
     partial class AssetStudioGUIForm : Form
     {
         private AssetItem lastSelectedItem;
+        private AssetItem lastPreviewItem;
         private DirectBitmap imageTexture;
         private string tempClipboard;
 
@@ -140,6 +141,7 @@ namespace AssetStudioGUI
             showConsoleToolStripMenuItem.Checked = Properties.Settings.Default.showConsole;
             buildTreeStructureToolStripMenuItem.Checked = Properties.Settings.Default.buildTreeStructure;
             useAssetLoadingViaTypetreeToolStripMenuItem.Checked = Properties.Settings.Default.useTypetreeLoading;
+            useDumpTreeViewToolStripMenuItem.Checked = Properties.Settings.Default.useDumpTreeView;
             FMODinit();
             listSearchFilterMode.SelectedIndex = 0;
 
@@ -776,7 +778,7 @@ namespace AssetStudioGUI
                     var at = a.SubItems[sortColumn].Text.AsSpan();
                     var bt = b.SubItems[sortColumn].Text.AsSpan();
 
-                    return reverseSort ? MemoryExtensions.CompareTo(bt, at, StringComparison.OrdinalIgnoreCase) : MemoryExtensions.CompareTo(at, bt, StringComparison.OrdinalIgnoreCase);
+                    return reverseSort ? bt.CompareTo(at, StringComparison.OrdinalIgnoreCase) : at.CompareTo(bt, StringComparison.OrdinalIgnoreCase);
                 });
             }
             assetListView.EndUpdate();
@@ -799,21 +801,43 @@ namespace AssetStudioGUI
 
             lastSelectedItem = (AssetItem)e.Item;
 
-            if (e.IsSelected)
+            if (!e.IsSelected) 
+                return;
+            
+            switch (tabControl2.SelectedIndex)
             {
-                if (tabControl2.SelectedIndex == 1)
-                {
-                    dumpTextBox.Text = DumpAsset(lastSelectedItem.Asset);
-                }
-                if (enablePreview.Checked)
-                {
-                    PreviewAsset(lastSelectedItem);
-                    if (displayInfo.Checked && lastSelectedItem.InfoText != null)
+                case 0: //Preview
+                    if (enablePreview.Checked)
                     {
-                        assetInfoLabel.Text = lastSelectedItem.InfoText;
-                        assetInfoLabel.Visible = true;
+                        PreviewAsset(lastSelectedItem);
+                        if (displayInfo.Checked && lastSelectedItem.InfoText != null)
+                        {
+                            assetInfoLabel.Text = lastSelectedItem.InfoText;
+                            assetInfoLabel.Visible = true;
+                        }
                     }
+                    break;
+                case 1: //Dump
+                    DumpAsset(lastSelectedItem);
+                    break;
+            }
+        }
+
+        private void DumpAsset(AssetItem assetItem)
+        {
+            if (assetItem == null)
+                return;
+
+            if (useDumpTreeViewToolStripMenuItem.Checked)
+            {
+                using (var jsonDoc = DumpAssetToJsonDoc(assetItem.Asset))
+                {
+                    dumpTreeView.LoadFromJson(jsonDoc, assetItem.Text);
                 }
+            }
+            else
+            {
+                dumpTextBox.Text = Studio.DumpAsset(assetItem.Asset);
             }
         }
 
@@ -830,6 +854,7 @@ namespace AssetStudioGUI
             if (e.IsSelected)
             {
                 classTextBox.Text = ((TypeTreeItem)classesListView.SelectedItems[0]).ToString();
+                lastSelectedItem = null;
             }
         }
 
@@ -844,6 +869,7 @@ namespace AssetStudioGUI
 
         private void PreviewAsset(AssetItem assetItem)
         {
+            lastPreviewItem = assetItem;
             if (assetItem == null)
                 return;
             try
@@ -1527,9 +1553,22 @@ namespace AssetStudioGUI
 
         private void tabControl2_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (tabControl2.SelectedIndex == 1 && lastSelectedItem != null)
+            switch (tabControl2.SelectedIndex)
             {
-                dumpTextBox.Text = DumpAsset(lastSelectedItem.Asset);
+                case 0: //Preview
+                    if (lastPreviewItem != lastSelectedItem)
+                    {
+                        PreviewAsset(lastSelectedItem);
+                        if (displayInfo.Checked && lastSelectedItem?.InfoText != null)
+                        {
+                            assetInfoLabel.Text = lastSelectedItem.InfoText;
+                            assetInfoLabel.Visible = true;
+                        }
+                    }
+                    break;
+                case 1: //Dump
+                    DumpAsset(lastSelectedItem);
+                    break;
             }
         }
 
@@ -2047,7 +2086,7 @@ namespace AssetStudioGUI
             if (e.Button == MouseButtons.Right)
             {
                 sceneTreeView.SelectedNode = e.Node;
-                contextMenuStrip2.Show(sceneTreeView, e.Location.X, e.Location.Y);
+                sceneContextMenuStrip.Show(sceneTreeView, e.Location.X, e.Location.Y);
             }
         }
 
@@ -2162,7 +2201,7 @@ namespace AssetStudioGUI
         {
             var selectedNode = sceneTreeView.SelectedNode;
             var relatedAssets = visibleAssets.FindAll(x => x.TreeNode == selectedNode);
-            showRelatedAssetsToolStripMenuItem.DropDownItems.Clear();
+            shShowRelatedAssetsToolStripMenuItem.DropDownItems.Clear();
             if (relatedAssets.Count > 1)
             {
                 var assetItem = new ToolStripMenuItem
@@ -2173,7 +2212,7 @@ namespace AssetStudioGUI
                     Text = "Select all"
                 };
                 assetItem.Click += selectAllRelatedAssets;
-                showRelatedAssetsToolStripMenuItem.DropDownItems.Add(assetItem);
+                shShowRelatedAssetsToolStripMenuItem.DropDownItems.Add(assetItem);
             }
             foreach (var asset in relatedAssets)
             {
@@ -2186,7 +2225,7 @@ namespace AssetStudioGUI
                     Text = $"({asset.TypeString}) {asset.Text}"
                 };
                 assetItem.Click += selectRelatedAsset;
-                showRelatedAssetsToolStripMenuItem.DropDownItems.Add(assetItem);
+                shShowRelatedAssetsToolStripMenuItem.DropDownItems.Add(assetItem);
             }
         }
 
@@ -2460,6 +2499,55 @@ namespace AssetStudioGUI
                       "Dark theme support for WinForms is not yet fully implemented and is for evaluation purposes only.\n" +
                       "Better Dark theme support should be added in future .NET versions.";
             MessageBox.Show(msg, "Info", MessageBoxButtons.OK);
+        }
+
+        private void DumpTreeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                dumpTreeView.SelectedNode = e.Node;
+                tempClipboard = string.IsNullOrEmpty((string)e.Node.Tag)
+                    ? e.Node.Text
+                    : $"{e.Node.Name}: {e.Node.Tag}";
+                dumpTreeViewContextMenuStrip.Show(dumpTreeView, e.Location.X, e.Location.Y);
+            }
+        }
+
+        private void copyToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetDataObject(tempClipboard);
+        }
+
+        private void expandAllToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            dumpTreeView.BeginUpdate();
+            foreach (TreeNode node in dumpTreeView.Nodes)
+            {
+                node.ExpandAll();
+            }
+            dumpTreeView.EndUpdate();
+        }
+
+        private void collapseAllToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            dumpTreeView.BeginUpdate();
+            foreach (TreeNode node in dumpTreeView.Nodes)
+            {
+                node.Collapse(ignoreChildren: false);
+            }
+            dumpTreeView.EndUpdate();
+        }
+
+        private void useDumpTreeViewToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            var isTreeViewEnabled = useDumpTreeViewToolStripMenuItem.Checked;
+            dumpTreeView.Visible = isTreeViewEnabled;
+            Properties.Settings.Default.useDumpTreeView = isTreeViewEnabled;
+            Properties.Settings.Default.Save();
+            if (tabControl2.SelectedIndex == 1)
+            {
+                DumpAsset(lastSelectedItem);
+            }
         }
 
         #region FMOD

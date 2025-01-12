@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -304,12 +305,15 @@ namespace AssetStudioGUI
                             {
                                 preloadTable = m_AssetBundle.m_PreloadTable;
                             }
-                            assetItem.Text = string.IsNullOrEmpty(m_AssetBundle.m_AssetBundleName) ? m_AssetBundle.m_Name : m_AssetBundle.m_AssetBundleName;
-
+                            assetItem.Text = string.IsNullOrEmpty(m_AssetBundle.m_AssetBundleName)
+                                ? m_AssetBundle.m_Name
+                                : m_AssetBundle.m_AssetBundleName;
                             foreach (var m_Container in m_AssetBundle.m_Container)
                             {
                                 var preloadIndex = m_Container.Value.preloadIndex;
-                                var preloadSize = isStreamedSceneAssetBundle ? preloadTable.Length : m_Container.Value.preloadSize;
+                                var preloadSize = isStreamedSceneAssetBundle
+                                    ? preloadTable.Length
+                                    : m_Container.Value.preloadSize;
                                 var preloadEnd = preloadIndex + preloadSize;
                                 for (var k = preloadIndex; k < preloadEnd; k++)
                                 {
@@ -689,7 +693,9 @@ namespace AssetStudioGUI
                     Logger.Error(ex.Value);
                 }
 
-                var statusText = exportedCount == 0 ? "Nothing exported." : $"Finished {mode.ToLower()}ing [{exportedCount}/{toExportCount}] assets.";
+                var statusText = exportedCount == 0
+                    ? "Nothing exported."
+                    : $"Finished {mode.ToLower()}ing [{exportedCount}/{toExportCount}] assets.";
                 if (toExportCount > exportedCount)
                 {
                     statusText += exceptionMsgs.IsEmpty
@@ -779,7 +785,7 @@ namespace AssetStudioGUI
                         //每个文件存放在单独的文件夹
                         var targetPath = $"{savePath}{filename}{Path.DirectorySeparatorChar}";
                         //重名文件处理
-                        for (int i = 1; ; i++)
+                        for (int i = 1;; i++)
                         {
                             if (Directory.Exists(targetPath))
                             {
@@ -963,6 +969,19 @@ namespace AssetStudioGUI
                 str = obj.DumpObject();
             }
             return str;
+        }
+
+        public static JsonDocument DumpAssetToJsonDoc(Object obj)
+        {
+            if (obj == null)
+                return null;
+
+            if (obj is MonoBehaviour m_MonoBehaviour)
+            {
+                var type = obj.serializedType?.m_Type ?? MonoBehaviourToTypeTree(m_MonoBehaviour);
+                return m_MonoBehaviour.ToJsonDoc(type);
+            }
+            return obj.ToJsonDoc();
         }
 
         public static void OpenFolderInExplorer(string path)

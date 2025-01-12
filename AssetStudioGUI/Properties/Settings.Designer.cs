@@ -430,5 +430,17 @@ namespace AssetStudioGUI.Properties {
                 this["l2dAssetSearchByFilename"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool useDumpTreeView {
+            get {
+                return ((bool)(this["useDumpTreeView"]));
+            }
+            set {
+                this["useDumpTreeView"] = value;
+            }
+        }
     }
 }
