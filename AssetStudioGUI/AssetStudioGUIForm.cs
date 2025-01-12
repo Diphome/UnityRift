@@ -269,6 +269,8 @@ namespace AssetStudioGUI
             var (productName, treeNodeCollection) = await Task.Run(BuildAssetData);
             var typeMap = await Task.Run(BuildClassStructure);
             productName = string.IsNullOrEmpty(productName) ? "no productName" : productName;
+            if (isDarkMode)
+                Progress.Reset();
 
             Text = $"{guiTitle} - {productName} - {assetsManager.assetsFileList[0].version} - {assetsManager.assetsFileList[0].targetPlatformString}";
 
