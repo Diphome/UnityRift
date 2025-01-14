@@ -215,13 +215,13 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: AssetGroupOption.ContainerPath,
                 optionName: "-g, --group-option <value>",
                 optionDescription: "Specify the way in which exported assets should be grouped\n" +
-                    "<Value: none | type | container(default) | containerFull | filename | sceneHierarchy>\n" +
+                    "<Value: none | type | container(default) | containerFull | fileName | sceneHierarchy>\n" +
                     "None - Do not group exported assets\n" +
                     "Type - Group exported assets by type name\n" +
                     "Container - Group exported assets by container path\n" +
                     "ContainerFull - Group exported assets by full container path (e.g. with prefab name)\n" +
                     "SceneHierarchy - Group exported assets by their node path in scene hierarchy\n" +
-                    "Filename - Group exported assets by source file name\n",
+                    "FileName - Group exported assets by source file name\n",
                 optionExample: "Example: \"-g containerFull\"\n",
                 optionHelpGroup: HelpGroups.General
             );
@@ -307,10 +307,11 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: CubismLive2DExtractor.Live2DModelGroupOption.ContainerPath,
                 optionName: "--l2d-group-option <value>",
                 optionDescription: "Specify the way in which exported models should be grouped\n" +
-                    "<Value: container(default) | filename >\n" +
+                    "<Value: container(default) | fileName | modelName>\n" +
                     "Container - Group exported models by container path\n" +
-                    "Filename - Group exported models by source file name\n",
-                optionExample: "Example: \"--l2d-group-option filename\"\n",
+                    "FileName - Group exported models by source file name\n" +
+                    "ModelName - Group exported models by model name\n",
+                optionExample: "Example: \"--l2d-group-option modelName\"\n",
                 optionHelpGroup: HelpGroups.Live2D
             );
             o_l2dMotionMode = new GroupedOption<CubismLive2DExtractor.Live2DMotionMode>
@@ -331,7 +332,8 @@ namespace AssetStudioCLI.Options
                 optionName: "--l2d-search-by-filename",
                 optionDescription: "(Flag) If specified, Studio will search for model-related Live2D assets by file name\n" + 
                     "rather than by container\n" +
-                    "(Preferred option when all model-related assets are stored in a single file)\n",
+                    "(Preferred option if all l2d assets of a single model are stored in a single file\n" + 
+                    "or containers are obfuscated)\n",
                 optionExample: "",
                 optionHelpGroup: HelpGroups.Live2D,
                 isFlag: true
@@ -880,6 +882,9 @@ namespace AssetStudioCLI.Options
                                 case "filename":
                                     o_l2dGroupOption.Value = CubismLive2DExtractor.Live2DModelGroupOption.SourceFileName;
                                     break;
+                                case "modelname":
+                                    o_l2dGroupOption.Value = CubismLive2DExtractor.Live2DModelGroupOption.ModelName;
+                                    break;
                                 default:
                                     Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported model grouping option: [{value.Color(brightRed)}].\n");
                                     ShowOptionDescription(o_l2dGroupOption);
@@ -1255,7 +1260,7 @@ namespace AssetStudioCLI.Options
                     else
                     {
                         sb.AppendLine($"# Model Group Option: {o_l2dGroupOption}");
-                        sb.AppendFormat("# Search model-related assets by: {0}", f_l2dAssetSearchByFilename.Value ? "Filename" : "Container");
+                        sb.AppendFormat("# Search model-related assets by: {0}\n", f_l2dAssetSearchByFilename.Value ? "FileName" : "Container");
                         sb.AppendLine($"# Motion Export Method: {o_l2dMotionMode}");
                         sb.AppendLine($"# Force Bezier: {f_l2dForceBezier }");
                         sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");

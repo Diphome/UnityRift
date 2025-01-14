@@ -1216,6 +1216,10 @@ namespace AssetStudioGUI
             using (var cubismMoc = new CubismMoc(m_MonoBehaviour))
             {
                 var sb = new StringBuilder();
+                if (Studio.l2dModelDict.TryGetValue(m_MonoBehaviour, out var model) && model != null)
+                {
+                    sb.AppendLine($"Model Name: {model.Name}");
+                }
                 sb.AppendLine($"SDK Version: {cubismMoc.VersionDescription}");
                 if (cubismMoc.Version > 0)
                 {
@@ -1512,11 +1516,11 @@ namespace AssetStudioGUI
         private void ResetForm()
         {
             Text = guiTitle;
-            assetsManager.Clear();
-            assemblyLoader.Clear();
-            exportableAssets.Clear();
-            visibleAssets.Clear();
-            l2dModelDict.Clear();
+            Studio.assetsManager.Clear();
+            Studio.assemblyLoader.Clear();
+            Studio.exportableAssets.Clear();
+            Studio.visibleAssets.Clear();
+            Studio.l2dModelDict.Clear();
             sceneTreeView.Nodes.Clear();
             assetListView.VirtualListSize = 0;
             assetListView.Items.Clear();

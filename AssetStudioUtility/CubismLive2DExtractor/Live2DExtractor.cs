@@ -41,7 +41,7 @@ namespace CubismLive2DExtractor
         private HashSet<string> EyeBlinkParameters { get; set; }
         private HashSet<string> LipSyncParameters { get; set; }
 
-        public Live2DExtractor(List<Object> assets, List<AnimationClip> inClipMotions = null, List<MonoBehaviour> inFadeMotions = null, MonoBehaviour inFadeMotionLst = null)
+        public Live2DExtractor(KeyValuePair<MonoBehaviour, List<Object>> assetGroupKvp, List<AnimationClip> inClipMotions = null, List<MonoBehaviour> inFadeMotions = null, MonoBehaviour inFadeMotionLst = null)
         {
             Expressions = new List<MonoBehaviour>();
             FadeMotions = inFadeMotions ?? new List<MonoBehaviour>();
@@ -63,7 +63,48 @@ namespace CubismLive2DExtractor
             var searchPoseParts = true;
 
             Logger.Debug("Sorting model assets..");
-            foreach (var asset in assets)
+
+            MocMono = assetGroupKvp.Key;
+            if (MocDict.TryGetValue(MocMono, out var model) && model != null)
+            {
+                Model = model;
+                PhysicsMono = Model.PhysicsController;
+                if (inFadeMotionLst == null && TryGetFadeList(Model.FadeController, out var fadeMono))
+                {
+                    FadeMotionLst = inFadeMotionLst = fadeMono;
+                }
+                if (TryGetExpressionList(Model.ExpressionController, out var expressionMono))
+                {
+                    ExpressionLst = expressionMono;
+                }
+                if (Model.RenderTextureList.Count > 0)
+                {
+                    var renderList = Model.RenderTextureList;
+                    foreach (var renderMono in renderList)
+                    {
+                        if (!TryGetRenderTexture(renderMono, out var tex))
+                            break;
+                        renderTextureSet.Add(tex);
+                    }
+                    searchRenderTextures = renderTextureSet.Count == 0;
+                }
+                if (Model.ParamDisplayInfoList.Count > 0)
+                {
+                    ParametersCdi = Model.ParamDisplayInfoList;
+                    searchModelParamCdi = false;
+                }
+                if (Model.PartDisplayInfoList.Count > 0)
+                {
+                    PartsCdi = Model.PartDisplayInfoList;
+                    searchModelPartCdi = false;
+                }
+                if (Model.PosePartList.Count > 0)
+                {
+                    PoseParts = Model.PosePartList;
+                    searchPoseParts = false;
+                }
+            }
+            foreach (var asset in assetGroupKvp.Value)
             {
                 switch (asset)
                 {
@@ -72,48 +113,6 @@ namespace CubismLive2DExtractor
                         {
                             switch (m_Script.m_ClassName)
                             {
-                                case "CubismMoc":
-                                    MocMono = m_MonoBehaviour;
-                                    Model = MocDict[MocMono];
-                                    if (Model != null)
-                                    {
-                                        PhysicsMono = Model.PhysicsController;
-                                        if (inFadeMotionLst == null && TryGetFadeList(Model.FadeController, out var fadeMono))
-                                        {
-                                            FadeMotionLst = inFadeMotionLst = fadeMono;
-                                        }
-                                        if (TryGetExpressionList(Model.ExpressionController, out var expressionMono))
-                                        {
-                                            ExpressionLst = expressionMono;
-                                        }
-                                        if (Model.RenderTextureList.Count > 0)
-                                        {
-                                            var renderList = Model.RenderTextureList;
-                                            foreach (var renderMono in renderList)
-                                            {
-                                                if (!TryGetRenderTexture(renderMono, out var tex))
-                                                    break;
-                                                renderTextureSet.Add(tex);
-                                            }
-                                            searchRenderTextures = renderTextureSet.Count == 0;
-                                        }
-                                        if (Model.ParamDisplayInfoList.Count > 0)
-                                        {
-                                            ParametersCdi = Model.ParamDisplayInfoList;
-                                            searchModelParamCdi = false;
-                                        }
-                                        if (Model.PartDisplayInfoList.Count > 0)
-                                        {
-                                            PartsCdi = Model.PartDisplayInfoList;
-                                            searchModelPartCdi = false;
-                                        }
-                                        if (Model.PosePartList.Count > 0)
-                                        {
-                                            PoseParts = Model.PosePartList;
-                                            searchPoseParts = false;
-                                        }
-                                    }
-                                    break;
                                 case "CubismPhysicsController":
                                     if (PhysicsMono == null)
                                         PhysicsMono = m_MonoBehaviour;
@@ -252,7 +251,11 @@ namespace CubismLive2DExtractor
             {
                 var savePath = $"{destTexturePath}{texture2D.m_Name}.png";
                 if (!savePathHash.TryAdd(savePath, true))
-                    return;
+                {
+                    savePath = $"{destTexturePath}{texture2D.m_Name}_#{texture2D.GetHashCode()}.png";
+                    if (!savePathHash.TryAdd(savePath, true))
+                        return;
+                }
 
                 using (var image = texture2D.ConvertToImage(flip: true))
                 {
@@ -293,19 +296,19 @@ namespace CubismLive2DExtractor
                 if (fadeMotionLstDict != null)
                 {
                     var cubismFadeList = JsonConvert.DeserializeObject<CubismFadeMotionList>(JsonConvert.SerializeObject(fadeMotionLstDict));
-                    var fadeMotionAssetList = new List<MonoBehaviour>();
+                    var fadeMotionAssetSet = new HashSet<MonoBehaviour>();
                     foreach (var motionPPtr in cubismFadeList.CubismFadeMotionObjects)
                     {
                         if (motionPPtr.TryGet<MonoBehaviour>(out var fadeMono, FadeMotionLst.assetsFile))
                         {
-                            fadeMotionAssetList.Add(fadeMono);
+                            fadeMotionAssetSet.Add(fadeMono);
                         }
                     }
            
-                    if (fadeMotionAssetList.Count > 0)
+                    if (fadeMotionAssetSet.Count > 0)
                     {
-                        FadeMotions = fadeMotionAssetList;
-                        Logger.Debug($"\"{FadeMotionLst.m_Name}\": found {fadeMotionAssetList.Count} motion(s)");
+                        FadeMotions = fadeMotionAssetSet.ToList();
+                        Logger.Debug($"\"{FadeMotionLst.m_Name}\": found {fadeMotionAssetSet.Count} motion(s)");
                     }
                 }
             }
@@ -361,19 +364,19 @@ namespace CubismLive2DExtractor
                 if (expLstDict != null)
                 {
                     var cubismExpList = JsonConvert.DeserializeObject<CubismExpressionList>(JsonConvert.SerializeObject(expLstDict));
-                    var expAssetList = new List<MonoBehaviour>();
+                    var expAssetSet = new HashSet<MonoBehaviour>();
                     foreach (var expPPtr in cubismExpList.CubismExpressionObjects)
                     {
                         if (expPPtr.TryGet<MonoBehaviour>(out var expMono, ExpressionLst.assetsFile))
                         {
-                            expAssetList.Add(expMono);
+                            expAssetSet.Add(expMono);
                         }
                     }
 
-                    if (expAssetList.Count > 0)
+                    if (expAssetSet.Count > 0)
                     {
-                        Expressions = expAssetList;
-                        Logger.Debug($"\"{ExpressionLst.m_Name}\": found {expAssetList.Count} expression(s)");
+                        Expressions = expAssetSet.ToList();
+                        Logger.Debug($"\"{ExpressionLst.m_Name}\": found {expAssetSet.Count} expression(s)");
                     }
                 }
             }

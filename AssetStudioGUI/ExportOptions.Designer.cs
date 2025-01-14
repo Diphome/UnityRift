@@ -379,7 +379,8 @@
             this.l2dAssetSearchByFilenameCheckBox.Size = new System.Drawing.Size(270, 17);
             this.l2dAssetSearchByFilenameCheckBox.TabIndex = 3;
             this.l2dAssetSearchByFilenameCheckBox.Text = "Search for model-related Live2D assets by file name";
-            this.optionTooltip.SetToolTip(this.l2dAssetSearchByFilenameCheckBox, "Preferred option when all model-related assets are stored in a single file");
+            this.optionTooltip.SetToolTip(this.l2dAssetSearchByFilenameCheckBox, "Preferred option if all l2d assets of a single model are stored in a single file " +
+        "or containers are obfuscated");
             this.l2dAssetSearchByFilenameCheckBox.UseVisualStyleBackColor = true;
             // 
             // l2dModelGroupComboBox
@@ -388,7 +389,8 @@
             this.l2dModelGroupComboBox.FormattingEnabled = true;
             this.l2dModelGroupComboBox.Items.AddRange(new object[] {
             "container path",
-            "source file name"});
+            "source file name",
+            "model name"});
             this.l2dModelGroupComboBox.Location = new System.Drawing.Point(142, 18);
             this.l2dModelGroupComboBox.Name = "l2dModelGroupComboBox";
             this.l2dModelGroupComboBox.Size = new System.Drawing.Size(154, 21);

@@ -4,5 +4,6 @@
     {
         ContainerPath,
         SourceFileName,
+        ModelName,
     }
 }
