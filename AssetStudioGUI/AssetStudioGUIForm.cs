@@ -43,6 +43,7 @@ namespace AssetStudioGUI
         private FMOD.Channel channel;
         private FMOD.SoundGroup masterSoundGroup;
         private FMOD.MODE loopMode = FMOD.MODE.LOOP_OFF;
+        private byte[] soundBuff;
         private uint FMODlenms;
         private uint FMODloopstartms;
         private uint FMODloopendms;
@@ -1101,17 +1102,16 @@ namespace AssetStudioGUI
                         break;
                 }
             }
-
-            var m_AudioData = m_AudioClip.m_AudioData.GetData();
-            if (m_AudioData == null || m_AudioData.Length == 0)
+            soundBuff = BigArrayPool<byte>.Shared.Rent(m_AudioClip.m_AudioData.Size);
+            m_AudioClip.m_AudioData.GetData(soundBuff, out var read);
+            if (read <= 0)
                 return;
 
             var exinfo = new FMOD.CREATESOUNDEXINFO();
-
             exinfo.cbsize = Marshal.SizeOf(exinfo);
             exinfo.length = (uint)m_AudioClip.m_Size;
 
-            var result = system.createSound(m_AudioData, FMOD.MODE.OPENMEMORY | loopMode, ref exinfo, out sound);
+            var result = system.createStream(soundBuff, FMOD.MODE.OPENMEMORY | FMOD.MODE.LOWMEM | FMOD.MODE.IGNORETAGS | FMOD.MODE.ACCURATETIME | loopMode, ref exinfo, out sound);
             if (result != FMOD.RESULT.OK)
             {
                 if (m_AudioClip.version < (2, 6) || m_AudioClip.version >= 5)
@@ -1141,7 +1141,6 @@ namespace AssetStudioGUI
             }
 
             sound.getNumSubSounds(out var numsubsounds);
-
             if (numsubsounds > 0)
             {
                 result = sound.getSubSound(0, out var subsound);
@@ -1172,6 +1171,20 @@ namespace AssetStudioGUI
 
             FMODinfoLabel.Text = frequency + " Hz";
             FMODtimerLabel.Text = $"00:00.00 / {(FMODlenms / 1000 / 60):00}:{(FMODlenms / 1000 % 60):00}.{(FMODlenms / 10 % 100):00}";
+            
+            sound.getFormat(out _, out _, out var audioChannels, out _);
+            switch (audioChannels)
+            {
+                case 1:
+                    FMODaudioChannelsLabel.Text = "Mono";
+                    break;
+                case 2:
+                    FMODaudioChannelsLabel.Text = "Stereo";
+                    break;
+                default:
+                    FMODaudioChannelsLabel.Text = $"{audioChannels}-Channel";
+                    break;
+            }
         }
 
         private void PreviewVideoClip(AssetItem assetItem, VideoClip m_VideoClip)
@@ -2589,12 +2602,18 @@ namespace AssetStudioGUI
             FMODtimerLabel.Text = "00:00.00 / 00:00.00";
             FMODstatusLabel.Text = "Stopped";
             FMODinfoLabel.Text = "";
+            FMODaudioChannelsLabel.Text = "";
 
             if (sound.hasHandle())
             {
                 var result = sound.release();
                 ERRCHECK(result);
                 sound.clearHandle();
+            }
+            if (soundBuff != null)
+            {
+                BigArrayPool<byte>.Shared.Return(soundBuff, clearArray: true);
+                soundBuff = null;
             }
         }
 

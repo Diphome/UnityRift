@@ -80,17 +80,18 @@ namespace AssetStudio
             lock (binaryReader)
             {
                 binaryReader.BaseStream.Position = Offset;
-                return binaryReader.ReadBytes((int) size);
+                return binaryReader.ReadBytes((int)size);
             }
         }
 
-        public void GetData(byte[] buff, int startIndex = 0)
+        public void GetData(byte[] buff, out int read, int startIndex = 0)
         {
+            read = -1;
             var binaryReader = GetReader();
             lock (binaryReader)
             {
                 binaryReader.BaseStream.Position = Offset;
-                binaryReader.Read(buff, startIndex, (int) size);
+                read = binaryReader.Read(buff, startIndex, (int)size);
             }
         }
 

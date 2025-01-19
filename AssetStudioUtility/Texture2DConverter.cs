@@ -89,7 +89,7 @@ namespace AssetStudio
             var buff = BigArrayPool<byte>.Shared.Rent(reader.Size);
             try
             {
-                reader.GetData(buff);
+                reader.GetData(buff, out _);
                 if (switchSwizzled)
                 {
                     var unswizzledData = BigArrayPool<byte>.Shared.Rent(reader.Size);

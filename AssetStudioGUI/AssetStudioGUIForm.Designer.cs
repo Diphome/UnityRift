@@ -124,7 +124,8 @@
             this.previewPanel = new System.Windows.Forms.PictureBox();
             this.assetInfoLabel = new System.Windows.Forms.Label();
             this.FMODpanel = new System.Windows.Forms.Panel();
-            this.FMODcopyright = new System.Windows.Forms.Label();
+            this.FMODaudioChannelsLabel = new System.Windows.Forms.Label();
+            this.FMODcopyrightLabel = new System.Windows.Forms.Label();
             this.FMODinfoLabel = new System.Windows.Forms.Label();
             this.FMODtimerLabel = new System.Windows.Forms.Label();
             this.FMODstatusLabel = new System.Windows.Forms.Label();
@@ -1077,7 +1078,8 @@
             // FMODpanel
             // 
             this.FMODpanel.BackColor = System.Drawing.SystemColors.ControlDark;
-            this.FMODpanel.Controls.Add(this.FMODcopyright);
+            this.FMODpanel.Controls.Add(this.FMODaudioChannelsLabel);
+            this.FMODpanel.Controls.Add(this.FMODcopyrightLabel);
             this.FMODpanel.Controls.Add(this.FMODinfoLabel);
             this.FMODpanel.Controls.Add(this.FMODtimerLabel);
             this.FMODpanel.Controls.Add(this.FMODstatusLabel);
@@ -1094,18 +1096,31 @@
             this.FMODpanel.TabIndex = 2;
             this.FMODpanel.Visible = false;
             // 
-            // FMODcopyright
+            // FMODaudioChannelsLabel
             // 
-            this.FMODcopyright.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.FMODcopyright.AutoSize = true;
-            this.FMODcopyright.BackColor = System.Drawing.Color.Transparent;
-            this.FMODcopyright.ForeColor = System.Drawing.Color.White;
-            this.FMODcopyright.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.FMODcopyright.Location = new System.Drawing.Point(214, 365);
-            this.FMODcopyright.Name = "FMODcopyright";
-            this.FMODcopyright.Size = new System.Drawing.Size(283, 13);
-            this.FMODcopyright.TabIndex = 9;
-            this.FMODcopyright.Text = "Audio Engine supplied by FMOD by Firelight Technologies.";
+            this.FMODaudioChannelsLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.FMODaudioChannelsLabel.AutoSize = true;
+            this.FMODaudioChannelsLabel.BackColor = System.Drawing.Color.Transparent;
+            this.FMODaudioChannelsLabel.ForeColor = System.Drawing.Color.White;
+            this.FMODaudioChannelsLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.FMODaudioChannelsLabel.Location = new System.Drawing.Point(368, 255);
+            this.FMODaudioChannelsLabel.Name = "FMODaudioChannelsLabel";
+            this.FMODaudioChannelsLabel.Size = new System.Drawing.Size(38, 13);
+            this.FMODaudioChannelsLabel.TabIndex = 10;
+            this.FMODaudioChannelsLabel.Text = "Stereo";
+            // 
+            // FMODcopyrightLabel
+            // 
+            this.FMODcopyrightLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.FMODcopyrightLabel.AutoSize = true;
+            this.FMODcopyrightLabel.BackColor = System.Drawing.Color.Transparent;
+            this.FMODcopyrightLabel.ForeColor = System.Drawing.Color.White;
+            this.FMODcopyrightLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.FMODcopyrightLabel.Location = new System.Drawing.Point(214, 365);
+            this.FMODcopyrightLabel.Name = "FMODcopyrightLabel";
+            this.FMODcopyrightLabel.Size = new System.Drawing.Size(283, 13);
+            this.FMODcopyrightLabel.TabIndex = 9;
+            this.FMODcopyrightLabel.Text = "Audio Engine supplied by FMOD by Firelight Technologies.";
             // 
             // FMODinfoLabel
             // 
@@ -1126,7 +1141,7 @@
             this.FMODtimerLabel.BackColor = System.Drawing.Color.Transparent;
             this.FMODtimerLabel.ForeColor = System.Drawing.Color.White;
             this.FMODtimerLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.FMODtimerLabel.Location = new System.Drawing.Point(457, 253);
+            this.FMODtimerLabel.Location = new System.Drawing.Point(457, 255);
             this.FMODtimerLabel.Name = "FMODtimerLabel";
             this.FMODtimerLabel.Size = new System.Drawing.Size(102, 13);
             this.FMODtimerLabel.TabIndex = 7;
@@ -1649,7 +1664,7 @@
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.TextBox classTextBox;
         private System.Windows.Forms.ToolStripMenuItem exportClassStructuresMenuItem;
-        private System.Windows.Forms.Label FMODcopyright;
+        private System.Windows.Forms.Label FMODcopyrightLabel;
         private OpenTK.GLControl glControl1;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem showOriginalFileToolStripMenuItem;
@@ -1735,6 +1750,7 @@
         private System.Windows.Forms.ToolStripMenuItem colorThemeAutoToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem colorThemeLightToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem colorThemeDarkToolStripMenuItem;
+        private System.Windows.Forms.Label FMODaudioChannelsLabel;
     }
 }
 

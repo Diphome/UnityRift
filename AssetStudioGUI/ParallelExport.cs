@@ -101,8 +101,8 @@ namespace AssetStudioGUI
             var m_AudioData = BigArrayPool<byte>.Shared.Rent(m_AudioClip.m_AudioData.Size);
             try
             {
-                m_AudioClip.m_AudioData.GetData(m_AudioData);
-                if (m_AudioData == null || m_AudioData.Length == 0)
+                m_AudioClip.m_AudioData.GetData(m_AudioData, out var read);
+                if (read <= 0)
                 {
                     Logger.Warning($"Failed to export \"{item.Text}\": AudioData was not found");
                     return false;
@@ -115,25 +115,8 @@ namespace AssetStudioGUI
 
                     if (GUILogger.ShowDebugMessage)
                     {
-                        var sb = new StringBuilder();
-                        sb.AppendLine($"Converting {item.TypeString} \"{m_AudioClip.m_Name}\" to wav..");
-                        if (m_AudioClip.version >= (2, 6))
-                        {
-                            sb.AppendLine(m_AudioClip.version < 5
-                                ? $"AudioClip type: {m_AudioClip.m_Type}"
-                                : $"AudioClip compression format: {m_AudioClip.m_CompressionFormat}");
-                            sb.AppendLine($"AudioClip channel count: {m_AudioClip.m_Channels}");
-                            sb.AppendLine($"AudioClip sample rate: {m_AudioClip.m_Frequency}");
-                            sb.AppendLine($"AudioClip bit depth: {m_AudioClip.m_BitsPerSample}");
-                        }
-                        else
-                        {
-                            sb.AppendLine($"Is raw AudioClip: {m_AudioClip.m_Format != 0x05}");
-                            sb.AppendLine($"AudioClip channel count: {m_AudioClip.m_Channels}");
-                            sb.AppendLine($"AudioClip sample rate: {m_AudioClip.m_Frequency}");
-                        }
-
-                        debugLog += sb.ToString();
+                        debugLog += $"Converting {item.TypeString} \"{m_AudioClip.m_Name}\" to wav..\n";
+                        debugLog += GenerateAudioClipInfo(m_AudioClip);
                     }
 
                     var debugLogConverter = "";
@@ -155,24 +138,8 @@ namespace AssetStudioGUI
 
                     if (GUILogger.ShowDebugMessage)
                     {
-                        var sb = new StringBuilder();
-                        sb.AppendLine($"Exporting non-fmod {item.TypeString} \"{m_AudioClip.m_Name}\"..");
-                        if (m_AudioClip.version >= (2, 6))
-                        {
-                            sb.AppendLine(m_AudioClip.version < 5
-                                ? $"AudioClip type: {m_AudioClip.m_Type}"
-                                : $"AudioClip compression format: {m_AudioClip.m_CompressionFormat}");
-                            sb.AppendLine($"AudioClip channel count: {m_AudioClip.m_Channels}");
-                            sb.AppendLine($"AudioClip sample rate: {m_AudioClip.m_Frequency}");
-                            sb.AppendLine($"AudioClip bit depth: {m_AudioClip.m_BitsPerSample}");
-                        }
-                        else 
-                        {
-                            sb.AppendLine($"Is raw AudioClip: {m_AudioClip.m_Format != 0x05}");
-                            sb.AppendLine($"AudioClip sample rate: {m_AudioClip.m_Frequency}");
-                        }
-
-                        debugLog += sb.ToString();
+                        debugLog += $"Exporting non-fmod {item.TypeString} \"{m_AudioClip.m_Name}\"..\n";
+                        debugLog += GenerateAudioClipInfo(m_AudioClip);
                     }
                     using (var file = File.OpenWrite(exportFullPath))
                     {
@@ -186,6 +153,32 @@ namespace AssetStudioGUI
             {
                 BigArrayPool<byte>.Shared.Return(m_AudioData, clearArray: true);
             }
+        }
+
+        private static string GenerateAudioClipInfo(AudioClip m_AudioClip)
+        {
+            var sb = new StringBuilder();
+            if (m_AudioClip.version >= (2, 6))
+            {
+                sb.AppendLine(m_AudioClip.version < 5
+                    ? $"AudioClip type: {m_AudioClip.m_Type}"
+                    : $"AudioClip compression format: {m_AudioClip.m_CompressionFormat}");
+                if (m_AudioClip.version >= 5)
+                {
+                    sb.AppendLine($"AudioClip channel count: {m_AudioClip.m_Channels}");
+                    sb.AppendLine($"AudioClip sample rate: {m_AudioClip.m_Frequency}");
+                    sb.AppendLine($"AudioClip bit depth: {m_AudioClip.m_BitsPerSample}");
+                }
+            }
+            else
+            {
+                var isRawWav = m_AudioClip.m_Format != 0x05;
+                sb.AppendLine($"Is raw wav data: {isRawWav}");
+                if (isRawWav)
+                    sb.AppendLine($"AudioClip channel count: {m_AudioClip.m_Channels}");
+                sb.AppendLine($"AudioClip sample rate: {m_AudioClip.m_Frequency}");
+            }
+            return sb.ToString();
         }
 
         private static bool TryExportFile(string dir, AssetItem item, string extension, out string fullPath)

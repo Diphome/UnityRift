@@ -38,7 +38,7 @@ namespace AssetStudio
             var exinfo = new CREATESOUNDEXINFO();
             exinfo.cbsize = Marshal.SizeOf(exinfo);
             exinfo.length = (uint)m_AudioClip.m_Size;
-            var result = system.createSound(m_AudioData, MODE.OPENMEMORY, ref exinfo, out var sound);
+            var result = system.createSound(m_AudioData, MODE.OPENMEMORY | MODE.LOWMEM | MODE.ACCURATETIME, ref exinfo, out var sound);
             if (ErrorCheck(result, out debugLog))
                 return null;
             result = sound.getNumSubSounds(out var numsubsounds);
@@ -106,19 +106,20 @@ namespace AssetStudio
 
         public byte[] RawAudioClipToWav(out string debugLog)
         {
-            var audioSize = m_AudioClip.m_Size;
+            var audioSize = (uint)m_AudioClip.m_Size;
             var channels = m_AudioClip.m_Channels;
             var sampleRate = m_AudioClip.m_Frequency;
             var bits = 16;
 
             debugLog = "[Legacy wav converter] Generating wav header..\n";
             var buffer = new byte[audioSize + 44];
-            m_AudioClip.m_AudioData.GetData(buffer, 44);
-            WriteWavHeader(buffer, audioSize, sampleRate, channels, bits);
+            m_AudioClip.m_AudioData.GetData(buffer, out var read, 44);
+            if (read > 0)
+                WriteWavHeader(buffer, audioSize, sampleRate, channels, bits);
             return buffer;
         }
 
-        private static void WriteWavHeader(byte[] buffer, long size, int sampleRate, int channels, int bits)
+        private static void WriteWavHeader(byte[] buffer, uint size, int sampleRate, int channels, int bits)
         {
             Encoding.ASCII.GetBytes("RIFF").CopyTo(buffer, 0);
             BitConverter.GetBytes(size + 36).CopyTo(buffer, 4);
