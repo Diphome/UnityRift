@@ -32,7 +32,11 @@ namespace AssetStudioCLI
 
             try
             {
-                if (Studio.LoadAssets())
+                if (CLIOptions.o_workMode.Value == WorkMode.Extract)
+                {
+                    Studio.ExtractBundles();
+                }
+                else if (Studio.LoadAssets())
                 {
                     Studio.ParseAssets();
                     if (CLIOptions.filterBy != FilterBy.None)

@@ -20,6 +20,7 @@ namespace AssetStudioCLI.Options
 
     internal enum WorkMode
     {
+        Extract,
         Export,
         ExportRaw,
         Dump,
@@ -136,7 +137,7 @@ namespace AssetStudioCLI.Options
             }
 
             var optionDesc = desc + example.Color(ColorConsole.BrightBlack);
-            var optionDict = new Dictionary<string, string>() { { name, optionDesc } };
+            var optionDict = new Dictionary<string, string> { { name, optionDesc } };
             if (optionGroups.TryGetValue(helpGroup, out Dictionary<string, string> groupDict))
             {
                 groupDict.Add(name, optionDesc);
@@ -188,7 +189,8 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: WorkMode.Export,
                 optionName: "-m, --mode <value>",
                 optionDescription: "Specify working mode\n" +
-                    "<Value: export(default) | exportRaw | dump | info | live2d | splitObjects>\n" +
+                    "<Value: extract | export(default) | exportRaw | dump | info | live2d | splitObjects>\n" +
+                    "Extract - Extracts(Decompresses) asset bundles\n" +
                     "Export - Exports converted assets\n" +
                     "ExportRaw - Exports raw data\n" +
                     "Dump - Makes asset dumps\n" +
@@ -551,6 +553,9 @@ namespace AssetStudioCLI.Options
                 var value = resplittedArgs[workModeOptionIndex + 1];
                 switch (value.ToLower())
                 {
+                    case "extract":
+                        o_workMode.Value = WorkMode.Extract;
+                        break;
                     case "export":
                         o_workMode.Value = WorkMode.Export;
                         break;
@@ -649,7 +654,7 @@ namespace AssetStudioCLI.Options
             #endregion
 
             #region Parse Options
-            for (int i = 0; i < resplittedArgs.Count; i++)
+            for (var i = 0; i < resplittedArgs.Count; i++)
             {
                 var option = resplittedArgs[i].ToLower();
                 try
@@ -1084,7 +1089,10 @@ namespace AssetStudioCLI.Options
             }
             if (o_outputFolder.Value == o_outputFolder.DefaultValue)
             {
-                var fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, o_outputFolder.DefaultValue + Path.DirectorySeparatorChar);
+                var defaultFolder = o_workMode.Value == WorkMode.Extract
+                    ? "ASExtract"
+                    : o_outputFolder.DefaultValue;
+                var fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, defaultFolder + Path.DirectorySeparatorChar);
                 if (!Directory.Exists(fullPath))
                 {
                     Directory.CreateDirectory(fullPath);
@@ -1205,14 +1213,20 @@ namespace AssetStudioCLI.Options
             {
                 sb.AppendLine($"# Custom Compression Type: {o_customCompressionType}");
             }
-            sb.AppendLine($"# Parse Assets Using TypeTree: {!f_avoidLoadingViaTypetree.Value}");
+            if (o_workMode.Value != WorkMode.Extract)
+            {
+                sb.AppendLine($"# Parse Assets Using TypeTree: {!f_avoidLoadingViaTypetree.Value}");
+            }
             sb.AppendLine($"# Input Path: \"{inputPath}\"");
+            if (o_workMode.Value != WorkMode.Info)
+            {
+                sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");
+            }
             switch (o_workMode.Value)
             {
                 case WorkMode.Export:
                 case WorkMode.ExportRaw:
                 case WorkMode.Dump:
-                    sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");
                     if (o_workMode.Value != WorkMode.Export)
                     {
                         sb.AppendLine($"# Load All Assets: {f_loadAllAssets}");
@@ -1248,7 +1262,6 @@ namespace AssetStudioCLI.Options
                     break;
                 case WorkMode.Live2D:
                 case WorkMode.SplitObjects:
-                    sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");
                     sb.AppendLine($"# Log Level: {o_logLevel}");
                     sb.AppendLine($"# Log Output: {o_logOutput}");
                     sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
@@ -1260,7 +1273,7 @@ namespace AssetStudioCLI.Options
                     else
                     {
                         sb.AppendLine($"# Model Group Option: {o_l2dGroupOption}");
-                        sb.AppendFormat("# Search model-related assets by: {0}\n", f_l2dAssetSearchByFilename.Value ? "FileName" : "Container");
+                        sb.AppendFormat("# Search Model-related Assets by: {0}\n", f_l2dAssetSearchByFilename.Value ? "FileName" : "Container");
                         sb.AppendLine($"# Motion Export Method: {o_l2dMotionMode}");
                         sb.AppendLine($"# Force Bezier: {f_l2dForceBezier }");
                         sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");

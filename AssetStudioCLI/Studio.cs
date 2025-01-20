@@ -35,6 +35,105 @@ namespace AssetStudioCLI
             Console.Write($"[{value:000}%]\r");
         }
 
+        public static void ExtractBundles()
+        {
+            var extractedCount = 0;
+            var path = CLIOptions.inputPath;
+            var savePath = CLIOptions.o_outputFolder.Value;
+            Progress.Reset();
+            if (Directory.Exists(path))
+            {
+                var files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
+                var totalCount = files.Length;
+                for (var i = 0; i < totalCount; i++)
+                {
+                    var file = files[i];
+                    var fileOriPath = Path.GetDirectoryName(file);
+                    var fileSavePath = fileOriPath.Replace(path, savePath);
+                    extractedCount += ExtractFile(file, fileSavePath);
+                    Progress.Report(i + 1, totalCount);
+                }
+            }
+            else if (File.Exists(path))
+            {
+                extractedCount += ExtractFile(path, savePath);
+            }
+
+            var status = extractedCount > 0
+                ? $"Finished extracting {extractedCount} file(s) to \"{savePath.Color(Ansi.BrightCyan)}\""
+                : "Nothing extracted (not extractable or file(s) already exist)";
+            Logger.Default.Log(LoggerEvent.Info, status, ignoreLevel: true);
+        }
+
+        public static int ExtractFile(string fileName, string savePath)
+        {
+            var extractedCount = 0;
+            var reader = new FileReader(fileName);
+            switch (reader.FileType)
+            {
+                case FileType.BundleFile:
+                    extractedCount += ExtractBundleFile(reader, savePath);
+                    break;
+                case FileType.WebFile:
+                    extractedCount += ExtractWebDataFile(reader, savePath);
+                    break;
+                default:
+                    reader.Dispose();
+                    break;
+            }
+            return extractedCount;
+        }
+
+        private static int ExtractBundleFile(FileReader reader, string savePath)
+        {
+            Logger.Info($"Decompressing {reader.FileName} ...");
+            var bundleFile = new BundleFile(reader, assetsManager.ZstdEnabled, assetsManager.SpecifyUnityVersion);
+            reader.Dispose();
+            if (bundleFile.fileList.Length > 0)
+            {
+                var extractPath = Path.Combine(savePath, reader.FileName + "_unpacked");
+                return ExtractStreamFile(extractPath, bundleFile.fileList);
+            }
+            return 0;
+        }
+
+        private static int ExtractWebDataFile(FileReader reader, string savePath)
+        {
+            Logger.Info($"Decompressing {reader.FileName} ...");
+            var webFile = new WebFile(reader);
+            reader.Dispose();
+            if (webFile.fileList.Length > 0)
+            {
+                var extractPath = Path.Combine(savePath, reader.FileName + "_unpacked");
+                return ExtractStreamFile(extractPath, webFile.fileList);
+            }
+            return 0;
+        }
+
+        private static int ExtractStreamFile(string extractPath, StreamFile[] fileList)
+        {
+            var extractedCount = 0;
+            foreach (var file in fileList)
+            {
+                var filePath = Path.Combine(extractPath, file.path);
+                var fileDirectory = Path.GetDirectoryName(filePath);
+                if (!Directory.Exists(fileDirectory))
+                {
+                    Directory.CreateDirectory(fileDirectory);
+                }
+                if (!File.Exists(filePath))
+                {
+                    using (var fileStream = File.Create(filePath))
+                    {
+                        file.stream.CopyTo(fileStream);
+                    }
+                    extractedCount += 1;
+                }
+                file.stream.Dispose();
+            }
+            return extractedCount;
+        }
+
         public static bool LoadAssets()
         {
             var isLoaded = false;
