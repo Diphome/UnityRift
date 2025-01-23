@@ -289,54 +289,59 @@ namespace CubismLive2DExtractor
             var destMotionPath = Path.Combine(destPath, "motions") + Path.DirectorySeparatorChar;
             var motionFps = 0f;
 
-            if (motionMode == Live2DMotionMode.MonoBehaviour && FadeMotionLst != null) //Fade motions from Fade Motion List
+            if (motionMode == Live2DMotionMode.MonoBehaviour) //Fade motions from MonoBehaviour
             {
-                Logger.Debug("Motion export method: MonoBehaviour (Fade motion)");
-                var fadeMotionLstDict = ParseMonoBehaviour(FadeMotionLst, CubismMonoBehaviourType.FadeMotionList, Assembly);
-                if (fadeMotionLstDict != null)
+                if (FadeMotionLst != null) //Fade motions from fadeMotionList
                 {
-                    var cubismFadeList = JsonConvert.DeserializeObject<CubismFadeMotionList>(JsonConvert.SerializeObject(fadeMotionLstDict));
-                    var fadeMotionAssetSet = new HashSet<MonoBehaviour>();
-                    foreach (var motionPPtr in cubismFadeList.CubismFadeMotionObjects)
+                    Logger.Debug("Parsing fade motion list..");
+                    var fadeMotionLstDict = ParseMonoBehaviour(FadeMotionLst, CubismMonoBehaviourType.FadeMotionList, Assembly);
+                    if (fadeMotionLstDict != null)
                     {
-                        if (motionPPtr.TryGet<MonoBehaviour>(out var fadeMono, FadeMotionLst.assetsFile))
+                        var cubismFadeList = JsonConvert.DeserializeObject<CubismFadeMotionList>(JsonConvert.SerializeObject(fadeMotionLstDict));
+                        var fadeMotionAssetSet = new HashSet<MonoBehaviour>();
+                        foreach (var motionPPtr in cubismFadeList.CubismFadeMotionObjects)
                         {
-                            fadeMotionAssetSet.Add(fadeMono);
+                            if (motionPPtr.TryGet<MonoBehaviour>(out var fadeMono, FadeMotionLst.assetsFile))
+                            {
+                                fadeMotionAssetSet.Add(fadeMono);
+                            }
+                        }
+
+                        if (fadeMotionAssetSet.Count > 0)
+                        {
+                            FadeMotions = fadeMotionAssetSet.ToList();
+                            Logger.Debug($"\"{FadeMotionLst.m_Name}\": found {fadeMotionAssetSet.Count} motion(s)");
                         }
                     }
-           
-                    if (fadeMotionAssetSet.Count > 0)
-                    {
-                        FadeMotions = fadeMotionAssetSet.ToList();
-                        Logger.Debug($"\"{FadeMotionLst.m_Name}\": found {fadeMotionAssetSet.Count} motion(s)");
-                    }
+                }
+
+                if (FadeMotions.Count > 0)
+                {
+                    Logger.Debug("Motion export method: MonoBehaviour (Fade motion)");
+                    ExportFadeMotions(destMotionPath, forceBezier, motions, ref motionFps);
                 }
             }
-            if (motionMode == Live2DMotionMode.MonoBehaviour && FadeMotions.Count > 0)  //motion from MonoBehaviour
-            {
-                ExportFadeMotions(destMotionPath, forceBezier, motions, ref motionFps);
-            }
 
-            if (motions.Count == 0) //motion from AnimationClip
+            if (motions.Count == 0) //motions from AnimationClip
             {
-                CubismMotion3Converter converter = null;
+                CubismMotion3Converter converter;
                 var exportMethod = "AnimationClip";
-                if (motionMode != Live2DMotionMode.AnimationClipV1) //AnimationClipV2
+                switch (motionMode)
                 {
-                    exportMethod += "V2";
-                    converter = new CubismMotion3Converter(AnimationClips, PartNames, ParameterNames);
-                }
-                else if (Model?.ModelGameObject != null) //AnimationClipV1
-                {
-                    exportMethod += "V1";
-                    converter = new CubismMotion3Converter(Model.ModelGameObject, AnimationClips);
-                }
-
-                if (motionMode == Live2DMotionMode.MonoBehaviour)
-                {
-                    exportMethod = FadeMotions.Count > 0
-                        ? exportMethod + " (unable to export motions using Fade motion method)"
-                        : exportMethod + " (no Fade motions found)";
+                    case Live2DMotionMode.AnimationClipV1 when Model?.ModelGameObject != null:
+                        exportMethod += "V1";
+                        converter = new CubismMotion3Converter(Model.ModelGameObject, AnimationClips);
+                        break;
+                    default: //AnimationClipV2
+                        exportMethod += "V2";
+                        if (motionMode == Live2DMotionMode.MonoBehaviour)
+                        {
+                            exportMethod = FadeMotions.Count > 0
+                                ? exportMethod + " (unable to export motions using Fade motion method)"
+                                : exportMethod + " (no Fade motions found)";
+                        }
+                        converter = new CubismMotion3Converter(AnimationClips, PartNames, ParameterNames);
+                        break;
                 }
                 Logger.Debug($"Motion export method: {exportMethod}");
 
