@@ -1303,7 +1303,7 @@ namespace AssetStudioGUI
         {
             if (m_Mesh.m_VertexCount > 0)
             {
-                viewMatrixData = Matrix4.CreateRotationY(-(float)Math.PI / 4) * Matrix4.CreateRotationX(-(float)Math.PI / 6);
+                viewMatrixData = Matrix4.CreateRotationY(-MathF.PI / 4) * Matrix4.CreateRotationX(-MathF.PI / 6);
                 #region Vertices
                 if (m_Mesh.m_Vertices == null || m_Mesh.m_Vertices.Length == 0)
                 {

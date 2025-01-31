@@ -181,19 +181,19 @@ namespace AssetStudio
             {
                 case TextureFormat.ASTC_RGBA_5x5:
                     // https://registry.khronos.org/webgl/extensions/WEBGL_compressed_texture_astc/
-                    imgDataSize = (int)(Math.Floor((m_Width + 4) / 5f) * Math.Floor((m_Height + 4) / 5f) * 16);
+                    imgDataSize = (int)(MathF.Floor((m_Width + 4) / 5f) * MathF.Floor((m_Height + 4) / 5f) * 16);
                     break;
                 case TextureFormat.ASTC_RGBA_6x6:
-                    imgDataSize = (int)(Math.Floor((m_Width + 5) / 6f) * Math.Floor((m_Height + 5) / 6f) * 16);
+                    imgDataSize = (int)(MathF.Floor((m_Width + 5) / 6f) * MathF.Floor((m_Height + 5) / 6f) * 16);
                     break;
                 case TextureFormat.ASTC_RGBA_8x8:
-                    imgDataSize = (int)(Math.Floor((m_Width + 7) / 8f) * Math.Floor((m_Height + 7) / 8f) * 16);
+                    imgDataSize = (int)(MathF.Floor((m_Width + 7) / 8f) * MathF.Floor((m_Height + 7) / 8f) * 16);
                     break;
                 case TextureFormat.ASTC_RGBA_10x10:
-                    imgDataSize = (int)(Math.Floor((m_Width + 9) / 10f) * Math.Floor((m_Height + 9) / 10f) * 16);
+                    imgDataSize = (int)(MathF.Floor((m_Width + 9) / 10f) * MathF.Floor((m_Height + 9) / 10f) * 16);
                     break;
                 case TextureFormat.ASTC_RGBA_12x12:
-                    imgDataSize = (int)(Math.Floor((m_Width + 11) / 12f) * Math.Floor((m_Height + 11) / 12f) * 16);
+                    imgDataSize = (int)(MathF.Floor((m_Width + 11) / 12f) * MathF.Floor((m_Height + 11) / 12f) * 16);
                     break;
                 case TextureFormat.DXT1:
                 case TextureFormat.EAC_R:

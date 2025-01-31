@@ -256,7 +256,7 @@ namespace AssetStudio
                 }
 
                 int lastComponent = (int)(flags & 3);
-                q[lastComponent] = (float)Math.Sqrt(1 - sum);
+                q[lastComponent] = MathF.Sqrt(1 - sum);
                 if ((flags & 4) != 0u)
                     q[lastComponent] = -q[lastComponent];
                 data[i] = q;

@@ -98,10 +98,10 @@ namespace AssetStudio
                     var height = (int)(m_Texture2D.m_Height / downscaleMultiplier);
                     originalImage.Mutate(x => x.Resize(width, height));
                 }
-                var rectX = (int)Math.Floor(textureRect.x);
-                var rectY = (int)Math.Floor(textureRect.y);
-                var rectRight = (int)Math.Ceiling(textureRect.x + textureRect.width);
-                var rectBottom = (int)Math.Ceiling(textureRect.y + textureRect.height);
+                var rectX = (int)MathF.Floor(textureRect.x);
+                var rectY = (int)MathF.Floor(textureRect.y);
+                var rectRight = (int)MathF.Ceiling(textureRect.x + textureRect.width);
+                var rectBottom = (int)MathF.Ceiling(textureRect.y + textureRect.height);
                 rectRight = Math.Min(rectRight, originalImage.Width);
                 rectBottom = Math.Min(rectBottom, originalImage.Height);
                 var rect = new Rectangle(rectX, rectY, rectRight - rectX, rectBottom - rectY);

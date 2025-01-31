@@ -1006,7 +1006,7 @@ namespace AssetStudio
                     var zsqr = 1 - x * x - y * y;
                     float z;
                     if (zsqr >= 0f)
-                        z = (float)Math.Sqrt(zsqr);
+                        z = MathF.Sqrt(zsqr);
                     else
                     {
                         z = 0;
@@ -1036,7 +1036,7 @@ namespace AssetStudio
                     var zsqr = 1 - x * x - y * y;
                     float z;
                     if (zsqr >= 0f)
-                        z = (float)Math.Sqrt(zsqr);
+                        z = MathF.Sqrt(zsqr);
                     else
                     {
                         z = 0;
