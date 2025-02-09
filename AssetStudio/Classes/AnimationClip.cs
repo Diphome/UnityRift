@@ -1168,17 +1168,15 @@ namespace AssetStudio
             if (version >= 4)//4.0 and up
             {
                 m_MuscleClipSize = reader.ReadUInt32();
-                if (m_MuscleClipSize > 0)
+                if (!version.IsTuanjie)
                 {
-                    if (version.IsTuanjie)
-                    {
-                        _ = reader.ReadUInt32();
-                    }
+                    m_MuscleClip = new ClipMuscleConstant(reader);
+                }
+                else if (m_MuscleClipSize > 0)
+                {
+                    _ = reader.ReadInt32();
                     m_MuscleClip = new ClipMuscleConstant(reader); //m_AnimData (Tuanjie)
-                    if (version.IsTuanjie)
-                    {
-                        m_StreamingInfo = new StreamingInfo(reader);
-                    }
+                    m_StreamingInfo = new StreamingInfo(reader);
                 }
             }
             if (version >= (4, 3)) //4.3 and up
