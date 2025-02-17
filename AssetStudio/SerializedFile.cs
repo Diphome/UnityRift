@@ -69,7 +69,23 @@ namespace AssetStudio
             }
             if (header.m_Version >= SerializedFileFormatVersion.Unknown_7)
             {
-                version = new UnityVersion(reader.ReadStringToNull());
+                var versionPos = reader.Position;
+                try
+                {
+                    version = new UnityVersion(reader.ReadStringToNull());
+                }
+                catch (NotSupportedException e)
+                {
+                    if (assetsManager.SpecifyUnityVersion == null)
+                    {
+                        Logger.Warning(e.Message);
+                        version = new UnityVersion();
+                        return;
+                    }
+                    version = assetsManager.SpecifyUnityVersion;
+                    reader.Position = versionPos;
+                    reader.ReadBytes(version.ToString().Length + 1);
+                }
             }
             else
             {
