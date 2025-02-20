@@ -2601,6 +2601,7 @@ namespace AssetStudioGUI
             FMODprogressBar.Value = 0;
             FMODtimerLabel.Text = "00:00.00 / 00:00.00";
             FMODstatusLabel.Text = "Stopped";
+            FMODpauseButton.Text = "Pause";
             FMODinfoLabel.Text = "";
             FMODaudioChannelsLabel.Text = "";
 

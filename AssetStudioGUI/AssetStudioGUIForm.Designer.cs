@@ -1103,7 +1103,7 @@
             this.FMODaudioChannelsLabel.BackColor = System.Drawing.Color.Transparent;
             this.FMODaudioChannelsLabel.ForeColor = System.Drawing.Color.White;
             this.FMODaudioChannelsLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.FMODaudioChannelsLabel.Location = new System.Drawing.Point(368, 255);
+            this.FMODaudioChannelsLabel.Location = new System.Drawing.Point(384, 255);
             this.FMODaudioChannelsLabel.Name = "FMODaudioChannelsLabel";
             this.FMODaudioChannelsLabel.Size = new System.Drawing.Size(38, 13);
             this.FMODaudioChannelsLabel.TabIndex = 10;
@@ -1129,7 +1129,7 @@
             this.FMODinfoLabel.BackColor = System.Drawing.Color.Transparent;
             this.FMODinfoLabel.ForeColor = System.Drawing.Color.White;
             this.FMODinfoLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.FMODinfoLabel.Location = new System.Drawing.Point(275, 255);
+            this.FMODinfoLabel.Location = new System.Drawing.Point(285, 255);
             this.FMODinfoLabel.Name = "FMODinfoLabel";
             this.FMODinfoLabel.Size = new System.Drawing.Size(0, 13);
             this.FMODinfoLabel.TabIndex = 8;
@@ -1141,7 +1141,7 @@
             this.FMODtimerLabel.BackColor = System.Drawing.Color.Transparent;
             this.FMODtimerLabel.ForeColor = System.Drawing.Color.White;
             this.FMODtimerLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.FMODtimerLabel.Location = new System.Drawing.Point(457, 255);
+            this.FMODtimerLabel.Location = new System.Drawing.Point(477, 255);
             this.FMODtimerLabel.Name = "FMODtimerLabel";
             this.FMODtimerLabel.Size = new System.Drawing.Size(102, 13);
             this.FMODtimerLabel.TabIndex = 7;
@@ -1168,7 +1168,7 @@
             this.FMODprogressBar.Location = new System.Drawing.Point(213, 274);
             this.FMODprogressBar.Maximum = 1000;
             this.FMODprogressBar.Name = "FMODprogressBar";
-            this.FMODprogressBar.Size = new System.Drawing.Size(350, 24);
+            this.FMODprogressBar.Size = new System.Drawing.Size(370, 24);
             this.FMODprogressBar.TabIndex = 5;
             this.FMODprogressBar.TickStyle = System.Windows.Forms.TickStyle.None;
             this.FMODprogressBar.Scroll += new System.EventHandler(this.FMODprogressBar_Scroll);
@@ -1180,9 +1180,9 @@
             this.FMODvolumeBar.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODvolumeBar.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODvolumeBar.LargeChange = 2;
-            this.FMODvolumeBar.Location = new System.Drawing.Point(460, 303);
+            this.FMODvolumeBar.Location = new System.Drawing.Point(480, 303);
             this.FMODvolumeBar.Name = "FMODvolumeBar";
-            this.FMODvolumeBar.Size = new System.Drawing.Size(104, 45);
+            this.FMODvolumeBar.Size = new System.Drawing.Size(103, 45);
             this.FMODvolumeBar.TabIndex = 4;
             this.FMODvolumeBar.TickStyle = System.Windows.Forms.TickStyle.Both;
             this.FMODvolumeBar.Value = 8;
@@ -1194,9 +1194,9 @@
             this.FMODloopButton.Appearance = System.Windows.Forms.Appearance.Button;
             this.FMODloopButton.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.FMODloopButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.FMODloopButton.Location = new System.Drawing.Point(399, 303);
+            this.FMODloopButton.Location = new System.Drawing.Point(414, 303);
             this.FMODloopButton.Name = "FMODloopButton";
-            this.FMODloopButton.Size = new System.Drawing.Size(55, 46);
+            this.FMODloopButton.Size = new System.Drawing.Size(60, 46);
             this.FMODloopButton.TabIndex = 3;
             this.FMODloopButton.Text = "Loop";
             this.FMODloopButton.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1208,9 +1208,9 @@
             this.FMODstopButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODstopButton.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.FMODstopButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.FMODstopButton.Location = new System.Drawing.Point(338, 303);
+            this.FMODstopButton.Location = new System.Drawing.Point(348, 303);
             this.FMODstopButton.Name = "FMODstopButton";
-            this.FMODstopButton.Size = new System.Drawing.Size(55, 46);
+            this.FMODstopButton.Size = new System.Drawing.Size(60, 46);
             this.FMODstopButton.TabIndex = 2;
             this.FMODstopButton.Text = "Stop";
             this.FMODstopButton.UseVisualStyleBackColor = false;
@@ -1221,9 +1221,9 @@
             this.FMODpauseButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.FMODpauseButton.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.FMODpauseButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.FMODpauseButton.Location = new System.Drawing.Point(277, 303);
+            this.FMODpauseButton.Location = new System.Drawing.Point(282, 303);
             this.FMODpauseButton.Name = "FMODpauseButton";
-            this.FMODpauseButton.Size = new System.Drawing.Size(55, 46);
+            this.FMODpauseButton.Size = new System.Drawing.Size(60, 46);
             this.FMODpauseButton.TabIndex = 1;
             this.FMODpauseButton.Text = "Pause";
             this.FMODpauseButton.UseVisualStyleBackColor = false;
@@ -1236,7 +1236,7 @@
             this.FMODplayButton.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.FMODplayButton.Location = new System.Drawing.Point(216, 303);
             this.FMODplayButton.Name = "FMODplayButton";
-            this.FMODplayButton.Size = new System.Drawing.Size(55, 46);
+            this.FMODplayButton.Size = new System.Drawing.Size(60, 46);
             this.FMODplayButton.TabIndex = 0;
             this.FMODplayButton.Text = "Play";
             this.FMODplayButton.UseVisualStyleBackColor = false;
