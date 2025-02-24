@@ -165,19 +165,19 @@ namespace AssetStudioCLI
                 case Texture2D m_Texture2D:
                     if (!string.IsNullOrEmpty(m_Texture2D.m_StreamData?.path))
                     {
-                        File.WriteAllBytes(exportFullPath.Replace(".dat", "_data.dat"), m_Texture2D.image_data.GetData());
+                        m_Texture2D.image_data.WriteData(exportFullPath.Replace(".dat", "_data.dat"));
                     }
                     break;
                 case AudioClip m_AudioClip:
                     if (!string.IsNullOrEmpty(m_AudioClip.m_Source))
                     {
-                        File.WriteAllBytes(exportFullPath.Replace(".dat", "_data.dat"), m_AudioClip.m_AudioData.GetData());
+                        m_AudioClip.m_AudioData.WriteData(exportFullPath.Replace(".dat", "_data.dat"));
                     }
                     break;
                 case VideoClip m_VideoClip:
                     if (!string.IsNullOrEmpty(m_VideoClip.m_ExternalResources.m_Source))
                     {
-                        File.WriteAllBytes(exportFullPath.Replace(".dat", "_data.dat"), m_VideoClip.m_VideoData.GetData());
+                        m_VideoClip.m_VideoData.WriteData(exportFullPath.Replace(".dat", "_data.dat"));
                     }
                     break;
             }
