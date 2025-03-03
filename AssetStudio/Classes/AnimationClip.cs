@@ -1200,5 +1200,21 @@ namespace AssetStudio
                 reader.AlignStream();
             }
         }
+
+        public class EqComparer : IEqualityComparer<AnimationClip>
+        {
+            public bool Equals(AnimationClip clipA, AnimationClip clipB)
+            {
+                return clipA?.m_PathID == clipB?.m_PathID 
+                       && clipA?.byteSize == clipB?.byteSize;
+            }
+
+            public int GetHashCode(AnimationClip obj)
+            {
+                var result = obj.m_PathID * 31;
+                result = result * 31 + obj.byteSize;
+                return result.GetHashCode();
+            }
+        }
     }
 }

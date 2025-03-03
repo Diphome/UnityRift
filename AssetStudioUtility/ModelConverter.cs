@@ -16,12 +16,13 @@ namespace AssetStudio
 
         private ImageFormat imageFormat;
         private Avatar avatar;
-        private AnimationClip[] animationClipUniqArray = Array.Empty<AnimationClip>(); //TODO: a proper AnimationClip equality comparer
+        private AnimationClip[] animationClipUniqArray = Array.Empty<AnimationClip>();
         private Dictionary<AnimationClip, string> boundAnimationPathDic = new Dictionary<AnimationClip, string>();
         private Dictionary<uint, string> bonePathHash = new Dictionary<uint, string>();
         private Dictionary<Texture2D, string> textureNameDictionary = new Dictionary<Texture2D, string>();
         private Dictionary<Transform, ImportedFrame> transformDictionary = new Dictionary<Transform, ImportedFrame>();
         Dictionary<uint, string> morphChannelNames = new Dictionary<uint, string>();
+        private IEqualityComparer<AnimationClip> animationClipEqComparer = new AnimationClip.EqComparer();
 
         public ModelConverter(GameObject m_GameObject, ImageFormat imageFormat, AnimationClip[] animationList = null)
         {
@@ -40,7 +41,7 @@ namespace AssetStudio
             }
             if (animationList != null)
             {
-                animationClipUniqArray = animationList.Distinct().ToArray();
+                animationClipUniqArray = animationList.Distinct(animationClipEqComparer).ToArray();
             }
             ConvertAnimations();
         }
@@ -67,7 +68,7 @@ namespace AssetStudio
             }
             if (animationList != null)
             {
-                animationClipUniqArray = animationList.Distinct().ToArray();
+                animationClipUniqArray = animationList.Distinct(animationClipEqComparer).ToArray();
             }
             ConvertAnimations();
         }
@@ -82,7 +83,7 @@ namespace AssetStudio
             }
             else
             {
-                animationClipUniqArray = animationList.Distinct().ToArray();
+                animationClipUniqArray = animationList.Distinct(animationClipEqComparer).ToArray();
             }
             ConvertAnimations();
         }
@@ -163,7 +164,7 @@ namespace AssetStudio
                         animationList.Add(animationClip);
                     }
                 }
-                animationClipUniqArray = animationList.Distinct().ToArray();
+                animationClipUniqArray = animationList.Distinct(animationClipEqComparer).ToArray();
             }
 
             foreach (var pptr in m_Transform.m_Children)
@@ -207,7 +208,7 @@ namespace AssetStudio
                             break;
                         }
                 }
-                animationClipUniqArray = animationList.Distinct().ToArray();
+                animationClipUniqArray = animationList.Distinct(animationClipEqComparer).ToArray();
             }
         }
 
