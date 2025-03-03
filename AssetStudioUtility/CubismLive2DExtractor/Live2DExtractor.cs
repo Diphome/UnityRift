@@ -41,17 +41,17 @@ namespace CubismLive2DExtractor
         private HashSet<string> EyeBlinkParameters { get; set; }
         private HashSet<string> LipSyncParameters { get; set; }
 
-        public Live2DExtractor(KeyValuePair<MonoBehaviour, List<Object>> assetGroupKvp, List<AnimationClip> inClipMotions = null, List<MonoBehaviour> inFadeMotions = null, MonoBehaviour inFadeMotionLst = null)
+        public Live2DExtractor(KeyValuePair<MonoBehaviour, List<Object>> assetGroupKvp, List<AnimationClip> selClipMotions = null, List<MonoBehaviour> selFadeMotions = null, MonoBehaviour selFadeMotionLst = null)
         {
             Expressions = new List<MonoBehaviour>();
-            FadeMotions = inFadeMotions ?? new List<MonoBehaviour>();
-            AnimationClips = inClipMotions ?? new List<AnimationClip>();
+            FadeMotions = selFadeMotions ?? new List<MonoBehaviour>();
+            AnimationClips = selClipMotions ?? new List<AnimationClip>();
+            FadeMotionLst = selFadeMotionLst;
             Texture2Ds = new List<Texture2D>();
             EyeBlinkParameters = new HashSet<string>();
             LipSyncParameters = new HashSet<string>();
             ParameterNames = new HashSet<string>();
             PartNames = new HashSet<string>();
-            FadeMotionLst = inFadeMotionLst;
             ParametersCdi = new List<MonoBehaviour>();
             PartsCdi = new List<MonoBehaviour>();
             PoseParts = new List<MonoBehaviour>();
@@ -61,6 +61,10 @@ namespace CubismLive2DExtractor
             var searchModelParamCdi = true;
             var searchModelPartCdi = true;
             var searchPoseParts = true;
+            var searchFadeMotions =
+                selClipMotions == null
+                && selFadeMotions == null
+                && selFadeMotionLst == null;
 
             Logger.Debug("Sorting model assets..");
 
@@ -69,9 +73,9 @@ namespace CubismLive2DExtractor
             {
                 Model = model;
                 PhysicsMono = Model.PhysicsController;
-                if (inFadeMotionLst == null && TryGetFadeList(Model.FadeController, out var fadeMono))
+                if (searchFadeMotions && TryGetFadeList(Model.FadeController, out var fadeMono))
                 {
-                    FadeMotionLst = inFadeMotionLst = fadeMono;
+                    FadeMotionLst = selFadeMotionLst = fadeMono;
                 }
                 if (TryGetExpressionList(Model.ExpressionController, out var expressionMono))
                 {
@@ -122,13 +126,13 @@ namespace CubismLive2DExtractor
                                         Expressions.Add(m_MonoBehaviour);
                                     break;
                                 case "CubismFadeMotionData":
-                                    if (inFadeMotions == null && inFadeMotionLst == null)
+                                    if (searchFadeMotions)
                                     {
                                         FadeMotions.Add(m_MonoBehaviour);
                                     }
                                     break;
                                 case "CubismFadeMotionList":
-                                    if (inFadeMotions == null && inFadeMotionLst == null)
+                                    if (searchFadeMotions)
                                     {
                                         FadeMotionLst = m_MonoBehaviour;
                                     }
@@ -187,7 +191,7 @@ namespace CubismLive2DExtractor
                         }
                         break;
                     case AnimationClip m_AnimationClip:
-                        if (inClipMotions == null)
+                        if (selClipMotions == null)
                         {
                             AnimationClips.Add(m_AnimationClip);
                         }

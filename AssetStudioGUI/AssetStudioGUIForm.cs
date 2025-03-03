@@ -2319,7 +2319,7 @@ namespace AssetStudioGUI
 
         private void ExportSelectedL2DModels(ExportL2DFilter l2dExportMode)
         {
-            if (exportableAssets.Count == 0)
+            if (Studio.exportableAssets.Count == 0)
             {
                 Logger.Info("No exportable assets loaded");
                 return;
