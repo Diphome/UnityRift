@@ -6,10 +6,10 @@ namespace AssetStudio
 {
     public static partial class JsonConverterHelper
     {
+        public static SerializedFile AssetsFile { get; set; }
+
         public class PPtrConverter : JsonConverterFactory
         {
-            public static SerializedFile AssetsFile;
-
             public override bool CanConvert(Type typeToConvert)
             {
                 if (!typeToConvert.IsGenericType)
@@ -22,24 +22,17 @@ namespace AssetStudio
             public override JsonConverter CreateConverter(Type type, JsonSerializerOptions options)
             {
                 var elementType = type.GetGenericArguments()[0];
-                var converter = (JsonConverter)Activator.CreateInstance(typeof(PPtrConverter<>).MakeGenericType(elementType), AssetsFile);
+                var converter = (JsonConverter)Activator.CreateInstance(typeof(PPtrConverter<>).MakeGenericType(elementType));
                 return converter;
             }
         }
 
         private class PPtrConverter<T> : JsonConverter<PPtr<T>> where T : Object
         {
-            private readonly SerializedFile _assetsFile;
-
-            public PPtrConverter(SerializedFile assetsFile)
-            {
-                _assetsFile = assetsFile;
-            }
-
             public override PPtr<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
                 var pptrObj = JsonSerializer.Deserialize<PPtr<T>>(ref reader, new JsonSerializerOptions { IncludeFields = true });
-                pptrObj.AssetsFile = _assetsFile;
+                pptrObj.AssetsFile = AssetsFile;
                 return pptrObj;
             }
 

@@ -526,7 +526,7 @@ namespace AssetStudio
             Progress.Reset();
             foreach (var assetsFile in assetsFileList)
             {
-                JsonConverterHelper.PPtrConverter.AssetsFile = assetsFile;
+                JsonConverterHelper.AssetsFile = assetsFile;
                 foreach (var objectInfo in assetsFile.m_Objects)
                 {
                     var objectReader = new ObjectReader(assetsFile.reader, assetsFile, objectInfo);
