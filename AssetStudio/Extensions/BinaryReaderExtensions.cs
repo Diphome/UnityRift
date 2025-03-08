@@ -53,7 +53,11 @@ namespace AssetStudio
                 count++;
             }
             bytes = bytes.Slice(0, count);
+#if NETFRAMEWORK
             return encoding?.GetString(bytes.ToArray()) ?? Encoding.UTF8.GetString(bytes.ToArray());
+#else
+            return encoding?.GetString(bytes) ?? Encoding.UTF8.GetString(bytes);
+#endif
         }
 
         private static string ReadUnicodeStringToNull(this BinaryReader reader, int maxLength)

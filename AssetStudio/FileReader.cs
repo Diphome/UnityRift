@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using static AssetStudio.EndianSpanReader;
 
 namespace AssetStudio
 {
@@ -14,6 +13,9 @@ namespace AssetStudio
         private static readonly byte[] brotliMagic = { 0x62, 0x72, 0x6F, 0x74, 0x6C, 0x69 };
         private static readonly byte[] zipMagic = { 0x50, 0x4B, 0x03, 0x04 };
         private static readonly byte[] zipSpannedMagic = { 0x50, 0x4B, 0x07, 0x08 };
+        private static readonly byte[] unityFsMagic = {0x55, 0x6E, 0x69, 0x74, 0x79, 0x46, 0x53};
+        private static readonly int headerBuffLen = 1152;
+        private static byte[] headerBuff = new byte[headerBuffLen];
 
         public FileReader(string path) : this(path, File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) { }
 
@@ -26,14 +28,19 @@ namespace AssetStudio
 
         private FileType CheckFileType()
         {
-            var signature = this.ReadStringToNull(20);
+            var buff = headerBuff.AsSpan();
+            buff.Clear();
+            var dataLen = Read(headerBuff, 0, headerBuffLen);
             Position = 0;
+
+            var signature = buff.ReadStringToNull(20);
             switch (signature)
             {
                 case "UnityWeb":
                 case "UnityRaw":
                 case "UnityArchive":
                 case "UnityFS":
+                    CheckBundleDataOffset(buff);
                     return FileType.BundleFile;
                 case "UnityWebData1.0":
                     return FileType.WebFile;
@@ -41,17 +48,15 @@ namespace AssetStudio
                     return FileType.WebFile;
                 default:
                 {
-                    var buff = ReadBytes(40).AsSpan();
                     var magic = Span<byte>.Empty;
-                    Position = 0;
 
-                    magic = buff.Length > 2 ? buff.Slice(0, 2) : magic;
+                    magic = dataLen > 2 ? buff.Slice(0, 2) : magic;
                     if (magic.SequenceEqual(gzipMagic))
                     {
                         return FileType.GZipFile;
                     }
 
-                    magic = buff.Length > 38 ? buff.Slice(32, 6) : magic;
+                    magic = dataLen > 38 ? buff.Slice(32, 6) : magic;
                     if (magic.SequenceEqual(brotliMagic))
                     {
                         return FileType.BrotliFile;
@@ -62,10 +67,15 @@ namespace AssetStudio
                         return FileType.AssetsFile;
                     }
 
-                    magic = buff.Length > 4 ? buff.Slice(0, 4): magic;
+                    magic = dataLen > 4 ? buff.Slice(0, 4): magic;
                     if (magic.SequenceEqual(zipMagic) || magic.SequenceEqual(zipSpannedMagic))
                     {
                         return FileType.ZipFile;
+                    }
+
+                    if (CheckBundleDataOffset(buff))
+                    {
+                        return FileType.BundleFile;
                     }
 
                     return FileType.ResourceFile;
@@ -82,10 +92,10 @@ namespace AssetStudio
             }
             var isBigEndian = Endian == EndianType.BigEndian;
 
-            //var m_MetadataSize = SpanToUint32(buff, 0, isBigEndian);
-            long m_FileSize = SpanToUint32(buff, 4, isBigEndian);
-            var m_Version = SpanToUint32(buff, 8, isBigEndian);
-            long m_DataOffset = SpanToUint32(buff, 12, isBigEndian);
+            //var m_MetadataSize = buff.ReadUInt32(0, isBigEndian);
+            long m_FileSize = buff.ReadUInt32(4, isBigEndian);
+            var m_Version = buff.ReadUInt32(8, isBigEndian);
+            long m_DataOffset = buff.ReadUInt32(12, isBigEndian);
             //var m_Endianess = buff[16];
             //var m_Reserved = buff.Slice(17, 3);
             if (m_Version >= 22)
@@ -94,15 +104,44 @@ namespace AssetStudio
                 {
                     return false;
                 }
-                //m_MetadataSize = SpanToUint32(buff, 20, isBigEndian);
-                m_FileSize = SpanToInt64(buff, 24, isBigEndian);
-                m_DataOffset = SpanToInt64(buff, 32, isBigEndian);
+                //m_MetadataSize = buff.ReadUInt32(20, isBigEndian);
+                m_FileSize = buff.ReadInt64(24, isBigEndian);
+                m_DataOffset = buff.ReadInt64(32, isBigEndian);
             }
             if (m_FileSize != fileSize || m_DataOffset > fileSize)
             {
                 return false;
             }
-            
+           
+            return true;
+        }
+
+        private bool CheckBundleDataOffset(ReadOnlySpan<byte> buff)
+        {
+            var lastOffset = buff.LastIndexOf(unityFsMagic);
+            if (lastOffset <= 0)
+                return false;
+
+            var firstOffset = buff.IndexOf(unityFsMagic);
+            if (firstOffset == lastOffset || lastOffset - firstOffset < 200)
+            {
+                Position = lastOffset;
+                return true;
+            }
+
+            Position = firstOffset;
+            _ = this.ReadStringToNull();
+            _ = this.ReadUInt32();
+            _ = this.ReadStringToNull();
+            _ = this.ReadStringToNull();
+            var bundleSize = this.ReadInt64();
+            if (bundleSize > 200 && firstOffset + bundleSize < lastOffset)
+            {
+                Position = firstOffset;
+                return true;
+            }
+
+            Position = lastOffset;
             return true;
         }
     }

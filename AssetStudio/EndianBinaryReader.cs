@@ -82,6 +82,7 @@ namespace AssetStudio
             return base.ReadUInt64();
         }
 
+#if NETFRAMEWORK
         public override float ReadSingle()
         {
             if (Endian == EndianType.BigEndian)
@@ -103,5 +104,26 @@ namespace AssetStudio
             }
             return base.ReadDouble();
         }
+#else
+        public override float ReadSingle()
+        {
+            if (Endian == EndianType.BigEndian)
+            {
+                Read(buffer, 0, 4);
+                return BinaryPrimitives.ReadSingleBigEndian(buffer);
+            }
+            return base.ReadSingle();
+        }
+
+        public override double ReadDouble()
+        {
+            if (Endian == EndianType.BigEndian)
+            {
+                Read(buffer, 0, 8);
+                return BinaryPrimitives.ReadDoubleBigEndian(buffer);
+            }
+            return base.ReadDouble();
+        }
+#endif
     }
 }

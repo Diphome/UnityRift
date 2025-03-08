@@ -42,6 +42,8 @@ namespace AssetStudio
 
     public class BundleFile
     {
+        public readonly bool IsMultiBundle;
+
         public class Header
         {
             public string signature;
@@ -102,6 +104,17 @@ namespace AssetStudio
                 case "UnityFS":
                     ReadHeader(reader);
 
+                    var bundleSize = m_Header.size;
+                    var streamSize = reader.BaseStream.Length;
+                    if (bundleSize > streamSize)
+                    {
+                        Logger.Warning("Bundle size is incorrect.");
+                    }
+                    else if (streamSize - bundleSize > 200)
+                    {
+                        IsMultiBundle = true;
+                    }
+                    
                     var isUnityCnEnc = false;
                     var unityVer = m_Header.unityRevision;
                     if (specUnityVer != null)

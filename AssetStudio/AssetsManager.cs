@@ -201,7 +201,7 @@ namespace AssetStudio
         {
             if (!assetsFileListHash.Contains(reader.FileName))
             {
-                Logger.Info($"Loading {reader.FullPath}");
+                Logger.Info($"Loading \"{reader.FullPath}\"");
                 try
                 {
                     var assetsFile = new SerializedFile(reader, this);
@@ -248,13 +248,13 @@ namespace AssetStudio
                 }
                 catch (Exception e)
                 {
-                    Logger.Warning($"Failed to read assets file {reader.FullPath}\r\n{e}");
+                    Logger.Warning($"Failed to read assets file \"{reader.FullPath}\"\n{e}");
                     reader.Dispose();
                 }
             }
             else
             {
-                Logger.Info($"Skipping {reader.FullPath}");
+                Logger.Info($"Skipping \"{reader.FullPath}\"");
                 reader.Dispose();
             }
             return true;
@@ -284,38 +284,46 @@ namespace AssetStudio
                 }
                 catch (Exception e)
                 {
-                    Logger.Warning($"Failed to read assets file {reader.FullPath} from {Path.GetFileName(originalPath)}\r\n{e}");
+                    Logger.Warning($"Failed to read assets file \"{reader.FullPath}\" from {Path.GetFileName(originalPath)}\n{e}");
                     resourceFileReaders.TryAdd(reader.FileName, reader);
                 }
             }
             else
             {
-                Logger.Info($"Skipping {originalPath} ({reader.FileName})");
+                Logger.Info($"Skipping \"{originalPath}\" ({reader.FileName})");
             }
             return true;
         }
 
         private bool LoadBundleFile(FileReader reader, string originalPath = null)
         {
-            Logger.Info("Loading " + reader.FullPath);
+            Logger.Info($"Loading \"{reader.FullPath}\"");
+            Logger.Debug($"Bundle offset: {reader.Position}");
+            var bundleStream = new OffsetStream(reader);
+            var bundleReader = new FileReader(reader.FullPath, bundleStream);
+            
             try
             {
-                var bundleFile = new BundleFile(reader, ZstdEnabled, specifiedUnityVersion);
-                foreach (var file in bundleFile.fileList)
+                var bundleFile = new BundleFile(bundleReader, ZstdEnabled, specifiedUnityVersion);
+                var isLoaded = LoadBundleFiles(bundleReader, bundleFile, originalPath);
+                if (!isLoaded)
+                    return false;
+
+                while (bundleFile.IsMultiBundle && isLoaded)
                 {
-                    var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), file.fileName);
-                    var subReader = new FileReader(dummyPath, file.stream);
-                    if (subReader.FileType == FileType.AssetsFile)
+                    bundleStream.Offset = reader.Position;
+                    bundleReader = new FileReader($"{reader.FullPath}_0x{bundleStream.Offset:X}", bundleStream);
+                    if (bundleReader.Position > 0)
                     {
-                        if (!LoadAssetsFromMemory(subReader, originalPath ?? reader.FullPath, bundleFile.m_Header.unityRevision))
-                            return false;
+                        bundleStream.Offset += bundleReader.Position;
+                        bundleReader.FullPath = $"{reader.FullPath}_0x{bundleStream.Offset:X}";
+                        bundleReader.FileName = $"{reader.FileName}_0x{bundleStream.Offset:X}";
                     }
-                    else
-                    {
-                        resourceFileReaders.TryAdd(file.fileName, subReader);
-                    }
+                    Logger.Info($"[MultiBundle] Loading \"{reader.FileName}\" from offset: 0x{bundleStream.Offset:X}");
+                    bundleFile = new BundleFile(bundleReader, ZstdEnabled, specifiedUnityVersion);
+                    isLoaded = LoadBundleFiles(bundleReader, bundleFile, originalPath ?? reader.FullPath);
                 }
-                return true;
+                return isLoaded;
             }
             catch (NotSupportedException e)
             {
@@ -324,23 +332,42 @@ namespace AssetStudio
             }
             catch (Exception e)
             {
-                var str = $"Error while reading bundle file {reader.FullPath}";
+                var str = $"Error while reading bundle file \"{bundleReader.FullPath}\"";
                 if (originalPath != null)
                 {
                     str += $" from {Path.GetFileName(originalPath)}";
                 }
-                Logger.Warning($"{str}\r\n{e}");
+                Logger.Warning($"{str}\n{e}");
                 return true;
             }
             finally
             {
-                reader.Dispose();
+                bundleReader.Dispose();
             }
+        }
+
+        private bool LoadBundleFiles(FileReader reader, BundleFile bundleFile, string originalPath = null)
+        {
+            foreach (var file in bundleFile.fileList)
+            {
+                var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), file.fileName);
+                var subReader = new FileReader(dummyPath, file.stream);
+                if (subReader.FileType == FileType.AssetsFile)
+                {
+                    if (!LoadAssetsFromMemory(subReader, originalPath ?? reader.FullPath, bundleFile.m_Header.unityRevision))
+                        return false;
+                }
+                else
+                {
+                    resourceFileReaders.TryAdd(file.fileName, subReader);
+                }
+            }
+            return true;
         }
 
         private void LoadWebFile(FileReader reader)
         {
-            Logger.Info("Loading " + reader.FullPath);
+            Logger.Info($"Loading \"{reader.FullPath}\"");
             try
             {
                 var webFile = new WebFile(reader);
@@ -367,7 +394,7 @@ namespace AssetStudio
             }
             catch (Exception e)
             {
-                Logger.Error($"Error while reading web file {reader.FullPath}", e);
+                Logger.Error($"Error while reading web file \"{reader.FullPath}\"", e);
             }
             finally
             {
@@ -427,7 +454,7 @@ namespace AssetStudio
                         }
                         catch (Exception e)
                         {
-                            Logger.Warning($"Error while reading zip split file {basePath}\r\n{e}");
+                            Logger.Warning($"Error while reading zip split file \"{basePath}\"\n{e}");
                         }
                     }
 
@@ -461,7 +488,7 @@ namespace AssetStudio
                         }
                         catch (Exception e)
                         {
-                            Logger.Warning($"Error while reading zip entry {entry.FullName}\r\n{e}");
+                            Logger.Warning($"Error while reading zip entry \"{entry.FullName}\"\n{e}");
                         }
                     }
                 }
