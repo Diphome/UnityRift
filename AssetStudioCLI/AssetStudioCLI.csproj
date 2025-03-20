@@ -39,8 +39,11 @@
         <Copy SourceFiles="$(ProjectDir)Libraries\osx-arm64\libAssetStudioFBXNative.dylib" DestinationFolder="$(TargetDir)runtimes\osx-arm64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\linux-x86\libfmod.so" DestinationFolder="$(TargetDir)runtimes\linux-x86\native" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\linux-x64\libfmod.so" DestinationFolder="$(TargetDir)runtimes\linux-x64\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(ProjectDir)Libraries\linux-arm64\libfmod.so" DestinationFolder="$(TargetDir)runtimes\linux-arm64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\osx-x64\libfmod.dylib" DestinationFolder="$(TargetDir)runtimes\osx-x64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\osx-arm64\libfmod.dylib" DestinationFolder="$(TargetDir)runtimes\osx-arm64\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(ProjectDir)Libraries\win-arm64\fmod.dll" DestinationFolder="$(TargetDir)runtimes\win-arm64\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(ProjectDir)Libraries\linux-arm64\libTexture2DDecoderNative.so" DestinationFolder="$(TargetDir)runtimes\linux-arm64\native" ContinueOnError="false" />
     </Target>
 
     <!-- Publishing an app as framework-dependent produces a cross-platform binary as a dll file, and a platform-specific executable that targets your current platform.
@@ -62,8 +65,11 @@
         <Copy SourceFiles="$(TargetDir)runtimes\osx-arm64\native\libAssetStudioFBXNative.dylib" DestinationFolder="$(PublishDir)runtimes\osx-arm64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)runtimes\linux-x86\native\libfmod.so" DestinationFolder="$(PublishDir)runtimes\linux-x86\native" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)runtimes\linux-x64\native\libfmod.so" DestinationFolder="$(PublishDir)runtimes\linux-x64\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(TargetDir)runtimes\linux-arm64\native\libfmod.so" DestinationFolder="$(PublishDir)runtimes\linux-arm64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)runtimes\osx-x64\native\libfmod.dylib" DestinationFolder="$(PublishDir)runtimes\osx-x64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)runtimes\osx-arm64\native\libfmod.dylib" DestinationFolder="$(PublishDir)runtimes\osx-arm64\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(TargetDir)runtimes\win-arm64\native\fmod.dll" DestinationFolder="$(PublishDir)runtimes\win-arm64\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(TargetDir)runtimes\linux-arm64\native\libTexture2DDecoderNative.so" DestinationFolder="$(PublishDir)runtimes\linux-arm64\native" ContinueOnError="false" />
     </Target>
 
     <Target Name="CopyExtraFilesWin86" AfterTargets="AfterBuild" Condition=" '$(RuntimeIdentifier)' == 'win-x86' ">
@@ -87,6 +93,16 @@
         <Copy SourceFiles="$(TargetDir)\fmod.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
     </Target>
 
+    <Target Name="CopyExtraFilesWinArm64" AfterTargets="AfterBuild" Condition=" '$(RuntimeIdentifier)' == 'win-arm64' ">
+        <Message Text="Copying extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
+        <Copy SourceFiles="$(ProjectDir)Libraries\win-arm64\fmod.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
+    </Target>
+
+    <Target Name="PublishExtraFilesWinArm64" AfterTargets="Publish" Condition=" $(RuntimeIdentifier.Contains('win-arm64')) ">
+        <Message Text="Publishing extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
+        <Copy SourceFiles="$(TargetDir)\fmod.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
+    </Target>
+
     <Target Name="CopyExtraFilesLinux64" AfterTargets="AfterBuild" Condition=" '$(RuntimeIdentifier)' == 'linux-x64' ">
         <Message Text="Copying extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
         <Copy SourceFiles="$(ProjectDir)Libraries\linux-x64\libAssetStudioFBXNative.so" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
@@ -96,6 +112,18 @@
     <Target Name="PublishExtraFilesLinux64" AfterTargets="Publish" Condition=" '$(RuntimeIdentifier)' == 'linux-x64' ">
         <Message Text="Publishing extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
         <Copy SourceFiles="$(TargetDir)\libAssetStudioFBXNative.so" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
+        <Copy SourceFiles="$(TargetDir)\libfmod.so" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
+    </Target>
+
+    <Target Name="CopyExtraFilesLinuxArm64" AfterTargets="AfterBuild" Condition=" '$(RuntimeIdentifier)' == 'linux-arm64' ">
+        <Message Text="Copying extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
+        <Copy SourceFiles="$(ProjectDir)Libraries\linux-arm64\libTexture2DDecoderNative.so" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
+        <Copy SourceFiles="$(ProjectDir)Libraries\linux-arm64\libfmod.so" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
+    </Target>
+
+    <Target Name="PublishExtraFilesLinuxArm64" AfterTargets="Publish" Condition=" '$(RuntimeIdentifier)' == 'linux-arm64' ">
+        <Message Text="Publishing extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
+        <Copy SourceFiles="$(TargetDir)\libTexture2DDecoderNative.so" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)\libfmod.so" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
     </Target>
 

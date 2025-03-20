@@ -96,7 +96,7 @@ namespace AssetStudioCLI
 
         public static bool ExportAudioClip(AssetItem item, string exportPath, out string debugLog)
         {
-            debugLog = "";
+            debugLog = string.Empty;
             string exportFullPath;
             var m_AudioClip = (AudioClip)item.Asset;
             var m_AudioData = BigArrayPool<byte>.Shared.Rent(m_AudioClip.m_AudioData.Size);
@@ -120,11 +120,9 @@ namespace AssetStudioCLI
                         debugLog += GenerateAudioClipInfo(m_AudioClip);
                     }
 
-                    var debugLogConverter = "";
                     var buffer = converter.IsLegacy
-                        ? converter.RawAudioClipToWav(out debugLogConverter)
-                        : converter.ConvertToWav(m_AudioData, out debugLogConverter);
-                    debugLog += debugLogConverter;
+                        ? converter.RawAudioClipToWav(ref debugLog)
+                        : converter.ConvertToWav(m_AudioData, ref debugLog);
                     if (buffer == null)
                     {
                         Logger.Error($"{debugLog}Export error. \"{item.Text}\": Failed to convert fmod audio to Wav");

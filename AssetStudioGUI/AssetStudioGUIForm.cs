@@ -1133,7 +1133,7 @@ namespace AssetStudioGUI
                         bits;
                 }
                 var errorMsg = result == FMOD.RESULT.ERR_VERSION
-                    ? "Unsupported fmod version. Try to export raw and convert with an external tool instead."
+                    ? "Unsupported version of fmod sound. Try to export raw and convert with an external tool instead."
                     : $"Preview not available, try to export instead. {FMOD.Error.String(result)}";
                 StatusStripUpdate(errorMsg);
                 FMODreset();
@@ -2465,12 +2465,16 @@ namespace AssetStudioGUI
             {
                 //skip
             }
+#pragma warning restore WFO5001
+#endif
             if (isDarkMode)
             {
                 assetListView.GridLines = false;
             }
-#pragma warning restore WFO5001
-#endif
+            else
+            {
+                FMODloopButton.UseVisualStyleBackColor = true;
+            }
         }
 
         private void colorThemeAutoToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2588,10 +2592,8 @@ namespace AssetStudioGUI
             result = system.init(2, FMOD.INITFLAGS.NORMAL, IntPtr.Zero);
             if (ERRCHECK(result)) { return; }
 
-            result = system.getMasterSoundGroup(out masterSoundGroup);
-            if (ERRCHECK(result)) { return; }
-
-            result = masterSoundGroup.setVolume(FMODVolume);
+            _ = system.getMasterChannelGroup(out var channelGroup);
+            result = channelGroup.setVolume(FMODVolume);
             if (ERRCHECK(result)) { return; }
         }
 
@@ -2607,9 +2609,17 @@ namespace AssetStudioGUI
 
             if (sound.hasHandle())
             {
-                var result = sound.release();
+                FMOD.RESULT result;
+                sound.getSubSoundParent(out var parentsound);
+                result = sound.release();
                 ERRCHECK(result);
                 sound.clearHandle();
+                if (parentsound.hasHandle())
+                {
+                    result = parentsound.release();
+                    ERRCHECK(result);
+                    parentsound.clearHandle();
+                }
             }
             if (soundBuff != null)
             {
@@ -2655,7 +2665,6 @@ namespace AssetStudioGUI
                         {
                             if (ERRCHECK(result)) { return; }
                         }
-
                     }
                 }
             }
@@ -2748,16 +2757,20 @@ namespace AssetStudioGUI
                 if (playing || paused)
                 {
                     result = channel.setMode(loopMode);
-                    if (ERRCHECK(result)) { return; }
+                    if ((result != FMOD.RESULT.OK) && (result != FMOD.RESULT.ERR_INVALID_HANDLE))
+                    {
+                        if (ERRCHECK(result)) { return; }
+                    }
                 }
             }
         }
 
         private void FMODvolumeBar_ValueChanged(object sender, EventArgs e)
         {
-            FMODVolume = Convert.ToSingle(FMODvolumeBar.Value) / 10;
+            FMODVolume = FMODvolumeBar.Value / 10f;
 
-            var result = masterSoundGroup.setVolume(FMODVolume);
+            _ = system.getMasterChannelGroup(out var channelGroup);
+            var result = channelGroup.setVolume(FMODVolume);
             if (ERRCHECK(result)) { return; }
         }
 
@@ -2786,7 +2799,6 @@ namespace AssetStudioGUI
                 {
                     if (ERRCHECK(result)) { return; }
                 }
-
 
                 result = channel.isPlaying(out var playing);
                 if ((result != FMOD.RESULT.OK) && (result != FMOD.RESULT.ERR_INVALID_HANDLE))
@@ -2822,6 +2834,12 @@ namespace AssetStudioGUI
                 if ((result != FMOD.RESULT.OK) && (result != FMOD.RESULT.ERR_INVALID_HANDLE))
                 {
                     ERRCHECK(result);
+                }
+
+                if (!playing)
+                {
+                    timer.Stop();
+                    ms = 0;
                 }
             }
 

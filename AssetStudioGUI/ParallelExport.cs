@@ -119,11 +119,9 @@ namespace AssetStudioGUI
                         debugLog += GenerateAudioClipInfo(m_AudioClip);
                     }
 
-                    var debugLogConverter = "";
                     var buffer = converter.IsLegacy
-                        ? converter.RawAudioClipToWav(out debugLogConverter)
-                        : converter.ConvertToWav(m_AudioData, out debugLogConverter);
-                    debugLog += debugLogConverter;
+                        ? converter.RawAudioClipToWav(ref debugLog)
+                        : converter.ConvertToWav(m_AudioData, ref debugLog);
                     if (buffer == null)
                     {
                         Logger.Warning($"{debugLog}Failed to export \"{item.Text}\": Failed to convert fmod audio to Wav");
