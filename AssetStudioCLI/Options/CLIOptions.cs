@@ -1206,6 +1206,9 @@ namespace AssetStudioCLI.Options
 
         public static void ShowCurrentOptions()
         {
+            var unityVer = o_unityVersion.Value?.ToString();
+            unityVer = string.IsNullOrEmpty(unityVer) ? "ReadFromAsset" : unityVer;
+            
             var sb = new StringBuilder();
             sb.AppendLine("[Current Options]");
             sb.AppendLine($"# Working Mode: {o_workMode}");
@@ -1244,7 +1247,7 @@ namespace AssetStudioCLI.Options
                     sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
                     sb.AppendLine(ShowCurrentFilter());
                     sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");
-                    sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
+                    sb.AppendLine($"# Unity Version: {unityVer}");
                     if (o_workMode.Value == WorkMode.Export)
                     {
                         sb.AppendLine($"# Max Parallel Export Tasks: {o_maxParallelExportTasks}");
@@ -1258,7 +1261,7 @@ namespace AssetStudioCLI.Options
                     sb.AppendLine($"# Log Output: {o_logOutput}");
                     sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
                     sb.AppendLine(ShowCurrentFilter());
-                    sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
+                    sb.AppendLine($"# Unity Version: {unityVer}");
                     break;
                 case WorkMode.Live2D:
                 case WorkMode.SplitObjects:
@@ -1278,7 +1281,7 @@ namespace AssetStudioCLI.Options
                         sb.AppendLine($"# Force Bezier: {f_l2dForceBezier }");
                         sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");
                     }
-                    sb.AppendLine($"# Unity Version: \"{o_unityVersion}\"");
+                    sb.AppendLine($"# Unity Version: {unityVer}");
                     break;
             }
             sb.AppendLine("======");
