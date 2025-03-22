@@ -43,6 +43,7 @@
             this.assetLoadingToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.enablePreview = new System.Windows.Forms.ToolStripMenuItem();
             this.displayInfo = new System.Windows.Forms.ToolStripMenuItem();
+            this.autoPlayAudioAssetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.useDumpTreeViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buildTreeStructureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.customCompressionTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -266,6 +267,7 @@
             this.assetLoadingToolStripSeparator,
             this.enablePreview,
             this.displayInfo,
+            this.autoPlayAudioAssetsToolStripMenuItem,
             this.useDumpTreeViewToolStripMenuItem,
             this.buildTreeStructureToolStripMenuItem,
             this.customCompressionTypeToolStripMenuItem,
@@ -325,6 +327,15 @@
             this.displayInfo.ToolTipText = "Toggle the overlay that shows information about each asset, eg. image size, forma" +
     "t, audio bitrate, etc.";
             this.displayInfo.CheckedChanged += new System.EventHandler(this.displayAssetInfo_Check);
+            // 
+            // autoPlayAudioAssetsToolStripMenuItem
+            // 
+            this.autoPlayAudioAssetsToolStripMenuItem.CheckOnClick = true;
+            this.autoPlayAudioAssetsToolStripMenuItem.Name = "autoPlayAudioAssetsToolStripMenuItem";
+            this.autoPlayAudioAssetsToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.autoPlayAudioAssetsToolStripMenuItem.Text = "Autoplay audio assets";
+            this.autoPlayAudioAssetsToolStripMenuItem.ToolTipText = "Autoplay AudioClip assets when selected";
+            this.autoPlayAudioAssetsToolStripMenuItem.CheckedChanged += new System.EventHandler(this.autoPlayAudioAssetsToolStripMenuItem_CheckedChanged);
             // 
             // useDumpTreeViewToolStripMenuItem
             // 
@@ -1751,6 +1762,7 @@
         private System.Windows.Forms.ToolStripMenuItem colorThemeLightToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem colorThemeDarkToolStripMenuItem;
         private System.Windows.Forms.Label FMODaudioChannelsLabel;
+        private System.Windows.Forms.ToolStripMenuItem autoPlayAudioAssetsToolStripMenuItem;
     }
 }
 

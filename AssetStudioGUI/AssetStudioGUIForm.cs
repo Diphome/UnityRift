@@ -143,6 +143,7 @@ namespace AssetStudioGUI
             buildTreeStructureToolStripMenuItem.Checked = Properties.Settings.Default.buildTreeStructure;
             useAssetLoadingViaTypetreeToolStripMenuItem.Checked = Properties.Settings.Default.useTypetreeLoading;
             useDumpTreeViewToolStripMenuItem.Checked = Properties.Settings.Default.useDumpTreeView;
+            autoPlayAudioAssetsToolStripMenuItem.Checked = Properties.Settings.Default.autoplayAudio;
             FMODinit();
             listSearchFilterMode.SelectedIndex = 0;
 
@@ -1159,10 +1160,12 @@ namespace AssetStudioGUI
                 assetItem.InfoText += $"\nLoop Start: {(FMODloopstartms / 1000 / 60):00}:{(FMODloopstartms / 1000 % 60):00}.{(FMODloopstartms / 10 % 100):00}";
                 assetItem.InfoText += $"\nLoop End: {(FMODloopendms / 1000 / 60):00}:{(FMODloopendms / 1000 % 60):00}.{(FMODloopendms / 10 % 100):00}";
             }
-            
+
+            var paused = !autoPlayAudioAssetsToolStripMenuItem.Checked;
             _ = system.getMasterChannelGroup(out var channelGroup);
-            result = system.playSound(sound, channelGroup, true, out channel);
+            result = system.playSound(sound, channelGroup, paused, out channel);
             if (ERRCHECK(result)) return;
+            if (!paused) { timer.Start(); }
 
             FMODpanel.Visible = true;
 
@@ -2571,6 +2574,12 @@ namespace AssetStudioGUI
             {
                 DumpAsset(lastSelectedItem);
             }
+        }
+
+        private void autoPlayAudioAssetsToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.autoplayAudio = autoPlayAudioAssetsToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
         }
 
         #region FMOD
