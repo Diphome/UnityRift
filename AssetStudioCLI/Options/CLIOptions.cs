@@ -136,7 +136,7 @@ namespace AssetStudioCLI.Options
                 return;
             }
 
-            var optionDesc = desc + example.Color(ColorConsole.BrightBlack);
+            var optionDesc = desc + example.Color(ColorConsole.BrightCyan);
             var optionDict = new Dictionary<string, string> { { name, optionDesc } };
             if (optionGroups.TryGetValue(helpGroup, out Dictionary<string, string> groupDict))
             {
@@ -1111,7 +1111,7 @@ namespace AssetStudioCLI.Options
         private static void ShowOptionDescription<T>(Option<T> option, bool isFlag = false)
         {
             var arg = isFlag ? "Flag" : "Option";
-            var optionDesc = option.Description + option.Example.Color(ColorConsole.BrightBlack);
+            var optionDesc = option.Description + option.Example.Color(ColorConsole.BrightCyan);
             Console.WriteLine($"{arg} description:\n{optionDesc}");
         }
 
