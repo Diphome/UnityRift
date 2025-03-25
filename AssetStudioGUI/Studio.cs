@@ -135,14 +135,36 @@ namespace AssetStudioGUI
         private static int ExtractBundleFile(FileReader reader, string savePath)
         {
             Logger.Info($"Decompressing {reader.FileName} ...");
-            var bundleFile = new BundleFile(reader, assetsManager.ZstdEnabled, assetsManager.SpecifyUnityVersion);
-            reader.Dispose();
+
+            Logger.Debug($"Bundle offset: {reader.Position}");
+            var count = 0;
+            var bundleStream = new OffsetStream(reader);
+            var bundleReader = new FileReader(reader.FullPath, bundleStream);
+            var bundleFile = new BundleFile(bundleReader, assetsManager.ZstdEnabled, assetsManager.SpecifyUnityVersion);
+            var extractPath = Path.Combine(savePath, reader.FileName + "_unpacked");
             if (bundleFile.fileList.Length > 0)
             {
-                var extractPath = Path.Combine(savePath, reader.FileName + "_unpacked");
-                return ExtractStreamFile(extractPath, bundleFile.fileList);
+                count += ExtractStreamFile(extractPath, bundleFile.fileList);
             }
-            return 0;
+            while (bundleFile.IsMultiBundle)
+            {
+                bundleStream.Offset = reader.Position;
+                bundleReader = new FileReader($"{reader.FullPath}_0x{bundleStream.Offset:X}", bundleStream);
+                if (bundleReader.Position > 0)
+                {
+                    bundleStream.Offset += bundleReader.Position;
+                    bundleReader.FullPath = $"{reader.FullPath}_0x{bundleStream.Offset:X}";
+                    bundleReader.FileName = $"{reader.FileName}_0x{bundleStream.Offset:X}";
+                }
+                Logger.Info($"[MultiBundle] Decompressing \"{reader.FileName}\" from offset: 0x{bundleStream.Offset:X}..");
+                bundleFile = new BundleFile(bundleReader, assetsManager.ZstdEnabled, assetsManager.SpecifyUnityVersion);
+                if (bundleFile.fileList.Length > 0)
+                {
+                    count += ExtractStreamFile(extractPath, bundleFile.fileList);
+                }
+            }
+            bundleStream.Dispose();
+            return count;
         }
 
         private static int ExtractWebDataFile(FileReader reader, string savePath)
