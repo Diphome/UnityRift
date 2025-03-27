@@ -66,9 +66,7 @@ AS_API(void) AsFbxMeshInitControlPoints(fbxsdk::FbxMesh* pMesh, int32_t vertexCo
 
 AS_API(void) AsFbxMeshCreateElementNormal(fbxsdk::FbxMesh* pMesh);
 
-AS_API(void) AsFbxMeshCreateDiffuseUV(fbxsdk::FbxMesh* pMesh, int32_t uv);
-
-AS_API(void) AsFbxMeshCreateNormalMapUV(fbxsdk::FbxMesh* pMesh, int32_t uv);
+AS_API(void) AsFbxMeshCreateUVMap(fbxsdk::FbxMesh* pMesh, int32_t uvIndex, int32_t uvType);
 
 AS_API(void) AsFbxMeshCreateElementTangent(fbxsdk::FbxMesh* pMesh);
 

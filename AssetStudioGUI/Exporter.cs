@@ -279,20 +279,8 @@ namespace AssetStudioGUI
 
         private static void ExportFbx(IImported convert, string exportPath)
         {
-            var eulerFilter = Properties.Settings.Default.eulerFilter;
-            var filterPrecision = (float)Properties.Settings.Default.filterPrecision;
-            var exportAllNodes = Properties.Settings.Default.exportAllNodes;
-            var exportSkins = Properties.Settings.Default.exportSkins;
-            var exportAnimations = Properties.Settings.Default.exportAnimations;
-            var exportBlendShape = Properties.Settings.Default.exportBlendShape;
-            var castToBone = Properties.Settings.Default.castToBone;
-            var boneSize = (int)Properties.Settings.Default.boneSize;
-            var exportAllUvsAsDiffuseMaps = Properties.Settings.Default.exportAllUvsAsDiffuseMaps;
-            var scaleFactor = (float)Properties.Settings.Default.scaleFactor;
-            var fbxVersion = Properties.Settings.Default.fbxVersion;
-            var fbxFormat = Properties.Settings.Default.fbxFormat;
-            ModelExporter.ExportFbx(exportPath, convert, eulerFilter, filterPrecision,
-                exportAllNodes, exportSkins, exportAnimations, exportBlendShape, castToBone, boneSize, exportAllUvsAsDiffuseMaps, scaleFactor, fbxVersion, fbxFormat == 1);
+            var fbxSettings = Fbx.Settings.FromBase64(Properties.Settings.Default.fbxSettings);
+            ModelExporter.ExportFbx(exportPath, convert, fbxSettings);
         }
 
         public static bool ExportDumpFile(AssetItem item, string exportPath)

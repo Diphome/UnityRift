@@ -142,10 +142,7 @@ namespace AssetStudio.FbxInterop
         private static extern void AsFbxMeshCreateElementNormal(IntPtr mesh);
 
         [DllImport(FbxDll.DllName, CallingConvention = CallingConvention.Winapi)]
-        private static extern void AsFbxMeshCreateDiffuseUV(IntPtr mesh, int uv);
-
-        [DllImport(FbxDll.DllName, CallingConvention = CallingConvention.Winapi)]
-        private static extern void AsFbxMeshCreateNormalMapUV(IntPtr mesh, int uv);
+        private static extern void AsFbxMeshCreateUVMap(IntPtr mesh, int uvIndex, int uvType);
 
         [DllImport(FbxDll.DllName, CallingConvention = CallingConvention.Winapi)]
         private static extern void AsFbxMeshCreateElementTangent(IntPtr mesh);

@@ -1,5 +1,7 @@
 ﻿using AssetStudio.FbxInterop;
 using System.IO;
+using System.Text.Json;
+using System.Collections.Generic;
 
 #if NETFRAMEWORK
 using AssetStudio.PInvoke;
@@ -30,9 +32,7 @@ namespace AssetStudio
 
         public static class Exporter
         {
-
-            public static void Export(string path, IImported imported, bool eulerFilter, float filterPrecision,
-                bool allNodes, bool skins, bool animation, bool blendShape, bool castToBone, float boneSize, bool exportAllUvsAsDiffuseMaps, float scaleFactor, int versionIndex, bool isAscii)
+            public static void Export(string path, IImported imported, Settings fbxSettings)
             {
                 var file = new FileInfo(path);
                 var dir = file.Directory;
@@ -47,16 +47,88 @@ namespace AssetStudio
 
                 var name = Path.GetFileName(path);
 
-                using (var exporter = new FbxExporter(name, imported, allNodes, skins, castToBone, boneSize, exportAllUvsAsDiffuseMaps, scaleFactor, versionIndex, isAscii))
+                using (var exporter = new FbxExporter(name, imported, fbxSettings))
                 {
-                    exporter.Initialize();
-                    exporter.ExportAll(blendShape, animation, eulerFilter, filterPrecision);
+                    exporter.ExportAll();
                 }
 
                 Directory.SetCurrentDirectory(currentDir);
             }
-
         }
 
+        public sealed class Settings
+        {
+            public bool EulerFilter { get; set; }
+            public float FilterPrecision { get; set; }
+            public bool ExportAllNodes { get; set; }
+            public bool ExportSkins { get; set; }
+            public bool ExportAnimations { get; set; }
+            public bool ExportBlendShape { get; set; }
+            public bool CastToBone { get; set; }
+            public float BoneSize { get; set; }
+            public bool ExportAllUvsAsDiffuseMaps { get; set; }
+            public float ScaleFactor { get; set; }
+            public int FbxVersionIndex { get; set; }
+            public int FbxFormat { get; set; }
+            public Dictionary<int,int> UvBindings { get; set; }
+            public bool IsAscii => FbxFormat == 1;
+
+            public Settings()
+            {
+                Init();
+            }
+
+            public Settings(bool eulerFilter, float filterPrecision, bool exportAllNodes, bool exportSkins, bool exportAnimations, bool exportBlendShape, bool castToBone, float boneSize,
+                bool exportAllUvsAsDiffuseMaps, float scaleFactor, int fbxVersionIndex, int fbxFormat, Dictionary<int, int> uvBindings)
+            {
+                EulerFilter = eulerFilter;
+                FilterPrecision = filterPrecision;
+                ExportAllNodes = exportAllNodes;
+                ExportSkins = exportSkins;
+                ExportAnimations = exportAnimations;
+                ExportBlendShape = exportBlendShape;
+                CastToBone = castToBone;
+                BoneSize = (int)boneSize;
+                ExportAllUvsAsDiffuseMaps = exportAllUvsAsDiffuseMaps;
+                ScaleFactor = scaleFactor;
+                FbxVersionIndex = fbxVersionIndex;
+                FbxFormat = fbxFormat;
+                UvBindings = uvBindings;
+            }
+
+            public void Init()
+            {
+                var uvDict = new Dictionary<int, int>();
+                for (var i = 0; i < 8; i++)
+                {
+                    uvDict[i] = i + 1;
+                }
+
+                EulerFilter = true;
+                FilterPrecision = 0.25f;
+                ExportAllNodes = true;
+                ExportSkins = true;
+                ExportAnimations = true;
+                ExportBlendShape = true;
+                CastToBone = false;
+                ExportAllUvsAsDiffuseMaps = false;
+                BoneSize = 10;
+                ScaleFactor = 1.0f;
+                FbxFormat = 0;
+                FbxVersionIndex = 3;
+                UvBindings = uvDict;
+            }
+
+            public static Settings FromBase64(string base64String)
+            {
+                var settingsData = System.Convert.FromBase64String(base64String);
+                return JsonSerializer.Deserialize<Settings>(settingsData);
+            }
+
+            public string ToBase64()
+            {
+                return System.Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(this));
+            }
+        }
     }
 }

@@ -11,29 +11,15 @@ namespace AssetStudio.FbxInterop
 
         private readonly string _fileName;
         private readonly IImported _imported;
-        private readonly bool _allNodes;
-        private readonly bool _exportSkins;
-        private readonly bool _castToBone;
-        private readonly float _boneSize;
-        private readonly bool _exportAllUvsAsDiffuseMaps;
-        private readonly float _scaleFactor;
-        private readonly int _versionIndex;
-        private readonly bool _isAscii;
+        private readonly Fbx.Settings _settings;
 
-        internal FbxExporter(string fileName, IImported imported, bool allNodes, bool exportSkins, bool castToBone, float boneSize, bool exportAllUvsAsDiffuseMaps, float scaleFactor, int versionIndex, bool isAscii)
+        internal FbxExporter(string fileName, IImported imported, Fbx.Settings fbxSettings)
         {
             _context = new FbxExporterContext();
 
             _fileName = fileName;
             _imported = imported;
-            _allNodes = allNodes;
-            _exportSkins = exportSkins;
-            _castToBone = castToBone;
-            _boneSize = boneSize;
-            _exportAllUvsAsDiffuseMaps = exportAllUvsAsDiffuseMaps;
-            _scaleFactor = scaleFactor;
-            _versionIndex = versionIndex;
-            _isAscii = isAscii;
+            _settings = fbxSettings;
         }
 
         ~FbxExporter()
@@ -64,13 +50,13 @@ namespace AssetStudio.FbxInterop
             IsDisposed = true;
         }
 
-        internal void Initialize()
+        private void Initialize()
         {
             var is60Fps = _imported.AnimationList.Count > 0 && _imported.AnimationList[0].SampleRate.Equals(60.0f);
 
-            _context.Initialize(_fileName, _scaleFactor, _versionIndex, _isAscii, is60Fps);
+            _context.Initialize(_fileName, _settings, is60Fps);
 
-            if (!_allNodes)
+            if (!_settings.ExportAllNodes)
             {
                 var framePaths = SearchHierarchy();
 
@@ -78,8 +64,10 @@ namespace AssetStudio.FbxInterop
             }
         }
 
-        internal void ExportAll(bool blendShape, bool animation, bool eulerFilter, float filterPrecision)
+        internal void ExportAll()
         {
+            Initialize();
+
             var meshFrames = new List<ImportedFrame>();
 
             ExportRootFrame(meshFrames);
@@ -97,16 +85,14 @@ namespace AssetStudio.FbxInterop
                 SetJointsNode(_imported.RootFrame, null, true);
             }
 
-
-
-            if (blendShape)
+            if (_settings.ExportBlendShape)
             {
                 ExportMorphs();
             }
 
-            if (animation)
+            if (_settings.ExportAnimations)
             {
-                ExportAnimations(eulerFilter, filterPrecision);
+                ExportAnimations(_settings.EulerFilter, _settings.FilterPrecision);
             }
 
             ExportScene();
@@ -134,7 +120,7 @@ namespace AssetStudio.FbxInterop
 
         private void SetJointsFromImportedMeshes()
         {
-            if (!_exportSkins)
+            if (!_settings.ExportSkins)
             {
                 return;
             }
@@ -156,12 +142,12 @@ namespace AssetStudio.FbxInterop
                 }
             }
 
-            SetJointsNode(_imported.RootFrame, bonePaths, _castToBone);
+            SetJointsNode(_imported.RootFrame, bonePaths, _settings.CastToBone);
         }
 
         private void SetJointsNode(ImportedFrame rootFrame, HashSet<string> bonePaths, bool castToBone)
         {
-            _context.SetJointsNode(rootFrame, bonePaths, castToBone, _boneSize);
+            _context.SetJointsNode(rootFrame, bonePaths, castToBone, _settings.BoneSize);
         }
 
         private void PrepareMaterials()
@@ -173,7 +159,7 @@ namespace AssetStudio.FbxInterop
         {
             foreach (var meshFrame in meshFrames)
             {
-                _context.ExportMeshFromFrame(rootFrame, meshFrame, _imported.MeshList, _imported.MaterialList, _imported.TextureList, _exportSkins, _exportAllUvsAsDiffuseMaps);
+                _context.ExportMeshFromFrame(rootFrame, meshFrame, _imported.MeshList, _imported.MaterialList, _imported.TextureList, _settings);
             }
         }
 

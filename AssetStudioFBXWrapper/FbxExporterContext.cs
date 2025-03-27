@@ -59,11 +59,11 @@ namespace AssetStudio.FbxInterop
             }
         }
 
-        internal void Initialize(string fileName, float scaleFactor, int versionIndex, bool isAscii, bool is60Fps)
+        internal void Initialize(string fileName, Fbx.Settings fbxSettings, bool is60Fps)
         {
             EnsureNotDisposed();
 
-            var b = AsFbxInitializeContext(_pContext, fileName, scaleFactor, versionIndex, isAscii, is60Fps, out var errorMessage);
+            var b = AsFbxInitializeContext(_pContext, fileName, fbxSettings.ScaleFactor, fbxSettings.FbxVersionIndex, fbxSettings.IsAscii, is60Fps, out var errorMessage);
 
             if (!b)
             {
@@ -173,12 +173,12 @@ namespace AssetStudio.FbxInterop
             AsFbxPrepareMaterials(_pContext, materialCount, textureCount);
         }
 
-        internal void ExportMeshFromFrame(ImportedFrame rootFrame, ImportedFrame meshFrame, List<ImportedMesh> meshList, List<ImportedMaterial> materialList, List<ImportedTexture> textureList, bool exportSkins, bool exportAllUvsAsDiffuseMaps)
+        internal void ExportMeshFromFrame(ImportedFrame rootFrame, ImportedFrame meshFrame, List<ImportedMesh> meshList, List<ImportedMaterial> materialList, List<ImportedTexture> textureList, Fbx.Settings fbxSettings)
         {
             var meshNode = _frameToNode[meshFrame];
             var mesh = ImportedHelpers.FindMesh(meshFrame.Path, meshList);
 
-            ExportMesh(rootFrame, materialList, textureList, meshNode, mesh, exportSkins, exportAllUvsAsDiffuseMaps);
+            ExportMesh(rootFrame, materialList, textureList, meshNode, mesh, fbxSettings);
         }
 
         private IntPtr ExportTexture(ImportedTexture texture)
@@ -207,12 +207,12 @@ namespace AssetStudio.FbxInterop
             return pTex;
         }
 
-        private void ExportMesh(ImportedFrame rootFrame, List<ImportedMaterial> materialList, List<ImportedTexture> textureList, IntPtr frameNode, ImportedMesh importedMesh, bool exportSkins, bool exportAllUvsAsDiffuseMaps)
+        private void ExportMesh(ImportedFrame rootFrame, List<ImportedMaterial> materialList, List<ImportedTexture> textureList, IntPtr frameNode, ImportedMesh importedMesh, Fbx.Settings fbxSettings)
         {
             var boneList = importedMesh.BoneList;
             var totalBoneCount = 0;
             var hasBones = false;
-            if (exportSkins && boneList?.Count > 0)
+            if (fbxSettings.ExportSkins && boneList?.Count > 0)
             {
                 totalBoneCount = boneList.Count;
                 hasBones = true;
@@ -253,17 +253,18 @@ namespace AssetStudio.FbxInterop
                     AsFbxMeshCreateElementNormal(mesh);
                 }
 
-                for (int i = 0; i < importedMesh.hasUV.Length; i++)
+                for (var i = 0; i < importedMesh.hasUV.Length; i++)
                 {
-                    if (!importedMesh.hasUV[i]) { continue; }
+                    if (!importedMesh.hasUV[i])
+                        continue;
 
-                    if (i == 1 && !exportAllUvsAsDiffuseMaps)
+                    if (fbxSettings.ExportAllUvsAsDiffuseMaps)
                     {
-                        AsFbxMeshCreateNormalMapUV(mesh, 1);
+                        AsFbxMeshCreateUVMap(mesh, i, 0);
                     }
-                    else
+                    else if(fbxSettings.UvBindings[i] > 0) //if checked
                     {
-                        AsFbxMeshCreateDiffuseUV(mesh, i);
+                        AsFbxMeshCreateUVMap(mesh, i, fbxSettings.UvBindings[i]);
                     }
                 }
 

@@ -140,20 +140,12 @@ namespace AssetStudioCLI
 
         private static void ExportFbx(IImported convert, string exportPath)
         {
-            var eulerFilter = true;
-            var filterPrecision = 0.25f;
-            var exportAllNodes = true;
-            var exportSkins = true;
-            var exportAnimations = true;
-            var exportBlendShape = true;
-            var castToBone = false;
-            var boneSize = CLIOptions.o_fbxBoneSize.Value;
-            var exportAllUvsAsDiffuseMaps = false;
-            var scaleFactor = CLIOptions.o_fbxScaleFactor.Value;
-            var fbxVersion = 3;
-            var fbxFormat = 0;
-            ModelExporter.ExportFbx(exportPath, convert, eulerFilter, filterPrecision,
-                exportAllNodes, exportSkins, exportAnimations, exportBlendShape, castToBone, boneSize, exportAllUvsAsDiffuseMaps, scaleFactor, fbxVersion, fbxFormat == 1);
+            var fbxSettings = new Fbx.Settings
+            {
+                BoneSize = CLIOptions.o_fbxBoneSize.Value,
+                ScaleFactor = CLIOptions.o_fbxScaleFactor.Value,
+            };
+            ModelExporter.ExportFbx(exportPath, convert, fbxSettings);
         }
 
         public static bool ExportRawFile(AssetItem item, string exportPath)

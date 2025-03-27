@@ -37,18 +37,19 @@ namespace AssetStudioGUI
         private AssetItem lastPreviewItem;
         private DirectBitmap imageTexture;
         private string tempClipboard;
+        private bool isDarkMode;
 
+        #region FMODControl
         private FMOD.System system;
         private FMOD.Sound sound;
         private FMOD.Channel channel;
-        private FMOD.SoundGroup masterSoundGroup;
         private FMOD.MODE loopMode = FMOD.MODE.LOOP_OFF;
         private byte[] soundBuff;
         private uint FMODlenms;
         private uint FMODloopstartms;
         private uint FMODloopendms;
         private float FMODVolume = 0.8f;
-        private bool isDarkMode;
+        #endregion
 
         #region SpriteControl
         private SpriteMaskMode spriteMaskVisibleMode = SpriteMaskMode.On;
@@ -146,6 +147,10 @@ namespace AssetStudioGUI
             autoPlayAudioAssetsToolStripMenuItem.Checked = Properties.Settings.Default.autoplayAudio;
             FMODinit();
             listSearchFilterMode.SelectedIndex = 0;
+            if (string.IsNullOrEmpty(Properties.Settings.Default.fbxSettings))
+            {
+                FBXinitOptions();
+            }
 
             logger = new GUILogger(StatusStripUpdate);
             Logger.Default = logger;
@@ -2579,6 +2584,12 @@ namespace AssetStudioGUI
         private void autoPlayAudioAssetsToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
         {
             Properties.Settings.Default.autoplayAudio = autoPlayAudioAssetsToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void FBXinitOptions()
+        {
+            Properties.Settings.Default.fbxSettings = new Fbx.Settings().ToBase64();
             Properties.Settings.Default.Save();
         }
 

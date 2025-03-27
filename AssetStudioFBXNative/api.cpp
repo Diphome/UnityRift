@@ -462,26 +462,52 @@ AS_API(void) AsFbxMeshCreateElementNormal(FbxMesh* pMesh)
 	pNormal->SetReferenceMode(FbxGeometryElement::eDirect);
 }
 
-AS_API(void) AsFbxMeshCreateDiffuseUV(FbxMesh* pMesh, int32_t uv)
+AS_API(void) AsFbxMeshCreateUVMap(FbxMesh* pMesh, int32_t uvIndex, int32_t uvType)
 {
 	if (pMesh == nullptr)
 	{
 		return;
 	}
 
-	auto pUV = pMesh->CreateElementUV(FbxString("UV") + FbxString(uv), FbxLayerElement::eTextureDiffuse);
-	pUV->SetMappingMode(FbxGeometryElement::eByControlPoint);
-	pUV->SetReferenceMode(FbxGeometryElement::eDirect);
-}
-
-AS_API(void) AsFbxMeshCreateNormalMapUV(FbxMesh* pMesh, int32_t uv)
-{
-	if (pMesh == nullptr)
+	FbxLayerElement::EType layerElement;
+	switch (uvType)
 	{
-		return;
+		case 0:
+			layerElement = FbxLayerElement::eTextureDiffuse;
+			break;
+		case 1:
+			layerElement = FbxLayerElement::eTextureNormalMap;
+			break;
+		case 2:
+			layerElement = FbxLayerElement::eTextureDisplacement;
+			break;
+		case 3:
+			layerElement = FbxLayerElement::eTextureSpecular;
+			break;
+		case 4:
+			layerElement = FbxLayerElement::eTextureBump;
+			break;
+		case 5:
+			layerElement = FbxLayerElement::eTextureEmissive;
+			break;
+		case 6:
+			layerElement = FbxLayerElement::eTextureAmbient;
+			break;
+		case 7:
+			layerElement = FbxLayerElement::eTextureShininess;
+			break;
+		case 8:
+			layerElement = FbxLayerElement::eTextureReflection;
+			break;
+		case 9:
+			layerElement = FbxLayerElement::eTextureTransparency;
+			break;
+		default:
+			layerElement = FbxLayerElement::eTextureDiffuse;
+			break;
 	}
 
-	auto pUV = pMesh->CreateElementUV(FbxString("UV") + FbxString(uv), FbxLayerElement::eTextureNormalMap);
+	auto pUV = pMesh->CreateElementUV(FbxString("UV") + FbxString(uvIndex), layerElement);
 	pUV->SetMappingMode(FbxGeometryElement::eByControlPoint);
 	pUV->SetReferenceMode(FbxGeometryElement::eDirect);
 }

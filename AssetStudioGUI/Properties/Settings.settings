@@ -26,44 +26,8 @@
     <Setting Name="convertType" Type="AssetStudio.ImageFormat" Scope="User">
       <Value Profile="(Default)">Png</Value>
     </Setting>
-    <Setting Name="eulerFilter" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="filterPrecision" Type="System.Decimal" Scope="User">
-      <Value Profile="(Default)">0.25</Value>
-    </Setting>
-    <Setting Name="exportAllNodes" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="exportSkins" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="exportAnimations" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="boneSize" Type="System.Decimal" Scope="User">
-      <Value Profile="(Default)">10</Value>
-    </Setting>
-    <Setting Name="fbxVersion" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">3</Value>
-    </Setting>
-    <Setting Name="fbxFormat" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="scaleFactor" Type="System.Decimal" Scope="User">
-      <Value Profile="(Default)">1</Value>
-    </Setting>
-    <Setting Name="exportBlendShape" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="castToBone" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="restoreExtensionName" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="exportAllUvsAsDiffuseMaps" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="exportSpriteWithMask" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
@@ -109,6 +73,9 @@
     </Setting>
     <Setting Name="autoplayAudio" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="fbxSettings" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>
