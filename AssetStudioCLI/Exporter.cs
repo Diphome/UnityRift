@@ -144,6 +144,7 @@ namespace AssetStudioCLI
             {
                 BoneSize = CLIOptions.o_fbxBoneSize.Value,
                 ScaleFactor = CLIOptions.o_fbxScaleFactor.Value,
+                ExportAllUvsAsDiffuseMaps = CLIOptions.f_fbxUvsAsDiffuseMaps.Value,
             };
             ModelExporter.ExportFbx(exportPath, convert, fbxSettings);
         }

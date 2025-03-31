@@ -108,6 +108,7 @@ namespace AssetStudioCLI.Options
         //fbx
         public static Option<float> o_fbxScaleFactor;
         public static Option<int> o_fbxBoneSize;
+        public static Option<bool> f_fbxUvsAsDiffuseMaps;
         //filter
         public static Option<List<string>> o_filterByName;
         public static Option<List<string>> o_filterByContainer;
@@ -368,7 +369,17 @@ namespace AssetStudioCLI.Options
                 optionName: "--fbx-bone-size <value>",
                 optionDescription: "Specify the FBX Bone Size\n" +
                     "<Value: integer number from 0 to 100 (default=10)>\n",
-                optionExample: "Example: \"--fbx-bone-size 10\"",
+                optionExample: "Example: \"--fbx-bone-size 10\"\n",
+                optionHelpGroup: HelpGroups.FBX
+            );
+            f_fbxUvsAsDiffuseMaps = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--fbx-uvs-as-diffuse",
+                optionDescription: "(Flag) If specified, Studio will export all UVs as Diffuse maps.\n" +
+                    "Сan be useful if you cannot find some UVs after exporting (e.g. in Blender)\n" +
+                    "(But can also cause some bugs with UVs)",
+                optionExample: "",
                 optionHelpGroup: HelpGroups.FBX
             );
             #endregion
@@ -408,7 +419,7 @@ namespace AssetStudioCLI.Options
                 optionDescription: "Specify the text by which assets should be filtered\n" +
                     "Looks for assets that contain the specified text in their names or containers\n" +
                     "*To specify multiple values write them separated by ',' or ';' without spaces\n",
-                optionExample: "Example: \"--filter-by-text portrait\" or \"--filter-by-text portrait,art\"\n",
+                optionExample: "Example: \"--filter-by-text portrait\" or \"--filter-by-text portrait,art\"",
                 optionHelpGroup: HelpGroups.Filter
             );
             #endregion
@@ -625,6 +636,16 @@ namespace AssetStudioCLI.Options
                             return;
                         }
                         f_l2dForceBezier.Value = true;
+                        resplittedArgs.RemoveAt(i);
+                        break;
+                    case "--fbx-uvs-as-diffuse":
+                        if (o_workMode.Value != WorkMode.SplitObjects)
+                        {
+                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
+                            ShowOptionDescription(o_workMode);
+                            return;
+                        }
+                        f_fbxUvsAsDiffuseMaps.Value = true;
                         resplittedArgs.RemoveAt(i);
                         break;
                     case "--not-restore-extension":
@@ -1273,6 +1294,9 @@ namespace AssetStudioCLI.Options
                     {
                         sb.AppendLine($"# Export Image Format: {o_imageFormat}");
                         sb.AppendLine($"# Filter by Name(s): \"{string.Join("\", \"", o_filterByName.Value)}\"");
+                        sb.AppendLine($"# FBX Scale Factor: {o_fbxScaleFactor}");
+                        sb.AppendLine($"# FBX Bone Size: {o_fbxBoneSize}");
+                        sb.AppendLine($"# FBX UVs as Diffuse Maps: {f_fbxUvsAsDiffuseMaps}");
                     }
                     else
                     {
