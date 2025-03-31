@@ -57,16 +57,13 @@ namespace AssetStudio
 
         public void SetAssetFilter(params ClassIDType[] classIDTypes)
         {
-            if (filteredAssetTypesList.Count == 0)
+            filteredAssetTypesList.UnionWith(new[]
             {
-                filteredAssetTypesList.UnionWith(new HashSet<ClassIDType>
-                {
-                    ClassIDType.AssetBundle,
-                    ClassIDType.ResourceManager,
-                    ClassIDType.GameObject,
-                    ClassIDType.Transform,
-                });
-            }
+                ClassIDType.AssetBundle,
+                ClassIDType.ResourceManager,
+                ClassIDType.GameObject,
+                ClassIDType.Transform,
+            });
 
             if (classIDTypes.Contains(ClassIDType.MonoBehaviour))
             {

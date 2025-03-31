@@ -572,7 +572,7 @@ namespace AssetStudioCLI.Options
                     case "l2d":
                     case "live2d":
                         o_workMode.Value = WorkMode.Live2D;
-                        o_exportAssetTypes.Value = new List<ClassIDType>()
+                        o_exportAssetTypes.Value = new List<ClassIDType>
                         {
                             ClassIDType.AnimationClip,
                             ClassIDType.MonoBehaviour,
@@ -581,13 +581,14 @@ namespace AssetStudioCLI.Options
                         break;
                     case "splitobjects":
                         o_workMode.Value = WorkMode.SplitObjects;
-                        o_exportAssetTypes.Value = new List<ClassIDType>()
+                        o_exportAssetTypes.Value = new List<ClassIDType>
                         {
                             ClassIDType.Texture2D,
                             ClassIDType.Material,
                             ClassIDType.Mesh,
                             ClassIDType.MeshRenderer,
                             ClassIDType.MeshFilter,
+                            ClassIDType.SkinnedMeshRenderer,
                         };
                         break;
                     default:
