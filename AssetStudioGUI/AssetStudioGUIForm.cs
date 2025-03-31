@@ -279,7 +279,9 @@ namespace AssetStudioGUI
             if (isDarkMode)
                 Progress.Reset();
 
-            Text = $"{guiTitle} - {productName} - {assetsManager.assetsFileList[0].version} - {assetsManager.assetsFileList[0].targetPlatformString}";
+            var serializedFile = assetsManager.assetsFileList[0];
+            var tuanjieString = serializedFile.version.IsTuanjie ? " - Tuanjie Engine" : "";
+            Text = $"{guiTitle} - {productName} - {serializedFile.version} - {serializedFile.targetPlatformString}{tuanjieString}";
 
             assetListView.VirtualListSize = visibleAssets.Count;
 

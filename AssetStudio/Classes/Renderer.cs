@@ -148,10 +148,14 @@
                 }
                 else
                 {
-                    var m_SortingLayerID = reader.ReadUInt32();
+                    var m_SortingLayerID = reader.ReadInt32();
                 }
 
-                //SInt16 m_SortingLayer 5.6 and up
+                if (version > (5, 6) || (version == (5, 6) && version.Build >= 3)) //5.6.0f3 and up
+                {
+                    var m_SortingLayer = reader.ReadInt16();
+                }
+
                 var m_SortingOrder = reader.ReadInt16();
                 reader.AlignStream();
             }

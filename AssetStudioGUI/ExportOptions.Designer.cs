@@ -60,6 +60,7 @@
             this.l2dMotionExportMethodLabel = new System.Windows.Forms.Label();
             this.l2dForceBezierCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.fbxResetButton = new System.Windows.Forms.Button();
             this.uvBindingsLabel = new System.Windows.Forms.Label();
             this.uvIndicesCheckedListBox = new System.Windows.Forms.CheckedListBox();
             this.uvTypesListBox = new System.Windows.Forms.ListBox();
@@ -81,7 +82,6 @@
             this.exportAllNodes = new System.Windows.Forms.CheckBox();
             this.eulerFilter = new System.Windows.Forms.CheckBox();
             this.optionTooltip = new System.Windows.Forms.ToolTip(this.components);
-            this.fbxResetButton = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.parallelExportUpDown)).BeginInit();
             this.panel1.SuspendLayout();
@@ -495,6 +495,17 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Fbx";
             // 
+            // fbxResetButton
+            // 
+            this.fbxResetButton.BackColor = System.Drawing.SystemColors.ButtonFace;
+            this.fbxResetButton.Location = new System.Drawing.Point(208, 368);
+            this.fbxResetButton.Name = "fbxResetButton";
+            this.fbxResetButton.Size = new System.Drawing.Size(75, 23);
+            this.fbxResetButton.TabIndex = 21;
+            this.fbxResetButton.Text = "Reset";
+            this.fbxResetButton.UseVisualStyleBackColor = false;
+            this.fbxResetButton.Click += new System.EventHandler(this.resetButton_Click);
+            // 
             // uvBindingsLabel
             // 
             this.uvBindingsLabel.AutoSize = true;
@@ -517,11 +528,12 @@
             "UV5",
             "UV6",
             "UV7"});
-            this.uvIndicesCheckedListBox.Location = new System.Drawing.Point(11, 192);
+            this.uvIndicesCheckedListBox.Location = new System.Drawing.Point(12, 192);
             this.uvIndicesCheckedListBox.Name = "uvIndicesCheckedListBox";
             this.uvIndicesCheckedListBox.ScrollAlwaysVisible = true;
-            this.uvIndicesCheckedListBox.Size = new System.Drawing.Size(125, 95);
+            this.uvIndicesCheckedListBox.Size = new System.Drawing.Size(125, 80);
             this.uvIndicesCheckedListBox.TabIndex = 18;
+            this.optionTooltip.SetToolTip(this.uvIndicesCheckedListBox, "Checked UVs will be exported (if they exist)");
             this.uvIndicesCheckedListBox.SelectedIndexChanged += new System.EventHandler(this.uvIndicesCheckedListBox_SelectedIndexChanged);
             // 
             // uvTypesListBox
@@ -539,10 +551,10 @@
             "Shininess",
             "Reflection",
             "Transparency"});
-            this.uvTypesListBox.Location = new System.Drawing.Point(150, 192);
+            this.uvTypesListBox.Location = new System.Drawing.Point(151, 192);
             this.uvTypesListBox.Name = "uvTypesListBox";
             this.uvTypesListBox.ScrollAlwaysVisible = true;
-            this.uvTypesListBox.Size = new System.Drawing.Size(125, 95);
+            this.uvTypesListBox.Size = new System.Drawing.Size(125, 80);
             this.uvTypesListBox.TabIndex = 19;
             this.uvTypesListBox.SelectedIndexChanged += new System.EventHandler(this.uvTypesListBox_SelectedIndexChanged);
             // 
@@ -550,12 +562,13 @@
             // 
             this.exportAllUvsAsDiffuseMaps.AccessibleDescription = "";
             this.exportAllUvsAsDiffuseMaps.AutoSize = true;
-            this.exportAllUvsAsDiffuseMaps.Location = new System.Drawing.Point(6, 292);
+            this.exportAllUvsAsDiffuseMaps.Location = new System.Drawing.Point(6, 278);
             this.exportAllUvsAsDiffuseMaps.Name = "exportAllUvsAsDiffuseMaps";
             this.exportAllUvsAsDiffuseMaps.Size = new System.Drawing.Size(168, 17);
             this.exportAllUvsAsDiffuseMaps.TabIndex = 20;
             this.exportAllUvsAsDiffuseMaps.Text = "Export all UVs as diffuse maps";
-            this.optionTooltip.SetToolTip(this.exportAllUvsAsDiffuseMaps, "Check this if some UV maps are missing after export (e.g. in Blender)");
+            this.optionTooltip.SetToolTip(this.exportAllUvsAsDiffuseMaps, "Check if some UV maps are missing after export (e.g. in Blender). But this can al" +
+        "so cause some bugs with UVs.");
             this.exportAllUvsAsDiffuseMaps.UseVisualStyleBackColor = true;
             this.exportAllUvsAsDiffuseMaps.CheckedChanged += new System.EventHandler(this.exportAllUvsAsDiffuseMaps_CheckedChanged);
             // 
@@ -749,17 +762,6 @@
             this.eulerFilter.TabIndex = 1;
             this.eulerFilter.Text = "EulerFilter";
             this.eulerFilter.UseVisualStyleBackColor = true;
-            // 
-            // fbxResetButton
-            // 
-            this.fbxResetButton.BackColor = System.Drawing.SystemColors.ButtonFace;
-            this.fbxResetButton.Location = new System.Drawing.Point(208, 368);
-            this.fbxResetButton.Name = "fbxResetButton";
-            this.fbxResetButton.Size = new System.Drawing.Size(75, 23);
-            this.fbxResetButton.TabIndex = 21;
-            this.fbxResetButton.Text = "Reset";
-            this.fbxResetButton.UseVisualStyleBackColor = false;
-            this.fbxResetButton.Click += new System.EventHandler(this.resetButton_Click);
             // 
             // ExportOptions
             // 
