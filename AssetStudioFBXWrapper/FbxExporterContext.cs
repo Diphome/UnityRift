@@ -264,7 +264,7 @@ namespace AssetStudio.FbxInterop
                     }
                     else if(fbxSettings.UvBindings[i] > 0) //if checked
                     {
-                        AsFbxMeshCreateUVMap(mesh, i, fbxSettings.UvBindings[i]);
+                        AsFbxMeshCreateUVMap(mesh, i, fbxSettings.UvBindings[i] - 1);
                     }
                 }
 
@@ -370,7 +370,7 @@ namespace AssetStudio.FbxInterop
 
                     for (var uvIndex = 0; uvIndex < importedMesh.hasUV.Length; uvIndex += 1)
                     {
-                        if (importedMesh.hasUV[uvIndex])
+                        if (importedMesh.hasUV[uvIndex] && fbxSettings.UvBindings[uvIndex] > 0)
                         {
                             var uv = importedVertex.UV[uvIndex];
                             AsFbxMeshElementUVAdd(mesh, uvIndex, uv[0], uv[1]);
