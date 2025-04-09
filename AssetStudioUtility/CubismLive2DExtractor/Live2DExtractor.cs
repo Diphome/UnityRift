@@ -75,7 +75,7 @@ namespace CubismLive2DExtractor
                 PhysicsMono = Model.PhysicsController;
                 if (searchFadeMotions && TryGetFadeList(Model.FadeController, out var fadeMono))
                 {
-                    FadeMotionLst = selFadeMotionLst = fadeMono;
+                    FadeMotionLst = fadeMono;
                 }
                 if (TryGetExpressionList(Model.ExpressionController, out var expressionMono))
                 {
@@ -106,6 +106,10 @@ namespace CubismLive2DExtractor
                 {
                     PoseParts = Model.PosePartList;
                     searchPoseParts = false;
+                }
+                if (Model.ClipMotionList.Count > 0 && selClipMotions == null)
+                {
+                    AnimationClips = Model.ClipMotionList;
                 }
             }
             foreach (var asset in assetGroupKvp.Value)
@@ -204,6 +208,10 @@ namespace CubismLive2DExtractor
             if (renderTextureSet.Count > 0)
             {
                 Texture2Ds = renderTextureSet.ToList();
+            }
+            if (AnimationClips.Count > 0)
+            {
+                AnimationClips = AnimationClips.Distinct().ToList();
             }
         }
 

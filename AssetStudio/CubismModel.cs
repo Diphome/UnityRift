@@ -15,6 +15,7 @@ namespace AssetStudio
         public List<MonoBehaviour> ParamDisplayInfoList { get; set; }
         public List<MonoBehaviour> PartDisplayInfoList { get; set; }
         public List<MonoBehaviour> PosePartList { get; set; }
+        public List<AnimationClip> ClipMotionList { get; set; }
         public GameObject ModelGameObject { get; set; }
 
         public CubismModel(GameObject m_GameObject)
@@ -26,6 +27,7 @@ namespace AssetStudio
             ParamDisplayInfoList = new List<MonoBehaviour>();
             PartDisplayInfoList = new List<MonoBehaviour>();
             PosePartList = new List<MonoBehaviour>();
+            ClipMotionList = new List<AnimationClip>();
         }
     }
 }

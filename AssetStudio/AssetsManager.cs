@@ -74,6 +74,11 @@ namespace AssetStudio
                 filteredAssetTypesList.Add(ClassIDType.Texture2D);
                 filteredAssetTypesList.Add(ClassIDType.SpriteAtlas);
             }
+            if (classIDTypes.Contains(ClassIDType.Animator))
+            {
+                filteredAssetTypesList.Add(ClassIDType.AnimatorController);
+                filteredAssetTypesList.Add(ClassIDType.AnimatorOverrideController);
+            }
 
             filteredAssetTypesList.UnionWith(classIDTypes);
         }

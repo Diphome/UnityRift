@@ -236,6 +236,7 @@ namespace AssetStudioGUI
                             if (m_GameObject.CubismModel != null && TryGetCubismMoc(m_GameObject.CubismModel.CubismModelMono, out var mocMono))
                             {
                                 l2dModelDict[mocMono] = m_GameObject.CubismModel;
+                                BindAnimationClips(m_GameObject);
                             }
                             break;
                         case Texture2D m_Texture2D:
@@ -1072,6 +1073,34 @@ namespace AssetStudioGUI
             if (rootTransform.m_GameObject.TryGet(out var rootGameObject) && rootGameObject.CubismModel != null)
             {
                 rootGameObject.CubismModel.PosePartList.Add(m_MonoBehaviour);
+            }
+        }
+
+        private static void BindAnimationClips(GameObject gameObject)
+        {
+            if (gameObject.m_Animator == null || gameObject.m_Animator.m_Controller.IsNull)
+                return;
+
+            if (!gameObject.m_Animator.m_Controller.TryGet(out var controller)) 
+                return;
+
+            AnimatorController animatorController;
+            if (controller is AnimatorOverrideController overrideController)
+            {
+                if (!overrideController.m_Controller.TryGet(out animatorController))
+                    return;
+            }
+            else
+            {
+                animatorController = (AnimatorController)controller;
+            }
+
+            foreach (var clipPptr in animatorController.m_AnimationClips)
+            {
+                if (clipPptr.TryGet(out var m_AnimationClip))
+                {
+                    gameObject.CubismModel.ClipMotionList.Add(m_AnimationClip);
+                }
             }
         }
 
