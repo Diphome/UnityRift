@@ -2866,11 +2866,7 @@ namespace AssetStudioGUI
             }
 
             FMODtimerLabel.Text = $"{ms / 1000 / 60:00}:{ms / 1000 % 60:00}.{ms / 10 % 100:00} / {FMODlenms / 1000 / 60:00}:{FMODlenms / 1000 % 60:00}.{FMODlenms / 10 % 100:00}";
-#if NETFRAMEWORK
-            FMODprogressBar.Value = (int)Math.Max(0, Math.Min(ms * 1000f / FMODlenms, 1000));
-#else
-            FMODprogressBar.Value = (int)Math.Clamp(ms * 1000f / FMODlenms, 0, 1000);
-#endif
+            FMODprogressBar.Value = (int)AssetStudio.MathHelper.Clamp(ms * 1000f / FMODlenms, 0, 1000);
             FMODstatusLabel.Text = paused ? "Paused " : playing ? "Playing" : "Stopped";
 
             if (system.hasHandle() && channel.hasHandle())

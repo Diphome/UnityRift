@@ -148,7 +148,7 @@ namespace AssetStudio
                 {
                     pcmFloatSample[j] = Marshal.ReadByte(srcPtr, i + j);
                 }
-                var pcm16Sample = (short)(BitConverter.ToSingle(pcmFloatSample, 0) * 32767);
+                var pcm16Sample = (short)MathHelper.Clamp(BitConverter.ToSingle(pcmFloatSample, 0) * short.MaxValue, short.MinValue, short.MaxValue);
                 destBuffer[offset] = (byte)(pcm16Sample & 255);
                 destBuffer[offset + 1] = (byte)(pcm16Sample >> 8);
                 offset += 2;
