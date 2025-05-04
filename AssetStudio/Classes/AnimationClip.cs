@@ -1036,7 +1036,18 @@ namespace AssetStudio
         {
             var parsedAnimClip = JsonSerializer.Deserialize<AnimationClip>(type, jsonOptions);
             m_AnimationType = parsedAnimClip.m_AnimationType;
-            m_Legacy = parsedAnimClip.m_Legacy;
+            if (version >= 5)//5.0 and up
+            {
+                m_Legacy = parsedAnimClip.m_Legacy;
+            }
+            else if (version >= 4)//4.0 and up
+            {
+                m_Legacy = m_AnimationType == AnimationType.Legacy;
+            }
+            else
+            {
+                m_Legacy = true;
+            }
             m_Compressed = parsedAnimClip.m_Compressed;
             m_UseHighQualityCurve = parsedAnimClip.m_UseHighQualityCurve;
             m_RotationCurves = parsedAnimClip.m_RotationCurves;
