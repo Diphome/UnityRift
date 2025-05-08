@@ -47,8 +47,10 @@
             this.useDumpTreeViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buildTreeStructureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.customCompressionTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.customCompressionZstdToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.customCompressionLZ4ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.blockInfoCompressionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.customBlockInfoCompressionComboBoxToolStripMenuItem = new System.Windows.Forms.ToolStripComboBox();
+            this.blockCompressionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.customBlockCompressionComboBoxToolStripMenuItem = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripMenuItem14 = new System.Windows.Forms.ToolStripMenuItem();
             this.specifyUnityVersion = new System.Windows.Forms.ToolStripTextBox();
             this.showExpOpt = new System.Windows.Forms.ToolStripMenuItem();
@@ -359,33 +361,59 @@
             // customCompressionTypeToolStripMenuItem
             // 
             this.customCompressionTypeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.customCompressionZstdToolStripMenuItem,
-            this.customCompressionLZ4ToolStripMenuItem});
+            this.blockInfoCompressionToolStripMenuItem,
+            this.customBlockInfoCompressionComboBoxToolStripMenuItem,
+            this.blockCompressionToolStripMenuItem,
+            this.customBlockCompressionComboBoxToolStripMenuItem});
             this.customCompressionTypeToolStripMenuItem.Name = "customCompressionTypeToolStripMenuItem";
             this.customCompressionTypeToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
-            this.customCompressionTypeToolStripMenuItem.Text = "Custom compression type";
+            this.customCompressionTypeToolStripMenuItem.Text = "Bundle compression type";
             // 
-            // customCompressionZstdToolStripMenuItem
+            // blockInfoCompressionToolStripMenuItem
             // 
-            this.customCompressionZstdToolStripMenuItem.Checked = true;
-            this.customCompressionZstdToolStripMenuItem.CheckOnClick = true;
-            this.customCompressionZstdToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.customCompressionZstdToolStripMenuItem.Name = "customCompressionZstdToolStripMenuItem";
-            this.customCompressionZstdToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
-            this.customCompressionZstdToolStripMenuItem.Text = "Zstd";
-            this.customCompressionZstdToolStripMenuItem.ToolTipText = "If selected, Zstd-decompression will be used for assets with custom compression t" +
-    "ype";
-            this.customCompressionZstdToolStripMenuItem.CheckedChanged += new System.EventHandler(this.customCompressionZstd_CheckedChanged);
+            this.blockInfoCompressionToolStripMenuItem.Enabled = false;
+            this.blockInfoCompressionToolStripMenuItem.Name = "blockInfoCompressionToolStripMenuItem";
+            this.blockInfoCompressionToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
+            this.blockInfoCompressionToolStripMenuItem.Text = "BlockInfo Compression";
             // 
-            // customCompressionLZ4ToolStripMenuItem
+            // customBlockInfoCompressionComboBoxToolStripMenuItem
             // 
-            this.customCompressionLZ4ToolStripMenuItem.CheckOnClick = true;
-            this.customCompressionLZ4ToolStripMenuItem.Name = "customCompressionLZ4ToolStripMenuItem";
-            this.customCompressionLZ4ToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
-            this.customCompressionLZ4ToolStripMenuItem.Text = "Lz4/Lz4HC";
-            this.customCompressionLZ4ToolStripMenuItem.ToolTipText = "If selected, Lz4-decompression will be used for assets with custom compression ty" +
-    "pe";
-            this.customCompressionLZ4ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.customCompressionLZ4_CheckedChanged);
+            this.customBlockInfoCompressionComboBoxToolStripMenuItem.DropDownHeight = 80;
+            this.customBlockInfoCompressionComboBoxToolStripMenuItem.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.customBlockInfoCompressionComboBoxToolStripMenuItem.IntegralHeight = false;
+            this.customBlockInfoCompressionComboBoxToolStripMenuItem.Items.AddRange(new object[] {
+            "Auto",
+            "Zstd",
+            "Oodle",
+            "Lz4/Lz4HC",
+            "Lzma"});
+            this.customBlockInfoCompressionComboBoxToolStripMenuItem.Name = "customBlockInfoCompressionComboBoxToolStripMenuItem";
+            this.customBlockInfoCompressionComboBoxToolStripMenuItem.Size = new System.Drawing.Size(100, 23);
+            this.customBlockInfoCompressionComboBoxToolStripMenuItem.ToolTipText = "Selected compression type will override detected type from asset bundle";
+            this.customBlockInfoCompressionComboBoxToolStripMenuItem.SelectedIndexChanged += new System.EventHandler(this.customBlockInfoCompressionComboBoxToolStripMenuItem_SelectedIndexChanged);
+            // 
+            // blockCompressionToolStripMenuItem
+            // 
+            this.blockCompressionToolStripMenuItem.Enabled = false;
+            this.blockCompressionToolStripMenuItem.Name = "blockCompressionToolStripMenuItem";
+            this.blockCompressionToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
+            this.blockCompressionToolStripMenuItem.Text = "Block Compression";
+            // 
+            // customBlockCompressionComboBoxToolStripMenuItem
+            // 
+            this.customBlockCompressionComboBoxToolStripMenuItem.DropDownHeight = 80;
+            this.customBlockCompressionComboBoxToolStripMenuItem.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.customBlockCompressionComboBoxToolStripMenuItem.IntegralHeight = false;
+            this.customBlockCompressionComboBoxToolStripMenuItem.Items.AddRange(new object[] {
+            "Auto",
+            "Zstd",
+            "Oodle",
+            "Lz4/Lz4HC",
+            "Lzma"});
+            this.customBlockCompressionComboBoxToolStripMenuItem.Name = "customBlockCompressionComboBoxToolStripMenuItem";
+            this.customBlockCompressionComboBoxToolStripMenuItem.Size = new System.Drawing.Size(100, 23);
+            this.customBlockCompressionComboBoxToolStripMenuItem.ToolTipText = "Selected compression type will override detected type from asset bundle";
+            this.customBlockCompressionComboBoxToolStripMenuItem.SelectedIndexChanged += new System.EventHandler(this.customBlockCompressionComboBoxToolStripMenuItem_SelectedIndexChanged);
             // 
             // toolStripMenuItem14
             // 
@@ -1746,8 +1774,6 @@
         private System.Windows.Forms.ToolStripMenuItem l2DModelWithFadeListToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportL2DWithFadeLstToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem customCompressionTypeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem customCompressionZstdToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem customCompressionLZ4ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem useAssetLoadingViaTypetreeToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator assetLoadingToolStripSeparator;
         private System.Windows.Forms.TreeView dumpTreeView;
@@ -1763,6 +1789,10 @@
         private System.Windows.Forms.ToolStripMenuItem colorThemeDarkToolStripMenuItem;
         private System.Windows.Forms.Label FMODaudioChannelsLabel;
         private System.Windows.Forms.ToolStripMenuItem autoPlayAudioAssetsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripComboBox customBlockCompressionComboBoxToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem blockCompressionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem blockInfoCompressionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripComboBox customBlockInfoCompressionComboBoxToolStripMenuItem;
     }
 }
 

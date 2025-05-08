@@ -82,6 +82,8 @@
         <Copy SourceFiles="$(SolutionDir)AssetStudioFBXNative\bin\x64\$(Configuration)\AssetStudioFBXNative.dll" DestinationFolder="$(TargetDir)runtimes\win-x64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\x86\fmod.dll" DestinationFolder="$(TargetDir)runtimes\win-x86\native" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\x64\fmod.dll" DestinationFolder="$(TargetDir)runtimes\win-x64\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(ProjectDir)Libraries\x86\ooz.dll" DestinationFolder="$(TargetDir)runtimes\win-x86\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(ProjectDir)Libraries\x64\ooz.dll" DestinationFolder="$(TargetDir)runtimes\win-x64\native" ContinueOnError="false" />
     </Target>
 
     <!-- Publishing an app as framework-dependent produces a cross-platform binary as a dll file, and a platform-specific executable that targets your current platform.
@@ -94,6 +96,8 @@
         <Copy SourceFiles="$(TargetDir)runtimes\win-x64\native\Texture2DDecoderNative.dll" DestinationFolder="$(PublishDir)runtimes\win-x64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)runtimes\win-x86\native\fmod.dll" DestinationFolder="$(PublishDir)runtimes\win-x86\native" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)runtimes\win-x64\native\fmod.dll" DestinationFolder="$(PublishDir)runtimes\win-x64\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(TargetDir)runtimes\win-x86\native\ooz.dll" DestinationFolder="$(PublishDir)runtimes\win-x86\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(TargetDir)runtimes\win-x64\native\ooz.dll" DestinationFolder="$(PublishDir)runtimes\win-x64\native" ContinueOnError="false" />
     </Target>
 
     <!-- No need to publish net472 build of AssetStudioGUI -->
@@ -107,6 +111,7 @@
         <Copy SourceFiles="$(SolutionDir)Texture2DDecoderNative\bin\Win32\$(Configuration)\Texture2DDecoderNative.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(SolutionDir)AssetStudioFBXNative\bin\Win32\$(Configuration)\AssetStudioFBXNative.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\x86\fmod.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
+        <Copy SourceFiles="$(ProjectDir)Libraries\x86\ooz.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
     </Target>
 
     <Target Name="CopyExtraFilesWin64" AfterTargets="AfterBuild" Condition=" '$(RuntimeIdentifier)' == 'win-x64' AND '$(TargetFramework)' != 'net472' ">
@@ -114,6 +119,7 @@
         <Copy SourceFiles="$(SolutionDir)Texture2DDecoderNative\bin\x64\$(Configuration)\Texture2DDecoderNative.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(SolutionDir)AssetStudioFBXNative\bin\x64\$(Configuration)\AssetStudioFBXNative.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\x64\fmod.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
+        <Copy SourceFiles="$(ProjectDir)Libraries\x64\ooz.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
     </Target>
     
     <Target Name="PublishExtraFilesWin" AfterTargets="Publish" Condition=" $(RuntimeIdentifier.Contains('win')) AND '$(TargetFramework)' != 'net472' ">
@@ -121,6 +127,7 @@
         <Copy SourceFiles="$(TargetDir)\AssetStudioFBXNative.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)\Texture2DDecoderNative.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)\fmod.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
+        <Copy SourceFiles="$(TargetDir)\ooz.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
     </Target>
 
 </Project>

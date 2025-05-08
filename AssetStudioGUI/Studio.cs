@@ -140,7 +140,7 @@ namespace AssetStudioGUI
             var count = 0;
             var bundleStream = new OffsetStream(reader);
             var bundleReader = new FileReader(reader.FullPath, bundleStream);
-            var bundleFile = new BundleFile(bundleReader, assetsManager.ZstdEnabled, assetsManager.SpecifyUnityVersion);
+            var bundleFile = new BundleFile(bundleReader, assetsManager.CustomBlockInfoCompression, assetsManager.CustomBlockCompression, assetsManager.SpecifyUnityVersion);
             var extractPath = Path.Combine(savePath, reader.FileName + "_unpacked");
             if (bundleFile.fileList.Length > 0)
             {
@@ -157,7 +157,7 @@ namespace AssetStudioGUI
                     bundleReader.FileName = $"{reader.FileName}_0x{bundleStream.Offset:X}";
                 }
                 Logger.Info($"[MultiBundle] Decompressing \"{reader.FileName}\" from offset: 0x{bundleStream.Offset:X}..");
-                bundleFile = new BundleFile(bundleReader, assetsManager.ZstdEnabled, assetsManager.SpecifyUnityVersion);
+                bundleFile = new BundleFile(bundleReader, assetsManager.CustomBlockInfoCompression, assetsManager.CustomBlockCompression, assetsManager.SpecifyUnityVersion);
                 if (bundleFile.fileList.Length > 0)
                 {
                     count += ExtractStreamFile(extractPath, bundleFile.fileList);

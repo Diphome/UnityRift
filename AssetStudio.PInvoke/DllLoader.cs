@@ -11,7 +11,7 @@ namespace AssetStudio.PInvoke
     {
         public static void PreloadDll(string dllName)
         {
-            var localPath = Process.GetCurrentProcess().MainModule.FileName;
+            var localPath = Process.GetCurrentProcess().MainModule?.FileName;
             var localDir = Path.GetDirectoryName(localPath);
 
             // Not using OperatingSystem.Platform.
@@ -35,7 +35,6 @@ namespace AssetStudio.PInvoke
 
         private static class Win32
         {
-
             internal static void LoadDll(string dllDir, string dllName)
             {
                 var dllFileName = $"{dllName}.dll";

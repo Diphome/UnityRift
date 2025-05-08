@@ -92,7 +92,7 @@ namespace AssetStudioCLI
             var count = 0;
             var bundleStream = new OffsetStream(reader);
             var bundleReader = new FileReader(reader.FullPath, bundleStream);
-            var bundleFile = new BundleFile(bundleReader, assetsManager.ZstdEnabled, assetsManager.SpecifyUnityVersion);
+            var bundleFile = new BundleFile(bundleReader, assetsManager.CustomBlockInfoCompression, assetsManager.CustomBlockCompression, assetsManager.SpecifyUnityVersion);
             var extractPath = Path.Combine(savePath, reader.FileName + "_unpacked");
             if (bundleFile.fileList.Length > 0)
             {
@@ -109,7 +109,7 @@ namespace AssetStudioCLI
                     bundleReader.FileName = $"{reader.FileName}_0x{bundleStream.Offset:X}";
                 }
                 Logger.Info($"[MultiBundle] Decompressing \"{reader.FileName}\" from offset: 0x{bundleStream.Offset:X}..");
-                bundleFile = new BundleFile(bundleReader, assetsManager.ZstdEnabled, assetsManager.SpecifyUnityVersion);
+                bundleFile = new BundleFile(bundleReader, assetsManager.CustomBlockInfoCompression, assetsManager.CustomBlockCompression, assetsManager.SpecifyUnityVersion);
                 if (bundleFile.fileList.Length > 0)
                 {
                     count += ExtractStreamFile(extractPath, bundleFile.fileList);
@@ -160,7 +160,8 @@ namespace AssetStudioCLI
         {
             var isLoaded = false;
             assetsManager.SpecifyUnityVersion = CLIOptions.o_unityVersion.Value;
-            assetsManager.ZstdEnabled = CLIOptions.o_customCompressionType.Value == CustomCompressionType.Zstd;
+            assetsManager.CustomBlockInfoCompression = CLIOptions.o_bundleBlockInfoCompression.Value;
+            assetsManager.CustomBlockCompression = CLIOptions.o_bundleBlockCompression.Value;
             assetsManager.LoadingViaTypeTreeEnabled = !CLIOptions.f_avoidLoadingViaTypetree.Value;
             if (!CLIOptions.f_loadAllAssets.Value)
             {

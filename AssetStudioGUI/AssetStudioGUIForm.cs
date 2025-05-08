@@ -145,6 +145,8 @@ namespace AssetStudioGUI
             useAssetLoadingViaTypetreeToolStripMenuItem.Checked = Properties.Settings.Default.useTypetreeLoading;
             useDumpTreeViewToolStripMenuItem.Checked = Properties.Settings.Default.useDumpTreeView;
             autoPlayAudioAssetsToolStripMenuItem.Checked = Properties.Settings.Default.autoplayAudio;
+            customBlockCompressionComboBoxToolStripMenuItem.SelectedIndex = 0;
+            customBlockInfoCompressionComboBoxToolStripMenuItem.SelectedIndex = 0;
             FMODinit();
             listSearchFilterMode.SelectedIndex = 0;
             if (string.IsNullOrEmpty(Properties.Settings.Default.fbxSettings))
@@ -2422,16 +2424,50 @@ namespace AssetStudioGUI
             }
         }
 
-        private void customCompressionZstd_CheckedChanged(object sender, EventArgs e)
+        private void customBlockCompressionComboBoxToolStripMenuItem_SelectedIndexChanged(object sender, EventArgs e)
         {
-            customCompressionLZ4ToolStripMenuItem.Checked = !customCompressionZstdToolStripMenuItem.Checked;
-            assetsManager.ZstdEnabled = customCompressionZstdToolStripMenuItem.Checked;
+            var selectedTypeIndex = customBlockCompressionComboBoxToolStripMenuItem.SelectedIndex;
+            switch (selectedTypeIndex)
+            {
+                case 0:
+                    assetsManager.CustomBlockCompression = CompressionType.Auto;
+                    break;
+                case 1:
+                    assetsManager.CustomBlockCompression = CompressionType.Zstd;
+                    break;
+                case 2:
+                    assetsManager.CustomBlockCompression = CompressionType.Oodle;
+                    break;
+                case 3:
+                    assetsManager.CustomBlockCompression = CompressionType.Lz4HC;
+                    break;
+                case 4:
+                    assetsManager.CustomBlockCompression = CompressionType.Lzma;
+                    break;
+            }
         }
 
-        private void customCompressionLZ4_CheckedChanged(object sender, EventArgs e)
+        private void customBlockInfoCompressionComboBoxToolStripMenuItem_SelectedIndexChanged(object sender, EventArgs e)
         {
-            customCompressionZstdToolStripMenuItem.Checked = !customCompressionLZ4ToolStripMenuItem.Checked;
-            assetsManager.ZstdEnabled = customCompressionZstdToolStripMenuItem.Checked;
+            var selectedTypeIndex = customBlockInfoCompressionComboBoxToolStripMenuItem.SelectedIndex;
+            switch (selectedTypeIndex)
+            {
+                case 0:
+                    assetsManager.CustomBlockInfoCompression = CompressionType.Auto;
+                    break;
+                case 1:
+                    assetsManager.CustomBlockInfoCompression = CompressionType.Zstd;
+                    break;
+                case 2:
+                    assetsManager.CustomBlockInfoCompression = CompressionType.Oodle;
+                    break;
+                case 3:
+                    assetsManager.CustomBlockInfoCompression = CompressionType.Lz4HC;
+                    break;
+                case 4:
+                    assetsManager.CustomBlockInfoCompression = CompressionType.Lzma;
+                    break;
+            }
         }
 
         private void useAssetLoadingViaTypetreeToolStripMenuItem_CheckedChanged(object sender, EventArgs e)

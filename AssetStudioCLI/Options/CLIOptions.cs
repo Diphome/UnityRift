@@ -68,12 +68,6 @@ namespace AssetStudioCLI.Options
         NameAndContainer,
     }
 
-    internal enum CustomCompressionType
-    {
-        Zstd,
-        Lz4,
-    }
-
     internal static class CLIOptions
     {
         public static bool isParsed;
@@ -115,7 +109,8 @@ namespace AssetStudioCLI.Options
         public static Option<List<string>> o_filterByPathID;
         public static Option<List<string>> o_filterByText;
         //advanced
-        public static Option<CustomCompressionType> o_customCompressionType;
+        public static Option<CompressionType> o_bundleBlockInfoCompression;
+        public static Option<CompressionType> o_bundleBlockCompression;
         public static Option<int> o_maxParallelExportTasks;
         public static Option<ExportListType> o_exportAssetList;
         public static Option<string> o_assemblyPath;
@@ -425,15 +420,33 @@ namespace AssetStudioCLI.Options
             #endregion
 
             #region Init Advanced Options
-            o_customCompressionType = new GroupedOption<CustomCompressionType>
+            o_bundleBlockInfoCompression = new GroupedOption<CompressionType>
             (
-                optionDefaultValue: CustomCompressionType.Zstd,
-                optionName: "--custom-compression <value>",
-                optionDescription: "Specify the compression type for assets that use custom compression\n" + 
-                    "<Value: zstd(default) | lz4>\n" +
+                optionDefaultValue: CompressionType.Auto,
+                optionName: "--blockinfo-comp <value>",
+                optionDescription: "Specify the compression type of bundle's blockInfo data\n" + 
+                    "<Value: auto(default) | zstd | oodle | lz4 | lzma>\n" +
+                    "Auto - Use compression type specified in an asset bundle\n" +
                     "Zstd - Try to decompress as zstd archive\n" +
-                    "Lz4 - Try to decompress as lz4 archive\n",
-                optionExample: "Example: \"--custom-compression lz4\"\n",
+                    "Oodle - Try to decompress as oodle archive\n" +
+                    "Lz4 - Try to decompress as lz4/lz4hc archive\n" +
+                    "Lzma - Try to decompress as lzma archive\n",
+                optionExample: "Example: \"--blockinfo-comp lz4\"\n",
+                optionHelpGroup: HelpGroups.Advanced
+            );
+
+            o_bundleBlockCompression = new GroupedOption<CompressionType>
+            (
+                optionDefaultValue: CompressionType.Auto,
+                optionName: "--block-comp <value>",
+                optionDescription: "Specify the compression type of bundle's block data\n" +
+                    "<Value: auto(default) | zstd | oodle | lz4 | lzma>\n" +
+                    "Auto - Use compression type specified in an asset bundle\n" +
+                    "Zstd - Try to decompress as zstd archive\n" +
+                    "Oodle - Try to decompress as oodle archive\n" +
+                    "Lz4 - Try to decompress as lz4/lz4hc archive\n" +
+                    "Lzma - Try to decompress as lzma archive\n",
+                optionExample: "Example: \"--block-comp zstd\"\n",
                 optionHelpGroup: HelpGroups.Advanced
             );
 
@@ -975,19 +988,53 @@ namespace AssetStudioCLI.Options
                             }
                             break;
                         }
-                        case "--custom-compression":
+                        case "--blockinfo-comp":
                             switch (value.ToLower())
                             {
+                                case "auto":
+                                    o_bundleBlockInfoCompression.Value = CompressionType.Zstd;
+                                    break;
                                 case "zstd":
-                                    o_customCompressionType.Value = CustomCompressionType.Zstd;
+                                    o_bundleBlockInfoCompression.Value = CompressionType.Zstd;
+                                    break;
+                                case "oodle":
+                                    o_bundleBlockInfoCompression.Value = CompressionType.Oodle;
                                     break;
                                 case "lz4":
                                 case "lz4hc":
-                                    o_customCompressionType.Value = CustomCompressionType.Lz4;
+                                    o_bundleBlockInfoCompression.Value = CompressionType.Lz4HC;
+                                    break;
+                                case "lzma":
+                                    o_bundleBlockInfoCompression.Value = CompressionType.Lzma;
                                     break;
                                 default:
                                     Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported compression type: [{value.Color(brightRed)}].\n");
-                                    ShowOptionDescription(o_customCompressionType);
+                                    ShowOptionDescription(o_bundleBlockInfoCompression);
+                                    return;
+                            }
+                            break;
+                        case "--block-comp":
+                            switch (value.ToLower())
+                            {
+                                case "auto":
+                                    o_bundleBlockCompression.Value = CompressionType.Zstd;
+                                    break;
+                                case "zstd":
+                                    o_bundleBlockCompression.Value = CompressionType.Zstd;
+                                    break;
+                                case "oodle":
+                                    o_bundleBlockCompression.Value = CompressionType.Oodle;
+                                    break;
+                                case "lz4":
+                                case "lz4hc":
+                                    o_bundleBlockCompression.Value = CompressionType.Lz4HC;
+                                    break;
+                                case "lzma":
+                                    o_bundleBlockCompression.Value = CompressionType.Lzma;
+                                    break;
+                                default:
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported compression type: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_bundleBlockCompression);
                                     return;
                             }
                             break;
@@ -1235,10 +1282,6 @@ namespace AssetStudioCLI.Options
             var sb = new StringBuilder();
             sb.AppendLine("[Current Options]");
             sb.AppendLine($"# Working Mode: {o_workMode}");
-            if (o_customCompressionType.Value != o_customCompressionType.DefaultValue)
-            {
-                sb.AppendLine($"# Custom Compression Type: {o_customCompressionType}");
-            }
             if (o_workMode.Value != WorkMode.Extract)
             {
                 sb.AppendLine($"# Parse Assets Using TypeTree: {!f_avoidLoadingViaTypetree.Value}");
@@ -1248,6 +1291,8 @@ namespace AssetStudioCLI.Options
             {
                 sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");
             }
+            sb.AppendLine($"Bundle BlockInfo Compression Type: {o_bundleBlockInfoCompression}");
+            sb.AppendLine($"Bundle Block Compression Type: {o_bundleBlockCompression}");
             switch (o_workMode.Value)
             {
                 case WorkMode.Export:

@@ -13,8 +13,9 @@ namespace AssetStudio
 {
     public class AssetsManager
     {
-        public bool ZstdEnabled = true;
         public bool LoadingViaTypeTreeEnabled = true;
+        public CompressionType CustomBlockCompression = CompressionType.Auto;
+        public CompressionType CustomBlockInfoCompression = CompressionType.Auto;
         public List<SerializedFile> assetsFileList = new List<SerializedFile>();
 
         internal Dictionary<string, int> assetsFileIndexCache = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -177,7 +178,10 @@ namespace AssetStudio
 
         private bool LoadFile(FileReader reader)
         {
-            switch (reader?.FileType)
+            if (reader == null)
+                return false;
+
+            switch (reader.FileType)
             {
                 case FileType.AssetsFile:
                     return LoadAssetsFile(reader);
@@ -306,7 +310,7 @@ namespace AssetStudio
             
             try
             {
-                var bundleFile = new BundleFile(bundleReader, ZstdEnabled, specifiedUnityVersion);
+                var bundleFile = new BundleFile(bundleReader, CustomBlockInfoCompression, CustomBlockCompression, specifiedUnityVersion);
                 var isLoaded = LoadBundleFiles(bundleReader, bundleFile, originalPath);
                 if (!isLoaded)
                     return false;
@@ -322,7 +326,7 @@ namespace AssetStudio
                         bundleReader.FileName = $"{reader.FileName}_0x{bundleStream.Offset:X}";
                     }
                     Logger.Info($"[MultiBundle] Loading \"{reader.FileName}\" from offset: 0x{bundleStream.Offset:X}");
-                    bundleFile = new BundleFile(bundleReader, ZstdEnabled, specifiedUnityVersion);
+                    bundleFile = new BundleFile(bundleReader, CustomBlockInfoCompression, CustomBlockCompression, specifiedUnityVersion);
                     isLoaded = LoadBundleFiles(bundleReader, bundleFile, originalPath ?? reader.FullPath);
                 }
                 return isLoaded;

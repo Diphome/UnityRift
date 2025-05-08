@@ -2,12 +2,11 @@ using System;
 using System.IO;
 using SevenZip.Compression.LZMA;
 
-
-namespace AssetStudio
+namespace BundleCompression.Lzma
 {
-    public static class SevenZipHelper
+    public static class SevenZipLzma
     {
-        public static MemoryStream StreamDecompress(MemoryStream inStream)
+        public static MemoryStream DecompressStream(MemoryStream inStream)
         {
             var decoder = new Decoder();
 
@@ -34,7 +33,7 @@ namespace AssetStudio
             return newOutStream;
         }
 
-        public static void StreamDecompress(Stream compressedStream, Stream decompressedStream, long compressedSize, long decompressedSize)
+        public static long DecompressStream(Stream compressedStream, Stream decompressedStream, long compressedSize, long decompressedSize)
         {
             var basePosition = compressedStream.Position;
             var decoder = new Decoder();
@@ -44,6 +43,7 @@ namespace AssetStudio
             decoder.SetDecoderProperties(properties);
             decoder.Code(compressedStream, decompressedStream, compressedSize - 5, decompressedSize, null);
             compressedStream.Position = basePosition + compressedSize;
+            return decompressedStream.Position;
         }
     }
 }
