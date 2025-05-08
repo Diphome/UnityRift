@@ -17,8 +17,8 @@ namespace AssetStudio
     [Flags]
     public enum CnEncryptionFlags
     {
-        OldFlag = 0x200,
-        NewFlag = 0x400
+        V1 = 0x200,
+        V2_V3 = 0x1400,
     }
 
     [Flags]
@@ -115,7 +115,6 @@ namespace AssetStudio
                         IsMultiBundle = true;
                     }
                     
-                    var isUnityCnEnc = false;
                     var unityVer = m_Header.unityRevision;
                     if (specUnityVer != null)
                     {
@@ -128,30 +127,8 @@ namespace AssetStudio
                         unityVer = specUnityVer;
                     }
 
-                    if (!unityVer.IsStripped)
-                    {
-                        // https://issuetracker.unity3d.com/issues/files-within-assetbundles-do-not-start-on-aligned-boundaries-breaking-patching-on-nintendo-switch
-                        if (unityVer < 2020
-                            || unityVer.IsInRange(2020, (2020, 3, 34))
-                            || unityVer.IsInRange(2021, (2021, 3, 2))
-                            || unityVer.IsInRange(2022, (2022, 1, 1)))
-                        {
-                            isUnityCnEnc = ((CnEncryptionFlags)m_Header.flags & CnEncryptionFlags.OldFlag) != 0;
-                        }
-                        else
-                        {
-                            isUnityCnEnc = ((CnEncryptionFlags)m_Header.flags & CnEncryptionFlags.NewFlag) != 0;
-                        }
-                    }
-                    if (isUnityCnEnc)
-                    {
-                        var msg = "Unsupported bundle file. ";
-                        msg += specUnityVer != null
-                            ? "UnityCN encryption was detected or the specified Unity version is incorrect."
-                            : "UnityCN encryption was detected.";
-                        throw new NotSupportedException(msg);
-                    }
-
+                    UnityCnCheck(reader, customBlockInfoCompression, unityVer);
+                    
                     ReadBlocksInfoAndDirectory(reader, customBlockInfoCompression, unityVer);
                     using (var blocksStream = CreateBlocksStream(reader.FullPath))
                     {
@@ -503,6 +480,41 @@ namespace AssetStudio
                 }
             }
             blocksStream.Position = 0;
+        }
+
+        private void UnityCnCheck(FileReader reader, CompressionType customBlockInfoCompression, UnityVersion unityVer)
+        {
+            var hasUnityCnFlag = false;
+            if (!unityVer.IsStripped)
+            {
+                // https://issuetracker.unity3d.com/issues/files-within-assetbundles-do-not-start-on-aligned-boundaries-breaking-patching-on-nintendo-switch
+                if (unityVer < 2020
+                    || unityVer.IsInRange(2020, (2020, 3, 34))
+                    || unityVer.IsInRange(2021, (2021, 3, 2))
+                    || unityVer.IsInRange(2022, (2022, 1, 1)))
+                {
+                    hasUnityCnFlag = ((CnEncryptionFlags)m_Header.flags & CnEncryptionFlags.V1) != 0;
+                }
+                else
+                {
+                    hasUnityCnFlag = ((CnEncryptionFlags)m_Header.flags & CnEncryptionFlags.V2_V3) != 0;
+                }
+            }
+            if (!hasUnityCnFlag)
+                return;
+
+            var pos = reader.Position;
+            reader.Position += 70;
+            try
+            {
+                ReadBlocksInfoAndDirectory(reader, customBlockInfoCompression, unityVer, silent: true);
+            }
+            catch (Exception)
+            {
+                reader.Position = pos;
+                return;
+            }
+            throw new NotSupportedException("Unsupported bundle file. UnityCN encryption was detected.");
         }
     }
 }
