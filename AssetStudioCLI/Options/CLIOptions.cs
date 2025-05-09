@@ -108,6 +108,7 @@ namespace AssetStudioCLI.Options
         public static Option<List<string>> o_filterByContainer;
         public static Option<List<string>> o_filterByPathID;
         public static Option<List<string>> o_filterByText;
+        public static Option<bool> f_filterWithRegex;
         //advanced
         public static Option<CompressionType> o_bundleBlockInfoCompression;
         public static Option<CompressionType> o_bundleBlockCompression;
@@ -384,7 +385,7 @@ namespace AssetStudioCLI.Options
             (
                 optionDefaultValue: new List<string>(),
                 optionName: "--filter-by-name <text>",
-                optionDescription: "Specify the name by which assets should be filtered\n" +
+                optionDescription: "Specify the name or regexp by which assets should be filtered\n" +
                     "*To specify multiple names write them separated by ',' or ';' without spaces\n",
                 optionExample: "Example: \"--filter-by-name char\" or \"--filter-by-name char,bg\"\n",
                 optionHelpGroup: HelpGroups.Filter
@@ -393,7 +394,7 @@ namespace AssetStudioCLI.Options
             (
                 optionDefaultValue: new List<string>(),
                 optionName: "--filter-by-container <text>",
-                optionDescription: "Specify the container by which assets should be filtered\n" +
+                optionDescription: "Specify the container or regexp by which assets should be filtered\n" +
                     "*To specify multiple containers write them separated by ',' or ';' without spaces\n",
                 optionExample: "Example: \"--filter-by-container arts\" or \"--filter-by-container arts,icons\"\n",
                 optionHelpGroup: HelpGroups.Filter
@@ -411,11 +412,21 @@ namespace AssetStudioCLI.Options
             (
                 optionDefaultValue: new List<string>(),
                 optionName: "--filter-by-text <text>",
-                optionDescription: "Specify the text by which assets should be filtered\n" +
+                optionDescription: "Specify the text or regexp by which assets should be filtered\n" +
                     "Looks for assets that contain the specified text in their names or containers\n" +
                     "*To specify multiple values write them separated by ',' or ';' without spaces\n",
-                optionExample: "Example: \"--filter-by-text portrait\" or \"--filter-by-text portrait,art\"",
+                optionExample: "Example: \"--filter-by-text portrait\" or \"--filter-by-text portrait,art\"\n",
                 optionHelpGroup: HelpGroups.Filter
+            );
+            f_filterWithRegex = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--filter-with-regex",
+                optionDescription: "(Flag) If specified, the filter options will handle the specified text\n" +
+                    "as a regular expression (doesn't apply to --filter-by-pathid)",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.Filter,
+                isFlag: true
             );
             #endregion
 
@@ -660,6 +671,10 @@ namespace AssetStudioCLI.Options
                             return;
                         }
                         f_fbxUvsAsDiffuseMaps.Value = true;
+                        resplittedArgs.RemoveAt(i);
+                        break;
+                    case "--filter-with-regex":
+                        f_filterWithRegex.Value = true;
                         resplittedArgs.RemoveAt(i);
                         break;
                     case "--not-restore-extension":
@@ -1077,11 +1092,11 @@ namespace AssetStudioCLI.Options
                             }
                             break;
                         case "--filter-by-name":
-                            o_filterByName.Value.AddRange(ValueSplitter(value));
+                            o_filterByName.Value.AddRange(ValueSplitter(value, isRegex: f_filterWithRegex.Value));
                             filterBy = filterBy == FilterBy.None ? FilterBy.Name : filterBy == FilterBy.Container ? FilterBy.NameAndContainer : filterBy;
                             break;
                         case "--filter-by-container":
-                            o_filterByContainer.Value.AddRange(ValueSplitter(value));
+                            o_filterByContainer.Value.AddRange(ValueSplitter(value, isRegex: f_filterWithRegex.Value));
                             filterBy = filterBy == FilterBy.None ? FilterBy.Container : filterBy == FilterBy.Name ? FilterBy.NameAndContainer : filterBy;
                             break;
                         case "--filter-by-pathid":
@@ -1089,7 +1104,7 @@ namespace AssetStudioCLI.Options
                             filterBy = FilterBy.PathID;
                             break;
                         case "--filter-by-text":
-                            o_filterByText.Value.AddRange(ValueSplitter(value));
+                            o_filterByText.Value.AddRange(ValueSplitter(value, isRegex: f_filterWithRegex.Value));
                             filterBy = FilterBy.NameOrContainer;
                             break;
                         case "--assembly-folder":
@@ -1172,8 +1187,11 @@ namespace AssetStudioCLI.Options
             isParsed = true;
         }
 
-        private static string[] ValueSplitter(string value)
+        private static string[] ValueSplitter(string value, bool isRegex = false)
         {
+            if (isRegex)
+                return new[] {value};
+
             var separator = value.Contains(';') ? ';' : ',';
             return value.Split(separator);
         }
@@ -1314,6 +1332,7 @@ namespace AssetStudioCLI.Options
                     sb.AppendLine($"# Log Output: {o_logOutput}");
                     sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
                     sb.AppendLine(ShowCurrentFilter());
+                    sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");
                     sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");
                     sb.AppendLine($"# Unity Version: {unityVer}");
                     if (o_workMode.Value == WorkMode.Export)
@@ -1329,6 +1348,7 @@ namespace AssetStudioCLI.Options
                     sb.AppendLine($"# Log Output: {o_logOutput}");
                     sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
                     sb.AppendLine(ShowCurrentFilter());
+                    sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");
                     sb.AppendLine($"# Unity Version: {unityVer}");
                     break;
                 case WorkMode.Live2D:

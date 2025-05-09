@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -534,14 +535,32 @@ namespace AssetStudioCLI
         {
             var assetsCount = parsedAssetsList.Count;
             var filteredAssets = new List<AssetItem>();
+            var regexMode = CLIOptions.f_filterWithRegex.Value;
+            Regex regex;
 
             switch(CLIOptions.filterBy)
             {
+                case FilterBy.Name when regexMode:
+                    regex = new Regex(CLIOptions.o_filterByName.Value[0]);
+                    filteredAssets = parsedAssetsList.FindAll(x => regex.IsMatch(x.Text));
+                    Logger.Info(
+                        $"Found [{filteredAssets.Count}/{assetsCount}] asset(s) " +
+                        $"which Names match {regex.ToString().Color(Ansi.BrightYellow)} regexp."
+                    );
+                    break;
                 case FilterBy.Name:
                     filteredAssets = parsedAssetsList.FindAll(x => CLIOptions.o_filterByName.Value.Any(y => x.Text.IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0));
                     Logger.Info(
                         $"Found [{filteredAssets.Count}/{assetsCount}] asset(s) " +
                         $"that contain {$"\"{string.Join("\", \"", CLIOptions.o_filterByName.Value)}\"".Color(Ansi.BrightYellow)} in their Names."
+                    );
+                    break;
+                case FilterBy.Container when regexMode:
+                    regex = new Regex(CLIOptions.o_filterByContainer.Value[0]);
+                    filteredAssets = parsedAssetsList.FindAll(x => regex.IsMatch(x.Container));
+                    Logger.Info(
+                        $"Found [{filteredAssets.Count}/{assetsCount}] asset(s) " +
+                        $"which Containers match {regex.ToString().Color(Ansi.BrightYellow)} regexp."
                     );
                     break;
                 case FilterBy.Container:
@@ -558,6 +577,14 @@ namespace AssetStudioCLI
                         $"that contain {$"\"{string.Join("\", \"", CLIOptions.o_filterByPathID.Value)}\"".Color(Ansi.BrightYellow)} in their PathIDs."
                     );
                     break;
+                case FilterBy.NameOrContainer when regexMode:
+                    regex = new Regex(CLIOptions.o_filterByText.Value[0]);
+                    filteredAssets = parsedAssetsList.FindAll(x => regex.IsMatch(x.Text) || regex.IsMatch(x.Container));
+                    Logger.Info(
+                        $"Found [{filteredAssets.Count}/{assetsCount}] asset(s) " +
+                        $"which Names or Containers match {regex.ToString().Color(Ansi.BrightYellow)} regexp."
+                    );
+                    break;
                 case FilterBy.NameOrContainer:
                     filteredAssets = parsedAssetsList.FindAll(x =>
                         CLIOptions.o_filterByText.Value.Any(y => x.Text.IndexOf(y, StringComparison.OrdinalIgnoreCase) >= 0) ||
@@ -565,7 +592,17 @@ namespace AssetStudioCLI
                     );
                     Logger.Info(
                         $"Found [{filteredAssets.Count}/{assetsCount}] asset(s) " +
-                        $"that contain {$"\"{string.Join("\", \"", CLIOptions.o_filterByText.Value)}\"".Color(Ansi.BrightYellow)} in their Names or Contaniers."
+                        $"that contain {$"\"{string.Join("\", \"", CLIOptions.o_filterByText.Value)}\"".Color(Ansi.BrightYellow)} in their Names or Containers."
+                    );
+                    break;
+                case FilterBy.NameAndContainer when regexMode:
+                    var nameRegex = new Regex(CLIOptions.o_filterByName.Value[0]);
+                    var containerRegex = new Regex(CLIOptions.o_filterByContainer.Value[0]);
+                    filteredAssets = parsedAssetsList.FindAll(x => nameRegex.IsMatch(x.Text) && containerRegex.IsMatch(x.Container));
+                    Logger.Info(
+                        $"Found [{filteredAssets.Count}/{assetsCount}] asset(s) " +
+                        $"which Containers match {containerRegex.ToString().Color(Ansi.BrightYellow)} regexp " +
+                        $"and which Names match {nameRegex.ToString().Color(Ansi.BrightYellow)} regexp."
                     );
                     break;
                 case FilterBy.NameAndContainer:
