@@ -616,9 +616,10 @@ namespace AssetStudioGUI
             {
                 if (treeSrcResults.Count == 0)
                 {
+                    var isExactSearch = sceneExactSearchCheckBox.Checked;
                     foreach (TreeNode node in sceneTreeView.Nodes)
                     {
-                        TreeNodeSearch(node);
+                        TreeNodeSearch(node, isExactSearch);
                     }
                 }
                 if (treeSrcResults.Count > 0)
@@ -634,17 +635,26 @@ namespace AssetStudioGUI
             }
         }
 
-        private void TreeNodeSearch(TreeNode treeNode)
+        private void TreeNodeSearch(TreeNode treeNode, bool isExactSearch)
         {
-            if (treeNode.Text.IndexOf(treeSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0)
+            if (isExactSearch && string.Equals(treeNode.Text, treeSearch.Text, StringComparison.InvariantCultureIgnoreCase))
+            {
+                treeSrcResults.Add(treeNode);
+            }
+            else if (!isExactSearch && treeNode.Text.IndexOf(treeSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 treeSrcResults.Add(treeNode);
             }
 
             foreach (TreeNode node in treeNode.Nodes)
             {
-                TreeNodeSearch(node);
+                TreeNodeSearch(node, isExactSearch);
             }
+        }
+
+        private void sceneExactSearchCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            treeSearch_TextChanged(sender, e);
         }
 
         private void sceneTreeView_AfterCheck(object sender, TreeViewEventArgs e)

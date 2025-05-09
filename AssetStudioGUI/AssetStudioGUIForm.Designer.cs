@@ -103,6 +103,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.sceneExactSearchCheckBox = new System.Windows.Forms.CheckBox();
             this.sceneTreeView = new AssetStudioGUI.GOHierarchy();
             this.treeSearch = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
@@ -841,6 +842,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.sceneExactSearchCheckBox);
             this.tabPage1.Controls.Add(this.sceneTreeView);
             this.tabPage1.Controls.Add(this.treeSearch);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
@@ -849,6 +851,21 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Scene Hierarchy";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // sceneExactSearchCheckBox
+            // 
+            this.sceneExactSearchCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.sceneExactSearchCheckBox.AutoSize = true;
+            this.sceneExactSearchCheckBox.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.sceneExactSearchCheckBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.sceneExactSearchCheckBox.Location = new System.Drawing.Point(384, 2);
+            this.sceneExactSearchCheckBox.Name = "sceneExactSearchCheckBox";
+            this.sceneExactSearchCheckBox.Size = new System.Drawing.Size(85, 17);
+            this.sceneExactSearchCheckBox.TabIndex = 2;
+            this.sceneExactSearchCheckBox.Text = "Exact search";
+            this.sceneExactSearchCheckBox.UseVisualStyleBackColor = true;
+            this.sceneExactSearchCheckBox.CheckedChanged += new System.EventHandler(this.sceneExactSearchCheckBox_CheckedChanged);
             // 
             // sceneTreeView
             // 
@@ -860,7 +877,7 @@
             this.sceneTreeView.Location = new System.Drawing.Point(0, 20);
             this.sceneTreeView.Name = "sceneTreeView";
             this.sceneTreeView.Size = new System.Drawing.Size(472, 587);
-            this.sceneTreeView.TabIndex = 1;
+            this.sceneTreeView.TabIndex = 0;
             this.sceneTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.sceneTreeView_AfterCheck);
             this.sceneTreeView.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.sceneTreeView_NodeMouseClick);
             // 
@@ -871,7 +888,7 @@
             this.treeSearch.Location = new System.Drawing.Point(0, 0);
             this.treeSearch.Name = "treeSearch";
             this.treeSearch.Size = new System.Drawing.Size(472, 20);
-            this.treeSearch.TabIndex = 2;
+            this.treeSearch.TabIndex = 1;
             this.treeSearch.Text = " Search ";
             this.treeSearch.TextChanged += new System.EventHandler(this.treeSearch_TextChanged);
             this.treeSearch.Enter += new System.EventHandler(this.treeSearch_Enter);
@@ -905,7 +922,7 @@
             this.assetListView.Location = new System.Drawing.Point(0, 23);
             this.assetListView.Name = "assetListView";
             this.assetListView.Size = new System.Drawing.Size(472, 584);
-            this.assetListView.TabIndex = 1;
+            this.assetListView.TabIndex = 0;
             this.assetListView.UseCompatibleStateImageBehavior = false;
             this.assetListView.View = System.Windows.Forms.View.Details;
             this.assetListView.VirtualMode = true;
@@ -965,7 +982,7 @@
             this.listSearch.Name = "listSearch";
             this.listSearch.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
             this.listSearch.Size = new System.Drawing.Size(331, 16);
-            this.listSearch.TabIndex = 3;
+            this.listSearch.TabIndex = 1;
             this.listSearch.Text = " Filter ";
             this.listSearch.WordWrap = false;
             this.listSearch.TextChanged += new System.EventHandler(this.ListSearchTextChanged);
@@ -999,7 +1016,7 @@
             this.listSearchFilterMode.Location = new System.Drawing.Point(351, 0);
             this.listSearchFilterMode.Name = "listSearchFilterMode";
             this.listSearchFilterMode.Size = new System.Drawing.Size(121, 21);
-            this.listSearchFilterMode.TabIndex = 3;
+            this.listSearchFilterMode.TabIndex = 2;
             this.listSearchFilterMode.SelectedIndexChanged += new System.EventHandler(this.listSearchFilterMode_SelectedIndexChanged);
             // 
             // tabPage3
@@ -1793,6 +1810,7 @@
         private System.Windows.Forms.ToolStripMenuItem blockCompressionToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem blockInfoCompressionToolStripMenuItem;
         private System.Windows.Forms.ToolStripComboBox customBlockInfoCompressionComboBoxToolStripMenuItem;
+        private System.Windows.Forms.CheckBox sceneExactSearchCheckBox;
     }
 }
 
