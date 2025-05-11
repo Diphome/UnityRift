@@ -68,7 +68,7 @@ namespace AssetStudio
             }
             catch (System.Exception e)
             {
-                Logger.Warning($"Error while decompressing gzip file {reader.FullPath}\r\n{e}");
+                Logger.Warning($"Error while decompressing Gzip file {reader.FullPath}\n{e}");
                 reader.Dispose();
                 return null;
             }
@@ -76,15 +76,24 @@ namespace AssetStudio
 
         public static FileReader DecompressBrotli(FileReader reader)
         {
-            using (reader)
+            try
             {
-                var stream = new MemoryStream();
-                using (var brotliStream = new BrotliInputStream(reader.BaseStream))
+                using (reader)
                 {
-                    brotliStream.CopyTo(stream);
+                    var stream = new MemoryStream();
+                    using (var brotliStream = new BrotliInputStream(reader.BaseStream))
+                    {
+                        brotliStream.CopyTo(stream);
+                    }
+                    stream.Position = 0;
+                    return new FileReader(reader.FullPath, stream);
                 }
-                stream.Position = 0;
-                return new FileReader(reader.FullPath, stream);
+            }
+            catch (System.Exception e)
+            {
+                Logger.Warning($"Error while decompressing Brotli file {reader.FullPath}\n{e}");
+                reader.Dispose();
+                return null;
             }
         }
     }

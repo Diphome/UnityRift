@@ -130,8 +130,8 @@ namespace AssetStudio
 
             debugLog += "[Legacy wav converter] Generating wav header..\n";
             var buffer = new byte[audioSize + 44];
-            m_AudioClip.m_AudioData.GetData(buffer, out var read, 44);
-            if (read > 0)
+            var dataLen = m_AudioClip.m_AudioData.GetData(buffer, 44);
+            if (dataLen > 0)
             {
                 var wavHeader = new WavHeader(audioSize, audioFormat, channels, (uint)sampleRate, bits);
                 wavHeader.WriteToArray(buffer);
@@ -141,16 +141,16 @@ namespace AssetStudio
 
         private static void ReadAsPcm16(IntPtr srcPtr, byte[] destBuffer, int offset, uint pcmDataLen, ref string debugLog)
         {
-            var pcmFloatSample = new byte[4];
+            var pcmFloatVal = new byte[4];
             for (var i = 0; i < pcmDataLen; i += 4)
             {
                 for (var j = 0; j < 4; j++)
                 {
-                    pcmFloatSample[j] = Marshal.ReadByte(srcPtr, i + j);
+                    pcmFloatVal[j] = Marshal.ReadByte(srcPtr, i + j);
                 }
-                var pcm16Sample = (short)MathHelper.Clamp(BitConverter.ToSingle(pcmFloatSample, 0) * short.MaxValue, short.MinValue, short.MaxValue);
-                destBuffer[offset] = (byte)(pcm16Sample & 255);
-                destBuffer[offset + 1] = (byte)(pcm16Sample >> 8);
+                var pcm16Val = (short)MathHelper.Clamp(BitConverter.ToSingle(pcmFloatVal, 0) * short.MaxValue, short.MinValue, short.MaxValue);
+                destBuffer[offset] = (byte)(pcm16Val & 255);
+                destBuffer[offset + 1] = (byte)(pcm16Val >> 8);
                 offset += 2;
             }
             debugLog += "Finished PCMFLOAT -> PCM16 converting\n";

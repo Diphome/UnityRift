@@ -399,6 +399,8 @@ namespace AssetStudio
 
         private void ReadBlocks(FileReader reader, CompressionType customBlockCompression, Stream blocksStream)
         {
+            Logger.Debug($"Block compression: {(CompressionType)m_BlocksInfo.Max(x => x.flags)}");
+
             var showCustomTypeWarning = true;
             foreach (var blockInfo in m_BlocksInfo)
             {
@@ -420,7 +422,6 @@ namespace AssetStudio
                         showCustomTypeWarning = false;
                     }
                 }
-                Logger.Debug($"Block compression: {compressionType}");
 
                 long numWrite;
                 var errorMsg = string.Empty;

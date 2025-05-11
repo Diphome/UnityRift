@@ -298,8 +298,8 @@
             this.useAssetLoadingViaTypetreeToolStripMenuItem.Name = "useAssetLoadingViaTypetreeToolStripMenuItem";
             this.useAssetLoadingViaTypetreeToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.useAssetLoadingViaTypetreeToolStripMenuItem.Text = "Parse assets using their typetree";
-            this.useAssetLoadingViaTypetreeToolStripMenuItem.ToolTipText = "(Applies to assets with typetree included). Slower but more correct parsing. Only" +
-    " for Texture2D and AnimationClip assets for now.";
+            this.useAssetLoadingViaTypetreeToolStripMenuItem.ToolTipText = "(Applies to assets with typetree included). Slower but can parse non-standard ass" +
+    "ets. Only for Texture2D, AnimationClip and Material assets for now.";
             this.useAssetLoadingViaTypetreeToolStripMenuItem.CheckedChanged += new System.EventHandler(this.useAssetLoadingViaTypetreeToolStripMenuItem_CheckedChanged);
             // 
             // assetLoadingToolStripSeparator

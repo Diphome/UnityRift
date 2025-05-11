@@ -1,7 +1,8 @@
-﻿using SixLabors.ImageSharp;
+﻿using System;
+using System.IO;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using System.IO;
 
 namespace AssetStudio
 {
@@ -10,8 +11,8 @@ namespace AssetStudio
         public static Image<Bgra32> ConvertToImage(this Texture2D m_Texture2D, bool flip)
         {
             var converter = new Texture2DConverter(m_Texture2D);
-            var uncroppedSize = converter.GetUncroppedSize();
             var buff = BigArrayPool<byte>.Shared.Rent(converter.OutputDataSize);
+            var spanBuff = buff.AsSpan(0, converter.OutputDataSize);
             try
             {
                 if (!converter.DecodeTexture2D(buff)) 
@@ -20,12 +21,13 @@ namespace AssetStudio
                 Image<Bgra32> image;
                 if (converter.UsesSwitchSwizzle)
                 {
-                    image = Image.LoadPixelData<Bgra32>(buff, uncroppedSize.Width, uncroppedSize.Height);
+                    var uncroppedSize = converter.GetUncroppedSize();
+                    image = Image.LoadPixelData<Bgra32>(spanBuff, uncroppedSize.Width, uncroppedSize.Height);
                     image.Mutate(x => x.Crop(m_Texture2D.m_Width, m_Texture2D.m_Height));
                 }
                 else
                 {
-                    image = Image.LoadPixelData<Bgra32>(buff, m_Texture2D.m_Width, m_Texture2D.m_Height);
+                    image = Image.LoadPixelData<Bgra32>(spanBuff, m_Texture2D.m_Width, m_Texture2D.m_Height);
                 }
 
                 if (flip)

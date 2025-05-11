@@ -1123,8 +1123,8 @@ namespace AssetStudioGUI
                 }
             }
             soundBuff = BigArrayPool<byte>.Shared.Rent(m_AudioClip.m_AudioData.Size);
-            m_AudioClip.m_AudioData.GetData(soundBuff, out var read);
-            if (read <= 0)
+            var dataLen = m_AudioClip.m_AudioData.GetData(soundBuff);
+            if (dataLen <= 0)
                 return;
 
             var exinfo = new FMOD.CREATESOUNDEXINFO();
@@ -1550,6 +1550,9 @@ namespace AssetStudioGUI
 
         private void ResetForm()
         {
+            if (Studio.assetsManager.assetsFileList.Count > 0)
+                Logger.Info("Resetting program...");
+
             Text = guiTitle;
             Studio.assetsManager.Clear();
             Studio.assemblyLoader.Clear();

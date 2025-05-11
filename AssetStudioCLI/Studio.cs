@@ -738,7 +738,7 @@ namespace AssetStudioCLI
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"{asset.SourceFile.originalPath}: [{$"{asset.Type}: {asset.Text}".Color(Ansi.BrightRed)}] : Export error\n{ex}");
+                    Logger.Error($"{asset.SourceFile.originalPath ?? asset.SourceFile.fullName}: [{$"{asset.Type}: {asset.Text}".Color(Ansi.BrightRed)}] : Export error\n{ex}");
                 }
 
                 if (isExported)
@@ -763,7 +763,7 @@ namespace AssetStudioCLI
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"{asset.SourceFile.originalPath}: [{$"{asset.Type}: {asset.Text}".Color(Ansi.BrightRed)}] : Export error\n{ex}");
+                    Logger.Error($"{asset.SourceFile.originalPath ?? asset.SourceFile.fullName}: [{$"{asset.Type}: {asset.Text}".Color(Ansi.BrightRed)}] : Export error\n{ex}");
                 }
             });
             ParallelExporter.ClearHash();
@@ -1084,7 +1084,10 @@ namespace AssetStudioCLI
             {
                 foreach (var assetKvp in containers)
                 {
-                    l2dContainers[assetKvp.Key] = Path.GetFileName(assetKvp.Key.assetsFile.originalPath);
+                    var container = string.IsNullOrEmpty(assetKvp.Key.assetsFile.originalPath)
+                        ? assetKvp.Key.assetsFile.fullName
+                        : assetKvp.Key.assetsFile.originalPath;
+                    l2dContainers[assetKvp.Key] = container;
                 }
             }
             var mocPathDict = GenerateMocPathDict(mocDict, l2dContainers, searchByFilename);
@@ -1141,16 +1144,19 @@ namespace AssetStudioCLI
                 try
                 {
                     var cubismExtractor = new Live2DExtractor(assetGroupKvp);
+                    var filename = string.IsNullOrEmpty(cubismExtractor.MocMono.assetsFile.originalPath)
+                        ? Path.GetFileNameWithoutExtension(cubismExtractor.MocMono.assetsFile.fileName)
+                        : Path.GetFileNameWithoutExtension(cubismExtractor.MocMono.assetsFile.originalPath);
                     string modelPath;
                     switch (modelGroupOption)
                         {
                             case Live2DModelGroupOption.SourceFileName:
-                                modelPath = Path.GetFileNameWithoutExtension(cubismExtractor.MocMono.assetsFile.originalPath);
+                                modelPath = filename;
                                 break;
                             case Live2DModelGroupOption.ModelName:
                                 modelPath = !string.IsNullOrEmpty(cubismExtractor.Model?.Name)
                                     ? cubismExtractor.Model.Name
-                                    : Path.GetFileNameWithoutExtension(cubismExtractor.MocMono.assetsFile.originalPath);
+                                    : filename;
                                 break;
                             default: //ContainerPath
                                 var container = searchByFilename && cubismExtractor.Model != null

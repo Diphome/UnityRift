@@ -115,7 +115,7 @@ namespace AssetStudio
             {1138, "m_PrefabAsset"},
             {1152, "FileSize"},
             {1161, "Hash128"},
-            {1169, "RenderingLayerMask"},   
+            {1169, "RenderingLayerMask"},
         };
     }
 }

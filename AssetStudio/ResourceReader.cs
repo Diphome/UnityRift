@@ -84,15 +84,16 @@ namespace AssetStudio
             }
         }
 
-        public void GetData(byte[] buff, out int read, int startIndex = 0)
+        public int GetData(byte[] buff, int startIndex = 0)
         {
-            read = -1;
+            int dataLen;
             var binaryReader = GetReader();
             lock (binaryReader)
             {
                 binaryReader.BaseStream.Position = Offset;
-                read = binaryReader.Read(buff, startIndex, (int)size);
+                dataLen = binaryReader.Read(buff, startIndex, (int)size);
             }
+            return dataLen;
         }
 
         public void WriteData(string path)

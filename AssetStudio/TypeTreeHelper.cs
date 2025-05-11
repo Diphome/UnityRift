@@ -29,11 +29,11 @@ namespace AssetStudio
             var m_Nodes = m_Type.m_Nodes;
             try
             {
-                for (int i = 0; i < m_Nodes.Count; i++)
+                for (var i = 0; i < m_Nodes.Count; i++)
                 {
                     ReadStringValue(sb, m_Nodes, reader, ref i);
+                    readed = reader.Position - reader.byteStart;
                 }
-                readed = reader.Position - reader.byteStart;
             }
             catch (Exception)
             {
@@ -206,8 +206,8 @@ namespace AssetStudio
                     var m_Node = m_Nodes[i];
                     var varNameStr = m_Node.m_Name;
                     obj[varNameStr] = ReadValue(m_Nodes, reader, ref i);
+                    readed = reader.Position - reader.byteStart;
                 }
-                readed = reader.Position - reader.byteStart;
             }
             catch (Exception)
             {

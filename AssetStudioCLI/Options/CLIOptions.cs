@@ -1007,7 +1007,7 @@ namespace AssetStudioCLI.Options
                             switch (value.ToLower())
                             {
                                 case "auto":
-                                    o_bundleBlockInfoCompression.Value = CompressionType.Zstd;
+                                    o_bundleBlockInfoCompression.Value = CompressionType.Auto;
                                     break;
                                 case "zstd":
                                     o_bundleBlockInfoCompression.Value = CompressionType.Zstd;
@@ -1032,7 +1032,7 @@ namespace AssetStudioCLI.Options
                             switch (value.ToLower())
                             {
                                 case "auto":
-                                    o_bundleBlockCompression.Value = CompressionType.Zstd;
+                                    o_bundleBlockCompression.Value = CompressionType.Auto;
                                     break;
                                 case "zstd":
                                     o_bundleBlockCompression.Value = CompressionType.Zstd;

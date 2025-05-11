@@ -91,9 +91,7 @@ namespace AssetStudio
 
         public void LoadFilesAndFolders(params string[] path)
         {
-            var pathList = new List<string>();
-            pathList.AddRange(path);
-            LoadFilesAndFolders(out _, pathList);
+            LoadFilesAndFolders(out _, path);
         }
 
         public void LoadFilesAndFolders(out string parentPath, params string[] path)
@@ -106,15 +104,15 @@ namespace AssetStudio
         public void LoadFilesAndFolders(out string parentPath, List<string> pathList)
         {
             var fileList = new List<string>();
-            bool filesInPath = false;
+            var filesInPath = false;
             parentPath = "";
             foreach (var path in pathList)
             {
                 var fullPath = Path.GetFullPath(path);
                 if (Directory.Exists(fullPath))
                 {
-                    var parent = Directory.GetParent(fullPath).FullName;
-                    if (!filesInPath && (parentPath == "" || parentPath.Length > parent.Length))
+                    var parent = Directory.GetParent(fullPath)?.FullName;
+                    if (!filesInPath && (parentPath == "" || parentPath?.Length > parent?.Length))
                     {
                         parentPath = parent;
                     }
@@ -241,6 +239,7 @@ namespace AssetStudio
                                 else
                                 {
                                     noexistFiles.Add(sharedFilePath);
+                                    Logger.Warning($"Dependency wasn't found: {sharedFilePath}");
                                 }
                             }
                         }

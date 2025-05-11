@@ -43,7 +43,7 @@ namespace AssetStudio
             return (a + b - 1) / b;
         }
 
-        internal static void Unswizzle(byte[] data, Size imageSize, Size blockSize, int gobsPerBlock, byte[] newData)
+        internal static void Unswizzle(ReadOnlySpan<byte> data, Size imageSize, Size blockSize, int gobsPerBlock, Span<byte> newData)
         {
             int width = imageSize.Width;
             int height = imageSize.Height;
@@ -69,7 +69,7 @@ namespace AssetStudio
                             int gobDstY = (i * gobsPerBlock + k) * GOB_Y_TEXEL_COUNT + gobY;
                             int gobDstLinPos = gobDstY * blockCountX * TEXEL_BYTE_SIZE + gobDstX * TEXEL_BYTE_SIZE;
 
-                            Buffer.BlockCopy(data, srcPos, newData, gobDstLinPos, TEXEL_BYTE_SIZE);
+                            data.Slice(srcPos, TEXEL_BYTE_SIZE).CopyTo(newData.Slice(gobDstLinPos));
 
                             srcPos += TEXEL_BYTE_SIZE;
                         }

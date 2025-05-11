@@ -97,13 +97,13 @@ namespace AssetStudioCLI
         public static bool ExportAudioClip(AssetItem item, string exportPath, out string debugLog)
         {
             debugLog = string.Empty;
-            string exportFullPath;
             var m_AudioClip = (AudioClip)item.Asset;
             var m_AudioData = BigArrayPool<byte>.Shared.Rent(m_AudioClip.m_AudioData.Size);
             try
             {
-                m_AudioClip.m_AudioData.GetData(m_AudioData, out var read);
-                if (read <= 0)
+                string exportFullPath;
+                var dataLen = m_AudioClip.m_AudioData.GetData(m_AudioData);
+                if (dataLen <= 0)
                 {
                     Logger.Error($"Export error. \"{item.Text}\": AudioData was not found");
                     return false;
