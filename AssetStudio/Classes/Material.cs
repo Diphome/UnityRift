@@ -83,17 +83,17 @@ namespace AssetStudio
         {
             m_Shader = new PPtr<Shader>(reader);
 
-            if (version == 4 && version.Minor >= 1) //4.x
+            if (version == 4 && version.Minor >= 1) //4.1 - 4.7.2
             {
                 var m_ShaderKeywords = reader.ReadStringArray();
             }
 
-            if (version >= (2021, 3)) //2021.3 and up
+            if (version >= (2021, 2, 18)) //2021.2.18 and up
             {
                 var m_ValidKeywords = reader.ReadStringArray();
                 var m_InvalidKeywords = reader.ReadStringArray();
             }
-            else if (version >= 5) //5.0 ~ 2021.2
+            else if (version >= 5) //5.0 - 2021.2.17
             {
                 var m_ShaderKeywords = reader.ReadAlignedString();
             }
