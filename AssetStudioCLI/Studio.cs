@@ -103,6 +103,8 @@ namespace AssetStudioCLI
             {
                 bundleStream.Offset = reader.Position;
                 bundleReader = new FileReader($"{reader.FullPath}_0x{bundleStream.Offset:X}", bundleStream);
+                if (bundleReader.FileType != FileType.BundleFile)
+                    break;
                 if (bundleReader.Position > 0)
                 {
                     bundleStream.Offset += bundleReader.Position;
