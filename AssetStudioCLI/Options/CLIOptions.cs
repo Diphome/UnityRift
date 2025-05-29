@@ -73,7 +73,7 @@ namespace AssetStudioCLI.Options
         public static bool isParsed;
         public static bool showHelp;
         public static string[] cliArgs;
-        public static string inputPath;
+        public static List<string> inputPathList;
         public static FilterBy filterBy;
         private static Dictionary<string, string> optionsDict;
         private static Dictionary<string, string> flagsDict;
@@ -159,7 +159,7 @@ namespace AssetStudioCLI.Options
             isParsed = false;
             showHelp = false;
             cliArgs = null;
-            inputPath = "";
+            inputPathList = new List<string>();
             filterBy = FilterBy.None;
             optionsDict = new Dictionary<string, string>();
             flagsDict = new Dictionary<string, string>();
@@ -543,12 +543,16 @@ namespace AssetStudioCLI.Options
 
             if (!args[0].StartsWith("-"))
             {
-                inputPath = Path.GetFullPath(args[0]).Replace("\"", "");
-                if (!Directory.Exists(inputPath) && !File.Exists(inputPath))
+                foreach (var path in ValueSplitter(args[0]))
                 {
-                    Console.WriteLine($"{"Error:".Color(brightRed)} Invalid input path \"{args[0].Color(brightRed)}\".\n" +
-                        $"Specified file or folder was not found. The input path must be specified as the first argument.");
-                    return;
+                    var fullPath = Path.GetFullPath(path).Replace("\"", "");
+                    if (!Directory.Exists(fullPath) && !File.Exists(fullPath))
+                    {
+                        Console.WriteLine($"{"Error:".Color(brightRed)} Invalid input path \"{fullPath.Color(brightRed)}\".\n" +
+                                          $"Specified file or folder was not found. The input path must be specified as the first argument.");
+                        return;
+                    }
+                    inputPathList.Add(fullPath);
                 }
             }
             else
@@ -1304,7 +1308,7 @@ namespace AssetStudioCLI.Options
             {
                 sb.AppendLine($"# Parse Assets Using TypeTree: {!f_avoidLoadingViaTypetree.Value}");
             }
-            sb.AppendLine($"# Input Path: \"{inputPath}\"");
+            sb.AppendLine($"# Input Path: \"{string.Join("\"\n- \"", inputPathList)}\"");
             if (o_workMode.Value != WorkMode.Info)
             {
                 sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");

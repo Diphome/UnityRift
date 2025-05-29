@@ -39,7 +39,7 @@ namespace AssetStudioCLI
         public static void ExtractBundles()
         {
             var extractedCount = 0;
-            var path = CLIOptions.inputPath;
+            var path = CLIOptions.inputPathList[0];
             var savePath = CLIOptions.o_outputFolder.Value;
             Progress.Reset();
             if (Directory.Exists(path))
@@ -170,7 +170,7 @@ namespace AssetStudioCLI
             {
                 assetsManager.SetAssetFilter(CLIOptions.o_exportAssetTypes.Value);
             }
-            assetsManager.LoadFilesAndFolders(CLIOptions.inputPath);
+            assetsManager.LoadFilesAndFolders(out _, CLIOptions.inputPathList);
             if (assetsManager.assetsFileList.Count == 0)
             {
                 Logger.Warning("No Unity file can be loaded.");
