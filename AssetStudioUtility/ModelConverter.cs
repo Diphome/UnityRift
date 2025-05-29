@@ -785,8 +785,12 @@ namespace AssetStudio
 
         private void ConvertAnimations()
         {
-            foreach (var animationClip in animationClipUniqArray)
+            var totalCount = animationClipUniqArray.Length;
+            Logger.Info($"Trying to convert {totalCount} animation(s)...");
+
+            for (var k = 0; k < totalCount; k++)
             {
+                var animationClip = animationClipUniqArray[k];
                 var iAnim = new ImportedKeyframedAnimation();
                 var name = animationClip.m_Name;
                 if (AnimationList.Exists(x => x.Name == name))
@@ -933,6 +937,7 @@ namespace AssetStudio
                         }
                     }
                 }
+                Console.Write($"Converted [{k+1}/{totalCount}] animations\r");
             }
         }
 
