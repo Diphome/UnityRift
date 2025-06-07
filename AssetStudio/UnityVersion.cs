@@ -27,7 +27,7 @@ namespace AssetStudio
         public bool IsAlpha => BuildType == BuildTypes.Alpha;
         public bool IsBeta => BuildType == BuildTypes.Beta;
         public bool IsPatch => BuildType == BuildTypes.Patch;
-        public bool IsTuanjie => BuildType == BuildTypes.Tuanjie && this >= (2022, 3);
+        public bool IsTuanjie => BuildType == BuildTypes.Tuanjie && this >= (2022, 3, 2);
 
         public UnityVersion(string version)
         {
