@@ -526,6 +526,7 @@ namespace AssetStudioCLI
             {
                 case WorkMode.Live2D:
                 case WorkMode.SplitObjects:
+                case WorkMode.Animator:
                     break;
                 default:
                     FilterAssets();
@@ -915,6 +916,62 @@ namespace AssetStudioCLI
             {
                 CollectNode(i, gameObjects);
             }
+        }
+
+        public static void ExportAnimator()
+        {
+            var animationList = CLIOptions.o_fbxAnimMode.Value == AnimationExportMode.Auto
+                ? null
+                : new List<AssetItem>();
+            var exportAllAnimations = CLIOptions.o_fbxAnimMode.Value == AnimationExportMode.All;
+
+            Logger.Info("Searching for Animator assets...");
+            var animatorList = new List<AssetItem>();
+            foreach (var asset in parsedAssetsList)
+            {
+                switch (asset.Type)
+                {
+                    case ClassIDType.Animator:
+                        animatorList.Add(asset);
+                        break;
+                    case ClassIDType.AnimationClip when exportAllAnimations:
+                        animationList?.Add(asset);
+                        break;
+                }
+            }
+            parsedAssetsList = animatorList;
+            Logger.Info($"Found {parsedAssetsList.Count} exportable Animator asset(s).");
+            if (parsedAssetsList.Count > 0 && CLIOptions.filterBy != FilterBy.None)
+            {
+                FilterAssets();
+            }
+
+            var savePath = CLIOptions.o_outputFolder.Value;
+            var toExportCount = parsedAssetsList.Count;
+            var exportedCount = 0;
+            Progress.Reset();
+            foreach (var asset in parsedAssetsList)
+            {
+                var isExported = false;
+                Logger.Info($"[{exportedCount + 1}/{toExportCount}] Exporting \"{asset.Text}\"...");
+                try
+                {
+                    Logger.Debug($"Animator Export: {asset.Type} : {asset.Container} : {asset.Text}");
+                    isExported = Exporter.ExportAnimator(asset, savePath, animationList);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"{asset.SourceFile.originalPath ?? asset.SourceFile.fullName}: [{$"{asset.Type}: {asset.Text}".Color(Ansi.BrightRed)}] : Export error\n{ex}");
+                }
+                if (isExported)
+                {
+                    exportedCount++;
+                }
+            }
+            var status = exportedCount > 0
+                ? $"Finished exporting [{exportedCount}/{toExportCount}] Animator asset(s) to \"{CLIOptions.o_outputFolder.Value.Color(Ansi.BrightCyan)}\""
+                : "Nothing exported";
+            Logger.Default.Log(LoggerEvent.Info, status, ignoreLevel: true);
         }
 
         private static bool TryGetCubismMoc(MonoBehaviour m_MonoBehaviour, out MonoBehaviour mocMono)

@@ -27,6 +27,7 @@ namespace AssetStudioCLI.Options
         Info,
         Live2D,
         SplitObjects,
+        Animator,
     }
 
     internal enum AssetGroupOption
@@ -68,6 +69,13 @@ namespace AssetStudioCLI.Options
         NameAndContainer,
     }
 
+    internal enum AnimationExportMode
+    {
+        Auto,
+        Skip,
+        All,
+    }
+
     internal static class CLIOptions
     {
         public static bool isParsed;
@@ -102,6 +110,7 @@ namespace AssetStudioCLI.Options
         //fbx
         public static Option<float> o_fbxScaleFactor;
         public static Option<int> o_fbxBoneSize;
+        public static Option<AnimationExportMode> o_fbxAnimMode;
         public static Option<bool> f_fbxUvsAsDiffuseMaps;
         //filter
         public static Option<List<string>> o_filterByName;
@@ -186,14 +195,15 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: WorkMode.Export,
                 optionName: "-m, --mode <value>",
                 optionDescription: "Specify working mode\n" +
-                    "<Value: extract | export(default) | exportRaw | dump | info | live2d | splitObjects>\n" +
-                    "Extract - Extracts(Decompresses) asset bundles\n" +
-                    "Export - Exports converted assets\n" +
-                    "ExportRaw - Exports raw data\n" +
-                    "Dump - Makes asset dumps\n" +
-                    "Info - Loads file(s), shows the number of available for export assets and exits\n" +
-                    "Live2D - Exports Live2D Cubism models\n" +
-                    "SplitObjects - Exports split objects (fbx)\n",
+                    "<Value: extract | export(default) | exportRaw | dump | info | live2d |\nsplitObjects | animator>\n" +
+                    "Extract - Extract(Decompress) asset bundles\n" +
+                    "Export - Convert and export assets\n" +
+                    "ExportRaw - Export raw assets\n" +
+                    "Dump - Generate json dumps of loaded asset\n" +
+                    "Info - Load file(s) and show the number of available for export assets\n" +
+                    "Live2D - Export Live2D Cubism models\n" +
+                    "SplitObjects - Export all model objects (split) (fbx)\n" +
+                    "Animator - Export Animator assets (fbx)\n",
                 optionExample: "Example: \"-m info\"\n",
                 optionHelpGroup: HelpGroups.General
             );
@@ -366,6 +376,18 @@ namespace AssetStudioCLI.Options
                 optionDescription: "Specify the FBX Bone Size\n" +
                     "<Value: integer number from 0 to 100 (default=10)>\n",
                 optionExample: "Example: \"--fbx-bone-size 10\"\n",
+                optionHelpGroup: HelpGroups.FBX
+            );
+            o_fbxAnimMode = new GroupedOption<AnimationExportMode>
+            (
+                optionDefaultValue: AnimationExportMode.Auto,
+                optionName: "--fbx-animation",
+                optionDescription: "Specify the FBX animation export mode\n" + 
+                    "<Value: auto(default) | skip | all>\n" +
+                    "Auto - Search for model-related animations and export model with them\n" +
+                    "Skip - Don't export animations\n" +
+                    "All - Try to bind all loaded animations to each loaded model\n",
+                optionExample: "--fbx-animation skip\n",
                 optionHelpGroup: HelpGroups.FBX
             );
             f_fbxUvsAsDiffuseMaps = new GroupedOption<bool>
@@ -613,22 +635,23 @@ namespace AssetStudioCLI.Options
                         o_workMode.Value = WorkMode.Live2D;
                         o_exportAssetTypes.Value = new List<ClassIDType>
                         {
+                            ClassIDType.Animation,
                             ClassIDType.AnimationClip,
-                            ClassIDType.Animator,
+                            ClassIDType.AnimatorController,
                             ClassIDType.MonoBehaviour,
                             ClassIDType.Texture2D,
                         };
                         break;
+                    case "animator":
                     case "splitobjects":
-                        o_workMode.Value = WorkMode.SplitObjects;
+                        o_workMode.Value = value.ToLower() == "animator"
+                            ? WorkMode.Animator
+                            : WorkMode.SplitObjects;
                         o_exportAssetTypes.Value = new List<ClassIDType>
                         {
-                            ClassIDType.Texture2D,
-                            ClassIDType.Material,
+                            ClassIDType.Animator,
                             ClassIDType.Mesh,
-                            ClassIDType.MeshRenderer,
-                            ClassIDType.MeshFilter,
-                            ClassIDType.SkinnedMeshRenderer,
+                            ClassIDType.Texture2D,
                         };
                         break;
                     default:
@@ -719,13 +742,19 @@ namespace AssetStudioCLI.Options
                     {
                         case "-t":
                         case "--asset-type":
-                            if (o_workMode.Value == WorkMode.Live2D || o_workMode.Value == WorkMode.SplitObjects)
+                            if (o_workMode.Value == WorkMode.Live2D || o_workMode.Value == WorkMode.SplitObjects || o_workMode.Value == WorkMode.Animator)
                             {
                                 i++;
                                 continue;
                             }
                             var splittedTypes = ValueSplitter(value);
                             o_exportAssetTypes.Value = new List<ClassIDType>();
+                            if (splittedTypes.Contains("all", StringComparer.OrdinalIgnoreCase))
+                            {
+                                o_exportAssetTypes.Value = exportableAssetTypes;
+                                i++;
+                                continue;
+                            }
                             foreach (var type in splittedTypes)
                             {
                                 switch (type.ToLower())
@@ -742,8 +771,14 @@ namespace AssetStudioCLI.Options
                                     case "video":
                                         o_exportAssetTypes.Value.Add(ClassIDType.VideoClip);
                                         break;
-                                    case "all":
-                                        o_exportAssetTypes.Value = exportableAssetTypes;
+                                    case "animator":
+                                        if (o_workMode.Value == WorkMode.Export)
+                                        {
+                                            Console.WriteLine($"{"Not supported in current mode".Color(brightYellow)}. To export Animator assets use \"Animator mode\".\n");
+                                            ShowOptionDescription(o_workMode);
+                                            return;
+                                        }
+                                        o_exportAssetTypes.Value.Add(ClassIDType.Animator);
                                         break;
                                     default:
                                         var isKnownType = knownAssetTypesDict.TryGetValue(type.ToLower(), out var assetType);
@@ -1007,6 +1042,24 @@ namespace AssetStudioCLI.Options
                             }
                             break;
                         }
+                        case "--fbx-animation":
+                            switch (value.ToLower())
+                            {
+                                case "auto":
+                                    o_fbxAnimMode.Value = AnimationExportMode.Auto;
+                                    break;
+                                case "skip":
+                                    o_fbxAnimMode.Value = AnimationExportMode.Skip;
+                                    break;
+                                case "all":
+                                    o_fbxAnimMode.Value = AnimationExportMode.All;
+                                    break;
+                                default:
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported animation export mode: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_fbxAnimMode);
+                                    return;
+                            }
+                            break;
                         case "--blockinfo-comp":
                             switch (value.ToLower())
                             {
@@ -1357,15 +1410,17 @@ namespace AssetStudioCLI.Options
                     break;
                 case WorkMode.Live2D:
                 case WorkMode.SplitObjects:
+                case WorkMode.Animator:
                     sb.AppendLine($"# Log Level: {o_logLevel}");
                     sb.AppendLine($"# Log Output: {o_logOutput}");
                     sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
-                    if (o_workMode.Value == WorkMode.SplitObjects)
+                    if (o_workMode.Value == WorkMode.SplitObjects || o_workMode.Value == WorkMode.Animator)
                     {
                         sb.AppendLine($"# Export Image Format: {o_imageFormat}");
                         sb.AppendLine($"# Filter by Name(s): \"{string.Join("\", \"", o_filterByName.Value)}\"");
                         sb.AppendLine($"# FBX Scale Factor: {o_fbxScaleFactor}");
                         sb.AppendLine($"# FBX Bone Size: {o_fbxBoneSize}");
+                        sb.AppendLine($"# FBX Animation Mode: {o_fbxAnimMode}");
                         sb.AppendLine($"# FBX UVs as Diffuse Maps: {f_fbxUvsAsDiffuseMaps}");
                     }
                     else

@@ -58,6 +58,9 @@ namespace AssetStudioCLI
                         case WorkMode.SplitObjects:
                             Studio.ExportSplitObjects();
                             break;
+                        case WorkMode.Animator:
+                            Studio.ExportAnimator();
+                            break;
                         default:
                             Studio.ExportAssets();
                             break;

@@ -79,6 +79,18 @@ namespace AssetStudio
             {
                 filteredAssetTypesList.Add(ClassIDType.AnimatorController);
                 filteredAssetTypesList.Add(ClassIDType.AnimatorOverrideController);
+                filteredAssetTypesList.Add(ClassIDType.Animation);
+                filteredAssetTypesList.Add(ClassIDType.AnimationClip);
+                filteredAssetTypesList.Add(ClassIDType.Avatar);
+                filteredAssetTypesList.Add(ClassIDType.Material);
+                filteredAssetTypesList.Add(ClassIDType.MeshFilter);
+                filteredAssetTypesList.Add(ClassIDType.MeshRenderer);
+                filteredAssetTypesList.Add(ClassIDType.SkinnedMeshRenderer);
+            }
+            if (classIDTypes.Contains(ClassIDType.AnimatorController))
+            {
+                filteredAssetTypesList.Add(ClassIDType.Animator);
+                filteredAssetTypesList.Add(ClassIDType.AnimatorOverrideController);
             }
 
             filteredAssetTypesList.UnionWith(classIDTypes);
