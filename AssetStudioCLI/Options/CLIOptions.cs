@@ -79,7 +79,6 @@ namespace AssetStudioCLI.Options
     internal static class CLIOptions
     {
         public static bool isParsed;
-        public static bool showHelp;
         public static string[] cliArgs;
         public static List<string> inputPathList;
         public static FilterBy filterBy;
@@ -166,7 +165,6 @@ namespace AssetStudioCLI.Options
         private static void InitOptions()
         {
             isParsed = false;
-            showHelp = false;
             cliArgs = null;
             inputPathList = new List<string>();
             filterBy = FilterBy.None;
@@ -214,7 +212,7 @@ namespace AssetStudioCLI.Options
                 optionDescription: "Specify asset type(s) to export\n" +
                     "<Value(s): tex2d, tex2dArray, sprite, textAsset, monoBehaviour, font, shader\n" +
                     "movieTexture, audio, video, mesh | all(default)>\n" +
-                    "All - export all asset types, which are listed in the values\n" +
+                    "All - Export all asset types listed in the values\n" +
                     "*To specify multiple asset types, write them separated by ',' or ';' without spaces\n",
                 optionExample: "Examples: \"-t sprite\" or \"-t tex2d,sprite,audio\" or \"-t tex2d;sprite;font\"\n",
                 optionHelpGroup: HelpGroups.General
@@ -524,7 +522,7 @@ namespace AssetStudioCLI.Options
             (
                 optionDefaultValue: false,
                 optionName: "--not-restore-extension",
-                optionDescription: "(Flag) If specified, AssetStudio will not try to use/restore original TextAsset\nextension name, and will just export all TextAssets with the \".txt\" extension\n",
+                optionDescription: "(Flag) If specified, Studio will not try to use/restore original TextAsset extension,\nand will just export all TextAssets with the \".txt\" extension\n",
                 optionExample: "",
                 optionHelpGroup: HelpGroups.Advanced,
                 isFlag: true
@@ -533,7 +531,7 @@ namespace AssetStudioCLI.Options
             (
                 optionDefaultValue: false,
                 optionName: "--avoid-typetree-loading",
-                optionDescription: "(Flag) If specified, AssetStudio will not try to parse assets at load time\nusing their type tree\n",
+                optionDescription: "(Flag) If specified, Studio will not try to parse assets at load time\nusing their type tree\n",
                 optionExample: "",
                 optionHelpGroup: HelpGroups.Advanced,
                 isFlag: true
@@ -542,7 +540,7 @@ namespace AssetStudioCLI.Options
             (
                 optionDefaultValue: false,
                 optionName: "--load-all",
-                optionDescription: "(Flag) If specified, AssetStudio will load assets of all types\n(Only for Dump, Info and ExportRaw modes)",
+                optionDescription: "(Flag) If specified, Studio will load assets of all types\n(Only for Dump, Info and ExportRaw modes)",
                 optionExample: "",
                 optionHelpGroup: HelpGroups.Advanced,
                 isFlag: true
@@ -559,7 +557,7 @@ namespace AssetStudioCLI.Options
 
             if (args.Length == 0 || args.Any(x => x.ToLower() == "-h" || x.ToLower() == "--help" || x.ToLower() == "-?"))
             {
-                showHelp = true;
+                o_displayHelp.Value = true;
                 return;
             }
 
@@ -583,35 +581,34 @@ namespace AssetStudioCLI.Options
                 return;
             }
 
-            var resplittedArgs = new List<string>();
-            for (int i = 1; i < args.Length; i++)
+            var processedArgs = new List<string>();
+            for (var i = 1; i < args.Length; i++)
             {
-                string arg = args[i];
-
+                var arg = args[i];
                 if (arg.Contains('='))
                 {
-                    var splittedArgs = arg.Split('=');
-                    resplittedArgs.Add(splittedArgs[0]);
-                    resplittedArgs.Add(splittedArgs[1]);
+                    var splitArgs = arg.Split('=');
+                    processedArgs.Add(splitArgs[0]);
+                    processedArgs.Add(splitArgs[1]);
                 }
                 else
                 {
-                    resplittedArgs.Add(arg);
-                }    
-            };
+                    processedArgs.Add(arg);
+                }
+            }
 
             #region Parse "Working Mode" Option
-            var workModeOptionIndex = resplittedArgs.FindIndex(x => x.ToLower() == "-m" || x.ToLower() == "--mode");
+            var workModeOptionIndex = processedArgs.FindIndex(x => x.ToLower() == "-m" || x.ToLower() == "--mode");
             if (workModeOptionIndex >= 0)
             {
-                var option = resplittedArgs[workModeOptionIndex];
-                if (workModeOptionIndex + 1 >= resplittedArgs.Count)
+                var option = processedArgs[workModeOptionIndex];
+                if (workModeOptionIndex + 1 >= processedArgs.Count)
                 {
                     Console.WriteLine($"{"Error during parsing options:".Color(brightRed)} Value for [{option.Color(brightYellow)}] option was not found.\n");
                     TryFindOptionDescription(option, optionsDict);
                     return;
                 }
-                var value = resplittedArgs[workModeOptionIndex + 1];
+                var value = processedArgs[workModeOptionIndex + 1];
                 switch (value.ToLower())
                 {
                     case "extract":
@@ -659,14 +656,14 @@ namespace AssetStudioCLI.Options
                         ShowOptionDescription(o_workMode);
                         return;
                 }
-                resplittedArgs.RemoveRange(workModeOptionIndex, 2);
+                processedArgs.RemoveRange(workModeOptionIndex, 2);
             }
             #endregion
 
             #region Parse Flags
-            for (var i = 0; i < resplittedArgs.Count; i++) 
+            for (var i = 0; i < processedArgs.Count; i++) 
             {
-                var flag = resplittedArgs[i].ToLower();
+                var flag = processedArgs[i].ToLower();
 
                 switch(flag)
                 {
@@ -678,7 +675,7 @@ namespace AssetStudioCLI.Options
                             return;
                         }
                         f_l2dAssetSearchByFilename.Value = true;
-                        resplittedArgs.RemoveAt(i);
+                        processedArgs.RemoveAt(i);
                         break;
                     case "--l2d-force-bezier":
                         if (o_workMode.Value != WorkMode.Live2D)
@@ -688,7 +685,7 @@ namespace AssetStudioCLI.Options
                             return;
                         }
                         f_l2dForceBezier.Value = true;
-                        resplittedArgs.RemoveAt(i);
+                        processedArgs.RemoveAt(i);
                         break;
                     case "--fbx-uvs-as-diffuse":
                         if (o_workMode.Value != WorkMode.SplitObjects)
@@ -698,19 +695,19 @@ namespace AssetStudioCLI.Options
                             return;
                         }
                         f_fbxUvsAsDiffuseMaps.Value = true;
-                        resplittedArgs.RemoveAt(i);
+                        processedArgs.RemoveAt(i);
                         break;
                     case "--filter-with-regex":
                         f_filterWithRegex.Value = true;
-                        resplittedArgs.RemoveAt(i);
+                        processedArgs.RemoveAt(i);
                         break;
                     case "--not-restore-extension":
                         f_notRestoreExtensionName.Value = true;
-                        resplittedArgs.RemoveAt(i);
+                        processedArgs.RemoveAt(i);
                         break;
                     case "--avoid-typetree-loading":
                         f_avoidLoadingViaTypetree.Value = true;
-                        resplittedArgs.RemoveAt(i);
+                        processedArgs.RemoveAt(i);
                         break;
                     case "--load-all":
                         switch (o_workMode.Value)
@@ -719,7 +716,7 @@ namespace AssetStudioCLI.Options
                             case WorkMode.Dump:
                             case WorkMode.Info:
                                 f_loadAllAssets.Value = true;
-                                resplittedArgs.RemoveAt(i);
+                                processedArgs.RemoveAt(i);
                                 break;
                             default:
                                 Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
@@ -732,12 +729,12 @@ namespace AssetStudioCLI.Options
             #endregion
 
             #region Parse Options
-            for (var i = 0; i < resplittedArgs.Count; i++)
+            for (var i = 0; i < processedArgs.Count; i++)
             {
-                var option = resplittedArgs[i].ToLower();
+                var option = processedArgs[i].ToLower();
                 try
                 {
-                    var value = resplittedArgs[i + 1].Replace("\"", "");
+                    var value = processedArgs[i + 1].Replace("\"", "");
                     switch (option)
                     {
                         case "-t":
@@ -1249,7 +1246,7 @@ namespace AssetStudioCLI.Options
             if (isRegex)
                 return new[] {value};
 
-            var separator = value.Contains(';') ? ';' : ',';
+            var separator = value.Contains(',') ? ',' : ';';
             return value.Split(separator);
         }
 
@@ -1282,7 +1279,7 @@ namespace AssetStudioCLI.Options
             var helpMessage = new StringBuilder();
             var usage = new StringBuilder();
             var appAssembly = typeof(Program).Assembly.GetName();
-            usage.Append($"{"Usage:".Color(ColorConsole.BrightYellow)} {appAssembly.Name} <input path to asset file/folder> ");
+            usage.Append($"{"Usage:".Color(ColorConsole.BrightYellow)} {appAssembly.Name} <input path to asset file(s)/folder> ");
 
             var i = 0;
             foreach (var optionsGroup in optionGroups.Keys)
@@ -1366,8 +1363,8 @@ namespace AssetStudioCLI.Options
             {
                 sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");
             }
-            sb.AppendLine($"Bundle BlockInfo Compression Type: {o_bundleBlockInfoCompression}");
-            sb.AppendLine($"Bundle Block Compression Type: {o_bundleBlockCompression}");
+            sb.AppendLine($"# Bundle BlockInfo Compression Type: {o_bundleBlockInfoCompression}");
+            sb.AppendLine($"# Bundle Block Compression Type: {o_bundleBlockCompression}");
             switch (o_workMode.Value)
             {
                 case WorkMode.Export:

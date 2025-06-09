@@ -13,7 +13,7 @@ namespace AssetStudioCLI
             {
                 CLIRun();
             }
-            else if (CLIOptions.showHelp)
+            else if (CLIOptions.o_displayHelp.Value)
             {
                 CLIOptions.ShowHelp();
             }

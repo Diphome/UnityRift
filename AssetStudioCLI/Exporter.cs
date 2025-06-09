@@ -372,8 +372,13 @@ namespace AssetStudioCLI
             var convert = animationList != null
                 ? new ModelConverter(gameObject, CLIOptions.o_imageFormat.Value, animationList.Select(x => (AnimationClip)x.Asset).ToArray())
                 : new ModelConverter(gameObject, CLIOptions.o_imageFormat.Value);
-            exportPath = exportPath + FixFileName(gameObject.m_Name) + ".fbx";
-            ExportFbx(convert, exportPath);
+            var modelName = FixFileName(gameObject.m_Name);
+            var exportFullPath = Path.Combine(exportPath, "FBX_GameObjects", modelName, modelName + ".fbx");
+            if (File.Exists(exportFullPath))
+            {
+                exportFullPath = Path.Combine(exportPath, $"{modelName}_{gameObject.GetHashCode():X}", modelName + ".fbx");
+            }
+            ExportFbx(convert, exportFullPath);
         }
 
         public static string FixFileName(string str)

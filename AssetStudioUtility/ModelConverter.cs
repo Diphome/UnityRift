@@ -178,35 +178,24 @@ namespace AssetStudio
         {
             if (m_Animator.m_Controller.TryGet(out var m_Controller))
             {
+                AnimatorController m_AnimatorController;
                 var animationList = new List<AnimationClip>();
-                switch (m_Controller)
+                if (m_Controller is AnimatorOverrideController overrideController)
                 {
-                    case AnimatorOverrideController m_AnimatorOverrideController:
-                        {
-                            if (m_AnimatorOverrideController.m_Controller.TryGet<AnimatorController>(out var m_AnimatorController))
-                            {
-                                foreach (var pptr in m_AnimatorController.m_AnimationClips)
-                                {
-                                    if (pptr.TryGet(out var m_AnimationClip))
-                                    {
-                                        animationList.Add(m_AnimationClip);
-                                    }
-                                }
-                            }
-                            break;
-                        }
+                    if (!overrideController.m_Controller.TryGet(out m_AnimatorController))
+                        return;
+                }
+                else
+                {
+                    m_AnimatorController = (AnimatorController)m_Controller;
+                }
 
-                    case AnimatorController m_AnimatorController:
-                        {
-                            foreach (var pptr in m_AnimatorController.m_AnimationClips)
-                            {
-                                if (pptr.TryGet(out var m_AnimationClip))
-                                {
-                                    animationList.Add(m_AnimationClip);
-                                }
-                            }
-                            break;
-                        }
+                foreach (var pptr in m_AnimatorController.m_AnimationClips)
+                {
+                    if (pptr.TryGet(out var m_AnimationClip))
+                    {
+                        animationList.Add(m_AnimationClip);
+                    }
                 }
                 animationClipUniqArray = animationList.Distinct(animationClipEqComparer).ToArray();
             }
@@ -795,7 +784,7 @@ namespace AssetStudio
                 var name = animationClip.m_Name;
                 if (AnimationList.Exists(x => x.Name == name))
                 {
-                    for (int i = 1; ; i++)
+                    for (var i = 1; ; i++)
                     {
                         var fixName = name + $"_{i}";
                         if (!AnimationList.Exists(x => x.Name == fixName))
@@ -811,7 +800,7 @@ namespace AssetStudio
                 AnimationList.Add(iAnim);
                 if (animationClip.m_Legacy)
                 {
-                    foreach (var m_CompressedRotationCurve in animationClip.m_CompressedRotationCurves)
+                    foreach (var m_CompressedRotationCurve in animationClip?.m_CompressedRotationCurves)
                     {
                         var track = iAnim.FindTrack(FixBonePath(animationClip, m_CompressedRotationCurve.m_Path));
 
@@ -858,15 +847,12 @@ namespace AssetStudio
                             track.Scalings.Add(new ImportedKeyframe<Vector3>(m_Curve.time, new Vector3(m_Curve.value.X, m_Curve.value.Y, m_Curve.value.Z)));
                         }
                     }
-                    if (animationClip.m_EulerCurves != null)
+                    foreach (var m_EulerCurve in animationClip?.m_EulerCurves)
                     {
-                        foreach (var m_EulerCurve in animationClip.m_EulerCurves)
+                        var track = iAnim.FindTrack(FixBonePath(animationClip, m_EulerCurve.path));
+                        foreach (var m_Curve in m_EulerCurve.curve.m_Curve)
                         {
-                            var track = iAnim.FindTrack(FixBonePath(animationClip, m_EulerCurve.path));
-                            foreach (var m_Curve in m_EulerCurve.curve.m_Curve)
-                            {
-                                track.Rotations.Add(new ImportedKeyframe<Vector3>(m_Curve.time, new Vector3(m_Curve.value.X, -m_Curve.value.Y, -m_Curve.value.Z)));
-                            }
+                            track.Rotations.Add(new ImportedKeyframe<Vector3>(m_Curve.time, new Vector3(m_Curve.value.X, -m_Curve.value.Y, -m_Curve.value.Z)));
                         }
                     }
                     foreach (var m_FloatCurve in animationClip.m_FloatCurves)
@@ -900,22 +886,22 @@ namespace AssetStudio
                     var m_Clip = animationClip.m_MuscleClip.m_Clip.data;
                     var streamedFrames = m_Clip.m_StreamedClip.ReadData();
                     var m_ClipBindingConstant = animationClip.m_ClipBindingConstant ?? m_Clip.ConvertValueArrayToGenericBinding();
-                    for (int frameIndex = 1; frameIndex < streamedFrames.Count - 1; frameIndex++)
+                    for (var frameIndex = 1; frameIndex < streamedFrames.Count - 1; frameIndex++)
                     {
                         var frame = streamedFrames[frameIndex];
                         var streamedValues = frame.keyList.Select(x => x.value).ToArray();
-                        for (int curveIndex = 0; curveIndex < frame.keyList.Length;)
+                        for (var curveIndex = 0; curveIndex < frame.keyList.Length;)
                         {
                             ReadCurveData(iAnim, m_ClipBindingConstant, frame.keyList[curveIndex].index, frame.time, streamedValues, 0, ref curveIndex);
                         }
                     }
                     var m_DenseClip = m_Clip.m_DenseClip;
                     var streamCount = m_Clip.m_StreamedClip.curveCount;
-                    for (int frameIndex = 0; frameIndex < m_DenseClip.m_FrameCount; frameIndex++)
+                    for (var frameIndex = 0; frameIndex < m_DenseClip.m_FrameCount; frameIndex++)
                     {
                         var time = m_DenseClip.m_BeginTime + frameIndex / m_DenseClip.m_SampleRate;
                         var frameOffset = frameIndex * m_DenseClip.m_CurveCount;
-                        for (int curveIndex = 0; curveIndex < m_DenseClip.m_CurveCount;)
+                        for (var curveIndex = 0; curveIndex < m_DenseClip.m_CurveCount;)
                         {
                             var index = streamCount + curveIndex;
                             ReadCurveData(iAnim, m_ClipBindingConstant, (int)index, time, m_DenseClip.m_SampleArray, (int)frameOffset, ref curveIndex);
@@ -926,9 +912,9 @@ namespace AssetStudio
                         var m_ConstantClip = m_Clip.m_ConstantClip;
                         var denseCount = m_Clip.m_DenseClip.m_CurveCount;
                         var time2 = 0.0f;
-                        for (int i = 0; i < 2; i++)
+                        for (var i = 0; i < 2; i++)
                         {
-                            for (int curveIndex = 0; curveIndex < m_ConstantClip.data.Length;)
+                            for (var curveIndex = 0; curveIndex < m_ConstantClip.data.Length;)
                             {
                                 var index = streamCount + denseCount + curveIndex;
                                 ReadCurveData(iAnim, m_ClipBindingConstant, (int)index, time2, m_ConstantClip.data, 0, ref curveIndex);

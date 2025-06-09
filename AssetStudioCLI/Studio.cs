@@ -861,7 +861,7 @@ namespace AssetStudioCLI
             var log = $"Found {exportableCount} exportable object(s) ";
             if (isFiltered)
             {
-                log += $"that contain {$"\"{string.Join("\", \"", CLIOptions.o_filterByName.Value)}\"".Color(Ansi.BrightYellow)} in their Names";
+                log += $"that contain {$"\"{string.Join("\", \"", searchList)}\"".Color(Ansi.BrightYellow)} in their Names";
             }
             Logger.Info(log);
             if (exportableCount > 0)
