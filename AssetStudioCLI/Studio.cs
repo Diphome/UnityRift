@@ -1134,7 +1134,7 @@ namespace AssetStudioCLI
             var forceBezier = CLIOptions.f_l2dForceBezier.Value;
             var modelGroupOption = CLIOptions.o_l2dGroupOption.Value;
             var searchByFilename = CLIOptions.f_l2dAssetSearchByFilename.Value;
-            var mocDict = l2dModelDict; //TODO: filter by name
+            var mocDict = l2dModelDict;
             var l2dContainers = searchByFilename
                 ? new Dictionary<AssetStudio.Object, string>()
                 : containers;
@@ -1144,6 +1144,38 @@ namespace AssetStudioCLI
                 Logger.Default.Log(LoggerEvent.Info, "Live2D Cubism models were not found.", ignoreLevel: true);
                 return;
             }
+
+            if (CLIOptions.filterBy == FilterBy.NameOrContainer)
+            {
+                var regexMode = CLIOptions.f_filterWithRegex.Value;
+                var filterList = CLIOptions.o_filterByText.Value;
+                var filteredDict = new Dictionary<MonoBehaviour, CubismModel>();
+                var regex = regexMode ? new Regex(filterList[0]) : null;
+                foreach (var kvp in l2dModelDict)
+                {
+                    var mocName = kvp.Key.m_Name;
+                    var mocContainer = containers.TryGetValue(kvp.Key, out var container)
+                        ? container
+                        : "";
+                    if (regexMode)
+                    {
+                        if (regex.IsMatch(mocContainer) || regex.IsMatch(mocName))
+                            filteredDict[kvp.Key] = kvp.Value;
+                        continue;
+                    }
+                    if (filterList.Any(str => mocContainer.IndexOf(str, StringComparison.OrdinalIgnoreCase) >= 0 || mocName.IndexOf(str, StringComparison.OrdinalIgnoreCase) >= 0))
+                    {
+                        filteredDict[kvp.Key] = kvp.Value;
+                    }
+                }
+                mocDict = filteredDict;
+                var log = regexMode
+                    ? $"Found {filteredDict.Count} Live2D model(s) which names or containers match {regex.ToString().Color(Ansi.BrightYellow)} regexp"
+                    : $"Found {filteredDict.Count} Live2D model(s) that contain {$"\"{string.Join("\", \"", filterList)}\"".Color(Ansi.BrightYellow)} in their names or containers";
+                Logger.Info(log);
+            }
+            if (mocDict.Count == 0)
+                return;
 
             Progress.Reset();
             Logger.Info("Searching for Live2D files...");
