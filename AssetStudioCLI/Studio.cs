@@ -826,8 +826,10 @@ namespace AssetStudioCLI
         public static void ExportSplitObjects()
         {
             var savePath = CLIOptions.o_outputFolder.Value;
-            var searchList = CLIOptions.o_filterByName.Value;
+            var filterList = CLIOptions.o_filterByName.Value;
             var isFiltered = CLIOptions.filterBy == FilterBy.Name;
+            var regexMode = CLIOptions.f_filterWithRegex.Value;
+            var regex = regexMode ? new Regex(filterList[0]) : null;
 
             var exportableObjects = new List<GameObjectNode>();
             var exportedCount = 0;
@@ -840,9 +842,14 @@ namespace AssetStudioCLI
             {
                 foreach (GameObjectNode j in node.nodes)
                 {
-                    if (isFiltered)
+                    if (isFiltered && regexMode)
                     {
-                        if (!searchList.Any(searchText => j.Text.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0))
+                        if (!regex.IsMatch(j.Text))
+                            continue;
+                    }
+                    else if (isFiltered)
+                    {
+                        if (!filterList.Any(str => j.Text.IndexOf(str, StringComparison.OrdinalIgnoreCase) >= 0))
                             continue;
                     }
                     var gameObjects = new List<GameObject>();
@@ -861,7 +868,9 @@ namespace AssetStudioCLI
             var log = $"Found {exportableCount} exportable object(s) ";
             if (isFiltered)
             {
-                log += $"that contain {$"\"{string.Join("\", \"", searchList)}\"".Color(Ansi.BrightYellow)} in their Names";
+                log += regexMode
+                    ? $"which names match {regex.ToString().Color(Ansi.BrightYellow)} regexp"
+                    : $"that contain {$"\"{string.Join("\", \"", filterList)}\"".Color(Ansi.BrightYellow)} in their names";
             }
             Logger.Info(log);
             if (exportableCount > 0)
