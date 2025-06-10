@@ -1354,81 +1354,70 @@ namespace AssetStudioCLI.Options
             var sb = new StringBuilder();
             sb.AppendLine("[Current Options]");
             sb.AppendLine($"# Working Mode: {o_workMode}");
-            if (o_workMode.Value != WorkMode.Extract)
-            {
-                sb.AppendLine($"# Parse Assets Using TypeTree: {!f_avoidLoadingViaTypetree.Value}");
-            }
             sb.AppendLine($"# Input Path: \"{string.Join("\"\n- \"", inputPathList)}\"");
             if (o_workMode.Value != WorkMode.Info)
             {
                 sb.AppendLine($"# Output Path: \"{o_outputFolder}\"");
             }
+            sb.AppendLine($"# Log Level: {o_logLevel}");
+            sb.AppendLine($"# Log Output: {o_logOutput}");
             sb.AppendLine($"# Bundle BlockInfo Compression Type: {o_bundleBlockInfoCompression}");
             sb.AppendLine($"# Bundle Block Compression Type: {o_bundleBlockCompression}");
+            sb.AppendLine($"# Unity Version: {unityVer}");
+            if (o_workMode.Value != WorkMode.Extract)
+            {
+                sb.AppendLine($"# Parse Assets Using TypeTree: {!f_avoidLoadingViaTypetree.Value}");
+                sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
+            }
             switch (o_workMode.Value)
             {
                 case WorkMode.Export:
                 case WorkMode.ExportRaw:
                 case WorkMode.Dump:
+                case WorkMode.Info:
                     if (o_workMode.Value != WorkMode.Export)
                     {
                         sb.AppendLine($"# Load All Assets: {f_loadAllAssets}");
                     }
                     sb.AppendLine(ShowExportTypes());
-                    sb.AppendLine($"# Asset Group Option: {o_groupAssetsBy}");
-                    sb.AppendLine($"# Filename format: {o_filenameFormat}");
+                    if (o_workMode.Value != WorkMode.Info)
+                    {
+                        sb.AppendLine($"# Asset Group Option: {o_groupAssetsBy}");
+                        sb.AppendLine($"# Filename format: {o_filenameFormat}");
+                    }
                     if (o_workMode.Value == WorkMode.Export)
                     {
                         sb.AppendLine($"# Export Image Format: {o_imageFormat}");
                         sb.AppendLine($"# Export Audio Format: {o_audioFormat}");
+                        sb.AppendLine($"# Restore TextAsset Extension: {!f_notRestoreExtensionName.Value}");
+                        sb.AppendLine($"# Max Parallel Export Tasks: {o_maxParallelExportTasks}");
                     }
-                    sb.AppendLine($"# Log Level: {o_logLevel}");
-                    sb.AppendLine($"# Log Output: {o_logOutput}");
-                    sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
                     sb.AppendLine(ShowCurrentFilter());
                     sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");
                     sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");
-                    sb.AppendLine($"# Unity Version: {unityVer}");
-                    if (o_workMode.Value == WorkMode.Export)
-                    {
-                        sb.AppendLine($"# Max Parallel Export Tasks: {o_maxParallelExportTasks}");
-                        sb.AppendLine($"# Restore TextAsset Extension: {!f_notRestoreExtensionName.Value}");
-                    }
-                    break;
-                case WorkMode.Info:
-                    sb.AppendLine($"# Load All Assets: {f_loadAllAssets}");
-                    sb.AppendLine(ShowExportTypes());
-                    sb.AppendLine($"# Log Level: {o_logLevel}");
-                    sb.AppendLine($"# Log Output: {o_logOutput}");
-                    sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
-                    sb.AppendLine(ShowCurrentFilter());
-                    sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");
-                    sb.AppendLine($"# Unity Version: {unityVer}");
                     break;
                 case WorkMode.Live2D:
+                    sb.AppendLine($"# [{o_workMode} Options]");
+                    sb.AppendLine($"# Filter by Text: \"{string.Join("\", \"", o_filterByText.Value)}\"");
+                    sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");
+                    sb.AppendLine($"# Model Group Option: {o_l2dGroupOption}");
+                    sb.AppendFormat("# Search Model-related Assets by: {0}\n", f_l2dAssetSearchByFilename.Value ? "FileName" : "Container");
+                    sb.AppendLine($"# Motion Export Method: {o_l2dMotionMode}");
+                    sb.AppendLine($"# Force Bezier: {f_l2dForceBezier}");
+                    sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");
+                    break;
                 case WorkMode.SplitObjects:
                 case WorkMode.Animator:
-                    sb.AppendLine($"# Log Level: {o_logLevel}");
-                    sb.AppendLine($"# Log Output: {o_logOutput}");
-                    sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
-                    if (o_workMode.Value == WorkMode.SplitObjects || o_workMode.Value == WorkMode.Animator)
-                    {
-                        sb.AppendLine($"# Export Image Format: {o_imageFormat}");
-                        sb.AppendLine($"# Filter by Name(s): \"{string.Join("\", \"", o_filterByName.Value)}\"");
-                        sb.AppendLine($"# FBX Scale Factor: {o_fbxScaleFactor}");
-                        sb.AppendLine($"# FBX Bone Size: {o_fbxBoneSize}");
-                        sb.AppendLine($"# FBX Animation Mode: {o_fbxAnimMode}");
-                        sb.AppendLine($"# FBX UVs as Diffuse Maps: {f_fbxUvsAsDiffuseMaps}");
-                    }
-                    else
-                    {
-                        sb.AppendLine($"# Model Group Option: {o_l2dGroupOption}");
-                        sb.AppendFormat("# Search Model-related Assets by: {0}\n", f_l2dAssetSearchByFilename.Value ? "FileName" : "Container");
-                        sb.AppendLine($"# Motion Export Method: {o_l2dMotionMode}");
-                        sb.AppendLine($"# Force Bezier: {f_l2dForceBezier }");
-                        sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");
-                    }
-                    sb.AppendLine($"# Unity Version: {unityVer}");
+                    sb.AppendLine($"# [{o_workMode} Options]");
+                    sb.AppendLine(o_workMode.Value == WorkMode.Animator
+                        ? ShowCurrentFilter()
+                        : $"# Filter by Name(s): \"{string.Join("\", \"", o_filterByName.Value)}\"");
+                    sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");
+                    sb.AppendLine($"# Export Image Format: {o_imageFormat}");
+                    sb.AppendLine($"# FBX Scale Factor: {o_fbxScaleFactor}");
+                    sb.AppendLine($"# FBX Bone Size: {o_fbxBoneSize}");
+                    sb.AppendLine($"# FBX Animation Mode: {o_fbxAnimMode}");
+                    sb.AppendLine($"# FBX UVs as Diffuse Maps: {f_fbxUvsAsDiffuseMaps}");
                     break;
             }
             sb.AppendLine("======");
