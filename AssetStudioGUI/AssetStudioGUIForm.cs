@@ -1265,6 +1265,7 @@ namespace AssetStudioGUI
                     sb.AppendLine($"Pixel Per Unit: {cubismMoc.PixelPerUnit}");
                     sb.AppendLine($"Parameter Count: {cubismMoc.ParamCount}");
                     sb.AppendLine($"Part Count: {cubismMoc.PartCount}");
+                    sb.AppendLine($"Pre-linked AnimationClips: {model?.ClipMotionList.Count}");
                 }
                 assetItem.InfoText = sb.ToString();
             }

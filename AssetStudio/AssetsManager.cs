@@ -64,6 +64,7 @@ namespace AssetStudio
                 ClassIDType.ResourceManager,
                 ClassIDType.GameObject,
                 ClassIDType.Transform,
+                ClassIDType.RectTransform,
             });
 
             if (classIDTypes.Contains(ClassIDType.MonoBehaviour))
