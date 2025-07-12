@@ -19,9 +19,14 @@ namespace AssetStudioGUI
         public override string ToString()
         {
             var sb = new StringBuilder();
-            foreach (var i in m_Type.m_Nodes)
+            for (var i = 0; i < m_Type.m_Nodes.Count; i++)
             {
-                sb.AppendFormat("{0}{1} {2} {3} {4}\r\n", new string('\t', i.m_Level), i.m_Type, i.m_Name, i.m_ByteSize, (i.m_MetaFlag & 0x4000) != 0);
+                var node = m_Type.m_Nodes[i];
+                if (node.m_Type == "string" && m_Type.m_Nodes[i + 1].m_Type != "Array")
+                    node.m_Type = "CustomType";
+
+                sb.AppendFormat("{0}{1} {2} {3} {4}\r\n", 
+                    new string('\t', node.m_Level), node.m_Type, node.m_Name, node.m_ByteSize, (node.m_MetaFlag & 0x4000) != 0);
             }
             return sb.ToString();
         }
