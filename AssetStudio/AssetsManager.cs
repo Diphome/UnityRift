@@ -187,7 +187,7 @@ namespace AssetStudio
             return LoadFile(reader);
         }
 
-        private bool LoadFile(FileReader reader)
+        private bool LoadFile(FileReader reader, bool fromZip = false)
         {
             if (reader == null)
                 return false;
@@ -195,7 +195,7 @@ namespace AssetStudio
             switch (reader.FileType)
             {
                 case FileType.AssetsFile:
-                    return LoadAssetsFile(reader);
+                    return LoadAssetsFile(reader, fromZip);
                 case FileType.BundleFile:
                     return LoadBundleFile(reader);
                 case FileType.WebFile:
@@ -214,7 +214,7 @@ namespace AssetStudio
             return true;
         }
 
-        private bool LoadAssetsFile(FileReader reader)
+        private bool LoadAssetsFile(FileReader reader, bool fromZip)
         {
             if (!assetsFileListHash.Contains(reader.FileName))
             {
@@ -226,6 +226,8 @@ namespace AssetStudio
                     CheckStrippedVersion(assetsFile);
                     assetsFileList.Add(assetsFile);
                     assetsFileListHash.Add(assetsFile.fileName);
+                    if (fromZip)
+                        return true;
 
                     foreach (var sharedFile in assetsFile.m_Externals)
                     {
@@ -454,15 +456,16 @@ namespace AssetStudio
                     }
 
                     // merge split files and load the result
-                    foreach (string basePath in splitFiles)
+                    for (var i = 0; i < splitFiles.Count; i++)
                     {
+                        var basePath = splitFiles[i].Replace("\\", "/");
                         try
                         {
                             Stream splitStream = new MemoryStream();
-                            int i = 0;
+                            var j = 0;
                             while (true)
                             {
-                                string path = $"{basePath}.split{i++}";
+                                string path = $"{basePath}.split{j++}";
                                 ZipArchiveEntry entry = archive.GetEntry(path);
                                 if (entry == null)
                                     break;
@@ -473,7 +476,8 @@ namespace AssetStudio
                             }
                             splitStream.Seek(0, SeekOrigin.Begin);
                             FileReader entryReader = new FileReader(basePath, splitStream);
-                            LoadFile(entryReader);
+                            if (!LoadFile(entryReader, fromZip: true))
+                                break;
                         }
                         catch (Exception e)
                         {
@@ -487,6 +491,8 @@ namespace AssetStudio
                     Progress.Reset();
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
+                        if (entry.Length == 0)
+                            continue;
                         try
                         {
                             string dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), reader.FileName, entry.FullName);
@@ -501,7 +507,9 @@ namespace AssetStudio
                             streamReader.Position = 0;
 
                             FileReader entryReader = new FileReader(dummyPath, streamReader);
-                            LoadFile(entryReader);
+                            if (!LoadFile(entryReader, fromZip: true))
+                                break;
+
                             if (entryReader.FileType == FileType.ResourceFile)
                             {
                                 entryReader.Position = 0;
