@@ -49,6 +49,7 @@
         EmbeddedLinux,
         QNX,
         VisionOS,
+        Switch2,
         UnknownPlatform = 9999
     }
 
