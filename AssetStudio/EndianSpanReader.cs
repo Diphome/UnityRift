@@ -8,10 +8,10 @@ namespace AssetStudio
     {
         public static uint ReadUInt32(this Span<byte> data, int start, bool isBigEndian)
         {
-            return SpanToUInt32(data, start, isBigEndian);
+            return ReadUInt32((ReadOnlySpan<byte>)data, start, isBigEndian);
         }
 
-        public static uint SpanToUInt32(Span<byte> data, int start, bool isBigEndian)
+        public static uint ReadUInt32(this ReadOnlySpan<byte> data, int start, bool isBigEndian)
         {
             return isBigEndian
                 ? BinaryPrimitives.ReadUInt32BigEndian(data.Slice(start))
@@ -20,10 +20,10 @@ namespace AssetStudio
 
         public static long ReadUInt16(this Span<byte> data, int start, bool isBigEndian)
         {
-            return SpanToUInt16(data, start, isBigEndian);
+            return ReadUInt16((ReadOnlySpan<byte>)data, start, isBigEndian);
         }
 
-        public static uint SpanToUInt16(Span<byte> data, int start, bool isBigEndian)
+        public static uint ReadUInt16(this ReadOnlySpan<byte> data, int start, bool isBigEndian)
         {
             return isBigEndian
                 ? BinaryPrimitives.ReadUInt16BigEndian(data.Slice(start))
@@ -32,10 +32,10 @@ namespace AssetStudio
 
         public static long ReadInt64(this Span<byte> data, int start, bool isBigEndian)
         {
-            return SpanToInt64(data, start, isBigEndian);
+            return ReadInt64((ReadOnlySpan<byte>)data, start, isBigEndian);
         }
 
-        public static long SpanToInt64(Span<byte> data, int start, bool isBigEndian)
+        public static long ReadInt64(this ReadOnlySpan<byte> data, int start, bool isBigEndian)
         {
             return isBigEndian
                 ? BinaryPrimitives.ReadInt64BigEndian(data.Slice(start))
@@ -44,20 +44,20 @@ namespace AssetStudio
 
         public static float ReadSingle(this Span<byte> data, int start, bool isBigEndian)
         {
-            return SpanToSingle(data, start, isBigEndian);
+            return ReadSingle((ReadOnlySpan<byte>)data, start, isBigEndian);
         }
 
 #if NETFRAMEWORK
-        public static float SpanToSingle(Span<byte> data, int start, bool isBigEndian)
+        public static float ReadSingle(this ReadOnlySpan<byte> data, int start, bool isBigEndian)
         {
-            var bytes = data.Slice(start, 4);
+            var bytes = data.Slice(start, 4).ToArray();
             if ((isBigEndian && BitConverter.IsLittleEndian) || (!isBigEndian && !BitConverter.IsLittleEndian))
-                bytes.Reverse();
+                bytes.AsSpan().Reverse();
 
-            return BitConverter.ToSingle(bytes.ToArray(), 0);
+            return BitConverter.ToSingle(bytes, 0);
         }
 #else
-        public static float SpanToSingle(Span<byte> data, int start, bool isBigEndian)
+        public static float ReadSingle(this ReadOnlySpan<byte> data, int start, bool isBigEndian)
         {
             return isBigEndian
                 ? BinaryPrimitives.ReadSingleBigEndian(data[start..])
@@ -66,6 +66,11 @@ namespace AssetStudio
 #endif
 
         public static string ReadStringToNull(this Span<byte> data, int maxLength = 32767)
+        {
+            return ReadStringToNull((ReadOnlySpan<byte>)data, maxLength);
+        }
+
+        public static string ReadStringToNull(this ReadOnlySpan<byte> data, int maxLength = 32767)
         {
             Span<byte> bytes = stackalloc byte[maxLength];
             var count = 0;

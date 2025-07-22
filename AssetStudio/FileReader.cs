@@ -13,7 +13,7 @@ namespace AssetStudio
         private static readonly byte[] brotliMagic = { 0x62, 0x72, 0x6F, 0x74, 0x6C, 0x69 };
         private static readonly byte[] zipMagic = { 0x50, 0x4B, 0x03, 0x04 };
         private static readonly byte[] zipSpannedMagic = { 0x50, 0x4B, 0x07, 0x08 };
-        private static readonly byte[] unityFsMagic = {0x55, 0x6E, 0x69, 0x74, 0x79, 0x46, 0x53};
+        private static readonly byte[] unityFsMagic = {0x55, 0x6E, 0x69, 0x74, 0x79, 0x46, 0x53, 0x00};
         private static readonly int headerBuffLen = 1152;
         private static byte[] headerBuff = new byte[headerBuffLen];
 
@@ -43,7 +43,6 @@ namespace AssetStudio
                     CheckBundleDataOffset(buff);
                     return FileType.BundleFile;
                 case "UnityWebData1.0":
-                    return FileType.WebFile;
                 case "TuanjieWebData1.0":
                     return FileType.WebFile;
                 default:
@@ -83,7 +82,7 @@ namespace AssetStudio
             }
         }
 
-        private bool IsSerializedFile(Span<byte> buff)
+        private bool IsSerializedFile(ReadOnlySpan<byte> buff)
         {
             var fileSize = BaseStream.Length;
             if (fileSize < 20)
@@ -129,12 +128,10 @@ namespace AssetStudio
                 return true;
             }
 
-            Position = firstOffset;
-            _ = this.ReadStringToNull();
-            _ = this.ReadUInt32();
-            _ = this.ReadStringToNull();
-            _ = this.ReadStringToNull();
-            var bundleSize = this.ReadInt64();
+            var pos = firstOffset + 12;
+            pos += buff.Slice(pos).ReadStringToNull().Length + 1;
+            pos += buff.Slice(pos).ReadStringToNull().Length + 1;
+            var bundleSize = buff.ReadInt64(pos, Endian == EndianType.BigEndian);
             if (bundleSize > 200 && firstOffset + bundleSize < lastOffset)
             {
                 Position = firstOffset;

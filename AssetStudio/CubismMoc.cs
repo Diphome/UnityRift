@@ -57,7 +57,7 @@ namespace AssetStudio
             }
             isBigEndian = BitConverter.ToBoolean(modelData, 5);
 
-            var modelDataSpan = modelData.AsSpan();
+            var modelDataSpan = new ReadOnlySpan<byte>(modelData, 0, modelDataSize);
             //offsets
             var countInfoTableOffset = (int)modelDataSpan.ReadUInt32(64, isBigEndian);
             var canvasInfoOffset = (int)modelDataSpan.ReadUInt32(68, isBigEndian);
@@ -74,8 +74,8 @@ namespace AssetStudio
             //model
             PartCount = modelDataSpan.ReadUInt32(countInfoTableOffset, isBigEndian);
             ParamCount = modelDataSpan.ReadUInt32(countInfoTableOffset + 20, isBigEndian);
-            PartNames = ReadMocStrings(modelData, (int)partIdsOffset, (int)PartCount);
-            ParamNames = ReadMocStrings(modelData, (int)parameterIdsOffset, (int)ParamCount);
+            PartNames = ReadMocStrings(modelDataSpan, (int)partIdsOffset, (int)PartCount);
+            ParamNames = ReadMocStrings(modelDataSpan, (int)parameterIdsOffset, (int)ParamCount);
         }
 
         public void SaveMoc3(string savePath)
@@ -102,7 +102,7 @@ namespace AssetStudio
             }
         }
 
-        private static HashSet<string> ReadMocStrings(Span<byte> data, int index, int count)
+        private static HashSet<string> ReadMocStrings(ReadOnlySpan<byte> data, int index, int count)
         {
             const int strLen = 64;
             var strHashSet = new HashSet<string>();
