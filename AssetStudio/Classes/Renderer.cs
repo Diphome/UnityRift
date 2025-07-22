@@ -57,7 +57,7 @@
                     {
                         var m_virtualGeometry = reader.ReadByte();
                         var m_virtualGeometryShadow = reader.ReadByte();
-                        if (version >= (2022, 3, 48)) //2022.3.48t3(1.4.0) and up
+                        if (version > (2022, 3, 48) || (version == (2022, 3, 48) && version.Build >= 3)) //2022.3.48t3(1.4.0) and up
                         {
                             reader.AlignStream();
                             var m_ShadingRate = reader.ReadByte();
