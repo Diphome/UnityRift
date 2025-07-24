@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace AssetStudio
+﻿namespace AssetStudio
 {
     public sealed class Font : NamedObject
     {
@@ -23,12 +18,12 @@ namespace AssetStudio
                 var m_CharacterPadding = reader.ReadInt32();
                 var m_ConvertCase = reader.ReadInt32();
                 int m_CharacterRects_size = reader.ReadInt32();
-                for (int i = 0; i < m_CharacterRects_size; i++)
+                for (var i = 0; i < m_CharacterRects_size; i++)
                 {
                     reader.Position += 44;//CharacterInfo data 41
                 }
                 int m_KerningValues_size = reader.ReadInt32();
-                for (int i = 0; i < m_KerningValues_size; i++)
+                for (var i = 0; i < m_KerningValues_size; i++)
                 {
                     reader.Position += 8;
                 }
@@ -55,7 +50,7 @@ namespace AssetStudio
                 if (version <= 3)
                 {
                     int m_PerCharacterKerning_size = reader.ReadInt32();
-                    for (int i = 0; i < m_PerCharacterKerning_size; i++)
+                    for (var i = 0; i < m_PerCharacterKerning_size; i++)
                     {
                         int first = reader.ReadInt32();
                         float second = reader.ReadSingle();
@@ -71,7 +66,7 @@ namespace AssetStudio
                 var m_DefaultMaterial = new PPtr<Material>(reader);
 
                 int m_CharacterRects_size = reader.ReadInt32();
-                for (int i = 0; i < m_CharacterRects_size; i++)
+                for (var i = 0; i < m_CharacterRects_size; i++)
                 {
                     int index = reader.ReadInt32();
                     //Rectf uv
@@ -96,7 +91,7 @@ namespace AssetStudio
                 var m_Texture = new PPtr<Texture>(reader);
 
                 int m_KerningValues_size = reader.ReadInt32();
-                for (int i = 0; i < m_KerningValues_size; i++)
+                for (var i = 0; i < m_KerningValues_size; i++)
                 {
                     int pairfirst = reader.ReadInt16();
                     int pairsecond = reader.ReadInt16();

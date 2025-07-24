@@ -221,7 +221,7 @@ namespace AssetStudioGUI
             Progress.Reset();
             foreach (var assetsFile in assetsManager.assetsFileList)
             {
-                var preloadTable = Array.Empty<PPtr<Object>>();
+                var preloadTable = new List<PPtr<Object>>();
 
                 foreach (var asset in assetsFile.Objects)
                 {
@@ -333,7 +333,7 @@ namespace AssetStudioGUI
                             {
                                 var preloadIndex = m_Container.Value.preloadIndex;
                                 var preloadSize = isStreamedSceneAssetBundle
-                                    ? preloadTable.Length
+                                    ? preloadTable.Count
                                     : m_Container.Value.preloadSize;
                                 var preloadEnd = preloadIndex + preloadSize;
                                 for (var k = preloadIndex; k < preloadEnd; k++)

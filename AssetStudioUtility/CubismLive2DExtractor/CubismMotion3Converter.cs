@@ -39,7 +39,7 @@ namespace CubismLive2DExtractor
                 for (int frameIndex = 1; frameIndex < streamedFrames.Count - 1; frameIndex++)
                 {
                     var frame = streamedFrames[frameIndex];
-                    for (int curveIndex = 0; curveIndex < frame.keyList.Length; curveIndex++)
+                    for (int curveIndex = 0; curveIndex < frame.keyList.Count; curveIndex++)
                     {
                         ReadStreamedData(iAnim, m_ClipBindingConstant, frame.time, frame.keyList[curveIndex]);
                     }
@@ -90,7 +90,7 @@ namespace CubismLive2DExtractor
             GetLive2dPath(binding, out var target, out var boneName);
             if (string.IsNullOrEmpty(boneName))
             {
-                Logger.Warning($"[Motion Converter] \"{iAnim.Name}\" read fail on binding {Array.IndexOf(m_ClipBindingConstant.genericBindings, binding)}");
+                Logger.Warning($"[Motion Converter] \"{iAnim.Name}\" read fail on binding {m_ClipBindingConstant.genericBindings.FindIndex(x => x == binding)}");
                 return;
             }
 
@@ -105,7 +105,7 @@ namespace CubismLive2DExtractor
             GetLive2dPath(binding, out var target, out var boneName);
             if (string.IsNullOrEmpty(boneName))
             {
-                Logger.Warning($"[Motion Converter] \"{iAnim.Name}\" read fail on binding {Array.IndexOf(m_ClipBindingConstant.genericBindings, binding)}");
+                Logger.Warning($"[Motion Converter] \"{iAnim.Name}\" read fail on binding {m_ClipBindingConstant.genericBindings.FindIndex(x => x == binding)}");
                 return;
             }
 

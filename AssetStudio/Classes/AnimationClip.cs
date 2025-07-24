@@ -35,7 +35,7 @@ namespace AssetStudio
 
     public class AnimationCurve<T>
     {
-        public Keyframe<T>[] m_Curve;
+        public List<Keyframe<T>> m_Curve;
         public int m_PreInfinity;
         public int m_PostInfinity;
         public int m_RotationOrder;
@@ -45,10 +45,10 @@ namespace AssetStudio
         public AnimationCurve(ObjectReader reader, Func<T> readerFunc)
         {
             int numCurves = reader.ReadInt32();
-            m_Curve = new Keyframe<T>[numCurves];
-            for (int i = 0; i < numCurves; i++)
+            m_Curve = new List<Keyframe<T>>();
+            for (var i = 0; i < numCurves; i++)
             {
-                m_Curve[i] = new Keyframe<T>(reader, readerFunc);
+                m_Curve.Add(new Keyframe<T>(reader, readerFunc));
             }
 
             m_PreInfinity = reader.ReadInt32();
@@ -111,7 +111,7 @@ namespace AssetStudio
             var data = new List<float>();
             for (var index = 0; index != end; index += chunkStride / 4)
             {
-                for (int i = 0; i < itemCountInChunk; ++i)
+                for (var i = 0; i < itemCountInChunk; ++i)
                 {
                     uint x = 0;
 
@@ -132,7 +132,6 @@ namespace AssetStudio
                     data.Add(x / (scale * ((1 << m_BitSize) - 1)) + m_Start);
                 }
             }
-
             return data.ToArray();
         }
     }
@@ -159,16 +158,16 @@ namespace AssetStudio
 
         public int[] UnpackInts()
         {
-            var data = new int[m_NumItems];
+            var data = new List<int>();
             int indexPos = 0;
             int bitPos = 0;
-            for (int i = 0; i < m_NumItems; i++)
+            for (var i = 0; i < m_NumItems; i++)
             {
                 int bits = 0;
-                data[i] = 0;
+                int elem = 0;
                 while (bits < m_BitSize)
                 {
-                    data[i] |= (m_Data[indexPos] >> bitPos) << bits;
+                    elem |= (m_Data[indexPos] >> bitPos) << bits;
                     int num = Math.Min(m_BitSize - bits, 8 - bitPos);
                     bitPos += num;
                     bits += num;
@@ -178,9 +177,10 @@ namespace AssetStudio
                         bitPos = 0;
                     }
                 }
-                data[i] &= (1 << m_BitSize) - 1;
+                elem &= (1 << m_BitSize) - 1;
+                data.Add(elem);
             }
-            return data;
+            return data.ToArray();
         }
     }
 
@@ -203,11 +203,11 @@ namespace AssetStudio
 
         public Quaternion[] UnpackQuats()
         {
-            var data = new Quaternion[m_NumItems];
+            var data = new List<Quaternion>();
             int indexPos = 0;
             int bitPos = 0;
 
-            for (int i = 0; i < m_NumItems; i++)
+            for (var i = 0; i < m_NumItems; i++)
             {
                 uint flags = 0;
 
@@ -226,10 +226,9 @@ namespace AssetStudio
                 }
                 flags &= 7;
 
-
                 var q = new Quaternion();
                 float sum = 0;
-                for (int j = 0; j < 4; j++)
+                for (var j = 0; j < 4; j++)
                 {
                     if ((flags & 3) != j)
                     {
@@ -254,15 +253,13 @@ namespace AssetStudio
                         sum += q[j] * q[j];
                     }
                 }
-
                 int lastComponent = (int)(flags & 3);
                 q[lastComponent] = MathF.Sqrt(1 - sum);
                 if ((flags & 4) != 0u)
                     q[lastComponent] = -q[lastComponent];
-                data[i] = q;
+                data.Add(q);
             }
-
-            return data;
+            return data.ToArray();
         }
     }
 
@@ -343,7 +340,7 @@ namespace AssetStudio
 
     public class PPtrCurve
     {
-        public PPtrKeyframe[] curve;
+        public List<PPtrKeyframe> curve;
         public string attribute;
         public string path;
         public int classID;
@@ -355,10 +352,10 @@ namespace AssetStudio
         public PPtrCurve(ObjectReader reader)
         {
             int numCurves = reader.ReadInt32();
-            curve = new PPtrKeyframe[numCurves];
-            for (int i = 0; i < numCurves; i++)
+            curve = new List<PPtrKeyframe>();
+            for (var i = 0; i < numCurves; i++)
             {
-                curve[i] = new PPtrKeyframe(reader);
+                curve.Add(new PPtrKeyframe(reader));
             }
 
             attribute = reader.ReadAlignedString();
@@ -470,11 +467,12 @@ namespace AssetStudio
             m_LookAtWeight = reader.ReadVector4();
 
             int numGoals = reader.ReadInt32();
-            m_GoalArray = new HumanGoal[numGoals];
-            for (int i = 0; i < numGoals; i++)
+            var goalList = new List<HumanGoal>();
+            for (var i = 0; i < numGoals; i++)
             {
-                m_GoalArray[i] = new HumanGoal(reader);
+                goalList.Add(new HumanGoal(reader));
             }
+            m_GoalArray = goalList.ToArray();
 
             m_LeftHandPose = new HandPose(reader);
             m_RightHandPose = new HandPose(reader);
@@ -484,11 +482,14 @@ namespace AssetStudio
             if (version >= (5, 2))//5.2 and up
             {
                 int numTDof = reader.ReadInt32();
-                m_TDoFArray = new Vector3[numTDof];
-                for (int i = 0; i < numTDof; i++)
+                var tDoFList = new List<Vector3>();
+                for (var i = 0; i < numTDof; i++)
                 {
-                    m_TDoFArray[i] = version >= (5, 4) ? reader.ReadVector3() : (Vector3)reader.ReadVector4();//5.4 and up
+                    tDoFList.Add(version >= (5, 4) //5.4 and up
+                        ? reader.ReadVector3()
+                        : (Vector3) reader.ReadVector4());
                 }
+                m_TDoFArray = tDoFList.ToArray();
             }
         }
     }
@@ -556,7 +557,7 @@ namespace AssetStudio
         public class StreamedFrame
         {
             public float time;
-            public StreamedCurveKey[] keyList;
+            public List<StreamedCurveKey> keyList;
 
             public StreamedFrame() { }
 
@@ -565,10 +566,10 @@ namespace AssetStudio
                 time = reader.ReadSingle();
 
                 int numKeys = reader.ReadInt32();
-                keyList = new StreamedCurveKey[numKeys];
-                for (int i = 0; i < numKeys; i++)
+                keyList = new List<StreamedCurveKey>();
+                for (var i = 0; i < numKeys; i++)
                 {
-                    keyList[i] = new StreamedCurveKey(reader);
+                    keyList.Add(new StreamedCurveKey(reader));
                 }
             }
         }
@@ -586,12 +587,12 @@ namespace AssetStudio
                 }
             }
 
-            for (int frameIndex = 2; frameIndex < frameList.Count - 1; frameIndex++)
+            for (var frameIndex = 2; frameIndex < frameList.Count - 1; frameIndex++)
             {
                 var frame = frameList[frameIndex];
                 foreach (var curveKey in frame.keyList)
                 {
-                    for (int i = frameIndex - 1; i >= 0; i--)
+                    for (var i = frameIndex - 1; i >= 0; i--)
                     {
                         var preFrame = frameList[i];
                         var preCurveKey = preFrame.keyList.FirstOrDefault(x => x.index == curveKey.index);
@@ -669,11 +670,12 @@ namespace AssetStudio
         public ValueArrayConstant(ObjectReader reader)
         {
             int numVals = reader.ReadInt32();
-            m_ValueArray = new ValueConstant[numVals];
-            for (int i = 0; i < numVals; i++)
+            var valueList = new List<ValueConstant>();
+            for (var i = 0; i < numVals; i++)
             {
-                m_ValueArray[i] = new ValueConstant(reader);
+                valueList.Add(new ValueConstant(reader));
             }
+            m_ValueArray = valueList.ToArray();
         }
     }
 
@@ -718,7 +720,7 @@ namespace AssetStudio
             var bindings = new AnimationClipBindingConstant();
             var genericBindings = new List<GenericBinding>();
             var values = m_Binding;
-            for (int i = 0; i < values.m_ValueArray.Length;)
+            for (var i = 0; i < values.m_ValueArray.Length;)
             {
                 var curveID = values.m_ValueArray[i].m_ID;
                 var curveTypeID = values.m_ValueArray[i].m_TypeID;
@@ -753,7 +755,7 @@ namespace AssetStudio
                     i++;
                 }
             }
-            bindings.genericBindings = genericBindings.ToArray();
+            bindings.genericBindings = genericBindings;
             return bindings;
         }
     }
@@ -834,11 +836,13 @@ namespace AssetStudio
             m_IndexArray = reader.ReadInt32Array();
             if (version < (4, 3)) //4.3 down
             {
-                var m_AdditionalCurveIndexArray = reader.ReadInt32Array();
+                var m_AdditionalCurveIndexArrayNum = reader.ReadInt32();
+                reader.Position += m_AdditionalCurveIndexArrayNum * 4; //skip int[] m_AdditionalCurveIndexArray
             }
             int numDeltas = reader.ReadInt32();
+            reader.ThrowIfTooLarge(numDeltas * 8f);
             m_ValueArrayDelta = new ValueDelta[numDeltas];
-            for (int i = 0; i < numDeltas; i++)
+            for (var i = 0; i < numDeltas; i++)
             {
                 m_ValueArrayDelta[i] = new ValueDelta(reader);
             }
@@ -911,25 +915,25 @@ namespace AssetStudio
 
     public class AnimationClipBindingConstant
     {
-        public GenericBinding[] genericBindings;
-        public PPtr<Object>[] pptrCurveMapping;
+        public List<GenericBinding> genericBindings;
+        public List<PPtr<Object>> pptrCurveMapping;
 
         public AnimationClipBindingConstant() { }
 
         public AnimationClipBindingConstant(ObjectReader reader)
         {
             int numBindings = reader.ReadInt32();
-            genericBindings = new GenericBinding[numBindings];
-            for (int i = 0; i < numBindings; i++)
+            genericBindings = new List<GenericBinding>();
+            for (var i = 0; i < numBindings; i++)
             {
-                genericBindings[i] = new GenericBinding(reader);
+                genericBindings.Add(new GenericBinding(reader));
             }
 
             int numMappings = reader.ReadInt32();
-            pptrCurveMapping = new PPtr<Object>[numMappings];
-            for (int i = 0; i < numMappings; i++)
+            pptrCurveMapping = new List<PPtr<Object>>();
+            for (var i = 0; i < numMappings; i++)
             {
-                pptrCurveMapping[i] = new PPtr<Object>(reader);
+                pptrCurveMapping.Add(new PPtr<Object>(reader));
             }
         }
 
@@ -1013,20 +1017,20 @@ namespace AssetStudio
         public bool m_Legacy;
         public bool m_Compressed;
         public bool m_UseHighQualityCurve;
-        public QuaternionCurve[] m_RotationCurves;
-        public CompressedAnimationCurve[] m_CompressedRotationCurves;
-        public Vector3Curve[] m_EulerCurves;
-        public Vector3Curve[] m_PositionCurves;
-        public Vector3Curve[] m_ScaleCurves;
-        public FloatCurve[] m_FloatCurves;
-        public PPtrCurve[] m_PPtrCurves;
+        public List<QuaternionCurve> m_RotationCurves;
+        public List<CompressedAnimationCurve> m_CompressedRotationCurves;
+        public List<Vector3Curve> m_EulerCurves;
+        public List<Vector3Curve> m_PositionCurves;
+        public List<Vector3Curve> m_ScaleCurves;
+        public List<FloatCurve> m_FloatCurves;
+        public List<PPtrCurve> m_PPtrCurves;
         public float m_SampleRate;
         public int m_WrapMode;
         public AABB m_Bounds;
         public uint m_MuscleClipSize;
         public ClipMuscleConstant m_MuscleClip;
         public AnimationClipBindingConstant m_ClipBindingConstant;
-        public AnimationEvent[] m_Events;
+        public List<AnimationEvent> m_Events;
         public byte[] m_AnimData;
         public StreamingInfo m_StreamingInfo;
 
@@ -1083,9 +1087,9 @@ namespace AssetStudio
                     }
                     else
                     {
-                        m_EulerCurves = Vector3CurveArray(objReader);
-                        m_PositionCurves = Vector3CurveArray(objReader);
-                        m_ScaleCurves = Vector3CurveArray(objReader);
+                        m_EulerCurves = Vector3CurveList(objReader);
+                        m_PositionCurves = Vector3CurveList(objReader);
+                        m_ScaleCurves = Vector3CurveList(objReader);
                     }
                 }
             }
@@ -1116,19 +1120,19 @@ namespace AssetStudio
             }
             reader.AlignStream();
             int numRCurves = reader.ReadInt32();
-            m_RotationCurves = new QuaternionCurve[numRCurves];
-            for (int i = 0; i < numRCurves; i++)
+            m_RotationCurves = new List<QuaternionCurve>();
+            for (var i = 0; i < numRCurves; i++)
             {
-                m_RotationCurves[i] = new QuaternionCurve(reader);
+                m_RotationCurves.Add(new QuaternionCurve(reader));
             }
 
             if (version >= (2, 6)) //2.6 and up
             {
                 int numCRCurves = reader.ReadInt32();
-                m_CompressedRotationCurves = new CompressedAnimationCurve[numCRCurves];
-                for (int i = 0; i < numCRCurves; i++)
+                m_CompressedRotationCurves = new List<CompressedAnimationCurve>();
+                for (var i = 0; i < numCRCurves; i++)
                 {
-                    m_CompressedRotationCurves[i] = new CompressedAnimationCurve(reader);
+                    m_CompressedRotationCurves.Add(new CompressedAnimationCurve(reader));
                 }
             }
 
@@ -1136,26 +1140,26 @@ namespace AssetStudio
             {
                 if (version >= (5, 3)) //5.3 and up
                 {
-                    m_EulerCurves = Vector3CurveArray(reader);
+                    m_EulerCurves = Vector3CurveList(reader);
                 }
-                m_PositionCurves = Vector3CurveArray(reader);
-                m_ScaleCurves = Vector3CurveArray(reader);
+                m_PositionCurves = Vector3CurveList(reader);
+                m_ScaleCurves = Vector3CurveList(reader);
             }
 
             int numFCurves = reader.ReadInt32();
-            m_FloatCurves = new FloatCurve[numFCurves];
-            for (int i = 0; i < numFCurves; i++)
+            m_FloatCurves = new List<FloatCurve>();
+            for (var i = 0; i < numFCurves; i++)
             {
-                m_FloatCurves[i] = new FloatCurve(reader);
+                m_FloatCurves.Add(new FloatCurve(reader));
             }
 
             if (version >= (4, 3)) //4.3 and up
             {
                 int numPtrCurves = reader.ReadInt32();
-                m_PPtrCurves = new PPtrCurve[numPtrCurves];
-                for (int i = 0; i < numPtrCurves; i++)
+                m_PPtrCurves = new List<PPtrCurve>();
+                for (var i = 0; i < numPtrCurves; i++)
                 {
-                    m_PPtrCurves[i] = new PPtrCurve(reader);
+                    m_PPtrCurves.Add(new PPtrCurve(reader));
                 }
             }
 
@@ -1185,9 +1189,9 @@ namespace AssetStudio
                     }
                     else
                     { 
-                        m_EulerCurves = Vector3CurveArray(reader);
-                        m_PositionCurves = Vector3CurveArray(reader);
-                        m_ScaleCurves = Vector3CurveArray(reader);
+                        m_EulerCurves = Vector3CurveList(reader);
+                        m_PositionCurves = Vector3CurveList(reader);
+                        m_ScaleCurves = Vector3CurveList(reader);
                     }
                 }
             }
@@ -1202,10 +1206,10 @@ namespace AssetStudio
                 reader.AlignStream();
             }
             int numEvents = reader.ReadInt32();
-            m_Events = new AnimationEvent[numEvents];
-            for (int i = 0; i < numEvents; i++)
+            m_Events = new List<AnimationEvent>();
+            for (var i = 0; i < numEvents; i++)
             {
-                m_Events[i] = new AnimationEvent(reader);
+                m_Events.Add(new AnimationEvent(reader));
             }
             if (version >= 2017) //2017 and up
             {
@@ -1213,13 +1217,13 @@ namespace AssetStudio
             }
         }
 
-        private static Vector3Curve[] Vector3CurveArray(ObjectReader reader)
+        private static List<Vector3Curve> Vector3CurveList(ObjectReader reader)
         {
             var curveNum = reader.ReadInt32();
-            var vector3Curve = new Vector3Curve[curveNum];
+            var vector3Curve = new List<Vector3Curve>();
             for (var i = 0; i < curveNum; i++)
             {
-                vector3Curve[i] = new Vector3Curve(reader);
+                vector3Curve.Add(new Vector3Curve(reader));
             }
             return vector3Curve;
         }

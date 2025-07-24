@@ -18,8 +18,8 @@ namespace AssetStudio
 
     public sealed class AssetBundle : NamedObject
     {
-        public PPtr<Object>[] m_PreloadTable;
-        public KeyValuePair<string, AssetInfo>[] m_Container;
+        public List<PPtr<Object>> m_PreloadTable;
+        public List<KeyValuePair<string, AssetInfo>> m_Container;
         public string m_AssetBundleName;
         public string[] m_Dependencies;
         public bool m_IsStreamedSceneAssetBundle;
@@ -27,17 +27,17 @@ namespace AssetStudio
         public AssetBundle(ObjectReader reader) : base(reader)
         {
             var m_PreloadTableSize = reader.ReadInt32();
-            m_PreloadTable = new PPtr<Object>[m_PreloadTableSize];
+            m_PreloadTable = new List<PPtr<Object>>();
             for (var i = 0; i < m_PreloadTableSize; i++)
             {
-                m_PreloadTable[i] = new PPtr<Object>(reader);
+                m_PreloadTable.Add(new PPtr<Object>(reader));
             }
 
             var m_ContainerSize = reader.ReadInt32();
-            m_Container = new KeyValuePair<string, AssetInfo>[m_ContainerSize];
+            m_Container = new List<KeyValuePair<string, AssetInfo>>();
             for (var i = 0; i < m_ContainerSize; i++)
             {
-                m_Container[i] = new KeyValuePair<string, AssetInfo>(reader.ReadAlignedString(), new AssetInfo(reader));
+                m_Container.Add(new KeyValuePair<string, AssetInfo>(reader.ReadAlignedString(), new AssetInfo(reader)));
             }
 
             var m_MainAsset = new AssetInfo(reader);
@@ -61,13 +61,7 @@ namespace AssetStudio
             {
                 m_AssetBundleName = reader.ReadAlignedString();
 
-                var m_DependenciesSize = reader.ReadInt32();
-                m_Dependencies = new string[m_DependenciesSize];
-
-                for (var i = 0; i < m_DependenciesSize; i++)
-                {
-                    m_Dependencies[i] = reader.ReadAlignedString();
-                }
+                m_Dependencies = reader.ReadStringArray();
 
                 m_IsStreamedSceneAssetBundle = reader.ReadBoolean();
             }

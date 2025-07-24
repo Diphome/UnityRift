@@ -203,7 +203,7 @@ namespace AssetStudio
 
         private ImportedFrame ConvertTransform(Transform trans)
         {
-            var frame = new ImportedFrame(trans.m_Children.Length);
+            var frame = new ImportedFrame(trans.m_Children.Count);
             transformDictionary.Add(trans, frame);
             trans.m_GameObject.TryGet(out var m_GameObject);
             frame.Name = m_GameObject.m_Name;
@@ -286,7 +286,7 @@ namespace AssetStudio
             iMesh.hasColor = mesh.m_Colors?.Length > 0;
 
             int firstFace = 0;
-            for (int i = 0; i < mesh.m_SubMeshes.Length; i++)
+            for (int i = 0; i < mesh.m_SubMeshes.Count; i++)
             {
                 int numFaces = (int)mesh.m_SubMeshes[i].indexCount / 3;
                 if (subHashSet.Count > 0 && !subHashSet.Contains(i))
@@ -297,7 +297,7 @@ namespace AssetStudio
                 var submesh = mesh.m_SubMeshes[i];
                 var iSubmesh = new ImportedSubmesh();
                 Material mat = null;
-                if (i - firstSubMesh < meshR.m_Materials.Length)
+                if (i - firstSubMesh < meshR.m_Materials.Count)
                 {
                     if (meshR.m_Materials[i - firstSubMesh].TryGet(out var m_Material))
                     {
@@ -410,16 +410,16 @@ namespace AssetStudio
                  * 2 - m_BoneNameHashes
                  */
                 var boneType = 0;
-                if (sMesh.m_Bones.Length > 0)
+                if (sMesh.m_Bones.Count > 0)
                 {
-                    if (sMesh.m_Bones.Length == mesh.m_BindPose.Length)
+                    if (sMesh.m_Bones.Count == mesh.m_BindPose.Length)
                     {
                         var verifiedBoneCount = sMesh.m_Bones.Count(x => x.TryGet(out _));
                         if (verifiedBoneCount > 0)
                         {
                             boneType = 1;
                         }
-                        if (verifiedBoneCount != sMesh.m_Bones.Length)
+                        if (verifiedBoneCount != sMesh.m_Bones.Count)
                         {
                             //尝试使用m_BoneNameHashes 4.3 and up
                             if (mesh.m_BindPose.Length > 0 && (mesh.m_BindPose.Length == mesh.m_BoneNameHashes?.Length))
@@ -449,7 +449,7 @@ namespace AssetStudio
 
                 if (boneType == 1)
                 {
-                    var boneCount = sMesh.m_Bones.Length;
+                    var boneCount = sMesh.m_Bones.Count;
                     iMesh.BoneList = new List<ImportedBone>(boneCount);
                     for (int i = 0; i < boneCount; i++)
                     {
@@ -480,13 +480,13 @@ namespace AssetStudio
                 }
 
                 //Morphs
-                if (mesh.m_Shapes?.channels?.Length > 0)
+                if (mesh.m_Shapes?.channels?.Count > 0)
                 {
                     var morph = new ImportedMorph();
                     MorphList.Add(morph);
                     morph.Path = iMesh.Path;
-                    morph.Channels = new List<ImportedMorphChannel>(mesh.m_Shapes.channels.Length);
-                    for (int i = 0; i < mesh.m_Shapes.channels.Length; i++)
+                    morph.Channels = new List<ImportedMorphChannel>(mesh.m_Shapes.channels.Count);
+                    for (var i = 0; i < mesh.m_Shapes.channels.Count; i++)
                     {
                         var channel = new ImportedMorphChannel();
                         morph.Channels.Add(channel);
@@ -501,7 +501,7 @@ namespace AssetStudio
                         channel.Name = shapeChannel.name.Split('.').Last();
                         channel.KeyframeList = new List<ImportedMorphKeyframe>(shapeChannel.frameCount);
                         var frameEnd = shapeChannel.frameIndex + shapeChannel.frameCount;
-                        for (int frameIdx = shapeChannel.frameIndex; frameIdx < frameEnd; frameIdx++)
+                        for (var frameIdx = shapeChannel.frameIndex; frameIdx < frameEnd; frameIdx++)
                         {
                             var keyframe = new ImportedMorphKeyframe();
                             channel.KeyframeList.Add(keyframe);
@@ -890,7 +890,7 @@ namespace AssetStudio
                     {
                         var frame = streamedFrames[frameIndex];
                         var streamedValues = frame.keyList.Select(x => x.value).ToArray();
-                        for (var curveIndex = 0; curveIndex < frame.keyList.Length;)
+                        for (var curveIndex = 0; curveIndex < frame.keyList.Count;)
                         {
                             ReadCurveData(iAnim, m_ClipBindingConstant, frame.keyList[curveIndex].index, frame.time, streamedValues, 0, ref curveIndex);
                         }

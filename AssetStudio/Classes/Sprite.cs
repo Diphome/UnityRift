@@ -79,11 +79,11 @@ namespace AssetStudio
     {
         public PPtr<Texture2D> texture;
         public PPtr<Texture2D> alphaTexture;
-        public SecondarySpriteTexture[] secondaryTextures;
-        public SubMesh[] m_SubMeshes;
+        public List<SecondarySpriteTexture> secondaryTextures;
+        public List<SubMesh> m_SubMeshes;
         public byte[] m_IndexBuffer;
         public VertexData m_VertexData;
-        public SpriteVertex[] vertices;
+        public List<SpriteVertex> vertices;
         public ushort[] indices;
         public Matrix4x4[] m_Bindpose;
         public BoneWeights4[] m_SourceSkin;
@@ -104,20 +104,20 @@ namespace AssetStudio
             if (version >= 2019) //2019 and up
             {
                 var secondaryTexturesSize = reader.ReadInt32();
-                secondaryTextures = new SecondarySpriteTexture[secondaryTexturesSize];
-                for (int i = 0; i < secondaryTexturesSize; i++)
+                secondaryTextures = new List<SecondarySpriteTexture>();
+                for (var i = 0; i < secondaryTexturesSize; i++)
                 {
-                    secondaryTextures[i] = new SecondarySpriteTexture(reader);
+                    secondaryTextures.Add(new SecondarySpriteTexture(reader));
                 }
             }
 
             if (version >= (5, 6)) //5.6 and up
             {
                 var m_SubMeshesSize = reader.ReadInt32();
-                m_SubMeshes = new SubMesh[m_SubMeshesSize];
-                for (int i = 0; i < m_SubMeshesSize; i++)
+                m_SubMeshes = new List<SubMesh>();
+                for (var i = 0; i < m_SubMeshesSize; i++)
                 {
-                    m_SubMeshes[i] = new SubMesh(reader);
+                    m_SubMeshes.Add(new SubMesh(reader));
                 }
 
                 m_IndexBuffer = reader.ReadUInt8Array();
@@ -128,10 +128,10 @@ namespace AssetStudio
             else
             {
                 var verticesSize = reader.ReadInt32();
-                vertices = new SpriteVertex[verticesSize];
-                for (int i = 0; i < verticesSize; i++)
+                vertices = new List<SpriteVertex>();
+                for (var i = 0; i < verticesSize; i++)
                 {
-                    vertices[i] = new SpriteVertex(reader);
+                    vertices.Add(new SpriteVertex(reader));
                 }
 
                 indices = reader.ReadUInt16Array();
@@ -145,7 +145,9 @@ namespace AssetStudio
                 if (version < (2018, 2)) //2018.2 down
                 {
                     var m_SourceSkinSize = reader.ReadInt32();
-                    for (int i = 0; i < m_SourceSkinSize; i++)
+                    reader.ThrowIfTooLarge(m_SourceSkinSize * 32f);
+                    m_SourceSkin = new BoneWeights4[m_SourceSkinSize];
+                    for (var i = 0; i < m_SourceSkinSize; i++)
                     {
                         m_SourceSkin[i] = new BoneWeights4(reader);
                     }
@@ -201,7 +203,7 @@ namespace AssetStudio
         public string[] m_AtlasTags;
         public PPtr<SpriteAtlas> m_SpriteAtlas;
         public SpriteRenderData m_RD;
-        public Vector2[][] m_PhysicsShape;
+        //public Vector2[][] m_PhysicsShape;
 
         public Sprite(ObjectReader reader) : base(reader)
         {
@@ -238,17 +240,18 @@ namespace AssetStudio
             }
 
             m_RD = new SpriteRenderData(reader);
-
+            /*
             if (version >= 2017) //2017 and up
             {
                 var m_PhysicsShapeSize = reader.ReadInt32();
-                m_PhysicsShape = new Vector2[m_PhysicsShapeSize][];
-                for (int i = 0; i < m_PhysicsShapeSize; i++)
+                var physicsShapeList = new List<Vector2[]>();
+                for (var i = 0; i < m_PhysicsShapeSize; i++)
                 {
-                    m_PhysicsShape[i] = reader.ReadVector2Array();
+                    physicsShapeList.Add(reader.ReadVector2Array());
                 }
+                m_PhysicsShape = physicsShapeList.ToArray();
             }
-
+            */
             //vector m_Bones 2018 and up
         }
     }

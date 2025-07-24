@@ -287,6 +287,11 @@ namespace AssetStudio
 
             var compressedSize = (int)m_Header.compressedBlocksInfoSize;
             var uncompressedSize = (int)m_Header.uncompressedBlocksInfoSize;
+            if (uncompressedSize < 0 || compressedSize < 0 || compressedSize > reader.BaseStream.Length)
+            {
+                throw new IOException("Incorrect blockInfo length.\nBlockInfo sizes might be encrypted.\n");
+            }
+
             if ((m_Header.flags & ArchiveFlags.BlocksInfoAtTheEnd) != 0)
             {
                 var position = reader.Position;

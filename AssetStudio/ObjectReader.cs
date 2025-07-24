@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace AssetStudio
 {
@@ -15,6 +16,8 @@ namespace AssetStudio
         public SerializedFileFormatVersion m_Version;
 
         public UnityVersion version => assetsFile.version;
+
+        public long Remaining => byteStart + byteSize - Position;
 
         public ObjectReader(EndianBinaryReader reader, SerializedFile assetsFile, ObjectInfo objectInfo) : base(reader.BaseStream, reader.Endian)
         {
@@ -34,6 +37,12 @@ namespace AssetStudio
             serializedType = objectInfo.serializedType;
             platform = assetsFile.m_TargetPlatform;
             m_Version = assetsFile.header.m_Version;
+        }
+
+        public void ThrowIfTooLarge(float val)
+        {
+            if (val < 0 || val > Remaining)
+                throw new EndOfStreamException();
         }
 
         public void Reset()

@@ -1,4 +1,6 @@
-﻿namespace AssetStudio
+﻿using System.Collections.Generic;
+
+namespace AssetStudio
 {
     public class StaticBatchInfo
     {
@@ -14,7 +16,7 @@
 
     public abstract class Renderer : Component
     {
-        public PPtr<Material>[] m_Materials;
+        public List<PPtr<Material>> m_Materials;
         public StaticBatchInfo m_StaticBatchInfo;
         public uint[] m_SubsetIndices;
 
@@ -108,10 +110,10 @@
             }
 
             var m_MaterialsSize = reader.ReadInt32();
-            m_Materials = new PPtr<Material>[m_MaterialsSize];
-            for (int i = 0; i < m_MaterialsSize; i++)
+            m_Materials = new List<PPtr<Material>>();
+            for (var i = 0; i < m_MaterialsSize; i++)
             {
-                m_Materials[i] = new PPtr<Material>(reader);
+                m_Materials.Add(new PPtr<Material>(reader));
             }
 
             if (version < 3) //3.0 down

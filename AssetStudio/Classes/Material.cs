@@ -21,10 +21,10 @@ namespace AssetStudio
 
     public class UnityPropertySheet
     {
-        public KeyValuePair<string, UnityTexEnv>[] m_TexEnvs;
-        public KeyValuePair<string, int>[] m_Ints;
-        public KeyValuePair<string, float>[] m_Floats;
-        public KeyValuePair<string, Color>[] m_Colors;
+        public List<KeyValuePair<string, UnityTexEnv>> m_TexEnvs;
+        public List<KeyValuePair<string, int>> m_Ints;
+        public List<KeyValuePair<string, float>> m_Floats;
+        public List<KeyValuePair<string, Color>> m_Colors;
 
         public UnityPropertySheet() { }
 
@@ -33,34 +33,34 @@ namespace AssetStudio
             var version = reader.version;
 
             int m_TexEnvsSize = reader.ReadInt32();
-            m_TexEnvs = new KeyValuePair<string, UnityTexEnv>[m_TexEnvsSize];
-            for (int i = 0; i < m_TexEnvsSize; i++)
+            m_TexEnvs = new List<KeyValuePair<string, UnityTexEnv>>();
+            for (var i = 0; i < m_TexEnvsSize; i++)
             {
-                m_TexEnvs[i] = new KeyValuePair<string, UnityTexEnv>(reader.ReadAlignedString(), new UnityTexEnv(reader));
+                m_TexEnvs.Add(new KeyValuePair<string, UnityTexEnv>(reader.ReadAlignedString(), new UnityTexEnv(reader)));
             }
 
             if (version >= 2021) //2021.1 and up
             {
                 int m_IntsSize = reader.ReadInt32();
-                m_Ints = new KeyValuePair<string, int>[m_IntsSize];
-                for (int i = 0; i < m_IntsSize; i++)
+                m_Ints = new List<KeyValuePair<string, int>>();
+                for (var i = 0; i < m_IntsSize; i++)
                 {
-                    m_Ints[i] = new KeyValuePair<string, int>(reader.ReadAlignedString(), reader.ReadInt32());
+                    m_Ints.Add(new KeyValuePair<string, int>(reader.ReadAlignedString(), reader.ReadInt32()));
                 }
             }
 
             int m_FloatsSize = reader.ReadInt32();
-            m_Floats = new KeyValuePair<string, float>[m_FloatsSize];
-            for (int i = 0; i < m_FloatsSize; i++)
+            m_Floats = new List<KeyValuePair<string, float>>();
+            for (var i = 0; i < m_FloatsSize; i++)
             {
-                m_Floats[i] = new KeyValuePair<string, float>(reader.ReadAlignedString(), reader.ReadSingle());
+                m_Floats.Add(new KeyValuePair<string, float>(reader.ReadAlignedString(), reader.ReadSingle()));
             }
 
             int m_ColorsSize = reader.ReadInt32();
-            m_Colors = new KeyValuePair<string, Color>[m_ColorsSize];
-            for (int i = 0; i < m_ColorsSize; i++)
+            m_Colors = new List<KeyValuePair<string, Color>>();
+            for (var i = 0; i < m_ColorsSize; i++)
             {
-                m_Colors[i] = new KeyValuePair<string, Color>(reader.ReadAlignedString(), reader.ReadColor4());
+                m_Colors.Add(new KeyValuePair<string, Color>(reader.ReadAlignedString(), reader.ReadColor4()));
             }
         }
     }
@@ -118,7 +118,7 @@ namespace AssetStudio
             if (version >= (5, 1)) //5.1 and up
             {
                 var stringTagMapSize = reader.ReadInt32();
-                for (int i = 0; i < stringTagMapSize; i++)
+                for (var i = 0; i < stringTagMapSize; i++)
                 {
                     var first = reader.ReadAlignedString();
                     var second = reader.ReadAlignedString();

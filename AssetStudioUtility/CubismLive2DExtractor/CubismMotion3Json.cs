@@ -116,7 +116,7 @@ namespace CubismLive2DExtractor
                 // [Optional] Time of the overall Fade-Out for easing in seconds.
                 FadeOutTime = fadeMotion.FadeOutTime,
                 // The total number of curves.
-                CurveCount = (int)fadeMotion.ParameterCurves.LongCount(x => x.m_Curve.Length > 0),
+                CurveCount = (int)fadeMotion.ParameterCurves.LongCount(x => x.m_Curve.Count > 0),
                 // [Optional] The total number of UserData.
                 UserDataCount = 0
             };
@@ -128,7 +128,7 @@ namespace CubismLive2DExtractor
             var actualCurveCount = 0;
             for (var i = 0; i < fadeMotion.ParameterCurves.Length; i++)
             {
-                if (fadeMotion.ParameterCurves[i].m_Curve.Length == 0)
+                if (fadeMotion.ParameterCurves[i].m_Curve.Count == 0)
                     continue;
 
                 string target;
@@ -174,7 +174,7 @@ namespace CubismLive2DExtractor
                         fadeMotion.ParameterCurves[i].m_Curve[0].value
                     }
                 };
-                for (var j = 1; j < fadeMotion.ParameterCurves[i].m_Curve.Length; j++)
+                for (var j = 1; j < fadeMotion.ParameterCurves[i].m_Curve.Count; j++)
                 {
                     var curve = fadeMotion.ParameterCurves[i].m_Curve[j];
                     var preCurve = fadeMotion.ParameterCurves[i].m_Curve[j - 1];

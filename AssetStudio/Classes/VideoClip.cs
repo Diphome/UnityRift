@@ -49,10 +49,9 @@ namespace AssetStudio
             if (version >= 2020) //2020.1 and up
             {
                 var m_VideoShadersSize = reader.ReadInt32();
-                var m_VideoShaders = new PPtr<Shader>[m_VideoShadersSize];
-                for (int i = 0; i < m_VideoShadersSize; i++)
+                for (var i = 0; i < m_VideoShadersSize; i++)
                 {
-                    m_VideoShaders[i] = new PPtr<Shader>(reader);
+                    var m_VideoShaders = new PPtr<Shader>(reader);
                 }
             }
             m_ExternalResources = new StreamedResource(reader);

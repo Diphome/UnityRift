@@ -1,16 +1,18 @@
-﻿namespace AssetStudio
+﻿using System.Collections.Generic;
+
+namespace AssetStudio
 {
     public sealed class PreloadData : NamedObject
     {
-        public PPtr<Object>[] m_Assets;
+        public List<PPtr<Object>> m_Assets;
 
         public PreloadData(ObjectReader reader) : base(reader)
         {
             var m_PreloadTableSize = reader.ReadInt32();
-            m_Assets = new PPtr<Object>[m_PreloadTableSize];
+            m_Assets = new List<PPtr<Object>>();
             for (var i = 0; i < m_PreloadTableSize; i++)
             {
-                m_Assets[i] = new PPtr<Object>(reader);
+                m_Assets.Add(new PPtr<Object>(reader));
             }
 
             /*
