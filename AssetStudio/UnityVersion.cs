@@ -66,6 +66,20 @@ namespace AssetStudio
             }
         }
 
+        public static bool TryParse(string versionStr, out UnityVersion version)
+        {
+            version = null;
+            try
+            {
+                version = new UnityVersion(versionStr);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         #region UnityVer, UnityVer
         public static bool operator ==(UnityVersion left, UnityVersion right)
         {

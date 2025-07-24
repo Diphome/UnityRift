@@ -83,7 +83,10 @@ namespace AssetStudio
             m_Header.signature = reader.ReadStringToNull();
             m_Header.version = reader.ReadUInt32();
             m_Header.unityVersion = reader.ReadStringToNull();
-            m_Header.unityRevision = new UnityVersion(reader.ReadStringToNull());
+            var revStr = reader.ReadStringToNull();
+            if (!UnityVersion.TryParse(revStr, out m_Header.unityRevision))
+                m_Header.unityRevision = new UnityVersion();
+            
             switch (m_Header.signature)
             {
                 case "UnityArchive":

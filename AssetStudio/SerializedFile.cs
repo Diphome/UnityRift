@@ -70,15 +70,13 @@ namespace AssetStudio
             if (header.m_Version >= SerializedFileFormatVersion.Unknown_7)
             {
                 var versionPos = reader.Position;
-                try
-                {
-                    version = new UnityVersion(reader.ReadStringToNull());
-                }
-                catch (NotSupportedException e)
+
+                var verStr = reader.ReadStringToNull();
+                if (!UnityVersion.TryParse(verStr, out version))
                 {
                     if (assetsManager.SpecifyUnityVersion == null)
                     {
-                        Logger.Warning(e.Message);
+                        Logger.Warning($"Failed to parse Unity version: \"{verStr}\"");
                         version = new UnityVersion();
                         return;
                     }
