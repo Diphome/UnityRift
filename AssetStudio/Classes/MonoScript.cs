@@ -11,15 +11,17 @@
             if (version >= (3, 4)) //3.4 and up
             {
                 var m_ExecutionOrder = reader.ReadInt32();
+                
+                if (version < 5) //5.0 down
+                {
+                    var m_PropertiesHash = reader.ReadUInt32();
+                }
+                else
+                {
+                    var m_PropertiesHash = reader.ReadBytes(16);
+                }
             }
-            if (version < 5) //5.0 down
-            {
-                var m_PropertiesHash = reader.ReadUInt32();
-            }
-            else
-            {
-                var m_PropertiesHash = reader.ReadBytes(16);
-            }
+
             if (version < 3) //3.0 down
             {
                 var m_PathName = reader.ReadAlignedString();
