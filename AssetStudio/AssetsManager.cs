@@ -321,16 +321,18 @@ namespace AssetStudio
             Logger.Debug($"Bundle offset: {reader.Position}");
             var bundleStream = new OffsetStream(reader);
             var bundleReader = new FileReader(reader.FullPath, bundleStream);
+            var isLoaded = false;
             
             try
             {
                 var bundleFile = new BundleFile(bundleReader, CustomBlockInfoCompression, CustomBlockCompression, specifiedUnityVersion);
-                var isLoaded = LoadBundleFiles(bundleReader, bundleFile, originalPath);
+                isLoaded = LoadBundleFiles(bundleReader, bundleFile, originalPath);
                 if (!isLoaded)
                     return false;
 
-                while (bundleFile.IsMultiBundle && isLoaded)
+                while (bundleFile.IsDataAfterBundle && isLoaded)
                 {
+                    isLoaded = false;
                     bundleStream.Offset = reader.Position;
                     bundleReader = new FileReader($"{reader.FullPath}_0x{bundleStream.Offset:X}", bundleStream);
                     if (bundleReader.FileType != FileType.BundleFile)
@@ -345,7 +347,7 @@ namespace AssetStudio
                         bundleReader.FileName = $"{reader.FileName}_0x{bundleStream.Offset:X}";
                     }
                     Logger.Info($"[MultiBundle] Loading \"{reader.FileName}\" from offset: 0x{bundleStream.Offset:X}");
-                    bundleFile = new BundleFile(bundleReader, CustomBlockInfoCompression, CustomBlockCompression, specifiedUnityVersion);
+                    bundleFile = new BundleFile(bundleReader, CustomBlockInfoCompression, CustomBlockCompression, specifiedUnityVersion, isMultiBundle: true);
                     isLoaded = LoadBundleFiles(bundleReader, bundleFile, originalPath ?? reader.FullPath);
                 }
                 return isLoaded;
@@ -367,7 +369,8 @@ namespace AssetStudio
             }
             finally
             {
-                bundleReader.Dispose();
+                if (!isLoaded)
+                    bundleReader.Dispose();
             }
         }
 
@@ -375,6 +378,9 @@ namespace AssetStudio
         {
             foreach (var file in bundleFile.fileList)
             {
+                if (file.stream == null)
+                    continue;
+                file.stream.Position = 0; //go to file offset
                 var dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), file.fileName);
                 var subReader = new FileReader(dummyPath, file.stream);
                 if (subReader.FileType == FileType.AssetsFile)

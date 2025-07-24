@@ -143,11 +143,11 @@ namespace AssetStudioGUI
             var bundleReader = new FileReader(reader.FullPath, bundleStream);
             var bundleFile = new BundleFile(bundleReader, assetsManager.CustomBlockInfoCompression, assetsManager.CustomBlockCompression, assetsManager.SpecifyUnityVersion);
             var extractPath = Path.Combine(savePath, reader.FileName + "_unpacked");
-            if (bundleFile.fileList.Length > 0)
+            if (bundleFile.fileList.Count > 0)
             {
                 count += ExtractStreamFile(extractPath, bundleFile.fileList);
             }
-            while (bundleFile.IsMultiBundle)
+            while (bundleFile.IsDataAfterBundle)
             {
                 bundleStream.Offset = reader.Position;
                 bundleReader = new FileReader($"{reader.FullPath}_0x{bundleStream.Offset:X}", bundleStream);
@@ -160,8 +160,8 @@ namespace AssetStudioGUI
                     bundleReader.FileName = $"{reader.FileName}_0x{bundleStream.Offset:X}";
                 }
                 Logger.Info($"[MultiBundle] Decompressing \"{reader.FileName}\" from offset: 0x{bundleStream.Offset:X}..");
-                bundleFile = new BundleFile(bundleReader, assetsManager.CustomBlockInfoCompression, assetsManager.CustomBlockCompression, assetsManager.SpecifyUnityVersion);
-                if (bundleFile.fileList.Length > 0)
+                bundleFile = new BundleFile(bundleReader, assetsManager.CustomBlockInfoCompression, assetsManager.CustomBlockCompression, assetsManager.SpecifyUnityVersion, isMultiBundle: true);
+                if (bundleFile.fileList.Count > 0)
                 {
                     count += ExtractStreamFile(extractPath, bundleFile.fileList);
                 }
@@ -175,19 +175,21 @@ namespace AssetStudioGUI
             Logger.Info($"Decompressing {reader.FileName} ...");
             var webFile = new WebFile(reader);
             reader.Dispose();
-            if (webFile.fileList.Length > 0)
+            if (webFile.fileList.Count > 0)
             {
                 var extractPath = Path.Combine(savePath, reader.FileName + "_unpacked");
-                return ExtractStreamFile(extractPath, webFile.fileList);
+                return ExtractStreamFile(extractPath, webFile.fileList, isOffsetStream: false);
             }
             return 0;
         }
 
-        private static int ExtractStreamFile(string extractPath, StreamFile[] fileList)
+        private static int ExtractStreamFile(string extractPath, List<StreamFile> fileList, bool isOffsetStream = true)
         {
-            int extractedCount = 0;
+            var extractedCount = 0;
             foreach (var file in fileList)
             {
+                if (file.stream == null)
+                    continue;
                 var filePath = Path.Combine(extractPath, file.path);
                 var fileDirectory = Path.GetDirectoryName(filePath);
                 if (!Directory.Exists(fileDirectory))
@@ -198,11 +200,16 @@ namespace AssetStudioGUI
                 {
                     using (var fileStream = File.Create(filePath))
                     {
-                        file.stream.CopyTo(fileStream);
+                        file.stream.Position = 0;
+                        file.stream.CopyTo(fileStream, file.stream.Length);
                     }
-                    extractedCount += 1;
+                    extractedCount++;
                 }
-                file.stream.Dispose();
+                if (!isOffsetStream) file.stream.Dispose();
+            }
+            if (isOffsetStream && fileList.Count > 0)
+            {
+                fileList[0].stream?.Dispose();
             }
             return extractedCount;
         }

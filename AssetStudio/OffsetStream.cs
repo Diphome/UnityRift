@@ -5,12 +5,15 @@ namespace AssetStudio
     public class OffsetStream : Stream
     {
         private readonly Stream _baseStream;
+        private readonly long _length;
         private long _offset;
 
         public override bool CanRead => _baseStream.CanRead;
         public override bool CanSeek => _baseStream.CanSeek;
         public override bool CanWrite => false;
-        public override long Length => _baseStream.Length - _offset;
+        public override long Length => _length > 0
+            ? _length
+            : _baseStream.Length - _offset;
 
         public override long Position
         {
@@ -38,6 +41,13 @@ namespace AssetStudio
         {
             _baseStream = reader.BaseStream;
             Offset = reader.Position;
+        }
+
+        public OffsetStream(Stream stream, long offset, long length)
+        {
+            _baseStream = stream;
+            _length = length;
+            Offset = offset;
         }
 
         public override void Flush() { }
