@@ -145,8 +145,9 @@ namespace AssetStudioGUI
             useAssetLoadingViaTypetreeToolStripMenuItem.Checked = Properties.Settings.Default.useTypetreeLoading;
             useDumpTreeViewToolStripMenuItem.Checked = Properties.Settings.Default.useDumpTreeView;
             autoPlayAudioAssetsToolStripMenuItem.Checked = Properties.Settings.Default.autoplayAudio;
-            customBlockCompressionComboBoxToolStripMenuItem.SelectedIndex = 0;
-            customBlockInfoCompressionComboBoxToolStripMenuItem.SelectedIndex = 0;
+            customBlockCompressionComboBox.SelectedIndex = 0;
+            customBlockInfoCompressionComboBox.SelectedIndex = 0;
+            assetsManager.Options.BundleOptions.DecompressToDisk = Properties.Settings.Default.decompressToDisk;
             FMODinit();
             listSearchFilterMode.SelectedIndex = 0;
             if (string.IsNullOrEmpty(Properties.Settings.Default.fbxSettings))
@@ -172,23 +173,28 @@ namespace AssetStudioGUI
 
         private async void AssetStudioGUIForm_DragDrop(object sender, DragEventArgs e)
         {
-            var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (paths.Length == 0)
+            var pathArray = (string[])e.Data?.GetData(DataFormats.FileDrop);
+            if (pathArray == null)
+                return;
+
+            var pathList = pathArray.ToList();
+            assetsManager.LoadOptionFiles(pathList);
+            if (pathList.Count == 0)
                 return;
 
             ResetForm();
-            for (var i = 0; i < paths.Length; i++)
+            for (var i = 0; i < pathList.Count; i++)
             {
-                if (paths[i].ToLower().EndsWith(".lnk"))
+                if (pathList[i].ToLower().EndsWith(".lnk"))
                 {
-                    var targetPath = LnkReader.GetLnkTarget(paths[i]);
+                    var targetPath = LnkReader.GetLnkTarget(pathList[i]);
                     if (!string.IsNullOrEmpty(targetPath))
                     {
-                        paths[i] = targetPath;
+                        pathList[i] = targetPath;
                     }
                 }
             }
-            await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, paths));
+            await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, pathList));
             saveDirectoryBackup = openDirectoryBackup;
             BuildAssetStructures();
         }
@@ -198,8 +204,12 @@ namespace AssetStudioGUI
             openFileDialog1.InitialDirectory = openDirectoryBackup;
             if (openFileDialog1.ShowDialog(this) == DialogResult.OK)
             {
+                var pathList = openFileDialog1.FileNames.ToList();
+                assetsManager.LoadOptionFiles(pathList);
+                if (pathList.Count == 0)
+                    return;
                 ResetForm();
-                await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, openFileDialog1.FileNames));
+                await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, pathList));
                 BuildAssetStructures();
             }
         }
@@ -213,24 +223,6 @@ namespace AssetStudioGUI
                 ResetForm();
                 await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, openFolderDialog.Folder));
                 BuildAssetStructures();
-            }
-        }
-
-        private void specifyUnityVersion_Close(object sender, EventArgs e)
-        {
-            if (string.IsNullOrEmpty(specifyUnityVersion.Text))
-            {
-                assetsManager.SpecifyUnityVersion = null;
-                return;
-            }
-            
-            try
-            {
-                assetsManager.SpecifyUnityVersion = new UnityVersion(specifyUnityVersion.Text);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex.Message);
             }
         }
 
@@ -269,7 +261,7 @@ namespace AssetStudioGUI
 
         private async void BuildAssetStructures()
         {
-            if (assetsManager.assetsFileList.Count == 0)
+            if (assetsManager.AssetsFileList.Count == 0)
             {
                 Logger.Info("No Unity file can be loaded.");
                 return;
@@ -281,7 +273,7 @@ namespace AssetStudioGUI
             if (isDarkMode)
                 Progress.Reset();
 
-            var serializedFile = assetsManager.assetsFileList[0];
+            var serializedFile = assetsManager.AssetsFileList[0];
             var tuanjieString = serializedFile.version.IsTuanjie ? " - Tuanjie Engine" : "";
             Text = $"{guiTitle} - {productName} - {serializedFile.version} - {serializedFile.targetPlatformString}{tuanjieString}";
 
@@ -326,12 +318,12 @@ namespace AssetStudioGUI
                 filterTypeToolStripMenuItem.DropDownItems.Add(typeItem);
             }
             allToolStripMenuItem.Checked = true;
-            var log = $"Finished loading {assetsManager.assetsFileList.Count} file(s) with {assetListView.Items.Count} exportable assets";
-            var unityVer = assetsManager.assetsFileList[0].version;
+            var log = $"Finished loading {assetsManager.AssetsFileList.Count} file(s) with {assetListView.Items.Count} exportable assets";
+            var unityVer = assetsManager.AssetsFileList[0].version;
             var m_ObjectsCount = unityVer > 2020 ?
-                assetsManager.assetsFileList.Sum(x => x.m_Objects.LongCount(y => y.classID != (int)ClassIDType.Shader)) :
-                assetsManager.assetsFileList.Sum(x => x.m_Objects.Count);
-            var objectsCount = assetsManager.assetsFileList.Sum(x => x.Objects.Count);
+                assetsManager.AssetsFileList.Sum(x => x.m_Objects.LongCount(y => y.classID != (int)ClassIDType.Shader)) :
+                assetsManager.AssetsFileList.Sum(x => x.m_Objects.Count);
+            var objectsCount = assetsManager.AssetsFileList.Sum(x => x.Objects.Count);
             if (m_ObjectsCount != objectsCount)
             {
                 log += $" and {m_ObjectsCount - objectsCount} assets failed to read";
@@ -1551,7 +1543,7 @@ namespace AssetStudioGUI
 
         private void ResetForm()
         {
-            if (Studio.assetsManager.assetsFileList.Count > 0)
+            if (Studio.assetsManager.AssetsFileList.Count > 0)
                 Logger.Info("Resetting program...");
 
             Text = guiTitle;
@@ -2438,49 +2430,90 @@ namespace AssetStudioGUI
             }
         }
 
-        private void customBlockCompressionComboBoxToolStripMenuItem_SelectedIndexChanged(object sender, EventArgs e)
+        private void importOptions_DropDownClose(object sender, EventArgs e)
         {
-            var selectedTypeIndex = customBlockCompressionComboBoxToolStripMenuItem.SelectedIndex;
-            switch (selectedTypeIndex)
+            if (string.IsNullOrEmpty(specifyUnityVersionTextBox.Text))
             {
-                case 0:
-                    assetsManager.CustomBlockCompression = CompressionType.Auto;
-                    break;
-                case 1:
-                    assetsManager.CustomBlockCompression = CompressionType.Zstd;
-                    break;
-                case 2:
-                    assetsManager.CustomBlockCompression = CompressionType.Oodle;
-                    break;
-                case 3:
-                    assetsManager.CustomBlockCompression = CompressionType.Lz4HC;
-                    break;
-                case 4:
-                    assetsManager.CustomBlockCompression = CompressionType.Lzma;
-                    break;
+                assetsManager.Options.CustomUnityVersion = null;
+                return;
+            }
+
+            try
+            {
+                assetsManager.Options.CustomUnityVersion = new UnityVersion(specifyUnityVersionTextBox.Text);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex.Message);
             }
         }
 
-        private void customBlockInfoCompressionComboBoxToolStripMenuItem_SelectedIndexChanged(object sender, EventArgs e)
+        private void importOptions_DropDownOpened(object sender, EventArgs e)
         {
-            var selectedTypeIndex = customBlockInfoCompressionComboBoxToolStripMenuItem.SelectedIndex;
-            switch (selectedTypeIndex)
+            if (assetsManager.Options.CustomUnityVersion != null)
             {
-                case 0:
-                    assetsManager.CustomBlockInfoCompression = CompressionType.Auto;
-                    break;
-                case 1:
-                    assetsManager.CustomBlockInfoCompression = CompressionType.Zstd;
-                    break;
-                case 2:
-                    assetsManager.CustomBlockInfoCompression = CompressionType.Oodle;
-                    break;
-                case 3:
-                    assetsManager.CustomBlockInfoCompression = CompressionType.Lz4HC;
-                    break;
-                case 4:
-                    assetsManager.CustomBlockInfoCompression = CompressionType.Lzma;
-                    break;
+                specifyUnityVersionTextBox.Text = assetsManager.Options.CustomUnityVersion.FullVersion;
+            }
+            alwaysDecompressToDiskToolStripMenuItem.Checked = assetsManager.Options.BundleOptions.DecompressToDisk;
+            customBlockInfoCompressionComboBox.SelectedIndex = SetComboBoxIndex(assetsManager.Options.BundleOptions.CustomBlockInfoCompression);
+            customBlockCompressionComboBox.SelectedIndex = SetComboBoxIndex(assetsManager.Options.BundleOptions.CustomBlockCompression);
+        }
+
+        private static int SetComboBoxIndex(CompressionType compressionType)
+        {
+            switch (compressionType)
+            {
+                case CompressionType.Auto: return 0;
+                case CompressionType.Lzma: return 4;
+                case CompressionType.Lz4:
+                case CompressionType.Lz4HC: return 3;
+                case CompressionType.Zstd:  return 1;
+                case CompressionType.Oodle: return 2;
+                default: throw new NotSupportedException();
+            }
+        }
+
+        private void customBlockCompressionComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var selectedTypeIndex = customBlockCompressionComboBox.SelectedIndex;
+            assetsManager.Options.BundleOptions.CustomBlockCompression = GetCustomCompressionTypes(selectedTypeIndex);
+        }
+
+        private void customBlockInfoCompressionComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var selectedTypeIndex = customBlockInfoCompressionComboBox.SelectedIndex;
+            assetsManager.Options.BundleOptions.CustomBlockInfoCompression = GetCustomCompressionTypes(selectedTypeIndex);
+        }
+
+        private static CompressionType GetCustomCompressionTypes(int index)
+        {
+            switch (index)
+            {
+                case 0: return CompressionType.Auto;
+                case 1: return CompressionType.Zstd;
+                case 2: return CompressionType.Oodle;
+                case 3: return CompressionType.Lz4HC;
+                case 4: return CompressionType.Lzma;
+                default: throw new NotSupportedException();
+            }
+        }
+
+        private void alwaysDecompressToDiskToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var isEnabled = alwaysDecompressToDiskToolStripMenuItem.Checked;
+            assetsManager.Options.BundleOptions.DecompressToDisk = isEnabled;
+            Properties.Settings.Default.decompressToDisk = isEnabled;
+            Properties.Settings.Default.Save();
+        }
+
+        private void saveOptionsToDiskToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var saveFolderDialog = new OpenFolderDialog();
+            saveFolderDialog.Title = "Select the save folder";
+            if (saveFolderDialog.ShowDialog(this) == DialogResult.OK)
+            {
+                var savePath = saveFolderDialog.Folder;
+                assetsManager.Options.SaveToFile(savePath);
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace AssetStudio
@@ -54,6 +55,7 @@ namespace AssetStudio
             }
         }
 
+        [JsonConstructor]
         public UnityVersion(int major = 0, int minor = 0, int patch = 0)
         {
             (Major, Minor, Patch) = (major, minor, patch);

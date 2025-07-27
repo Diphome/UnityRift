@@ -39,7 +39,7 @@ namespace AssetStudio
             if (m_FileID > 0 && m_FileID - 1 < _assetsFile.m_Externals.Count)
             {
                 var assetsManager = _assetsFile.assetsManager;
-                var assetsFileList = assetsManager.assetsFileList;
+                var assetsFileList = assetsManager.AssetsFileList;
                 var assetsFileIndexCache = assetsManager.assetsFileIndexCache;
 
                 if (_index == -2)
@@ -126,7 +126,7 @@ namespace AssetStudio
             }
 
             var assetsManager = _assetsFile.assetsManager;
-            var assetsFileList = assetsManager.assetsFileList;
+            var assetsFileList = assetsManager.AssetsFileList;
             var assetsFileIndexCache = assetsManager.assetsFileIndexCache;
 
             if (!assetsFileIndexCache.TryGetValue(name, out _index))

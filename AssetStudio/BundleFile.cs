@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using AssetStudio.CustomOptions;
 
 namespace AssetStudio
 {
@@ -44,6 +45,7 @@ namespace AssetStudio
     public class BundleFile
     {
         public readonly bool IsDataAfterBundle;
+        private readonly CustomBundleOptions _bundleOptions;
 
         public class Header
         {
@@ -78,9 +80,10 @@ namespace AssetStudio
 
         public List<StreamFile> fileList;
 
-        public BundleFile(FileReader reader, CompressionType customBlockInfoCompression, CompressionType customBlockCompression, UnityVersion specUnityVer = null, bool isMultiBundle = false)
+        public BundleFile(FileReader reader, CustomBundleOptions bundleOptions, bool isMultiBundle = false)
         {
             Stream blocksStream;
+            _bundleOptions = bundleOptions;
             m_Header = new Header();
             m_Header.signature = reader.ReadStringToNull();
             m_Header.version = reader.ReadUInt32();
@@ -121,20 +124,21 @@ namespace AssetStudio
                     }
                     
                     var unityVer = m_Header.unityRevision;
-                    if (specUnityVer != null)
+                    var customUnityVer = _bundleOptions.Options.CustomUnityVersion;
+                    if (customUnityVer != null)
                     {
-                        if (!unityVer.IsStripped && specUnityVer != unityVer)
+                        if (!unityVer.IsStripped && customUnityVer != unityVer)
                         {
-                            Logger.Warning($"Detected Unity version is different from the specified one ({specUnityVer.FullVersion.Color(ColorConsole.BrightCyan)}).\n" +
+                            Logger.Warning($"Detected Unity version is different from the specified one ({customUnityVer.FullVersion.Color(ColorConsole.BrightCyan)}).\n" +
                                 $"Assets may load with errors.\n" +
                                 $"It is recommended to specify the detected Unity version: {unityVer.FullVersion.Color(ColorConsole.BrightCyan)}");
                         }
-                        unityVer = specUnityVer;
+                        unityVer = customUnityVer;
                     }
 
-                    UnityCnCheck(reader, customBlockInfoCompression, unityVer);
+                    UnityCnCheck(reader, unityVer);
                     
-                    ReadBlocksInfoAndDirectory(reader, customBlockInfoCompression, unityVer);
+                    ReadBlocksInfoAndDirectory(reader, unityVer);
 
                     if (!isMultiBundle && IsUncompressedBundle)
                     {
@@ -142,7 +146,7 @@ namespace AssetStudio
                         break;
                     }
                     
-                    blocksStream = ReadBlocks(reader, customBlockCompression);
+                    blocksStream = ReadBlocks(reader);
                     ReadFiles(blocksStream);
                     
                     if (!IsDataAfterBundle)
@@ -190,7 +194,7 @@ namespace AssetStudio
         private Stream CreateBlocksStream(string path)
         {
             var uncompressedSizeSum = m_BlocksInfo.Sum(x => x.uncompressedSize);
-            return uncompressedSizeSum >= int.MaxValue
+            return uncompressedSizeSum >= int.MaxValue || _bundleOptions.DecompressToDisk
                 ? new FileStream(path + ".temp", FileMode.Create, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.DeleteOnClose)
                 : (Stream) new MemoryStream((int)uncompressedSizeSum);
         }
@@ -264,7 +268,7 @@ namespace AssetStudio
             }
         }
 
-        private void ReadBlocksInfoAndDirectory(FileReader reader, CompressionType customBlockInfoCompression, UnityVersion unityVer, bool silent = false)
+        private void ReadBlocksInfoAndDirectory(FileReader reader, UnityVersion unityVer, bool silent = false)
         {
             byte[] blocksInfoBytes;
 
@@ -304,6 +308,7 @@ namespace AssetStudio
                 blocksInfoBytes = reader.ReadBytes(compressedSize);
             }
             
+            var customBlockInfoCompression = _bundleOptions.CustomBlockInfoCompression;
             var compressionType = (CompressionType)(m_Header.flags & ArchiveFlags.CompressionTypeMask);
             if (customBlockInfoCompression == CompressionType.Auto)
             {
@@ -402,8 +407,9 @@ namespace AssetStudio
             }
         }
 
-        private Stream ReadBlocks(FileReader reader, CompressionType customBlockCompression)
+        private Stream ReadBlocks(FileReader reader)
         {
+            var customBlockCompression = _bundleOptions.CustomBlockCompression;
             var blocksStream = CreateBlocksStream(reader.FullPath);
             var blocksCompression = m_BlocksInfo.Max(x => (CompressionType)(x.flags & StorageBlockFlags.CompressionTypeMask));
             Logger.Debug($"BlockData compression: {blocksCompression}");
@@ -503,7 +509,7 @@ namespace AssetStudio
             return blocksStream;
         }
 
-        private void UnityCnCheck(FileReader reader, CompressionType customBlockInfoCompression, UnityVersion unityVer)
+        private void UnityCnCheck(FileReader reader, UnityVersion unityVer)
         {
             var hasUnityCnFlag = false;
             if (!unityVer.IsStripped)
@@ -528,7 +534,7 @@ namespace AssetStudio
             reader.Position += 70;
             try
             {
-                ReadBlocksInfoAndDirectory(reader, customBlockInfoCompression, unityVer, silent: true);
+                ReadBlocksInfoAndDirectory(reader, unityVer, silent: true);
             }
             catch (Exception)
             {

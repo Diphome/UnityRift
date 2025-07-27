@@ -74,13 +74,13 @@ namespace AssetStudio
                 var verStr = reader.ReadStringToNull();
                 if (!UnityVersion.TryParse(verStr, out version))
                 {
-                    if (assetsManager.SpecifyUnityVersion == null)
+                    if (assetsManager.Options.CustomUnityVersion == null)
                     {
                         Logger.Warning($"Failed to parse Unity version: \"{verStr}\"");
                         version = new UnityVersion();
                         return;
                     }
-                    version = assetsManager.SpecifyUnityVersion;
+                    version = assetsManager.Options.CustomUnityVersion;
                     reader.Position = versionPos;
                     reader.ReadBytes(version.ToString().Length + 1);
                 }

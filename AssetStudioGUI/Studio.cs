@@ -141,7 +141,7 @@ namespace AssetStudioGUI
             var count = 0;
             var bundleStream = new OffsetStream(reader);
             var bundleReader = new FileReader(reader.FullPath, bundleStream);
-            var bundleFile = new BundleFile(bundleReader, assetsManager.CustomBlockInfoCompression, assetsManager.CustomBlockCompression, assetsManager.SpecifyUnityVersion);
+            var bundleFile = new BundleFile(bundleReader, assetsManager.Options.BundleOptions);
             var extractPath = Path.Combine(savePath, reader.FileName + "_unpacked");
             if (bundleFile.fileList.Count > 0)
             {
@@ -160,7 +160,7 @@ namespace AssetStudioGUI
                     bundleReader.FileName = $"{reader.FileName}_0x{bundleStream.Offset:X}";
                 }
                 Logger.Info($"[MultiBundle] Decompressing \"{reader.FileName}\" from offset: 0x{bundleStream.Offset:X}..");
-                bundleFile = new BundleFile(bundleReader, assetsManager.CustomBlockInfoCompression, assetsManager.CustomBlockCompression, assetsManager.SpecifyUnityVersion, isMultiBundle: true);
+                bundleFile = new BundleFile(bundleReader, assetsManager.Options.BundleOptions, isMultiBundle: true);
                 if (bundleFile.fileList.Count > 0)
                 {
                     count += ExtractStreamFile(extractPath, bundleFile.fileList);
@@ -219,14 +219,14 @@ namespace AssetStudioGUI
             Logger.Info("Building asset list...");
 
             string productName = null;
-            var objectCount = assetsManager.assetsFileList.Sum(x => x.Objects.Count);
+            var objectCount = assetsManager.AssetsFileList.Sum(x => x.Objects.Count);
             var objectAssetItemDic = new Dictionary<Object, AssetItem>(objectCount);
             var containers = new List<(PPtr<Object>, string)>();
             var tex2dArrayAssetList = new List<AssetItem>();
             l2dAssetContainers.Clear();
             var i = 0;
             Progress.Reset();
-            foreach (var assetsFile in assetsManager.assetsFileList)
+            foreach (var assetsFile in assetsManager.AssetsFileList)
             {
                 var preloadTable = new List<PPtr<Object>>();
 
@@ -428,10 +428,10 @@ namespace AssetStudioGUI
 
             var treeNodeCollection = new List<TreeNode>();
             var treeNodeDictionary = new Dictionary<GameObject, GameObjectTreeNode>();
-            var assetsFileCount = assetsManager.assetsFileList.Count;
+            var assetsFileCount = assetsManager.AssetsFileList.Count;
             var j = 0;
             Progress.Reset();
-            foreach (var assetsFile in assetsManager.assetsFileList)
+            foreach (var assetsFile in assetsManager.AssetsFileList)
             {
                 var fileNode = new TreeNode(assetsFile.fileName); //RootNode
 
@@ -504,7 +504,7 @@ namespace AssetStudioGUI
         public static Dictionary<UnityVersion, SortedDictionary<int, TypeTreeItem>> BuildClassStructure()
         {
             var typeMap = new Dictionary<UnityVersion, SortedDictionary<int, TypeTreeItem>>();
-            foreach (var assetsFile in assetsManager.assetsFileList)
+            foreach (var assetsFile in assetsManager.AssetsFileList)
             {
                 if (typeMap.TryGetValue(assetsFile.version, out var curVer))
                 {

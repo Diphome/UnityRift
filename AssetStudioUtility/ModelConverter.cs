@@ -586,7 +586,7 @@ namespace AssetStudio
             {
                 Logger.Debug("Mesh Renderer had no Mesh attached, trying to find Mesh by name..");
                 var meshR_originalName = m_GameObject.m_Name;
-                foreach (var serializedFile in m_GameObject.assetsFile.assetsManager.assetsFileList)
+                foreach (var serializedFile in m_GameObject.assetsFile.assetsManager.AssetsFileList)
                 {
                     var nameRelatedMesh = (Mesh)serializedFile.Objects.Find(x => x is Mesh m_Mesh && m_Mesh.m_Name == meshR_originalName);
                     if (nameRelatedMesh != null)
