@@ -124,6 +124,7 @@ namespace AssetStudioCLI.Options
         public static Option<ExportListType> o_exportAssetList;
         public static Option<string> o_assemblyPath;
         public static Option<UnityVersion> o_unityVersion;
+        public static Option<bool> f_decompressToDisk;
         public static Option<bool> f_notRestoreExtensionName;
         public static Option<bool> f_avoidLoadingViaTypetree;
         public static Option<bool> f_loadAllAssets;
@@ -518,6 +519,15 @@ namespace AssetStudioCLI.Options
                 optionExample: "Example: \"--unity-version 2017.4.39f1\"\n",
                 optionHelpGroup: HelpGroups.Advanced
             );
+            f_decompressToDisk = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--decompress-to-disk",
+                optionDescription: "(Flag) If not specified, only bundles larger than 2GB will be decompressed to disk\ninstead of memory\n",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.Advanced,
+                isFlag: true
+            );
             f_notRestoreExtensionName = new GroupedOption<bool>
             (
                 optionDefaultValue: false,
@@ -661,11 +671,12 @@ namespace AssetStudioCLI.Options
             #endregion
 
             #region Parse Flags
-            for (var i = 0; i < processedArgs.Count; i++) 
+            var flagIndexes = new List<int>();
+            for (var i = 0; i < processedArgs.Count; i++)
             {
                 var flag = processedArgs[i].ToLower();
 
-                switch(flag)
+                switch (flag)
                 {
                     case "--l2d-search-by-filename":
                         if (o_workMode.Value != WorkMode.Live2D)
@@ -675,7 +686,7 @@ namespace AssetStudioCLI.Options
                             return;
                         }
                         f_l2dAssetSearchByFilename.Value = true;
-                        processedArgs.RemoveAt(i);
+                        flagIndexes.Add(i);
                         break;
                     case "--l2d-force-bezier":
                         if (o_workMode.Value != WorkMode.Live2D)
@@ -685,7 +696,7 @@ namespace AssetStudioCLI.Options
                             return;
                         }
                         f_l2dForceBezier.Value = true;
-                        processedArgs.RemoveAt(i);
+                        flagIndexes.Add(i);
                         break;
                     case "--fbx-uvs-as-diffuse":
                         if (o_workMode.Value != WorkMode.SplitObjects)
@@ -695,19 +706,23 @@ namespace AssetStudioCLI.Options
                             return;
                         }
                         f_fbxUvsAsDiffuseMaps.Value = true;
-                        processedArgs.RemoveAt(i);
+                        flagIndexes.Add(i);
                         break;
                     case "--filter-with-regex":
                         f_filterWithRegex.Value = true;
-                        processedArgs.RemoveAt(i);
+                        flagIndexes.Add(i);
+                        break;
+                    case "--decompress-to-disk":
+                        f_decompressToDisk.Value = true;
+                        flagIndexes.Add(i);
                         break;
                     case "--not-restore-extension":
                         f_notRestoreExtensionName.Value = true;
-                        processedArgs.RemoveAt(i);
+                        flagIndexes.Add(i);
                         break;
                     case "--avoid-typetree-loading":
                         f_avoidLoadingViaTypetree.Value = true;
-                        processedArgs.RemoveAt(i);
+                        flagIndexes.Add(i);
                         break;
                     case "--load-all":
                         switch (o_workMode.Value)
@@ -716,7 +731,7 @@ namespace AssetStudioCLI.Options
                             case WorkMode.Dump:
                             case WorkMode.Info:
                                 f_loadAllAssets.Value = true;
-                                processedArgs.RemoveAt(i);
+                                flagIndexes.Add(i);
                                 break;
                             default:
                                 Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
@@ -725,7 +740,11 @@ namespace AssetStudioCLI.Options
                         }
                         break;
                 }
-            }            
+            }
+            for (var i = 0; i < flagIndexes.Count; i++)
+            {
+                processedArgs.RemoveAt(flagIndexes[i] - i);
+            }
             #endregion
 
             #region Parse Options
@@ -1366,6 +1385,7 @@ namespace AssetStudioCLI.Options
             sb.AppendLine($"# Unity Version: {unityVer}");
             if (o_workMode.Value != WorkMode.Extract)
             {
+                sb.AppendLine($"# Decompress Bundles To Disk: {f_decompressToDisk.Value}");
                 sb.AppendLine($"# Parse Assets Using TypeTree: {!f_avoidLoadingViaTypetree.Value}");
                 sb.AppendLine($"# Export Asset List: {o_exportAssetList}");
             }
