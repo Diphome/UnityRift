@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -808,7 +809,8 @@ namespace AssetStudio
                             for (var d = 0; d < m_Channel.dimension; d++)
                             {
                                 var componentOffset = vertexOffset + componentByteSize * d;
-                                Buffer.BlockCopy(m_VertexData.m_DataSize, componentOffset, componentBytes, componentByteSize * (v * m_Channel.dimension + d), componentByteSize);
+                                var dstOffset = componentByteSize * (v * m_Channel.dimension + d);
+                                m_VertexData.m_DataSize.AsSpan(componentOffset, componentByteSize).CopyTo(componentBytes.AsSpan(dstOffset));
                             }
                         }
 
@@ -816,10 +818,7 @@ namespace AssetStudio
                         {
                             for (var i = 0; i < componentBytes.Length / componentByteSize; i++)
                             {
-                                var buff = new byte[componentByteSize];
-                                Buffer.BlockCopy(componentBytes, i * componentByteSize, buff, 0, componentByteSize);
-                                buff = buff.Reverse().ToArray();
-                                Buffer.BlockCopy(buff, 0, componentBytes, i * componentByteSize, componentByteSize);
+                                componentBytes.AsSpan(i * componentByteSize, componentByteSize).Reverse();
                             }
                         }
 
@@ -897,6 +896,9 @@ namespace AssetStudio
                                         }
                                     }
                                     break;
+                                default:
+                                    Logger.Warning($"Unknown vertex attribute: {chn}");
+                                    break;
                             }
                         }
                         else
@@ -933,6 +935,9 @@ namespace AssetStudio
                                     break;
                                 case 7: //kShaderChannelTangent
                                     m_Tangents = componentsFloatArray;
+                                    break;
+                                default:
+                                    Logger.Warning($"Unknown vertex attribute: {chn}");
                                     break;
                             }
                         }
@@ -990,11 +995,9 @@ namespace AssetStudio
                 {
                     m_BindPose = new Matrix4x4[m_CompressedMesh.m_BindPoses.m_NumItems / 16];
                     var m_BindPoses_Unpacked = m_CompressedMesh.m_BindPoses.UnpackFloats(16, 4 * 16);
-                    var buffer = new float[16];
                     for (var i = 0; i < m_BindPose.Length; i++)
                     {
-                        Array.Copy(m_BindPoses_Unpacked, i * 16, buffer, 0, 16);
-                        m_BindPose[i] = new Matrix4x4(buffer);
+                        m_BindPose[i] = new Matrix4x4(m_BindPoses_Unpacked.AsSpan(i * 16, 16));
                     }
                 }
             }
@@ -1415,7 +1418,11 @@ namespace AssetStudio
                 switch (format)
                 {
                     case VertexFormat.Float:
+#if NET
+                        result[i] = BinaryPrimitives.ReadSingleLittleEndian(inputBytes.AsSpan(i * 4));
+#else
                         result[i] = BitConverter.ToSingle(inputBytes, i * 4);
+#endif
                         break;
                     case VertexFormat.Float16:
                         result[i] = (float)HalfHelper.ToHalf(inputBytes, i * 2);
@@ -1427,17 +1434,17 @@ namespace AssetStudio
                         result[i] = Math.Max((sbyte)inputBytes[i] / 127f, -1f);
                         break;
                     case VertexFormat.UNorm16:
-                        result[i] = BitConverter.ToUInt16(inputBytes, i * 2) / 65535f;
+                        result[i] = BinaryPrimitives.ReadUInt16LittleEndian(inputBytes.AsSpan(i * 2)) / 65535f;
                         break;
                     case VertexFormat.SNorm16:
-                        result[i] = Math.Max(BitConverter.ToInt16(inputBytes, i * 2) / 32767f, -1f);
+                        result[i] = Math.Max(BinaryPrimitives.ReadInt16LittleEndian(inputBytes.AsSpan(i * 2)) / 32767f, -1f);
                         break;
                 }
             }
             return result;
         }
 
-        public static int[] BytesToIntArray(byte[] inputBytes, VertexFormat format)
+        public static int[] BytesToIntArray(ReadOnlySpan<byte> inputBytes, VertexFormat format)
         {
             var size = GetFormatSize(format);
             var len = inputBytes.Length / size;
@@ -1451,12 +1458,16 @@ namespace AssetStudio
                         result[i] = inputBytes[i];
                         break;
                     case VertexFormat.UInt16:
+                        result[i] = BinaryPrimitives.ReadUInt16LittleEndian(inputBytes.Slice(i * 2));
+                        break;
                     case VertexFormat.SInt16:
-                        result[i] = BitConverter.ToInt16(inputBytes, i * 2);
+                        result[i] = BinaryPrimitives.ReadInt16LittleEndian(inputBytes.Slice(i * 2));
                         break;
                     case VertexFormat.UInt32:
+                        result[i] = (int)BinaryPrimitives.ReadUInt32LittleEndian(inputBytes.Slice(i * 4));
+                        break;
                     case VertexFormat.SInt32:
-                        result[i] = BitConverter.ToInt32(inputBytes, i * 4);
+                        result[i] = BinaryPrimitives.ReadInt32LittleEndian(inputBytes.Slice(i * 4));
                         break;
                 }
             }
