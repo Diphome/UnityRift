@@ -90,6 +90,7 @@ namespace AssetStudioGUI
         public static Dictionary<MonoBehaviour, CubismModel> l2dModelDict = new Dictionary<MonoBehaviour, CubismModel>();
         private static Dictionary<Object, string> l2dAssetContainers = new Dictionary<Object, string>();
         internal static Action<string> StatusStripUpdate = x => { };
+        internal static Fbx.Settings FbxSettings;
 
         public static int ExtractFolder(string path, string savePath)
         {
@@ -861,7 +862,6 @@ namespace AssetStudioGUI
             {
                 Progress.Reset();
                 Logger.Info($"Exporting {animator.Text}");
-                Logger.Debug($"Selected AnimationClip(s):\n\"{string.Join("\"\n\"", animationList.Select(x => x.Text))}\"");
                 try
                 {
                     ExportAnimator(animator, exportPath, animationList);

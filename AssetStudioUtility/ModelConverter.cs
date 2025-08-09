@@ -23,14 +23,16 @@ namespace AssetStudio
         private Dictionary<Transform, ImportedFrame> transformDictionary = new Dictionary<Transform, ImportedFrame>();
         Dictionary<uint, string> morphChannelNames = new Dictionary<uint, string>();
         private IEqualityComparer<AnimationClip> animationClipEqComparer = new AnimationClip.EqComparer();
+        private bool collectAnimationClips;
 
-        public ModelConverter(GameObject m_GameObject, ImageFormat imageFormat, AnimationClip[] animationList = null)
+        public ModelConverter(GameObject m_GameObject, ImageFormat imageFormat, List<AnimationClip> animationList = null)
         {
+            collectAnimationClips = animationList == null;
             this.imageFormat = imageFormat;
             if (m_GameObject.m_Animator != null)
             {
                 InitWithAnimator(m_GameObject.m_Animator);
-                if (animationList == null)
+                if (collectAnimationClips)
                 {
                     CollectAnimationClip(m_GameObject.m_Animator);
                 }
@@ -39,20 +41,22 @@ namespace AssetStudio
             {
                 InitWithGameObject(m_GameObject);
             }
-            if (animationList != null)
+            if (animationList != null && animationList.Count > 0)
             {
+                Logger.Debug($"Selected AnimationClip(s):\n\"{string.Join("\"\n\"", animationList.Select(x => x.m_Name))}\"");
                 animationClipUniqArray = animationList.Distinct(animationClipEqComparer).ToArray();
             }
             ConvertAnimations();
         }
 
-        public ModelConverter(string rootName, List<GameObject> m_GameObjects, ImageFormat imageFormat, AnimationClip[] animationList = null)
+        public ModelConverter(string rootName, List<GameObject> m_GameObjects, ImageFormat imageFormat, List<AnimationClip> animationList = null)
         {
+            collectAnimationClips = animationList == null;
             this.imageFormat = imageFormat;
             RootFrame = CreateFrame(rootName, Vector3.Zero, new Quaternion(0, 0, 0, 0), Vector3.One);
             foreach (var m_GameObject in m_GameObjects)
             {
-                if (m_GameObject.m_Animator != null && animationList == null)
+                if (m_GameObject.m_Animator != null && collectAnimationClips)
                 {
                     CollectAnimationClip(m_GameObject.m_Animator);
                 }
@@ -66,23 +70,26 @@ namespace AssetStudio
                 var m_Transform = m_GameObject.m_Transform;
                 ConvertMeshRenderer(m_Transform);
             }
-            if (animationList != null)
+            if (animationList != null && animationList.Count > 0)
             {
+                Logger.Debug($"Selected AnimationClip(s):\n\"{string.Join("\"\n\"", animationList.Select(x => x.m_Name))}\"");
                 animationClipUniqArray = animationList.Distinct(animationClipEqComparer).ToArray();
             }
             ConvertAnimations();
         }
 
-        public ModelConverter(Animator m_Animator, ImageFormat imageFormat, AnimationClip[] animationList = null)
+        public ModelConverter(Animator m_Animator, ImageFormat imageFormat, List<AnimationClip> animationList = null)
         {
+            collectAnimationClips = animationList == null;
             this.imageFormat = imageFormat;
             InitWithAnimator(m_Animator);
-            if (animationList == null)
+            if (collectAnimationClips)
             {
                 CollectAnimationClip(m_Animator);
             }
-            else
+            else if (animationList?.Count > 0)
             {
+                Logger.Debug($"Selected AnimationClip(s):\n\"{string.Join("\"\n\"", animationList.Select(x => x.m_Name))}\"");
                 animationClipUniqArray = animationList.Distinct(animationClipEqComparer).ToArray();
             }
             ConvertAnimations();
@@ -150,7 +157,7 @@ namespace AssetStudio
                 ConvertMeshRenderer(m_GameObject.m_SkinnedMeshRenderer);
             }
 
-            if (m_GameObject.m_Animation != null)
+            if (m_GameObject.m_Animation != null && collectAnimationClips)
             {
                 var animationList = new List<AnimationClip>();
                 foreach (var animation in m_GameObject.m_Animation.m_Animations)
@@ -775,7 +782,8 @@ namespace AssetStudio
         private void ConvertAnimations()
         {
             var totalCount = animationClipUniqArray.Length;
-            Logger.Info($"Trying to convert {totalCount} animation(s)...");
+            if (totalCount > 0)
+                Logger.Info($"Trying to convert {totalCount} animation(s)...");
 
             for (var k = 0; k < totalCount; k++)
             {

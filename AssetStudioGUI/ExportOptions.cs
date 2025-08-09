@@ -1,5 +1,6 @@
 ﻿using AssetStudio;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -7,7 +8,7 @@ namespace AssetStudioGUI
 {
     public partial class ExportOptions : Form
     {
-        private static Fbx.Settings fbxSettings;
+        private static Dictionary<int, int> uvBindings;
 
         public ExportOptions()
         {
@@ -34,8 +35,7 @@ namespace AssetStudioGUI
             ((RadioButton)l2dMotionExportMethodPanel.Controls.Cast<Control>().First(x => x.AccessibleName == defaultMotionMode)).Checked = true;
             l2dForceBezierCheckBox.Checked = Properties.Settings.Default.l2dForceBezier;
 
-            fbxSettings = Fbx.Settings.FromBase64(Properties.Settings.Default.fbxSettings);
-            SetFromFbxSettings();
+            SetFromFbxSettings(Studio.FbxSettings);
         }
 
         private void OKbutton_Click(object sender, EventArgs e)
@@ -58,26 +58,27 @@ namespace AssetStudioGUI
             Properties.Settings.Default.l2dMotionMode = (CubismLive2DExtractor.Live2DMotionMode)Enum.Parse(typeof(CubismLive2DExtractor.Live2DMotionMode), checkedMotionMode.AccessibleName);
             Properties.Settings.Default.l2dForceBezier = l2dForceBezierCheckBox.Checked;
 
-            fbxSettings.EulerFilter = eulerFilter.Checked;
-            fbxSettings.FilterPrecision = (float)filterPrecision.Value;
-            fbxSettings.ExportAllNodes = exportAllNodes.Checked;
-            fbxSettings.ExportSkins = exportSkins.Checked;
-            fbxSettings.ExportAnimations = exportAnimations.Checked;
-            fbxSettings.ExportBlendShape = exportBlendShape.Checked;
-            fbxSettings.CastToBone = castToBone.Checked;
-            fbxSettings.ExportAllUvsAsDiffuseMaps = exportAllUvsAsDiffuseMaps.Checked;
-            fbxSettings.BoneSize = (int)boneSize.Value;
-            fbxSettings.ScaleFactor = (float)scaleFactor.Value;
-            fbxSettings.FbxVersionIndex = fbxVersion.SelectedIndex;
-            fbxSettings.FbxFormat = fbxFormat.SelectedIndex;
+            Studio.FbxSettings.EulerFilter = eulerFilter.Checked;
+            Studio.FbxSettings.FilterPrecision = (float)filterPrecision.Value;
+            Studio.FbxSettings.ExportAllNodes = exportAllNodes.Checked;
+            Studio.FbxSettings.ExportSkins = exportSkins.Checked;
+            Studio.FbxSettings.ExportAnimations = exportAnimations.Checked;
+            Studio.FbxSettings.ExportBlendShape = exportBlendShape.Checked;
+            Studio.FbxSettings.CastToBone = castToBone.Checked;
+            Studio.FbxSettings.ExportAllUvsAsDiffuseMaps = exportAllUvsAsDiffuseMaps.Checked;
+            Studio.FbxSettings.BoneSize = (int)boneSize.Value;
+            Studio.FbxSettings.ScaleFactor = (float)scaleFactor.Value;
+            Studio.FbxSettings.FbxVersionIndex = fbxVersion.SelectedIndex;
+            Studio.FbxSettings.FbxFormat = fbxFormat.SelectedIndex;
             for (var i = 0; i < uvIndicesCheckedListBox.Items.Count; i++)
             {
                 var isChecked = uvIndicesCheckedListBox.GetItemChecked(i);
-                var type = fbxSettings.UvBindings[i];
+                var type = uvBindings[i];
                 if ((isChecked && type < 0) || (!isChecked && type > 0))
-                    fbxSettings.UvBindings[i] *= -1;
+                    uvBindings[i] *= -1;
             }
-            Properties.Settings.Default.fbxSettings = fbxSettings.ToBase64();
+            Studio.FbxSettings.UvBindings = uvBindings;
+            Properties.Settings.Default.fbxSettings = Studio.FbxSettings.ToBase64();
 
             Properties.Settings.Default.Save();
             DialogResult = DialogResult.OK;
@@ -100,7 +101,7 @@ namespace AssetStudioGUI
             if (exportAllUvsAsDiffuseMaps.Checked)
                 return;
 
-            if (fbxSettings.UvBindings.TryGetValue(uvIndicesCheckedListBox.SelectedIndex, out var uvType))
+            if (uvBindings.TryGetValue(uvIndicesCheckedListBox.SelectedIndex, out var uvType))
             {
                 uvTypesListBox.SelectedIndex = (int)MathF.Abs(uvType) - 1;
             }
@@ -109,7 +110,7 @@ namespace AssetStudioGUI
         private void uvTypesListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             var selectedUv = uvIndicesCheckedListBox.SelectedIndex;
-            fbxSettings.UvBindings[selectedUv] = uvTypesListBox.SelectedIndex + 1;
+            uvBindings[selectedUv] = uvTypesListBox.SelectedIndex + 1;
         }
 
         private void exportAllUvsAsDiffuseMaps_CheckedChanged(object sender, EventArgs e)
@@ -118,7 +119,7 @@ namespace AssetStudioGUI
             uvIndicesCheckedListBox.Enabled = !exportAllUvsAsDiffuseMaps.Checked;
         }
 
-        private void SetFromFbxSettings()
+        private void SetFromFbxSettings(Fbx.Settings fbxSettings)
         {
             eulerFilter.Checked = fbxSettings.EulerFilter;
             filterPrecision.Value = (decimal)fbxSettings.FilterPrecision;
@@ -132,9 +133,10 @@ namespace AssetStudioGUI
             scaleFactor.Value = (decimal)fbxSettings.ScaleFactor;
             fbxVersion.SelectedIndex = fbxSettings.FbxVersionIndex;
             fbxFormat.SelectedIndex = fbxSettings.FbxFormat;
+            uvBindings = new Dictionary<int, int>(fbxSettings.UvBindings);
             for (var i = 0; i < uvIndicesCheckedListBox.Items.Count; i++)
             {
-                var isChecked = fbxSettings.UvBindings[i] > 0;
+                var isChecked = uvBindings[i] > 0;
                 uvIndicesCheckedListBox.SetItemChecked(i, isChecked);
             }
             uvTypesListBox.Enabled = !exportAllUvsAsDiffuseMaps.Checked;
@@ -143,8 +145,7 @@ namespace AssetStudioGUI
 
         private void resetButton_Click(object sender, EventArgs e)
         {
-            fbxSettings.Init();
-            SetFromFbxSettings();
+            SetFromFbxSettings(new Fbx.Settings());
             uvIndicesCheckedListBox_SelectedIndexChanged(sender, e);
         }
     }

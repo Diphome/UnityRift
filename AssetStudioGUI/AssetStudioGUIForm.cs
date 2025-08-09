@@ -150,10 +150,7 @@ namespace AssetStudioGUI
             assetsManager.Options.BundleOptions.DecompressToDisk = Properties.Settings.Default.decompressToDisk;
             FMODinit();
             listSearchFilterMode.SelectedIndex = 0;
-            if (string.IsNullOrEmpty(Properties.Settings.Default.fbxSettings))
-            {
-                FBXinitOptions();
-            }
+            FbxInitOptions(Properties.Settings.Default.fbxSettings);
 
             logger = new GUILogger(StatusStripUpdate);
             Logger.Default = logger;
@@ -1700,26 +1697,18 @@ namespace AssetStudioGUI
 
         private void exportAnimatorWithAnimationClipMenuItem_Click(object sender, EventArgs e)
         {
-            AssetItem animator = null;
             var selectedAssets = GetSelectedAssets();
-            foreach (var assetPreloadData in selectedAssets)
-            {
-                if (assetPreloadData.Type == ClassIDType.Animator)
-                {
-                    animator = assetPreloadData;
-                }
-            }
+            var animator = selectedAssets.FirstOrDefault(x => x.Type == ClassIDType.Animator);
+            if (animator == null)
+                return;
 
-            if (animator != null)
+            var saveFolderDialog = new OpenFolderDialog();
+            saveFolderDialog.InitialFolder = saveDirectoryBackup;
+            if (saveFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
-                var saveFolderDialog = new OpenFolderDialog();
-                saveFolderDialog.InitialFolder = saveDirectoryBackup;
-                if (saveFolderDialog.ShowDialog(this) == DialogResult.OK)
-                {
-                    saveDirectoryBackup = saveFolderDialog.Folder;
-                    var exportPath = Path.Combine(saveFolderDialog.Folder, "Animator") + Path.DirectorySeparatorChar;
-                    ExportAnimatorWithAnimationClip(animator, selectedAnimationAssetsList, exportPath);
-                }
+                saveDirectoryBackup = saveFolderDialog.Folder;
+                var exportPath = Path.Combine(saveFolderDialog.Folder, "Animator") + Path.DirectorySeparatorChar;
+                ExportAnimatorWithAnimationClip(animator, selectedAnimationAssetsList, exportPath);
             }
         }
 
@@ -1744,13 +1733,9 @@ namespace AssetStudioGUI
                     saveDirectoryBackup = saveFolderDialog.Folder;
                     var exportPath = Path.Combine(saveFolderDialog.Folder, "GameObject") + Path.DirectorySeparatorChar;
                     List<AssetItem> animationList = null;
-                    if (animation)
+                    if(animation && selectedAnimationAssetsList.Count > 0)
                     {
-                        animationList = GetSelectedAssets().Where(x => x.Type == ClassIDType.AnimationClip).ToList();
-                        if (animationList.Count == 0)
-                        {
-                            animationList = null;
-                        }
+                        animationList = selectedAnimationAssetsList;
                     }
                     ExportObjectsWithAnimationClip(exportPath, sceneTreeView.Nodes, animationList);
                 }
@@ -1789,13 +1774,9 @@ namespace AssetStudioGUI
                         saveDirectoryBackup = Path.GetDirectoryName(saveFileDialog.FileName);
                         var exportPath = saveFileDialog.FileName;
                         List<AssetItem> animationList = null;
-                        if (animation)
+                        if (animation && selectedAnimationAssetsList.Count > 0)
                         {
-                            animationList = GetSelectedAssets().Where(x => x.Type == ClassIDType.AnimationClip).ToList();
-                            if (animationList.Count == 0)
-                            {
-                                animationList = null;
-                            }
+                            animationList = selectedAnimationAssetsList;
                         }
                         ExportObjectsMergeWithAnimationClip(exportPath, gameObjects, animationList);
                     }
@@ -2672,10 +2653,18 @@ namespace AssetStudioGUI
             Properties.Settings.Default.Save();
         }
 
-        private void FBXinitOptions()
+        private static void FbxInitOptions(string base64String)
         {
-            Properties.Settings.Default.fbxSettings = new Fbx.Settings().ToBase64();
-            Properties.Settings.Default.Save();
+            if (string.IsNullOrEmpty(base64String))
+            {
+                Studio.FbxSettings = new Fbx.Settings();
+                Properties.Settings.Default.fbxSettings = Studio.FbxSettings.ToBase64();
+                Properties.Settings.Default.Save();
+            }
+            else
+            {
+                Studio.FbxSettings = Fbx.Settings.FromBase64(base64String);
+            }
         }
 
         #region FMOD
