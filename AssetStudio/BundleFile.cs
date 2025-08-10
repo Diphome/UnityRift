@@ -82,7 +82,6 @@ namespace AssetStudio
 
         public BundleFile(FileReader reader, CustomBundleOptions bundleOptions, bool isMultiBundle = false)
         {
-            Stream blocksStream;
             _bundleOptions = bundleOptions;
             m_Header = new Header();
             m_Header.signature = reader.ReadStringToNull();
@@ -105,9 +104,8 @@ namespace AssetStudio
                     ReadHeaderAndBlocksInfo(reader);
                     using (reader)
                     {
-                        blocksStream = ReadBlocksAndDirectory(reader);
+                        ReadFiles(ReadBlocksAndDirectory(reader));
                     }
-                    ReadFiles(blocksStream);
                     break;
                 case "UnityFS":
                     ReadHeader(reader);
@@ -115,13 +113,8 @@ namespace AssetStudio
                     var bundleSize = m_Header.size;
                     var streamSize = reader.BaseStream.Length;
                     if (bundleSize > streamSize)
-                    {
                         Logger.Warning("Bundle size is incorrect.");
-                    }
-                    else if (streamSize - bundleSize > 200)
-                    {
-                        IsDataAfterBundle = true;
-                    }
+                    IsDataAfterBundle = streamSize - bundleSize > 200;
                     
                     var unityVer = m_Header.unityRevision;
                     var customUnityVer = _bundleOptions.Options.CustomUnityVersion;
@@ -135,20 +128,18 @@ namespace AssetStudio
                         }
                         unityVer = customUnityVer;
                     }
-
                     UnityCnCheck(reader, unityVer);
                     
                     ReadBlocksInfoAndDirectory(reader, unityVer);
 
-                    if (!isMultiBundle && IsUncompressedBundle)
+                    if (IsUncompressedBundle && !IsDataAfterBundle && !isMultiBundle)
                     {
+                        Logger.Debug($"[Uncompressed bundle] BlockData count: {m_BlocksInfo.Length}");
                         ReadFiles(reader.BaseStream, reader.Position);
                         break;
                     }
                     
-                    blocksStream = ReadBlocks(reader);
-                    ReadFiles(blocksStream);
-                    
+                    ReadFiles(ReadBlocks(reader));
                     if (!IsDataAfterBundle)
                         reader.Close();
 
@@ -194,9 +185,18 @@ namespace AssetStudio
         private Stream CreateBlocksStream(string path)
         {
             var uncompressedSizeSum = m_BlocksInfo.Sum(x => x.uncompressedSize);
-            return uncompressedSizeSum >= int.MaxValue || _bundleOptions.DecompressToDisk
-                ? new FileStream(path + ".temp", FileMode.Create, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.DeleteOnClose)
-                : (Stream) new MemoryStream((int)uncompressedSizeSum);
+            if (uncompressedSizeSum < int.MaxValue && !_bundleOptions.DecompressToDisk) 
+                return new MemoryStream((int)uncompressedSizeSum);
+
+            if (!Directory.Exists(Path.GetDirectoryName(path)))
+            {
+                var tempDir = Path.Combine(Directory.GetCurrentDirectory(), "Studio_temp");
+                Directory.CreateDirectory(tempDir);
+                var filename = Path.GetFileName(path);
+                var hash = path.GetHashCode();
+                path = Path.Combine(tempDir, $"{filename}_{hash:X}");
+            }
+            return new FileStream(path + ".temp", FileMode.Create, FileAccess.ReadWrite, FileShare.Read, 4096, FileOptions.DeleteOnClose);
         }
 
         private Stream ReadBlocksAndDirectory(FileReader reader)
@@ -412,8 +412,10 @@ namespace AssetStudio
             var customBlockCompression = _bundleOptions.CustomBlockCompression;
             var blocksStream = CreateBlocksStream(reader.FullPath);
             var blocksCompression = m_BlocksInfo.Max(x => (CompressionType)(x.flags & StorageBlockFlags.CompressionTypeMask));
-            Logger.Debug($"BlockData compression: {blocksCompression}");
-            Logger.Debug($"BlockData count: {m_BlocksInfo.Length}");
+            var blockSize = (int)m_BlocksInfo.Max(x => x.uncompressedSize);
+            Logger.Debug($"BlockData compression: {blocksCompression}\n" +
+                         $"BlockData count: {m_BlocksInfo.Length}\n" +
+                         $"BlockSize: {blockSize}");
 
             if (customBlockCompression == CompressionType.Auto)
             {
@@ -432,9 +434,6 @@ namespace AssetStudio
             byte[] sharedUncompressedBuff = null;
             if (blocksCompression != CompressionType.Lzma && blocksCompression != CompressionType.Lzham)
             {
-                var blockSize = (int)m_BlocksInfo.Max(x => x.uncompressedSize);
-                Logger.Debug($"BlockSize: {blockSize}");
-
                 sharedCompressedBuff = BigArrayPool<byte>.Shared.Rent(blockSize);
                 sharedUncompressedBuff = BigArrayPool<byte>.Shared.Rent(blockSize);
             }
@@ -478,8 +477,10 @@ namespace AssetStudio
 
                             numWrite = BundleDecompressionHelper.DecompressBlock(compressionType, compressedSpan, uncompressedSpan, ref errorMsg);
                             if (numWrite == uncompressedSize)
+                            {
                                 blocksStream.Write(sharedUncompressedBuff, 0, uncompressedSize);
-
+                                continue;
+                            }
                             break;
                         case CompressionType.Lzham:
                             throw new IOException($"Unsupported block compression type: {compressionType}.\n");
@@ -511,6 +512,9 @@ namespace AssetStudio
 
         private void UnityCnCheck(FileReader reader, UnityVersion unityVer)
         {
+            if ((m_Header.flags & ArchiveFlags.BlocksInfoAtTheEnd) != 0)
+                return;
+
             var hasUnityCnFlag = false;
             if (!unityVer.IsStripped)
             {
