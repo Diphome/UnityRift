@@ -761,6 +761,7 @@ namespace AssetStudioCLI
                 }
                 Console.Write($"Exported [{exportedCount}/{toExportCount}]\r");
             }
+            Exporter.ClearHash();
 
             Parallel.ForEach(toParallelExportAssetDict, new ParallelOptions { MaxDegreeOfParallelism = parallelExportCount }, toExportAsset =>
             {

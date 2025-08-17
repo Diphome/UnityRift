@@ -677,6 +677,7 @@ namespace AssetStudioGUI
 
                     Progress.Report(++i, toExportCount);
                 }
+                Exporter.ClearHash();
 
                 Parallel.ForEach(toParallelExportAssetDict, new ParallelOptions { MaxDegreeOfParallelism = parallelExportCount }, (toExportAsset, loopState) =>
                 {
@@ -896,7 +897,8 @@ namespace AssetStudioGUI
                         Logger.Info($"Exporting {gameObject.m_Name}");
                         try
                         {
-                            ExportGameObject(gameObject, exportPath, animationList);
+                            var modelExportPath = Path.Combine(exportPath, gameObject.m_Name) + Path.DirectorySeparatorChar;
+                            ExportGameObject(gameObject, modelExportPath, animationList);
                             Logger.Info($"Finished exporting {gameObject.m_Name}");
                         }
                         catch (Exception ex)

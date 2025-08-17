@@ -10,10 +10,13 @@ namespace AssetStudioCLI
 {
     internal static class Exporter
     {
+        private static readonly HashSet<string> ExportPathHashSet = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+
         private static bool TryExportFile(string dir, AssetItem item, string extension, out string fullPath, string mode = "Export")
         {
             var fileName = FixFileName(item.Text);
             var filenameFormat = CLIOptions.o_filenameFormat.Value;
+            var canOverwrite = CLIOptions.f_overwriteExisting.Value;
             switch (filenameFormat)
             {
                 case FilenameFormat.AssetName_PathID:
@@ -24,22 +27,31 @@ namespace AssetStudioCLI
                     break;
             }
             fullPath = Path.Combine(dir, fileName + extension);
-            if (!File.Exists(fullPath))
+            if (ExportPathHashSet.Add(fullPath))
             {
-                Directory.CreateDirectory(dir);
-                return true;
+                if (CanWrite(fullPath, dir, canOverwrite))
+                {
+                    return true;
+                }
             }
-            if (filenameFormat == FilenameFormat.AssetName)
+            else if (filenameFormat == FilenameFormat.AssetName)
             {
                 fullPath = Path.Combine(dir, fileName + item.UniqueID + extension);
-                if (!File.Exists(fullPath))
+                if (CanWrite(fullPath, dir, canOverwrite))
                 {
-                    Directory.CreateDirectory(dir);
                     return true;
                 }
             }
             Logger.Error($"{mode} error. File \"{fullPath.Color(ColorConsole.BrightRed)}\" already exist");
             return false;
+        }
+
+        private static bool CanWrite(string fullPath, string dir, bool canOverwrite)
+        {
+            if (!canOverwrite && File.Exists(fullPath))
+                return false;
+            Directory.CreateDirectory(dir);
+            return true;
         }
 
         private static bool ExportVideoClip(AssetItem item, string exportPath)
@@ -386,6 +398,11 @@ namespace AssetStudioCLI
             return str.Length >= 260
                 ? Path.GetRandomFileName()
                 : Path.GetInvalidFileNameChars().Aggregate(str, (current, c) => current.Replace(c, '_'));
+        }
+
+        public static void ClearHash()
+        {
+            ExportPathHashSet.Clear();
         }
     }
 }

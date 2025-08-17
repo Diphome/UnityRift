@@ -15,6 +15,7 @@ namespace AssetStudioGUI
             InitializeComponent();
             assetGroupOptions.SelectedIndex = Properties.Settings.Default.assetGroupOption;
             filenameFormatComboBox.SelectedIndex = Properties.Settings.Default.filenameFormat;
+            overwriteExistingFiles.Checked = Properties.Settings.Default.overwriteExistingFiles;
             restoreExtensionName.Checked = Properties.Settings.Default.restoreExtensionName;
             converttexture.Checked = Properties.Settings.Default.convertTexture;
             exportSpriteWithAlphaMask.Checked = Properties.Settings.Default.exportSpriteWithMask;
@@ -42,6 +43,7 @@ namespace AssetStudioGUI
         {
             Properties.Settings.Default.assetGroupOption = assetGroupOptions.SelectedIndex;
             Properties.Settings.Default.filenameFormat = filenameFormatComboBox.SelectedIndex;
+            Properties.Settings.Default.overwriteExistingFiles = overwriteExistingFiles.Checked;
             Properties.Settings.Default.restoreExtensionName = restoreExtensionName.Checked;
             Properties.Settings.Default.convertTexture = converttexture.Checked;
             Properties.Settings.Default.exportSpriteWithMask = exportSpriteWithAlphaMask.Checked;

@@ -334,5 +334,17 @@ namespace AssetStudioGUI.Properties {
                 this["decompressToDisk"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool overwriteExistingFiles {
+            get {
+                return ((bool)(this["overwriteExistingFiles"]));
+            }
+            set {
+                this["overwriteExistingFiles"] = value;
+            }
+        }
     }
 }

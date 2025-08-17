@@ -93,6 +93,7 @@ namespace AssetStudioCLI.Options
         public static Option<AssetGroupOption> o_groupAssetsBy;
         public static Option<FilenameFormat> o_filenameFormat;
         public static Option<string> o_outputFolder;
+        public static Option<bool> f_overwriteExisting;
         public static Option<bool> o_displayHelp;
         //logger
         public static Option<LoggerEvent> o_logLevel;
@@ -253,6 +254,15 @@ namespace AssetStudioCLI.Options
                     "If path isn't specified, 'ASExport' folder will be created in the program's work folder\n",
                 optionExample: "",
                 optionHelpGroup: HelpGroups.General
+            );
+            f_overwriteExisting = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "-r, --overwrite-existing",
+                optionDescription: "(Flag) If specified, Studio will overwrite existing files during asset export/dump\n",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.General,
+                isFlag: true
             );
             o_displayHelp = new GroupedOption<bool>
             (
@@ -678,6 +688,11 @@ namespace AssetStudioCLI.Options
 
                 switch (flag)
                 {
+                    case "-r":
+                    case "--overwrite-existing":
+                        f_overwriteExisting.Value = true;
+                        flagIndexes.Add(i);
+                        break;
                     case "--l2d-search-by-filename":
                         if (o_workMode.Value != WorkMode.Live2D)
                         {
@@ -1403,7 +1418,8 @@ namespace AssetStudioCLI.Options
                     if (o_workMode.Value != WorkMode.Info)
                     {
                         sb.AppendLine($"# Asset Group Option: {o_groupAssetsBy}");
-                        sb.AppendLine($"# Filename format: {o_filenameFormat}");
+                        sb.AppendLine($"# Filename Format: {o_filenameFormat}");
+                        sb.AppendLine($"# Overwrite Existing Files: {f_overwriteExisting}");
                     }
                     if (o_workMode.Value == WorkMode.Export)
                     {

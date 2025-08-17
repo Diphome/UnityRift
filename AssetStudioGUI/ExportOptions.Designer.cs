@@ -82,6 +82,7 @@
             this.exportAllNodes = new System.Windows.Forms.CheckBox();
             this.eulerFilter = new System.Windows.Forms.CheckBox();
             this.optionTooltip = new System.Windows.Forms.ToolTip(this.components);
+            this.overwriteExistingFiles = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.parallelExportUpDown)).BeginInit();
             this.panel1.SuspendLayout();
@@ -96,7 +97,7 @@
             // OKbutton
             // 
             this.OKbutton.BackColor = System.Drawing.SystemColors.ButtonFace;
-            this.OKbutton.Location = new System.Drawing.Point(460, 430);
+            this.OKbutton.Location = new System.Drawing.Point(460, 448);
             this.OKbutton.Name = "OKbutton";
             this.OKbutton.Size = new System.Drawing.Size(75, 23);
             this.OKbutton.TabIndex = 4;
@@ -108,7 +109,7 @@
             // 
             this.Cancel.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.Cancel.Location = new System.Drawing.Point(541, 430);
+            this.Cancel.Location = new System.Drawing.Point(541, 448);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
             this.Cancel.TabIndex = 5;
@@ -120,6 +121,7 @@
             // 
             this.groupBox1.AutoSize = true;
             this.groupBox1.BackColor = System.Drawing.SystemColors.Menu;
+            this.groupBox1.Controls.Add(this.overwriteExistingFiles);
             this.groupBox1.Controls.Add(this.parallelExportMaxLabel);
             this.groupBox1.Controls.Add(this.parallelExportCheckBox);
             this.groupBox1.Controls.Add(this.parallelExportUpDown);
@@ -135,7 +137,7 @@
             this.groupBox1.Controls.Add(this.converttexture);
             this.groupBox1.Location = new System.Drawing.Point(12, 13);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(316, 272);
+            this.groupBox1.Size = new System.Drawing.Size(316, 280);
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Export";
@@ -144,7 +146,7 @@
             // 
             this.parallelExportMaxLabel.AutoSize = true;
             this.parallelExportMaxLabel.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.parallelExportMaxLabel.Location = new System.Drawing.Point(260, 221);
+            this.parallelExportMaxLabel.Location = new System.Drawing.Point(260, 244);
             this.parallelExportMaxLabel.Name = "parallelExportMaxLabel";
             this.parallelExportMaxLabel.Size = new System.Drawing.Size(33, 13);
             this.parallelExportMaxLabel.TabIndex = 13;
@@ -156,7 +158,7 @@
             this.parallelExportCheckBox.AutoSize = true;
             this.parallelExportCheckBox.Checked = true;
             this.parallelExportCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.parallelExportCheckBox.Location = new System.Drawing.Point(6, 219);
+            this.parallelExportCheckBox.Location = new System.Drawing.Point(6, 242);
             this.parallelExportCheckBox.Name = "parallelExportCheckBox";
             this.parallelExportCheckBox.Size = new System.Drawing.Size(203, 17);
             this.parallelExportCheckBox.TabIndex = 11;
@@ -167,7 +169,7 @@
             // 
             // parallelExportUpDown
             // 
-            this.parallelExportUpDown.Location = new System.Drawing.Point(211, 218);
+            this.parallelExportUpDown.Location = new System.Drawing.Point(211, 241);
             this.parallelExportUpDown.Maximum = new decimal(new int[] {
             8,
             0,
@@ -214,7 +216,7 @@
             this.exportSpriteWithAlphaMask.AutoSize = true;
             this.exportSpriteWithAlphaMask.Checked = true;
             this.exportSpriteWithAlphaMask.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.exportSpriteWithAlphaMask.Location = new System.Drawing.Point(6, 150);
+            this.exportSpriteWithAlphaMask.Location = new System.Drawing.Point(6, 173);
             this.exportSpriteWithAlphaMask.Name = "exportSpriteWithAlphaMask";
             this.exportSpriteWithAlphaMask.Size = new System.Drawing.Size(205, 17);
             this.exportSpriteWithAlphaMask.TabIndex = 8;
@@ -226,7 +228,7 @@
             this.openAfterExport.AutoSize = true;
             this.openAfterExport.Checked = true;
             this.openAfterExport.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.openAfterExport.Location = new System.Drawing.Point(6, 196);
+            this.openAfterExport.Location = new System.Drawing.Point(6, 219);
             this.openAfterExport.Name = "openAfterExport";
             this.openAfterExport.Size = new System.Drawing.Size(137, 17);
             this.openAfterExport.TabIndex = 10;
@@ -238,7 +240,7 @@
             this.restoreExtensionName.AutoSize = true;
             this.restoreExtensionName.Checked = true;
             this.restoreExtensionName.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.restoreExtensionName.Location = new System.Drawing.Point(6, 63);
+            this.restoreExtensionName.Location = new System.Drawing.Point(6, 86);
             this.restoreExtensionName.Name = "restoreExtensionName";
             this.restoreExtensionName.Size = new System.Drawing.Size(275, 17);
             this.restoreExtensionName.TabIndex = 5;
@@ -276,7 +278,7 @@
             this.convertAudio.AutoSize = true;
             this.convertAudio.Checked = true;
             this.convertAudio.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.convertAudio.Location = new System.Drawing.Point(6, 173);
+            this.convertAudio.Location = new System.Drawing.Point(6, 196);
             this.convertAudio.Name = "convertAudio";
             this.convertAudio.Size = new System.Drawing.Size(213, 17);
             this.convertAudio.TabIndex = 9;
@@ -290,7 +292,7 @@
             this.panel1.Controls.Add(this.tojpg);
             this.panel1.Controls.Add(this.topng);
             this.panel1.Controls.Add(this.tobmp);
-            this.panel1.Location = new System.Drawing.Point(18, 111);
+            this.panel1.Location = new System.Drawing.Point(18, 134);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(279, 33);
             this.panel1.TabIndex = 7;
@@ -352,7 +354,7 @@
             this.converttexture.AutoSize = true;
             this.converttexture.Checked = true;
             this.converttexture.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.converttexture.Location = new System.Drawing.Point(6, 87);
+            this.converttexture.Location = new System.Drawing.Point(6, 110);
             this.converttexture.Name = "converttexture";
             this.converttexture.Size = new System.Drawing.Size(116, 17);
             this.converttexture.TabIndex = 6;
@@ -368,7 +370,7 @@
             this.l2dGroupBox.Controls.Add(this.l2dMotionExportMethodPanel);
             this.l2dGroupBox.Controls.Add(this.l2dMotionExportMethodLabel);
             this.l2dGroupBox.Controls.Add(this.l2dForceBezierCheckBox);
-            this.l2dGroupBox.Location = new System.Drawing.Point(12, 275);
+            this.l2dGroupBox.Location = new System.Drawing.Point(12, 291);
             this.l2dGroupBox.Name = "l2dGroupBox";
             this.l2dGroupBox.Size = new System.Drawing.Size(316, 149);
             this.l2dGroupBox.TabIndex = 2;
@@ -490,7 +492,7 @@
             this.groupBox2.Controls.Add(this.eulerFilter);
             this.groupBox2.Location = new System.Drawing.Point(328, 13);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(289, 411);
+            this.groupBox2.Size = new System.Drawing.Size(289, 427);
             this.groupBox2.TabIndex = 3;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Fbx";
@@ -498,7 +500,7 @@
             // fbxResetButton
             // 
             this.fbxResetButton.BackColor = System.Drawing.SystemColors.ButtonFace;
-            this.fbxResetButton.Location = new System.Drawing.Point(208, 368);
+            this.fbxResetButton.Location = new System.Drawing.Point(208, 384);
             this.fbxResetButton.Name = "fbxResetButton";
             this.fbxResetButton.Size = new System.Drawing.Size(75, 23);
             this.fbxResetButton.TabIndex = 21;
@@ -763,6 +765,16 @@
             this.eulerFilter.Text = "EulerFilter";
             this.eulerFilter.UseVisualStyleBackColor = true;
             // 
+            // overwriteExistingFiles
+            // 
+            this.overwriteExistingFiles.AutoSize = true;
+            this.overwriteExistingFiles.Location = new System.Drawing.Point(6, 63);
+            this.overwriteExistingFiles.Name = "overwriteExistingFiles";
+            this.overwriteExistingFiles.Size = new System.Drawing.Size(130, 17);
+            this.overwriteExistingFiles.TabIndex = 14;
+            this.overwriteExistingFiles.Text = "Overwrite existing files";
+            this.overwriteExistingFiles.UseVisualStyleBackColor = true;
+            // 
             // ExportOptions
             // 
             this.AcceptButton = this.OKbutton;
@@ -770,7 +782,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Menu;
             this.CancelButton = this.Cancel;
-            this.ClientSize = new System.Drawing.Size(628, 461);
+            this.ClientSize = new System.Drawing.Size(628, 483);
             this.Controls.Add(this.l2dGroupBox);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -856,5 +868,6 @@
         private System.Windows.Forms.ListBox uvTypesListBox;
         private System.Windows.Forms.Label uvBindingsLabel;
         private System.Windows.Forms.Button fbxResetButton;
+        private System.Windows.Forms.CheckBox overwriteExistingFiles;
     }
 }

@@ -10,7 +10,7 @@ namespace AssetStudioCLI
 {
     internal static class ParallelExporter
     {
-        private static ConcurrentDictionary<string, bool> savePathHash = new ConcurrentDictionary<string, bool>();
+        private static readonly ConcurrentDictionary<string, bool> ExportPathDict = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
 
         public static bool ExportTexture2D(AssetItem item, string exportPath, out string debugLog)
         {
@@ -184,6 +184,7 @@ namespace AssetStudioCLI
         {
             var fileName = FixFileName(item.Text);
             var filenameFormat = CLIOptions.o_filenameFormat.Value;
+            var canOverwrite = CLIOptions.f_overwriteExisting.Value;
             switch (filenameFormat)
             {
                 case FilenameFormat.AssetName_PathID:
@@ -194,22 +195,31 @@ namespace AssetStudioCLI
                     break;
             }
             fullPath = Path.Combine(dir, fileName + extension);
-            if (savePathHash.TryAdd(fullPath.ToLower(), true) && !File.Exists(fullPath))
+            if (ExportPathDict.TryAdd(fullPath, true))
             {
-                Directory.CreateDirectory(dir);
-                return true;
+                if (CanWrite(fullPath, dir, canOverwrite))
+                {
+                    return true;
+                }
             }
-            if (filenameFormat == FilenameFormat.AssetName)
+            else if (filenameFormat == FilenameFormat.AssetName)
             {
                 fullPath = Path.Combine(dir, fileName + item.UniqueID + extension);
-                if (!File.Exists(fullPath))
+                if (CanWrite(fullPath, dir, canOverwrite))
                 {
-                    Directory.CreateDirectory(dir);
                     return true;
                 }
             }
             Logger.Error($"Export error. File \"{fullPath.Color(ColorConsole.BrightRed)}\" already exist");
             return false;
+        }
+
+        private static bool CanWrite(string fullPath, string dir, bool canOverwrite)
+        {
+            if (!canOverwrite && File.Exists(fullPath))
+                return false;
+            Directory.CreateDirectory(dir);
+            return true;
         }
 
         public static bool ParallelExportConvertFile(AssetItem item, string exportPath, out string debugLog)
@@ -237,7 +247,7 @@ namespace AssetStudioCLI
 
         public static void ClearHash()
         {
-            savePathHash.Clear();
+            ExportPathDict.Clear();
         }
     }
 }
