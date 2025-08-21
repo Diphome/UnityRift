@@ -97,6 +97,12 @@ namespace AssetStudio
                 };
             }
             m_TextureFormat = (TextureFormat)reader.ReadInt32();
+            if (version.IsTuanjie && version >= (2022, 3, 62)) //2022.3.62t1(1.7.0) and up
+            {
+                var m_TextureManagerMultiFormatSettingSize = reader.ReadInt32();
+                reader.Position += m_TextureManagerMultiFormatSettingSize; //skip byte[] m_TextureManagerMultiFormatSetting
+                reader.AlignStream();
+            }
             if (version < (5, 2)) //5.2 down
             {
                 m_MipMap = reader.ReadBoolean();

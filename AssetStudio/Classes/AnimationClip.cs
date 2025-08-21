@@ -679,6 +679,45 @@ namespace AssetStudio
         }
     }
 
+    public class ACLClip //Tuanjie
+    {
+        public uint m_FrameCount;
+        public uint m_BoneCount;
+        public float m_SampleRate;
+        public uint m_CurveCount;
+        public byte[] m_Tracks;
+        public uint[] m_ACLDecoderMap;
+        public bool m_UseACLFastSampleMode;
+
+        public ACLClip() { }
+
+        public ACLClip(ObjectReader reader)
+        {
+            var version = reader.version;
+            m_FrameCount = reader.ReadUInt32();
+            m_BoneCount = reader.ReadUInt32();
+            m_SampleRate = reader.ReadSingle();
+            if (version >= (2022, 3, 55)) //2022.3.55t1(1.5.0) and up
+            {
+                m_CurveCount = reader.ReadUInt32();
+            }
+            m_Tracks = reader.ReadUInt8Array();
+            if (version >= (2022, 3, 61)) //2022.3.61t1(1.6.0) and up
+            {
+                reader.AlignStream();
+            }
+            m_ACLDecoderMap = reader.ReadUInt32Array();
+            if (version > (2022, 3, 55) || (version == (2022, 3, 55) && version.Build >= 4)) //2022.3.55t4(1.5.3) and up
+            {
+                m_UseACLFastSampleMode = reader.ReadBoolean();
+                if (version >= (2022, 3, 61)) //2022.3.61t1(1.6.0) and up
+                {
+                    reader.AlignStream();
+                }
+            }
+        }
+    }
+
     public class OffsetPtr
     {
         public Clip data;
@@ -697,6 +736,7 @@ namespace AssetStudio
         public DenseClip m_DenseClip;
         public ConstantClip m_ConstantClip;
         public ValueArrayConstant m_Binding;
+        public ACLClip m_ACLClip;
 
         public Clip() { }
 
@@ -712,6 +752,10 @@ namespace AssetStudio
             if (version < (2018, 3)) //2018.3 down
             {
                 m_Binding = new ValueArrayConstant(reader);
+            }
+            if (version.IsTuanjie && (version > (2022, 3, 48) || (version == (2022, 3, 48) && version.Build >= 3))) //2022.3.48t3(1.4.0) and up
+            {
+                m_ACLClip = new ACLClip(reader);
             }
         }
 
@@ -1174,21 +1218,32 @@ namespace AssetStudio
             }
             if (version >= 4)//4.0 and up
             {
-                m_MuscleClipSize = reader.ReadUInt32(); //m_AnimDataSize (Tuanjie)
-                if (!version.IsTuanjie)
+                if (version.IsTuanjie && version >= (2022, 3, 61)) //2022.3.61t1(1.6.0) and up
+                {
+                    m_EulerCurves = Vector3CurveList(reader);
+                    m_PositionCurves = Vector3CurveList(reader);
+                    m_ScaleCurves = Vector3CurveList(reader);
+                }
+
+                m_MuscleClipSize = reader.ReadUInt32(); //m_AnimDataSize (Tuanjie 1.0-1.5)
+                if (!version.IsTuanjie || version >= (2022, 3, 61))
                 {
                     m_MuscleClip = new ClipMuscleConstant(reader);
+                    if (version.IsTuanjie) //2022.3.61t1(1.6.0) and up
+                    {
+                        m_StreamingInfo = new StreamingInfo(reader);
+                    }
                 }
                 else if (m_MuscleClipSize > 0)
                 {
                     if (!m_Legacy)
                     {
                         _ = reader.ReadInt32();
-                        m_MuscleClip = new ClipMuscleConstant(reader); //m_AnimData (Tuanjie)
+                        m_MuscleClip = new ClipMuscleConstant(reader); //m_AnimData (Tuanjie 1.0-1.5)
                         m_StreamingInfo = new StreamingInfo(reader);
                     }
                     else
-                    { 
+                    {
                         m_EulerCurves = Vector3CurveList(reader);
                         m_PositionCurves = Vector3CurveList(reader);
                         m_ScaleCurves = Vector3CurveList(reader);

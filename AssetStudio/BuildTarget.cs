@@ -55,7 +55,7 @@
 
     public enum TuanjieBuildTarget
     {
-        WeixinMiniGame = 47,
+        MiniGame = 47,
         OpenHarmony,
         HMIAndroid,
         ArmLinux,

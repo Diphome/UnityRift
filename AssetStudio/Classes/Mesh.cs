@@ -445,43 +445,98 @@ namespace AssetStudio
     public class VGPackedHierarchyNode
     {
         public Vector4[] LODBounds = new Vector4[8];
-        public Vector3[] BoxBoundsCenter = new Vector3[8];
+        public Vector3[] AABBCenter = new Vector3[8];
         public uint[] MinLODError_MaxParentLODError = new uint[8];
-        public Vector3[] BoxBoundsExtent = new Vector3[8];
-        public uint[] ChildStartReference = new uint[8];
-        public uint[] ResourcePageIndex_NumPages_GroupPartSize = new uint[8];
+        public Vector3[] AABBExtent = new Vector3[8];
+        public uint[] ChildStartIndex = new uint[8];
+        public uint[] PageIndex_PageCount_PageBlockCount = new uint[8];
 
         public VGPackedHierarchyNode(BinaryReader reader)
         {
             for (var i = 0; i < 8; i++)
             {
                 LODBounds[i] = reader.ReadVector4();
-                BoxBoundsCenter[i] = reader.ReadVector3();
+                AABBCenter[i] = reader.ReadVector3();
                 MinLODError_MaxParentLODError[i] = reader.ReadUInt32();
-                BoxBoundsExtent[i] = reader.ReadVector3();
-                ChildStartReference[i] = reader.ReadUInt32();
-                ResourcePageIndex_NumPages_GroupPartSize[i] = reader.ReadUInt32();
+                AABBExtent[i] = reader.ReadVector3();
+                ChildStartIndex[i] = reader.ReadUInt32();
+                PageIndex_PageCount_PageBlockCount[i] = reader.ReadUInt32();
             }
         }
     }
 
-    public class VGPageStreamingState
+    public class VGPageStreamingInfo
     {
-        public uint BulkOffset;
-        public uint BulkSize;
-        public uint PageSize;
-        public uint DependenciesStart;
-        public uint DependenciesNum;
-        public uint Flags;
+        public uint offset;
+        public uint wholeSize;
+        public uint dataSize;
+        public uint dependencyOffset;
+        public uint dependencyCount;
+        public uint flags;
 
-        public VGPageStreamingState(BinaryReader reader)
+        public VGPageStreamingInfo(BinaryReader reader)
         {
-            BulkOffset = reader.ReadUInt32();
-            BulkSize = reader.ReadUInt32();
-            PageSize = reader.ReadUInt32();
-            DependenciesStart = reader.ReadUInt32();
-            DependenciesNum = reader.ReadUInt32();
-            Flags = reader.ReadUInt32();
+            offset = reader.ReadUInt32();
+            wholeSize = reader.ReadUInt32();
+            dataSize = reader.ReadUInt32();
+            dependencyOffset = reader.ReadUInt32();
+            dependencyCount = reader.ReadUInt32();
+            flags = reader.ReadUInt32();
+        }
+    }
+
+    public class SharedClusterData //Tuanjie
+    {
+        public SharedClusterData(ObjectReader reader, byte rev)
+        {
+            var m_LightmapUseUV1 = reader.ReadInt32();
+            var m_fileScale = reader.ReadSingle();
+            if (rev == 1)
+            {
+                var NumInputTriangles = reader.ReadUInt32();
+                var NumInputVertices = reader.ReadUInt32();
+                var NumInputMeshes = reader.ReadUInt16();
+                var NumInputTexCoords = reader.ReadUInt16();
+                var ResourceFlags = reader.ReadUInt32();
+            }
+            var rootClusterPageSize = reader.ReadInt32();
+            reader.Position += rootClusterPageSize; //skip byte[] rootClusterPage
+            if (rev == 1)
+            {
+                var imposterAtlasSize = reader.ReadInt32();
+                reader.Position += imposterAtlasSize * 2; //skip ushort[] imposterAtlas
+            }
+            var hierarchyNodesSize = reader.ReadInt32();
+            for (var i = 0; i < hierarchyNodesSize; i++)
+            {
+                var hierarchyNode = new VGPackedHierarchyNode(reader);
+            }
+            if (rev == 1)
+            {
+                var hierarchyRootOffsetsSize = reader.ReadInt32();
+                reader.Position += hierarchyRootOffsetsSize * 4; //skip uint[] hierarchyRootOffsets
+            }
+            var pageStreamingInfosSize = reader.ReadInt32();
+            for (var i = 0; i < pageStreamingInfosSize; i++)
+            {
+                var pageStreamingInfo = new VGPageStreamingInfo(reader);
+            }
+            var pageIndicesOfDependenciesSize = reader.ReadInt32();
+            reader.Position += pageIndicesOfDependenciesSize * 4; //skip uint[] pageIndicesOfDependencies
+            if (rev == 2)
+            {
+                var inputTrianglesCount = reader.ReadUInt32();
+                var inputVerticesCount = reader.ReadUInt32();
+                var inputMeshesCount = reader.ReadUInt16();
+                var inputTexCoordsCount = reader.ReadUInt16();
+                var resourceFlags = reader.ReadUInt32();
+                var imposterAtlasSize = reader.ReadInt32();
+                reader.Position += imposterAtlasSize * 2; //skip ushort[] imposterAtlas
+                var hierarchyRootOffsetsSize = reader.ReadInt32();
+                reader.Position += hierarchyRootOffsetsSize * 4; //skip uint[] hierarchyRootOffsets
+            }
+            var streamableClusterPageSize = reader.ReadInt32();
+            reader.Position += streamableClusterPageSize; //skip byte[] streamableClusterPageSize
         }
     }
 
@@ -507,6 +562,7 @@ namespace AssetStudio
         public float[] m_UV6;
         public float[] m_UV7;
         public float[] m_Tangents;
+        private bool m_HasVirtualGeometryMesh;
         private VertexData m_VertexData;
         private CompressedMesh m_CompressedMesh;
         private StreamingInfo m_StreamData;
@@ -584,35 +640,23 @@ namespace AssetStudio
                     var m_KeepVertices = reader.ReadBoolean();
                     var m_KeepIndices = reader.ReadBoolean();
                 }
+
                 if (version.IsTuanjie)
                 {
-                    var m_LightmapUseUV1 = reader.ReadInt32();
-                    var m_fileScale = reader.ReadSingle();
-                    var NumInputTriangles = reader.ReadUInt32();
-                    var NumInputVertices = reader.ReadUInt32();
-                    var NumInputMeshes = reader.ReadUInt16();
-                    var NumInputTexCoords = reader.ReadUInt16();
-                    var ResourceFlags = reader.ReadUInt32();
-                    var RootClusterPageSize = reader.ReadInt32();
-                    reader.Position += RootClusterPageSize; //skip byte[] RootClusterPage
-                    var ImposterAtlasSize = reader.ReadInt32();
-                    reader.Position += ImposterAtlasSize * 2; //skip ushort[] ImposterAtlas
-                    var HierarchyNodesSize = reader.ReadInt32();
-                    for (var i = 0; i < HierarchyNodesSize; i++)
+                    if (version < (2022, 3, 48) || (version == (2022, 3, 48) && version.Build < 3)) //2022.3.48t3(1.4.0) down
                     {
-                        _ = new VGPackedHierarchyNode(reader);
+                        _ = new SharedClusterData(reader, rev: 1);
                     }
-                    var HierarchyRootOffsetsSize = reader.ReadInt32();
-                    reader.Position += HierarchyRootOffsetsSize * 4; //skip uint[] HierarchyRootOffsets
-                    var PageStreamingStatesSize = reader.ReadInt32();
-                    for (var i = 0; i < PageStreamingStatesSize; i++)
+                    else if (version < (2022, 3, 61) || (version == (2022, 3, 61) && version.Build < 2)) //2022.3.48t3(1.4.0) - 2022.3.61t1(1.6.0)
                     {
-                        _ = new VGPageStreamingState(reader);
+                        _ = new SharedClusterData(reader, rev: 2);
                     }
-                    var PageDependenciesSize = reader.ReadInt32();
-                    reader.Position += PageDependenciesSize * 4; //skip uint[] PageDependencies
-                    var streamableClusterPageSize = reader.ReadInt32();
-                    reader.Position += streamableClusterPageSize; //skip byte[] streamableClusterPageSize
+                    else //2022.3.61t2(1.6.1) and up
+                    {
+                        reader.AlignStream();
+                        _ = new SharedClusterData(reader, rev: 3);
+                    }
+                        
                 }
                 reader.AlignStream();
 
@@ -756,6 +800,12 @@ namespace AssetStudio
                 m_StreamData = new StreamingInfo(reader);
             }
 
+            if (version.IsTuanjie && (version > (2022, 3, 2) || (version == (2022, 3, 2) && version.Build >= 13))) //2022.3.2t13(1.2.0) and up
+            {
+                var m_GenerateGeometryBuffer = reader.ReadBoolean();
+                m_HasVirtualGeometryMesh = reader.ReadBoolean();
+            }
+            
             ProcessData();
         }
 
@@ -779,7 +829,10 @@ namespace AssetStudio
                 DecompressCompressedMesh();
             }
 
-            GetTriangles();
+            if (m_HasVirtualGeometryMesh && m_IndexBuffer.Length == 0)
+                Logger.Warning($"Unsupported mesh type: Virtual Geometry | PathID: {m_PathID} | Name: \"{m_Name}\"");
+            else
+                GetTriangles();
         }
 
         private void ReadVertexData()

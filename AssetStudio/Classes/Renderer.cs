@@ -63,6 +63,10 @@ namespace AssetStudio
                         {
                             reader.AlignStream();
                             var m_ShadingRate = reader.ReadByte();
+                            if (version >= (2022, 3, 61)) //2022.3.61t1(1.6.0) and up
+                            {
+                                var m_ForceDisableGRD = reader.ReadByte();
+                            }
                         }
                     }
                     if (version >= (2023, 2)) //2023.2 and up

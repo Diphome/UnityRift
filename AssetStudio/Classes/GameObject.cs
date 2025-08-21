@@ -31,7 +31,7 @@ namespace AssetStudio
             }
 
             var m_Layer = reader.ReadInt32();
-            if (version.IsTuanjie && (version > (2022, 3, 2) || (version == (2022, 3, 2) && version.Build >= 13))) //2022.3.2t13(?) and up
+            if (version.IsTuanjie && (version > (2022, 3, 2) || (version == (2022, 3, 2) && version.Build >= 11))) //2022.3.2t11(1.1.3) and up
             {
                 var m_HasEditorInfo = reader.ReadBoolean();
                 reader.AlignStream();
