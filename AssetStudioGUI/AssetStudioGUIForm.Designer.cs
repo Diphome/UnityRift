@@ -395,6 +395,7 @@
             this.specifyUnityVersionTextBox.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.specifyUnityVersionTextBox.Name = "specifyUnityVersionTextBox";
             this.specifyUnityVersionTextBox.Size = new System.Drawing.Size(100, 23);
+            this.specifyUnityVersionTextBox.ToolTipText = "Specify full Unity version, including letters at the end\r\nExample: 2017.4.39f1";
             // 
             // bundleDecompressionToolStripMenuItem
             // 
@@ -411,7 +412,7 @@
             this.alwaysDecompressToDiskToolStripMenuItem.ShowShortcutKeys = false;
             this.alwaysDecompressToDiskToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             this.alwaysDecompressToDiskToolStripMenuItem.Text = "Always decompress to disk";
-            this.alwaysDecompressToDiskToolStripMenuItem.ToolTipText = "If not selected, any bundles less than 2GB will be decompressed to memory";
+            this.alwaysDecompressToDiskToolStripMenuItem.ToolTipText = "If not selected, any bundles less than 2GB will be decompressed to RAM";
             this.alwaysDecompressToDiskToolStripMenuItem.Click += new System.EventHandler(this.alwaysDecompressToDiskToolStripMenuItem_Click);
             // 
             // blockInfoCompressionTypeToolStripMenuItem

@@ -302,10 +302,11 @@ namespace AssetStudio
                 case "TypelessData":
                     {
                         var size = reader.ReadInt32();
+                        var offset = size > 0 ? reader.BaseStream.Position : 0;
                         var dic = new OrderedDictionary
                         {
-                            { "Offset", reader.BaseStream.Position },
-                            { "Size", size }
+                            {"Offset", offset},
+                            {"Size", size}
                         };
                         value = dic;
                         reader.BaseStream.Position += size;

@@ -89,19 +89,18 @@ namespace AssetStudioGUI
         {
             var m_TextAsset = (TextAsset)item.Asset;
             var extension = ".txt";
-            var assetExtension = Path.GetExtension(m_TextAsset.m_Name);
             if (Properties.Settings.Default.restoreExtensionName)
             {
-                if (!string.IsNullOrEmpty(assetExtension))
+                if (Path.HasExtension(m_TextAsset.m_Name))
                 {
                     extension = "";
                 }
-                else if (!string.IsNullOrEmpty(item.Container))
+                else
                 {
-                    var ext = Path.GetExtension(item.Container);
-                    if (!string.IsNullOrEmpty(item.Container))
+                    var extFromContainer = Path.GetExtension(item.Container);
+                    if (!string.IsNullOrEmpty(extFromContainer))
                     {
-                        extension = ext;
+                        extension = extFromContainer;
                     }
                 }
             }

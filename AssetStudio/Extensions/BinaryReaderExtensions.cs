@@ -27,7 +27,7 @@ namespace AssetStudio
             {
                 var stringData = reader.ReadBytes(length);
                 var result = Encoding.UTF8.GetString(stringData);
-                reader.AlignStream(4);
+                reader.AlignStream();
                 return result;
             }
             return "";

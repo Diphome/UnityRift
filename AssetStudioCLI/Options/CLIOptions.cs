@@ -94,7 +94,7 @@ namespace AssetStudioCLI.Options
         public static Option<FilenameFormat> o_filenameFormat;
         public static Option<string> o_outputFolder;
         public static Option<bool> f_overwriteExisting;
-        public static Option<bool> o_displayHelp;
+        public static Option<bool> f_displayHelp;
         //logger
         public static Option<LoggerEvent> o_logLevel;
         public static Option<LogOutputMode> o_logOutput;
@@ -264,13 +264,14 @@ namespace AssetStudioCLI.Options
                 optionHelpGroup: HelpGroups.General,
                 isFlag: true
             );
-            o_displayHelp = new GroupedOption<bool>
+            f_displayHelp = new GroupedOption<bool>
             (
                 optionDefaultValue: false,
                 optionName: "-h, --help",
                 optionDescription: "Display help and exit",
                 optionExample: "",
-                optionHelpGroup: HelpGroups.General
+                optionHelpGroup: HelpGroups.General,
+                isFlag: true
             );
             #endregion
 
@@ -533,7 +534,7 @@ namespace AssetStudioCLI.Options
             (
                 optionDefaultValue: false,
                 optionName: "--decompress-to-disk",
-                optionDescription: "(Flag) If not specified, only bundles larger than 2GB will be decompressed to disk\ninstead of memory\n",
+                optionDescription: "(Flag) If not specified, only bundles larger than 2GB will be decompressed to disk\ninstead of RAM\n",
                 optionExample: "",
                 optionHelpGroup: HelpGroups.Advanced,
                 isFlag: true
@@ -577,7 +578,7 @@ namespace AssetStudioCLI.Options
 
             if (args.Length == 0 || args.Any(x => x.ToLower() == "-h" || x.ToLower() == "--help" || x.ToLower() == "-?"))
             {
-                o_displayHelp.Value = true;
+                f_displayHelp.Value = true;
                 return;
             }
 
@@ -1030,6 +1031,7 @@ namespace AssetStudioCLI.Options
                                 case "monobehaviour":
                                     o_l2dMotionMode.Value = CubismLive2DExtractor.Live2DMotionMode.MonoBehaviour;
                                     break;
+                                case "clip":
                                 case "animationclip":
                                 case "animationclipv2":
                                     o_l2dMotionMode.Value = CubismLive2DExtractor.Live2DMotionMode.AnimationClipV2;

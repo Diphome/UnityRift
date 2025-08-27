@@ -30,7 +30,7 @@ namespace AssetStudioCLI
         {
             Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
             Progress.Default = new Progress<int>(ShowCurProgressValue);
-            assetsManager.LoadingViaTypeTreeEnabled = !CLIOptions.f_avoidLoadingViaTypetree.Value;
+            assetsManager.LoadViaTypeTree = !CLIOptions.f_avoidLoadingViaTypetree.Value;
             assetsManager.Options.CustomUnityVersion = CLIOptions.o_unityVersion.Value;
             assetsManager.Options.BundleOptions.CustomBlockInfoCompression = CLIOptions.o_bundleBlockInfoCompression.Value;
             assetsManager.Options.BundleOptions.CustomBlockCompression = CLIOptions.o_bundleBlockCompression.Value;

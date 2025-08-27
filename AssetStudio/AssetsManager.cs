@@ -15,7 +15,7 @@ namespace AssetStudio
 {
     public class AssetsManager
     {
-        public bool LoadingViaTypeTreeEnabled = true;
+        public bool LoadViaTypeTree = true;
         public ImportOptions Options = new ImportOptions();
         public readonly List<Action<OptionsFile>> OptionLoaders = new List<Action<OptionsFile>>();
         public readonly List<SerializedFile> AssetsFileList = new List<SerializedFile>();
@@ -154,6 +154,8 @@ namespace AssetStudio
             importFilesHash.Clear();
             noexistFiles.Clear();
             assetsFileListHash.Clear();
+            if (AssetsFileList.Count == 0)
+                return;
 
             ReadAssets();
             ProcessAssets();
@@ -187,6 +189,9 @@ namespace AssetStudio
                     break;
                 case FileType.ZipFile:
                     LoadZipFile(reader);
+                    break;
+                case FileType.ResourceFile when !fromZip:
+                    reader.Dispose();
                     break;
             }
             return true;
@@ -277,7 +282,7 @@ namespace AssetStudio
                 catch (NotSupportedException e)
                 {
                     Logger.Error(e.Message);
-                    resourceFileReaders.TryAdd(reader.FileName, reader);
+                    reader.Dispose();
                     return false;
                 }
                 catch (Exception e)
@@ -648,7 +653,7 @@ namespace AssetStudio
                                 obj = new Animation(objectReader);
                                 break;
                             case ClassIDType.AnimationClip:
-                                obj = objectReader.serializedType?.m_Type != null && LoadingViaTypeTreeEnabled
+                                obj = objectReader.serializedType?.m_Type != null && LoadViaTypeTree
                                     ? new AnimationClip(objectReader, TypeTreeHelper.ReadTypeByteArray(objectReader.serializedType.m_Type, objectReader), jsonOptions, objectInfo)
                                     : new AnimationClip(objectReader);
                                 break;
@@ -680,7 +685,7 @@ namespace AssetStudio
                                 obj = new GameObject(objectReader);
                                 break;
                             case ClassIDType.Material:
-                                obj = objectReader.serializedType?.m_Type != null && LoadingViaTypeTreeEnabled
+                                obj = objectReader.serializedType?.m_Type != null && LoadViaTypeTree
                                     ? new Material(objectReader, TypeTreeHelper.ReadTypeByteArray(objectReader.serializedType.m_Type, objectReader), jsonOptions)
                                     : new Material(objectReader);
                                 break;
@@ -728,12 +733,12 @@ namespace AssetStudio
                                 obj = new TextAsset(objectReader);
                                 break;
                             case ClassIDType.Texture2D:
-                                obj = objectReader.serializedType?.m_Type != null && LoadingViaTypeTreeEnabled
+                                obj = objectReader.serializedType?.m_Type != null && LoadViaTypeTree
                                     ? new Texture2D(objectReader, TypeTreeHelper.ReadTypeByteArray(objectReader.serializedType.m_Type, objectReader), jsonOptions)
                                     : new Texture2D(objectReader);
                                 break;
                             case ClassIDType.Texture2DArray:
-                                obj = objectReader.serializedType?.m_Type != null && LoadingViaTypeTreeEnabled
+                                obj = objectReader.serializedType?.m_Type != null && LoadViaTypeTree
                                     ? new Texture2DArray(objectReader, TypeTreeHelper.ReadTypeByteArray(objectReader.serializedType.m_Type, objectReader), jsonOptions)
                                     : new Texture2DArray(objectReader);
                                 break;

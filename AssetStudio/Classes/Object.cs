@@ -102,7 +102,7 @@ namespace AssetStudio
             {
                 if (typeDict != null)
                 {
-                    return JsonSerializer.SerializeToDocument(typeDict);
+                    return JsonSerializer.SerializeToDocument(typeDict, jsonOptions);
                 }
                 return JsonSerializer.SerializeToDocument(this, GetType(), jsonOptions);
             }
