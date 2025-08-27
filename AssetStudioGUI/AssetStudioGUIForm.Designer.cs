@@ -40,6 +40,7 @@
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.displayAll = new System.Windows.Forms.ToolStripMenuItem();
             this.useAssetLoadingViaTypetreeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.meshLazyLoadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.assetLoadingToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.enablePreview = new System.Windows.Forms.ToolStripMenuItem();
             this.displayInfo = new System.Windows.Forms.ToolStripMenuItem();
@@ -271,6 +272,7 @@
             this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.displayAll,
             this.useAssetLoadingViaTypetreeToolStripMenuItem,
+            this.meshLazyLoadToolStripMenuItem,
             this.assetLoadingToolStripSeparator,
             this.enablePreview,
             this.displayInfo,
@@ -287,7 +289,7 @@
             // 
             this.displayAll.CheckOnClick = true;
             this.displayAll.Name = "displayAll";
-            this.displayAll.Size = new System.Drawing.Size(241, 22);
+            this.displayAll.Size = new System.Drawing.Size(243, 22);
             this.displayAll.Text = "Display all assets";
             this.displayAll.ToolTipText = "Check this option will display all types assets. Not extractable assets can expor" +
     "t the RAW file.";
@@ -299,16 +301,26 @@
             this.useAssetLoadingViaTypetreeToolStripMenuItem.CheckOnClick = true;
             this.useAssetLoadingViaTypetreeToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.useAssetLoadingViaTypetreeToolStripMenuItem.Name = "useAssetLoadingViaTypetreeToolStripMenuItem";
-            this.useAssetLoadingViaTypetreeToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.useAssetLoadingViaTypetreeToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
             this.useAssetLoadingViaTypetreeToolStripMenuItem.Text = "Parse assets using their typetree";
             this.useAssetLoadingViaTypetreeToolStripMenuItem.ToolTipText = "(Applies to assets with typetree included). Slower but can parse non-standard ass" +
     "ets. Only for Texture2D, AnimationClip and Material assets for now.";
             this.useAssetLoadingViaTypetreeToolStripMenuItem.CheckedChanged += new System.EventHandler(this.useAssetLoadingViaTypetreeToolStripMenuItem_CheckedChanged);
             // 
+            // meshLazyLoadToolStripMenuItem
+            // 
+            this.meshLazyLoadToolStripMenuItem.Checked = true;
+            this.meshLazyLoadToolStripMenuItem.CheckOnClick = true;
+            this.meshLazyLoadToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.meshLazyLoadToolStripMenuItem.Name = "meshLazyLoadToolStripMenuItem";
+            this.meshLazyLoadToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
+            this.meshLazyLoadToolStripMenuItem.Text = "Use lazy loading for Mesh assets";
+            this.meshLazyLoadToolStripMenuItem.CheckedChanged += new System.EventHandler(this.meshLazyLoadToolStripMenuItem_CheckedChanged);
+            // 
             // assetLoadingToolStripSeparator
             // 
             this.assetLoadingToolStripSeparator.Name = "assetLoadingToolStripSeparator";
-            this.assetLoadingToolStripSeparator.Size = new System.Drawing.Size(238, 6);
+            this.assetLoadingToolStripSeparator.Size = new System.Drawing.Size(240, 6);
             // 
             // enablePreview
             // 
@@ -316,7 +328,7 @@
             this.enablePreview.CheckOnClick = true;
             this.enablePreview.CheckState = System.Windows.Forms.CheckState.Checked;
             this.enablePreview.Name = "enablePreview";
-            this.enablePreview.Size = new System.Drawing.Size(241, 22);
+            this.enablePreview.Size = new System.Drawing.Size(243, 22);
             this.enablePreview.Text = "Enable preview";
             this.enablePreview.ToolTipText = "Toggle the loading and preview of readable assets, such as images, sounds, text, " +
     "etc.\r\nDisable preview if you have performance or compatibility issues.";
@@ -328,7 +340,7 @@
             this.displayInfo.CheckOnClick = true;
             this.displayInfo.CheckState = System.Windows.Forms.CheckState.Checked;
             this.displayInfo.Name = "displayInfo";
-            this.displayInfo.Size = new System.Drawing.Size(241, 22);
+            this.displayInfo.Size = new System.Drawing.Size(243, 22);
             this.displayInfo.Text = "Display asset information";
             this.displayInfo.ToolTipText = "Toggle the overlay that shows information about each asset, eg. image size, forma" +
     "t, audio bitrate, etc.";
@@ -338,7 +350,7 @@
             // 
             this.autoPlayAudioAssetsToolStripMenuItem.CheckOnClick = true;
             this.autoPlayAudioAssetsToolStripMenuItem.Name = "autoPlayAudioAssetsToolStripMenuItem";
-            this.autoPlayAudioAssetsToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.autoPlayAudioAssetsToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
             this.autoPlayAudioAssetsToolStripMenuItem.Text = "Autoplay audio assets";
             this.autoPlayAudioAssetsToolStripMenuItem.ToolTipText = "Autoplay AudioClip assets when selected";
             this.autoPlayAudioAssetsToolStripMenuItem.CheckedChanged += new System.EventHandler(this.autoPlayAudioAssetsToolStripMenuItem_CheckedChanged);
@@ -347,7 +359,7 @@
             // 
             this.useDumpTreeViewToolStripMenuItem.CheckOnClick = true;
             this.useDumpTreeViewToolStripMenuItem.Name = "useDumpTreeViewToolStripMenuItem";
-            this.useDumpTreeViewToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.useDumpTreeViewToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
             this.useDumpTreeViewToolStripMenuItem.Text = "Use tree view to display dump";
             this.useDumpTreeViewToolStripMenuItem.CheckedChanged += new System.EventHandler(this.useDumpTreeViewToolStripMenuItem_CheckedChanged);
             // 
@@ -357,7 +369,7 @@
             this.buildTreeStructureToolStripMenuItem.CheckOnClick = true;
             this.buildTreeStructureToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.buildTreeStructureToolStripMenuItem.Name = "buildTreeStructureToolStripMenuItem";
-            this.buildTreeStructureToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.buildTreeStructureToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
             this.buildTreeStructureToolStripMenuItem.Text = "Build tree structure";
             this.buildTreeStructureToolStripMenuItem.ToolTipText = "You can disable tree structure building if you don\'t use the Scene Hierarchy tab";
             this.buildTreeStructureToolStripMenuItem.CheckedChanged += new System.EventHandler(this.buildTreeStructureToolStripMenuItem_CheckedChanged);
@@ -376,7 +388,7 @@
             this.importOptionsToolStripSeparator,
             this.saveOptionsToDiskToolStripMenuItem});
             this.importOptionsToolStripMenuItem.Name = "importOptionsToolStripMenuItem";
-            this.importOptionsToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.importOptionsToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
             this.importOptionsToolStripMenuItem.Text = "Import options";
             this.importOptionsToolStripMenuItem.DropDownClosed += new System.EventHandler(this.importOptions_DropDownClose);
             this.importOptionsToolStripMenuItem.DropDownOpened += new System.EventHandler(this.importOptions_DropDownOpened);
@@ -479,7 +491,7 @@
             // showExpOpt
             // 
             this.showExpOpt.Name = "showExpOpt";
-            this.showExpOpt.Size = new System.Drawing.Size(241, 22);
+            this.showExpOpt.Size = new System.Drawing.Size(243, 22);
             this.showExpOpt.Text = "Export options";
             this.showExpOpt.Click += new System.EventHandler(this.showExpOpt_Click);
             // 
@@ -1858,6 +1870,7 @@
         private System.Windows.Forms.ToolStripComboBox customBlockCompressionComboBox;
         private System.Windows.Forms.ToolStripMenuItem saveOptionsToDiskToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator importOptionsToolStripSeparator;
+        private System.Windows.Forms.ToolStripMenuItem meshLazyLoadToolStripMenuItem;
     }
 }
 

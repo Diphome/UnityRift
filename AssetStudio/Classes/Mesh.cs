@@ -542,6 +542,7 @@ namespace AssetStudio
 
     public sealed class Mesh : NamedObject
     {
+        private bool isLoaded;
         private bool m_Use16BitIndices = true;
         public List<SubMesh> m_SubMeshes;
         private uint[] m_IndexBuffer;
@@ -587,6 +588,7 @@ namespace AssetStudio
                     {
                         indexBufferList.Add(reader.ReadUInt16());
                     }
+
                     reader.AlignStream();
                     m_IndexBuffer = indexBufferList.ToArray();
                 }
@@ -656,14 +658,13 @@ namespace AssetStudio
                         reader.AlignStream();
                         _ = new SharedClusterData(reader, rev: 3);
                     }
-                        
                 }
                 reader.AlignStream();
 
                 //Unity fixed it in 2017.3.1p1 and later versions
                 if (version >= (2017, 4) //2017.4
                     || version == (2017, 3, 1) && version.IsPatch //fixed after 2017.3.1px
-                    || version == (2017, 3) && m_MeshCompression == 0)//2017.3.xfx with no compression
+                    || version == (2017, 3) && m_MeshCompression == 0) //2017.3.xfx with no compression
                 {
                     var m_IndexFormat = reader.ReadInt32();
                     m_Use16BitIndices = m_IndexFormat == 0;
@@ -677,6 +678,7 @@ namespace AssetStudio
                     {
                         indexBufferList.Add(reader.ReadUInt16());
                     }
+
                     reader.AlignStream();
                     m_IndexBuffer = indexBufferList.ToArray();
                 }
@@ -781,9 +783,12 @@ namespace AssetStudio
 
             if (version >= 5) //5.0 and up
             {
-                var m_BakedConvexCollisionMesh = reader.ReadUInt8Array();
+                var m_BakedConvexCollisionMeshSize = reader.ReadInt32();
+                reader.Position += m_BakedConvexCollisionMeshSize; //skip byte[] m_BakedConvexCollisionMesh
                 reader.AlignStream();
-                var m_BakedTriangleCollisionMesh = reader.ReadUInt8Array();
+
+                var m_BakedTriangleCollisionMeshSize = reader.ReadInt32();
+                reader.Position += m_BakedTriangleCollisionMeshSize; //skip byte[] m_BakedTriangleCollisionMesh
                 reader.AlignStream();
             }
 
@@ -805,18 +810,25 @@ namespace AssetStudio
                 var m_GenerateGeometryBuffer = reader.ReadBoolean();
                 m_HasVirtualGeometryMesh = reader.ReadBoolean();
             }
-            
-            ProcessData();
+
+            if (!assetsFile.assetsManager.MeshLazyLoad)
+                ProcessData();
         }
 
-        private void ProcessData()
+        public void ProcessData()
         {
+            if (isLoaded)
+                return;
+
+            var isStreamedDataSize = false;
             if (!string.IsNullOrEmpty(m_StreamData?.path))
             {
                 if (m_VertexData.m_VertexCount > 0)
                 {
+                    m_VertexData.m_DataSize = BigArrayPool<byte>.Shared.Rent((int)m_StreamData.size);
                     var resourceReader = new ResourceReader(m_StreamData.path, assetsFile, m_StreamData.offset, m_StreamData.size);
-                    m_VertexData.m_DataSize = resourceReader.GetData();
+                    resourceReader.GetData(m_VertexData.m_DataSize);
+                    isStreamedDataSize = true;
                 }
             }
             if (version >= (3, 5)) //3.5 and up
@@ -829,10 +841,21 @@ namespace AssetStudio
                 DecompressCompressedMesh();
             }
 
-            if (m_HasVirtualGeometryMesh && m_IndexBuffer.Length == 0)
-                Logger.Warning($"Unsupported mesh type: Virtual Geometry | PathID: {m_PathID} | Name: \"{m_Name}\"");
+            if (m_IndexBuffer.Length == 0)
+            {
+                var msg = m_HasVirtualGeometryMesh
+                    ? "Unsupported mesh type: Virtual Geometry"
+                    : "Cannot process empty mesh";
+                Logger.Warning($"{msg} | PathID: {m_PathID} | Name: \"{m_Name}\"");
+            }
             else
+            {
                 GetTriangles();
+            }
+
+            isLoaded = true;
+            if (isStreamedDataSize)
+                BigArrayPool<byte>.Shared.Return(m_VertexData.m_DataSize, clearArray: true);
         }
 
         private void ReadVertexData()

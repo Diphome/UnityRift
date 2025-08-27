@@ -67,6 +67,11 @@ namespace AssetStudio
             string str = null;
             try
             {
+                if (this is Mesh m_Mesh)
+                {
+                    m_Mesh.ProcessData();
+                }
+
                 str = JsonSerializer.Deserialize<JsonObject>(JsonSerializer.SerializeToUtf8Bytes(this, GetType(), jsonOptions))
                     .ToJsonString(jsonOptions).Replace("  ", "    ");
             }
@@ -74,6 +79,7 @@ namespace AssetStudio
             {
                 //ignore
             }
+
             return str;
         }
 
@@ -104,12 +110,19 @@ namespace AssetStudio
                 {
                     return JsonSerializer.SerializeToDocument(typeDict, jsonOptions);
                 }
+
+                if (this is Mesh m_Mesh)
+                {
+                    m_Mesh.ProcessData();
+                }
+
                 return JsonSerializer.SerializeToDocument(this, GetType(), jsonOptions);
             }
             catch
             {
                 //ignore
             }
+
             return null;
         }
 

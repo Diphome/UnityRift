@@ -145,6 +145,7 @@ namespace AssetStudioGUI
             useAssetLoadingViaTypetreeToolStripMenuItem.Checked = Properties.Settings.Default.useTypetreeLoading;
             useDumpTreeViewToolStripMenuItem.Checked = Properties.Settings.Default.useDumpTreeView;
             autoPlayAudioAssetsToolStripMenuItem.Checked = Properties.Settings.Default.autoplayAudio;
+            meshLazyLoadToolStripMenuItem.Checked = Properties.Settings.Default.meshLazyLoad;
             customBlockCompressionComboBox.SelectedIndex = 0;
             customBlockInfoCompressionComboBox.SelectedIndex = 0;
             assetsManager.Options.BundleOptions.DecompressToDisk = Properties.Settings.Default.decompressToDisk;
@@ -1308,6 +1309,8 @@ namespace AssetStudioGUI
 
         private void PreviewMesh(Mesh m_Mesh)
         {
+            m_Mesh.ProcessData();
+
             if (m_Mesh.m_VertexCount > 0)
             {
                 viewMatrixData = Matrix4.CreateRotationY(-MathF.PI / 4) * Matrix4.CreateRotationX(-MathF.PI / 6);
@@ -2649,6 +2652,13 @@ namespace AssetStudioGUI
         private void autoPlayAudioAssetsToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
         {
             Properties.Settings.Default.autoplayAudio = autoPlayAudioAssetsToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void meshLazyLoadToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.meshLazyLoad = meshLazyLoadToolStripMenuItem.Checked;
+            assetsManager.MeshLazyLoad = meshLazyLoadToolStripMenuItem.Checked;
             Properties.Settings.Default.Save();
         }
 

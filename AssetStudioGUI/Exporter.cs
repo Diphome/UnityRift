@@ -147,12 +147,16 @@ namespace AssetStudioGUI
         private static bool ExportMesh(AssetItem item, string exportPath)
         {
             var m_Mesh = (Mesh)item.Asset;
+            m_Mesh.ProcessData();
+
             if (m_Mesh.m_VertexCount <= 0)
                 return false;
             if (!TryExportFile(exportPath, item, ".obj", out var exportFullPath))
                 return false;
+
             var sb = new StringBuilder();
             sb.AppendLine("g " + m_Mesh.m_Name);
+
             #region Vertices
             if (m_Mesh.m_Vertices == null || m_Mesh.m_Vertices.Length == 0)
             {

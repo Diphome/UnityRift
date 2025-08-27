@@ -16,6 +16,7 @@ namespace AssetStudio
     public class AssetsManager
     {
         public bool LoadViaTypeTree = true;
+        public bool MeshLazyLoad = true;
         public ImportOptions Options = new ImportOptions();
         public readonly List<Action<OptionsFile>> OptionLoaders = new List<Action<OptionsFile>>();
         public readonly List<SerializedFile> AssetsFileList = new List<SerializedFile>();
