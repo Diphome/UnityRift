@@ -491,9 +491,12 @@ namespace AssetStudioCLI
         public static void ShowExportableAssetsInfo()
         {
             var exportableAssetsCountDict = new Dictionary<ClassIDType, int>();
-            string info = "";
+            var info = "======";
             if (parsedAssetsList.Count > 0)
             {
+                info += $"\n\n[Unity Version]" +
+                        $"\n# {parsedAssetsList[0].Asset.version}";
+
                 foreach (var asset in parsedAssetsList)
                 {
                     if (exportableAssetsCountDict.ContainsKey(asset.Type))
@@ -506,15 +509,17 @@ namespace AssetStudioCLI
                     }
                 }
 
-                info += "\n[Exportable Assets Count]\n";
+                info += "\n\n[Exportable Assets Count]";
                 foreach (var assetType in exportableAssetsCountDict.Keys)
                 {
-                    info += $"# {assetType}: {exportableAssetsCountDict[assetType]}\n";
+                    info += $"\n# {assetType}: {exportableAssetsCountDict[assetType]}";
                 }
                 if (exportableAssetsCountDict.Count > 1)
                 {
-                    info += $"#\n# Total: {parsedAssetsList.Count} assets";
+                    info += $"\n#\n# Total: {parsedAssetsList.Count} assets";
                 }
+
+                info += $"\n\n# Exportable Live2D Models: {l2dModelDict.Count}";
             }
             else
             {

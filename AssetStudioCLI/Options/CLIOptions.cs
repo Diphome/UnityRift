@@ -647,6 +647,7 @@ namespace AssetStudioCLI.Options
                         break;
                     case "info":
                         o_workMode.Value = WorkMode.Info;
+                        o_exportAssetTypes.Value.Add(ClassIDType.Animator);
                         break;
                     case "l2d":
                     case "live2d":
