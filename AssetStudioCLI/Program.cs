@@ -73,6 +73,7 @@ namespace AssetStudioCLI
             }
             finally
             {
+                Studio.Clear();
                 cliLogger.LogToFile(LoggerEvent.Verbose, "---Program ended---");
             }
         }       

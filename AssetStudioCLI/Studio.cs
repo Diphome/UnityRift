@@ -1303,5 +1303,11 @@ namespace AssetStudioCLI
                 "Nothing exported.";
             Logger.Default.Log(LoggerEvent.Info, status, ignoreLevel: true);
         }
+
+        public static void Clear()
+        {
+            assetsManager.Clear();
+            assemblyLoader.Clear();
+        }
     }
 }

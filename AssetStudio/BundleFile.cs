@@ -196,7 +196,7 @@ namespace AssetStudio
                 var hash = path.GetHashCode();
                 path = Path.Combine(tempDir, $"{filename}_{hash:X}");
             }
-            return new FileStream(path + ".temp", FileMode.Create, FileAccess.ReadWrite, FileShare.Read, 4096, FileOptions.DeleteOnClose);
+            return new TempFileStream(path + ".temp", FileMode.Create);
         }
 
         private Stream ReadBlocksAndDirectory(FileReader reader)
