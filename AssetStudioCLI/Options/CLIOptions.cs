@@ -397,7 +397,7 @@ namespace AssetStudioCLI.Options
                     "Auto - Search for model-related animations and export model with them\n" +
                     "Skip - Don't export animations\n" +
                     "All - Try to bind all loaded animations to each loaded model\n",
-                optionExample: "--fbx-animation skip\n",
+                optionExample: "Example: \"--fbx-animation skip\"\n",
                 optionHelpGroup: HelpGroups.FBX
             );
             f_fbxUvsAsDiffuseMaps = new GroupedOption<bool>
@@ -551,7 +551,7 @@ namespace AssetStudioCLI.Options
             f_avoidLoadingViaTypetree = new GroupedOption<bool>
             (
                 optionDefaultValue: false,
-                optionName: "--avoid-typetree-loading",
+                optionName: "--ignore-typetree",
                 optionDescription: "(Flag) If specified, Studio will not try to parse assets at load time\nusing their type tree\n",
                 optionExample: "",
                 optionHelpGroup: HelpGroups.Advanced,
@@ -737,7 +737,7 @@ namespace AssetStudioCLI.Options
                         f_notRestoreExtensionName.Value = true;
                         flagIndexes.Add(i);
                         break;
-                    case "--avoid-typetree-loading":
+                    case "--ignore-typetree":
                         f_avoidLoadingViaTypetree.Value = true;
                         flagIndexes.Add(i);
                         break;
