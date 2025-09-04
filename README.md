@@ -14,8 +14,8 @@
 
 ## AssetStudio Features
 
-- Support version:
-  - 3.4 - 2023.2
+- Support Unity version:
+  - 1.7 - 6000.2
 - Support asset types:
   - **Texture2D**, **Texture2DArray** : convert to png, tga, jpeg, bmp, webp
   - **Sprite** : crop Texture2D to png, tga, jpeg, bmp, webp
@@ -32,7 +32,6 @@
 ## AssetStudioMod Features
 
 - CLI version (for Windows, Linux, Mac)
-   - `Animator` and `AnimationClip` assets are not supported in the CLI version
 - Support of sprites with alpha mask
 - Support of image export in WebP format
 - Support of Live2D Cubism model export
@@ -48,12 +47,12 @@
 
 - AssetStudioMod.net472
    - GUI/CLI - [.NET Framework 4.7.2](https://dotnet.microsoft.com/download/dotnet-framework/net472)
-- AssetStudioMod.net6
-   - GUI/CLI (Windows) - [.NET Desktop Runtime 6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
-   - CLI (Linux/Mac) - [.NET Runtime 6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
 - AssetStudioMod.net8
    - GUI/CLI (Windows) - [.NET Desktop Runtime 8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
    - CLI (Linux/Mac) - [.NET Runtime 8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
+- AssetStudioMod.net9
+   - GUI/CLI (Windows) - [.NET Desktop Runtime 9.0](https://dotnet.microsoft.com/download/dotnet/9.0)
+   - CLI (Linux/Mac) - [.NET Runtime 9.0](https://dotnet.microsoft.com/download/dotnet/9.0)
 
 ## CLI Usage
 
@@ -97,14 +96,16 @@ AssetStudioModCLI <asset folder path> -m dump -o <output folder path>
 ```
 AssetStudioModCLI <asset folder path> -m live2d
 ```
-> When running in live2d mode you can only specify `-o`, `--log-level`, `--log-output`, `--l2d-motion-mode`, `--l2d-force-bezier`, `--export-asset-list`, `--unity-version` and `--assembly-folder` options.
-Any other options will be ignored.
+> When running in live2d mode, the only filter option supported is `--filter-by-name`.
 - Export all FBX objects (similar to "Export all objects (split)" option in the GUI)
 ```
 AssetStudioModCLI <asset folder path> -m splitObjects
 ```
-> When running in splitObjects mode you can only specify `-o`, `--log-level`, `--log-output`, `--export-asset-list`, `--image-format`, `--filter-by-name` and `--unity-version` options.
-Any other options will be ignored.
+> When running in splitObjects mode, the only filter option supported is `--filter-by-name`.
+- Export Animator assets
+```
+AssetStudioModCLI <asset folder path> -m animator
+```
 
 ### Advanced Samples
 - Export image assets converted to webp format to a specified output folder
@@ -202,3 +203,9 @@ First, use [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) to generate d
 * [Ishotihadus/mikunyan](https://github.com/Ishotihadus/mikunyan)
 * [BinomialLLC/crunch](https://github.com/BinomialLLC/crunch)
 * [Unity-Technologies/crunch](https://github.com/Unity-Technologies/crunch/tree/unity)
+
+### LZMA compression
+* [7-zip/sdk](https://www.7-zip.org/sdk.html)
+
+### Oodle compression
+* [zao/ooz](https://github.com/zao/ooz)

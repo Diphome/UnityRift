@@ -3110,7 +3110,11 @@ namespace AssetStudioGUI
                 GL.UniformMatrix4(uniformModelMatrix, false, ref modelMatrixData);
                 GL.UniformMatrix4(uniformViewMatrix, false, ref viewMatrixData);
                 GL.UniformMatrix4(uniformProjMatrix, false, ref projMatrixData);
+#if NETFRAMEWORK
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+#else
+                GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
+#endif
                 GL.DrawElements(BeginMode.Triangles, indiceData.Length, DrawElementsType.UnsignedInt, 0);
             }
             //Wireframe
@@ -3122,7 +3126,11 @@ namespace AssetStudioGUI
                 GL.UniformMatrix4(uniformModelMatrix, false, ref modelMatrixData);
                 GL.UniformMatrix4(uniformViewMatrix, false, ref viewMatrixData);
                 GL.UniformMatrix4(uniformProjMatrix, false, ref projMatrixData);
+#if NETFRAMEWORK
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+#else
+                GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
+#endif
                 GL.DrawElements(BeginMode.Triangles, indiceData.Length, DrawElementsType.UnsignedInt, 0);
                 GL.Disable(EnableCap.PolygonOffsetLine);
             }

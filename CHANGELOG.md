@@ -1,5 +1,83 @@
 # Changelog
 
+## v0.19.0.0 [04-09-2025]
+#### Breaking Changes
+- Many asset fields of array type have been replaced with list type *(aka fixed the cause of most memory leaks)* ([35b2499](https://github.com/aelurum/AssetStudio/commit/35b24990c6a5d99c15b661578cf9da26aefe8d1b))
+
+#### New features
+- Added Unity 6 support
+- Added support for Tuanjie 1.0 - 1.6 (partial)
+    - Support for some Tuanjie-specific features, such as web streaming of texture data/virtual geometry meshes/acl clips, is not implemented yet
+- Added multiBundle support (a single file with multiple asset bundles inside)
+    - *Which also includes support for fake headers*
+- Added options to control exported UV types
+    - [GUI] Added option for manual binding of UV map types
+    - [CLI] Added flag to export all UVs as diffuse maps
+- [GUI] Added Dark mode support for .NET 9 (wip) (https://github.com/aelurum/AssetStudio/issues/9)
+- [GUI] Added option to use lazy loading for `Mesh` assets
+- [GUI] Added option to use tree view in the Dump tab
+- [GUI] Added option to autoplay `AudioClip` assets
+- [CLI] Added mode to export `Animator` assets
+    - Added option to choose animation export mode (`--fbx-animation`)
+- [CLI] Added mode to Extract/Decompress asset bundles (https://github.com/aelurum/AssetStudio/issues/62)
+- [CLI] Added support for multiple input paths (separated by `,` or `;`)
+
+#### Fixes
+- Fixed support for `Mesh` assets with omitted weight values (https://github.com/aelurum/AssetStudio/issues/21)
+- Fixed audio preview for some fmod formats (https://github.com/aelurum/AssetStudio/issues/53)
+- Fixed bundle blocks read failed with ArchiveFlags.BlocksInfoAtTheEnd (https://github.com/aelurum/AssetStudio/pull/44)
+- Fixed a bug that caused audio preview volume to reset when selecting an asset
+- Fixed support of `Sprite` assets from Unity < 5.2
+- Fixed support of `Sprite` assets with wrong `SpriteAtlas` pathID
+- Fixed parsing of `AnimationClip` assets via typetree for Unity versions < 5
+- Fixed calculation of totalPointCount and totalSegmentCount in Live2D motions (https://github.com/Live2D/CubismNativeFramework/pull/57)
+- [GUI] Fixed displayed info for non-fmod audio clips from Unity < 5
+- [CLI] Fixed `Mesh` export for some region formats (https://github.com/aelurum/AssetStudio/issues/38)
+
+#### Other Changes
+- Replaced Newtonsoft.Json with System.Text.Json for asset typetree serialization/deserialization
+- Disabled animation converting if animation export is disabled in the options
+- Added support for assets/bundles with obfuscated Unity version
+- Added support of loading `Material` assets using their typetree
+- Added Oodle compression support (unofficial)
+- Improved `Animator` export in cases where `MeshRenderer` is missing a `Mesh` reference (https://github.com/aelurum/AssetStudio/pull/40)
+- Improved support for some older Unity versions (< 3.0)
+- Improved support of zipped files
+- Improved ExportRaw option: External data will also be added to exported assets
+- Updated UnityCN encryption detection method
+- Updated bundle reader
+    - Replaced creation of a duplicated file/memory stream with OffsetStream
+    - Added separate processing of uncompressed bundles (including streamed bundles). They will be read directly from disk
+    - Added progress report on LZMA decompression process
+- Updated asset export logic
+    - Disabled saving files with a unique id if they already exist. A unique id will only be added to files with identical names during export
+    - Added option to overwrite existing files (`-r`, `--overwrite-existing` flag in CLI)
+    - Fixed support of multiple model export using "Export selected objects (split)" option (https://github.com/aelurum/AssetStudio/issues/43)
+- Improved integration with Live2D assets
+    - Fixed Live2D model export for bundles with multiple models inside    
+    - Added support of exporting Live2D poses (pose3.json)
+    - Added support of grouping exported models by model name
+    - Added container-independent method for searching `AnimationClip` assets
+    > *However, it's not really universal, so it cannot completely replace the container-dependent method*
+    - [GUI] Added ability to filter Live2D model assets using "Filter Type"
+    - [CLI] Added name filtering support for Live2D export mode
+- FMOD updated to v2.03.06
+    - Added native libs for linux-arm64, win-arm64
+- [GUI] AudioClip improvements:
+    - Increased loading speed of `AudioClip` preview
+    - Optimized memory consumption of `AudioClip` preview
+    - Fixed incorrect length detection for some sound types
+    - Added `AudioClip` loop point display (https://github.com/aelurum/AssetStudio/pull/37)
+    - Added channel count info (audio channels)
+- [GUI] Reworked some import options
+    - Added feature to load and save import options to a file (*import options include Unity version*)
+    - Added option to always decompress bundles to disk (related issue: https://github.com/aelurum/AssetStudio/issues/58)
+- [GUI] Added exact search option for Scene Hierarchy (https://github.com/aelurum/AssetStudio/issues/49)
+- [CLI] Added flag to always decompress bundles to disk (`--decompress-to-disk`)
+- [CLI] Added flag to allow filtering assets using regex (`--filter-with-regex`) (https://github.com/aelurum/AssetStudio/issues/45)
+- [CLI] The `--avoid-typetree-loading` flag replaced with `--ignore-typetree`
+- Made some other minor fixes and improvements
+
 ## v0.18.0.0 [04-04-2024]
 #### Breaking Changes
 - Structure of the AnimationClip class has been changed a bit to match the structure of its type tree (`m_Clip = animationClip.m_MuscleClip.m_Clip` -> `m_Clip = animationClip.m_MuscleClip.m_Clip.data`)

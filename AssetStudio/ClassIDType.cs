@@ -376,6 +376,7 @@ namespace AssetStudio
         SceneRoots = 1660057539,
         BrokenPrefabAsset = 1731078267,
         AndroidAssetPackImporter = 1736697216,
+        VulkanDeviceFilterLists = 1740304944,
         GridLayout = 1742807556,
         AssemblyDefinitionImporter = 1766753193,
         ParentConstraint = 1773428102,
