@@ -1,6 +1,6 @@
 # AssetStudioMod
 
-[![Release](https://img.shields.io/github/v/release/aelurum/AssetStudio)](https://github.com/aelurum/AssetStudio/releases/latest) [![Downloads](https://img.shields.io/github/downloads/aelurum/AssetStudio/total?color=blue)](https://github.com/aelurum/AssetStudio/releases/latest) [![Download latest release](https://img.shields.io/badge/Download_latest_release-blue)](https://github.com/aelurum/AssetStudio/releases/latest)
+[![Release](https://img.shields.io/github/v/release/aelurum/AssetStudio?color=blue)](https://github.com/aelurum/AssetStudio/releases/latest) [![Downloads](https://img.shields.io/github/downloads/aelurum/AssetStudio/total?color=blue)](https://github.com/aelurum/AssetStudio/releases/latest) [![Download latest release](https://img.shields.io/badge/Download_latest_release-blue)](https://github.com/aelurum/AssetStudio/releases/latest)
 
 [![Build status](https://ci.appveyor.com/api/projects/status/5qyai0hqs0ktyara/branch/AssetStudioMod?svg=true)](https://ci.appveyor.com/project/aelurum/assetstudiomod/branch/AssetStudioMod) [![Download latest build](https://img.shields.io/badge/Download_latest_build-brightgreen)](https://ci.appveyor.com/project/aelurum/assetstudiomod/branch/AssetStudioMod/artifacts)
 
@@ -40,7 +40,7 @@
 - Support of swizzled Switch textures
     - Ported from nesrak1's [AssetStudio fork](https://github.com/nesrak1/AssetStudio/tree/switch-tex-deswizzle)
 - Detecting bundles with UnityCN encryption
-   - Detection only. If you want to open them, please use Razmoth's [Studio](https://github.com/RazTools/Studio)
+   - Detection only. If you want to open them, please use Razmoth's [Studio](https://github.com/RazTools/Studio) or Escartem's [AnimeStudio](https://github.com/Escartem/AnimeStudio)
 - Some UI optimizations and bug fixes (See [CHANGELOG](https://github.com/aelurum/AssetStudio/blob/AssetStudioMod/CHANGELOG.md) for details)
 
 ## Requirements
