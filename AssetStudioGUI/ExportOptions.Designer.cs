@@ -32,6 +32,7 @@
             this.OKbutton = new System.Windows.Forms.Button();
             this.Cancel = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.overwriteExistingFiles = new System.Windows.Forms.CheckBox();
             this.parallelExportMaxLabel = new System.Windows.Forms.Label();
             this.parallelExportCheckBox = new System.Windows.Forms.CheckBox();
             this.parallelExportUpDown = new System.Windows.Forms.NumericUpDown();
@@ -82,7 +83,6 @@
             this.exportAllNodes = new System.Windows.Forms.CheckBox();
             this.eulerFilter = new System.Windows.Forms.CheckBox();
             this.optionTooltip = new System.Windows.Forms.ToolTip(this.components);
-            this.overwriteExistingFiles = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.parallelExportUpDown)).BeginInit();
             this.panel1.SuspendLayout();
@@ -142,6 +142,16 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Export";
             // 
+            // overwriteExistingFiles
+            // 
+            this.overwriteExistingFiles.AutoSize = true;
+            this.overwriteExistingFiles.Location = new System.Drawing.Point(6, 63);
+            this.overwriteExistingFiles.Name = "overwriteExistingFiles";
+            this.overwriteExistingFiles.Size = new System.Drawing.Size(130, 17);
+            this.overwriteExistingFiles.TabIndex = 5;
+            this.overwriteExistingFiles.Text = "Overwrite existing files";
+            this.overwriteExistingFiles.UseVisualStyleBackColor = true;
+            // 
             // parallelExportMaxLabel
             // 
             this.parallelExportMaxLabel.AutoSize = true;
@@ -149,7 +159,7 @@
             this.parallelExportMaxLabel.Location = new System.Drawing.Point(260, 244);
             this.parallelExportMaxLabel.Name = "parallelExportMaxLabel";
             this.parallelExportMaxLabel.Size = new System.Drawing.Size(33, 13);
-            this.parallelExportMaxLabel.TabIndex = 13;
+            this.parallelExportMaxLabel.TabIndex = 14;
             this.parallelExportMaxLabel.Text = "Max: ";
             this.optionTooltip.SetToolTip(this.parallelExportMaxLabel, "*The maximum number matches the number of CPU cores");
             // 
@@ -161,7 +171,7 @@
             this.parallelExportCheckBox.Location = new System.Drawing.Point(6, 242);
             this.parallelExportCheckBox.Name = "parallelExportCheckBox";
             this.parallelExportCheckBox.Size = new System.Drawing.Size(203, 17);
-            this.parallelExportCheckBox.TabIndex = 11;
+            this.parallelExportCheckBox.TabIndex = 12;
             this.parallelExportCheckBox.Text = "Export in parallel with number of tasks";
             this.optionTooltip.SetToolTip(this.parallelExportCheckBox, "*Requires slightly more RAM than in single-task mode");
             this.parallelExportCheckBox.UseVisualStyleBackColor = true;
@@ -182,7 +192,7 @@
             0});
             this.parallelExportUpDown.Name = "parallelExportUpDown";
             this.parallelExportUpDown.Size = new System.Drawing.Size(42, 20);
-            this.parallelExportUpDown.TabIndex = 12;
+            this.parallelExportUpDown.TabIndex = 13;
             this.parallelExportUpDown.Value = new decimal(new int[] {
             1,
             0,
@@ -219,7 +229,7 @@
             this.exportSpriteWithAlphaMask.Location = new System.Drawing.Point(6, 173);
             this.exportSpriteWithAlphaMask.Name = "exportSpriteWithAlphaMask";
             this.exportSpriteWithAlphaMask.Size = new System.Drawing.Size(205, 17);
-            this.exportSpriteWithAlphaMask.TabIndex = 8;
+            this.exportSpriteWithAlphaMask.TabIndex = 9;
             this.exportSpriteWithAlphaMask.Text = "Export sprites with alpha mask applied";
             this.exportSpriteWithAlphaMask.UseVisualStyleBackColor = true;
             // 
@@ -231,7 +241,7 @@
             this.openAfterExport.Location = new System.Drawing.Point(6, 219);
             this.openAfterExport.Name = "openAfterExport";
             this.openAfterExport.Size = new System.Drawing.Size(137, 17);
-            this.openAfterExport.TabIndex = 10;
+            this.openAfterExport.TabIndex = 11;
             this.openAfterExport.Text = "Open folder after export";
             this.openAfterExport.UseVisualStyleBackColor = true;
             // 
@@ -243,7 +253,7 @@
             this.restoreExtensionName.Location = new System.Drawing.Point(6, 86);
             this.restoreExtensionName.Name = "restoreExtensionName";
             this.restoreExtensionName.Size = new System.Drawing.Size(275, 17);
-            this.restoreExtensionName.TabIndex = 5;
+            this.restoreExtensionName.TabIndex = 6;
             this.restoreExtensionName.Text = "Try to restore/Use original TextAsset extension name";
             this.optionTooltip.SetToolTip(this.restoreExtensionName, "If not checked, AssetStudio will export all TextAssets with the \".txt\" extension");
             this.restoreExtensionName.UseVisualStyleBackColor = true;
@@ -281,7 +291,7 @@
             this.convertAudio.Location = new System.Drawing.Point(6, 196);
             this.convertAudio.Name = "convertAudio";
             this.convertAudio.Size = new System.Drawing.Size(213, 17);
-            this.convertAudio.TabIndex = 9;
+            this.convertAudio.TabIndex = 10;
             this.convertAudio.Text = "Convert FMOD AudioClip to WAV(PCM)";
             this.convertAudio.UseVisualStyleBackColor = true;
             // 
@@ -295,7 +305,7 @@
             this.panel1.Location = new System.Drawing.Point(18, 134);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(279, 33);
-            this.panel1.TabIndex = 7;
+            this.panel1.TabIndex = 8;
             // 
             // towebp
             // 
@@ -357,7 +367,7 @@
             this.converttexture.Location = new System.Drawing.Point(6, 110);
             this.converttexture.Name = "converttexture";
             this.converttexture.Size = new System.Drawing.Size(116, 17);
-            this.converttexture.TabIndex = 6;
+            this.converttexture.TabIndex = 7;
             this.converttexture.Text = "Convert Texture2D";
             this.converttexture.UseVisualStyleBackColor = true;
             // 
@@ -459,9 +469,9 @@
             this.l2dForceBezierCheckBox.AutoSize = true;
             this.l2dForceBezierCheckBox.Location = new System.Drawing.Point(6, 122);
             this.l2dForceBezierCheckBox.Name = "l2dForceBezierCheckBox";
-            this.l2dForceBezierCheckBox.Size = new System.Drawing.Size(278, 17);
+            this.l2dForceBezierCheckBox.Size = new System.Drawing.Size(304, 17);
             this.l2dForceBezierCheckBox.TabIndex = 6;
-            this.l2dForceBezierCheckBox.Text = "Calculate Linear motion segments as Bezier segments";
+            this.l2dForceBezierCheckBox.Text = "Smooth motions (calc Linear segments as Bezier segments)";
             this.optionTooltip.SetToolTip(this.l2dForceBezierCheckBox, "May help if the exported motions look jerky/not smooth enough");
             this.l2dForceBezierCheckBox.UseVisualStyleBackColor = true;
             // 
@@ -764,16 +774,6 @@
             this.eulerFilter.TabIndex = 1;
             this.eulerFilter.Text = "EulerFilter";
             this.eulerFilter.UseVisualStyleBackColor = true;
-            // 
-            // overwriteExistingFiles
-            // 
-            this.overwriteExistingFiles.AutoSize = true;
-            this.overwriteExistingFiles.Location = new System.Drawing.Point(6, 63);
-            this.overwriteExistingFiles.Name = "overwriteExistingFiles";
-            this.overwriteExistingFiles.Size = new System.Drawing.Size(130, 17);
-            this.overwriteExistingFiles.TabIndex = 14;
-            this.overwriteExistingFiles.Text = "Overwrite existing files";
-            this.overwriteExistingFiles.UseVisualStyleBackColor = true;
             // 
             // ExportOptions
             // 

@@ -360,7 +360,7 @@ namespace AssetStudioCLI.Options
             f_l2dForceBezier = new GroupedOption<bool>
             (
                 optionDefaultValue: false,
-                optionName: "--l2d-force-bezier",
+                optionName: "--l2d-smooth-motions",
                 optionDescription: "(Flag) If specified, Linear motion segments will be calculated as Bezier segments\n" +
                     "(May help if the exported motions look jerky/not smooth enough)",
                 optionExample: "",
@@ -705,7 +705,7 @@ namespace AssetStudioCLI.Options
                         f_l2dAssetSearchByFilename.Value = true;
                         flagIndexes.Add(i);
                         break;
-                    case "--l2d-force-bezier":
+                    case "--l2d-smooth-motions":
                         if (o_workMode.Value != WorkMode.Live2D)
                         {
                             Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");

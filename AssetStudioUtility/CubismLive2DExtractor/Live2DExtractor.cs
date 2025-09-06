@@ -86,7 +86,8 @@ namespace CubismLive2DExtractor
                     var renderList = Model.RenderTextureList;
                     foreach (var renderMono in renderList)
                     {
-                        if (!TryGetRenderTexture(renderMono, out var tex))
+                        isRenderReadable = TryGetRenderTexture(renderMono, out var tex);
+                        if (!isRenderReadable)
                             break;
                         renderTextureSet.Add(tex);
                     }
