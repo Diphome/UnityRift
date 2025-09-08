@@ -432,7 +432,7 @@ namespace AssetStudio
 
             byte[] sharedCompressedBuff = null;
             byte[] sharedUncompressedBuff = null;
-            if (blocksCompression != CompressionType.Lzma && blocksCompression != CompressionType.Lzham)
+            if (blocksCompression > CompressionType.Lzma && blocksCompression != CompressionType.Lzham)
             {
                 sharedCompressedBuff = BigArrayPool<byte>.Shared.Rent(blockSize);
                 sharedUncompressedBuff = BigArrayPool<byte>.Shared.Rent(blockSize);
