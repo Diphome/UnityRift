@@ -458,7 +458,6 @@ namespace AssetStudio
                             numWrite = blockInfo.compressedSize;
                             break;
                         case CompressionType.Lzma:
-                            Logger.Info("Decompressing LZMA stream...");
                             numWrite = BundleDecompressionHelper.DecompressLzmaStream(reader.BaseStream, blocksStream, blockInfo.compressedSize, blockInfo.uncompressedSize, ref errorMsg);
                             break;
                         case CompressionType.Lz4:

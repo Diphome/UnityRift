@@ -118,6 +118,9 @@ namespace AssetStudioGUI
         private GUILogger logger;
 
         private TaskbarManager taskbar = TaskbarManager.Instance;
+        private System.Drawing.Font progressBarTextFont;
+        private Brush progressBarTextBrush;
+        private StringFormat progressBarTextFormat;
 
         [DllImport("gdi32.dll")]
         private static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
@@ -157,7 +160,16 @@ namespace AssetStudioGUI
             Logger.Default = logger;
             writeLogToFileToolStripMenuItem.Checked = Properties.Settings.Default.useFileLogger;
 
+            progressBarTextFont = new System.Drawing.Font(FontFamily.GenericSansSerif, 8);
+            progressBarTextBrush = new SolidBrush(SystemColors.ControlText);
+            progressBarTextFormat = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center,
+            };
+
             Progress.Default = new Progress<int>(SetProgressBarValue);
+            Progress.SetInstance(index: 1, new Progress<int>(SetProgressBarStringValue));
             Studio.StatusStripUpdate = StatusStripUpdate;
         }
 
@@ -1528,6 +1540,33 @@ namespace AssetStudioGUI
                 else
                     taskbar.SetProgressState(TaskbarProgressBarState.Normal);
             }));
+        }
+
+        private void SetProgressBarStringValue(int value)
+        {
+            var str = $"Decompressing LZMA: {value}%";
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    using (var graphics = progressBar1.CreateGraphics())
+                    {
+                        progressBar1.Refresh();
+                        var rect = new Rectangle(0, 0, progressBar1.Width, progressBar1.Height);
+                        graphics.DrawString(str, progressBarTextFont, progressBarTextBrush, rect, progressBarTextFormat);
+                    }
+                }));
+            }
+            else
+            {
+                using (var graphics = progressBar1.CreateGraphics())
+                {
+                    progressBar1.Refresh();
+                    var rect = new Rectangle(0, 0, progressBar1.Width, progressBar1.Height);
+                    graphics.DrawString(str, progressBarTextFont, progressBarTextBrush, rect, progressBarTextFormat);
+                }
+            }
         }
 
         private void StatusStripUpdate(string statusText)

@@ -249,7 +249,7 @@ namespace SevenZip.Compression.LZMA
 				nowPos64++;
 			}
 
-			Progress.Reset();
+			Progress.Reset(index: 1);
 			while (nowPos64 < outSize64)
 			{
 				// UInt64 next = Math.Min(nowPos64 + (1 << 18), outSize64);
@@ -342,7 +342,7 @@ namespace SevenZip.Compression.LZMA
 						m_OutWindow.CopyBlock(rep0, len);
 						nowPos64 += len;
 
-						Progress.Report((int)(nowPos64 * 100f / outSize64), 100);
+						Progress.Report((int)(nowPos64 * 100f / outSize64), 100, index: 1);
 					}
 				}
 			}
