@@ -128,6 +128,7 @@ namespace AssetStudioCLI.Options
         public static Option<bool> f_decompressToDisk;
         public static Option<bool> f_notRestoreExtensionName;
         public static Option<bool> f_avoidLoadingViaTypetree;
+        public static Option<bool> f_rawByteArrayFromMono;
         public static Option<bool> f_loadAllAssets;
 
         static CLIOptions()
@@ -557,6 +558,15 @@ namespace AssetStudioCLI.Options
                 optionHelpGroup: HelpGroups.Advanced,
                 isFlag: true
             );
+            f_rawByteArrayFromMono = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--raw-array",
+                optionDescription: "(Flag) If specified, Studio will try to extract raw byte array from MonoBehaviour assets\n(Only for ExportRaw mode)\n",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.Advanced,
+                isFlag: true
+            );
             f_loadAllAssets = new GroupedOption<bool>
             (
                 optionDefaultValue: false,
@@ -739,6 +749,16 @@ namespace AssetStudioCLI.Options
                         break;
                     case "--ignore-typetree":
                         f_avoidLoadingViaTypetree.Value = true;
+                        flagIndexes.Add(i);
+                        break;
+                    case "--raw-array":
+                        if (o_workMode.Value != WorkMode.ExportRaw)
+                        {
+                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
+                            ShowOptionDescription(f_rawByteArrayFromMono, isFlag: true);
+                            return;
+                        }
+                        f_rawByteArrayFromMono.Value = true;
                         flagIndexes.Add(i);
                         break;
                     case "--load-all":
@@ -1430,6 +1450,10 @@ namespace AssetStudioCLI.Options
                         sb.AppendLine($"# Export Audio Format: {o_audioFormat}");
                         sb.AppendLine($"# Restore TextAsset Extension: {!f_notRestoreExtensionName.Value}");
                         sb.AppendLine($"# Max Parallel Export Tasks: {o_maxParallelExportTasks}");
+                    }
+                    if (o_workMode.Value == WorkMode.ExportRaw)
+                    {
+                        sb.AppendLine($"# Extract Raw Byte Array From MonoBehaviour: {f_rawByteArrayFromMono}");
                     }
                     sb.AppendLine(ShowCurrentFilter());
                     sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");

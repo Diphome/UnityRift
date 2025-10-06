@@ -358,5 +358,17 @@ namespace AssetStudioGUI.Properties {
                 this["meshLazyLoad"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool rawByteArrayFromMono {
+            get {
+                return ((bool)(this["rawByteArrayFromMono"]));
+            }
+            set {
+                this["rawByteArrayFromMono"] = value;
+            }
+        }
     }
 }

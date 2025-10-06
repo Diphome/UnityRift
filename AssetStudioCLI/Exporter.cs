@@ -315,6 +315,31 @@ namespace AssetStudioCLI
                         m_VideoClip.m_VideoData.WriteData(exportFullPath.Replace(".dat", "_data.dat"));
                     }
                     break;
+                case MonoBehaviour m_MonoBehaviour when CLIOptions.f_rawByteArrayFromMono.Value:
+                    var reader = m_MonoBehaviour.reader;
+                    reader.Reset();
+                    var assetData = reader.ReadBytes(28); //PPtr<GameObject> m_GameObject, m_Enabled, PPtr<MonoScript>
+                    var assetNameLen = reader.ReadInt32();
+                    reader.Position -= 4;
+                    var assetNameBytes = reader.ReadBytes(assetNameLen + 4);
+                    if (assetNameLen > 0)
+                        reader.AlignStream();
+                    var arrayLen = reader.ReadInt32();
+                    if (arrayLen <= 0 || arrayLen > reader.Remaining)
+                        break;
+                    using (var outStream = new FileStream(exportFullPath.Replace(".dat", "_extracted.dat"), FileMode.Create))
+                    {
+                        reader.BaseStream.CopyTo(outStream, size: arrayLen);
+                    }
+                    using (var outStream = new FileStream(exportFullPath, FileMode.Create))
+                    {
+                        outStream.Write(assetData, 0, assetData.Length);
+                        outStream.Write(assetNameBytes, 0, assetNameBytes.Length);
+                        if (reader.Remaining > 0)
+                            reader.BaseStream.CopyTo(outStream, size: reader.Remaining);
+                    }
+                    Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{exportFullPath}\"");
+                    return true;
             }
             File.WriteAllBytes(exportFullPath, item.Asset.GetRawData());
 
