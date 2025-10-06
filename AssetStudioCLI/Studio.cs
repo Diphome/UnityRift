@@ -30,6 +30,7 @@ namespace AssetStudioCLI
         {
             Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
             Progress.Default = new Progress<int>(ShowCurProgressValue);
+            Progress.SetInstance(1, new Progress<int>(ShowCurProgressValue));
             assetsManager.LoadViaTypeTree = !CLIOptions.f_avoidLoadingViaTypetree.Value;
             assetsManager.Options.CustomUnityVersion = CLIOptions.o_unityVersion.Value;
             assetsManager.Options.BundleOptions.CustomBlockInfoCompression = CLIOptions.o_bundleBlockInfoCompression.Value;
@@ -519,11 +520,11 @@ namespace AssetStudioCLI
                     info += $"\n#\n# Total: {parsedAssetsList.Count} assets";
                 }
 
-                info += $"\n\n# Exportable Live2D Models: {l2dModelDict.Count}";
+                info += $"\n\n[Cubism Live2D]\n# Exportable Models: {l2dModelDict.Count}";
             }
             else
             {
-                info += "No exportable assets found.";
+                info += "\n\nNo exportable assets found.";
             }
 
             if (CLIOptions.o_logLevel.Value > LoggerEvent.Info)

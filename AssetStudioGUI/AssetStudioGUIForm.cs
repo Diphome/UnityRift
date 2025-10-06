@@ -89,10 +89,10 @@ namespace AssetStudioGUI
         private int sortColumn = -1;
         private bool reverseSort;
 
-#if NET6_0_OR_GREATER
-        private AlphanumComparatorFastNet alphanumComparator = new AlphanumComparatorFastNet();
-#else
+#if NETFRAMEWORK
         private AlphanumComparatorFast alphanumComparator = new AlphanumComparatorFast();
+#else
+        private AlphanumComparatorFastNet alphanumComparator = new AlphanumComparatorFastNet();
 #endif
 
         //asset list selection
