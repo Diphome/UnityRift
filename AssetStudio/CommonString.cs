@@ -116,6 +116,8 @@ namespace AssetStudio
             {1152, "FileSize"},
             {1161, "Hash128"},
             {1169, "RenderingLayerMask"},
+            {1188, "fixed_array"},
+            {1200, "EntityId"},
         };
     }
 }
