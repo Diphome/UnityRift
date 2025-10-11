@@ -794,13 +794,10 @@ namespace AssetStudioCLI
             {
                 Logger.Default.Log(LoggerEvent.Info, "Nothing exported.", ignoreLevel: true);
             }
-            else if (toExportCount > exportedCount)
-            {
-                Logger.Default.Log(LoggerEvent.Info, $"Finished exporting {exportedCount} asset(s) to \"{CLIOptions.o_outputFolder.Value.Color(Ansi.BrightYellow)}\".", ignoreLevel: true);
-            }
             else
             {
-                Logger.Default.Log(LoggerEvent.Info, $"Finished exporting {exportedCount} asset(s) to \"{CLIOptions.o_outputFolder.Value.Color(Ansi.BrightGreen)}\".", ignoreLevel: true);
+                var outPath = CLIOptions.o_outputFolder.Value.ColorIf(toExportCount > exportedCount, Ansi.BrightYellow, Ansi.BrightGreen);
+                Logger.Default.Log(LoggerEvent.Info, $"Finished exporting {exportedCount} asset(s) to \"{outPath}\".", ignoreLevel: true);
             }
 
             if (toExportCount > exportedCount)

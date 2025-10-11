@@ -10,9 +10,9 @@ namespace AssetStudio
             Black = "\u001b[30m",
             Red = "\u001b[31m",
             Green = "\u001b[32m",
-            Yellow = "\u001b[33m",   //remapped to ~BrightWhite in Windows PowerShell 6
+            Yellow = "\u001b[33m", //remapped to ~BrightWhite in Windows PowerShell 6
             Blue = "\u001b[34m",
-            Magenta = "\u001b[35m",  //remapped to ~Blue in Windows PowerShell 6
+            Magenta = "\u001b[35m", //remapped to ~Blue in Windows PowerShell 6
             Cyan = "\u001b[36m",
             White = "\u001b[37m",
             BrightBlack = "\u001b[30;1m",
@@ -28,11 +28,20 @@ namespace AssetStudio
         public static string Color(this string str, string ansiColor)
         {
             if (!ColorConsoleHelper.isAnsiCodesSupported)
-            {
                 return str;
-            }
 
             return $"{ansiColor}{str}{Reset}";
+        }
+
+        public static string ColorIf(this string str, bool isTrue, string ansiColor, string defaultAnsiColor = null)
+        {
+            if (isTrue)
+                return str.Color(ansiColor);
+
+            if (defaultAnsiColor != null)
+                return str.Color(defaultAnsiColor);
+
+            return str;
         }
 
         public static void AnsiCodesTest()
@@ -45,5 +54,4 @@ namespace AssetStudio
             Console.WriteLine("\u001b[34;1m E \u001b[35;1m F \u001b[36;1m G \u001b[37;1m H \u001b[0m");
         }
     }
-
 }

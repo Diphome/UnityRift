@@ -1272,7 +1272,7 @@ namespace AssetStudioCLI.Options
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Unknown Error.".Color(ColorConsole.Red));
+                    Console.WriteLine("Unknown Error.".Color(ColorConsole.BrightRed));
                     Console.WriteLine(ex);
                     return;
                 }

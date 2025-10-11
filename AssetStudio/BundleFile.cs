@@ -438,14 +438,16 @@ namespace AssetStudio
 
             try
             {
-                foreach (var blockInfo in m_BlocksInfo)
+                for (var i = 0; i < m_BlocksInfo.Length; i++)
                 {
+                    var blockInfo = m_BlocksInfo[i];
                     var compressionType = (CompressionType)(blockInfo.flags & StorageBlockFlags.CompressionTypeMask);
 
                     if (customBlockCompression != CompressionType.Auto && compressionType > 0)
                     {
                         compressionType = customBlockCompression;
                     }
+                    var debugMsg = $"[{i:D2}] Compression: {compressionType} | UncompressedSize: {blockInfo.uncompressedSize} | CompressedSize: {blockInfo.compressedSize} ";
 
                     long numWrite;
                     var errorMsg = string.Empty;
@@ -468,7 +470,8 @@ namespace AssetStudio
                             sharedCompressedBuff.AsSpan().Clear();
                             sharedUncompressedBuff.AsSpan().Clear();
 
-                            _ = reader.Read(sharedCompressedBuff, 0, compressedSize);
+                            var read = reader.Read(sharedCompressedBuff, 0, compressedSize);
+                            debugMsg += $"(read: {read.ToString().ColorIf(read != compressedSize, ColorConsole.BrightRed)})";
                             var compressedSpan = new ReadOnlySpan<byte>(sharedCompressedBuff, 0, compressedSize);
                             var uncompressedSpan = new Span<byte>(sharedUncompressedBuff, 0, uncompressedSize);
 
@@ -476,7 +479,6 @@ namespace AssetStudio
                             if (numWrite == uncompressedSize)
                             {
                                 blocksStream.Write(sharedUncompressedBuff, 0, uncompressedSize);
-                                continue;
                             }
                             break;
                         case CompressionType.Lzham:
@@ -484,6 +486,7 @@ namespace AssetStudio
                         default:
                             throw new IOException($"Unknown block compression type: {compressionType}.\nYou may try to specify the compression type manually.\n");
                     }
+                    Logger.Debug(debugMsg);
 
                     if (numWrite != blockInfo.uncompressedSize)
                     {
