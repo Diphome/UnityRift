@@ -135,7 +135,7 @@ namespace AssetStudio
                         var matrix = Matrix3x2.CreateScale(m_Sprite.m_PixelsToUnits);
                         matrix *= Matrix3x2.CreateTranslation(m_Sprite.m_Rect.width * m_Sprite.m_Pivot.X - textureRectOffset.X, m_Sprite.m_Rect.height * m_Sprite.m_Pivot.Y - textureRectOffset.Y);
                         var triangles = GetTriangles(m_Sprite.m_RD);
-                        var points = triangles.Select(x => x.Select(y => new PointF(y.X, y.Y)).ToArray());
+                        var points = triangles.Select(x => x.Select(y => new PointF(y.X, y.Y)));
                         var pathBuilder = new PathBuilder(matrix);
                         foreach (var p in points)
                         {
@@ -156,7 +156,7 @@ namespace AssetStudio
                             var rectP = new RectangularPolygon(0, 0, rect.Width, rect.Height);
                             try
                             {
-                                spriteImage.Mutate(x => x.Fill(options, SixLabors.ImageSharp.Color.Red, rectP.Clip(path)));
+                                spriteImage.Mutate(x => x.Fill(options, SixLabors.ImageSharp.Color.Red, rectP.Clip(path.Clip())));
                                 spriteImage.Mutate(x => x.Flip(FlipMode.Vertical));
                                 return spriteImage;
                             }
