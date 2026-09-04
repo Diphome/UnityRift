@@ -79,6 +79,18 @@ namespace AssetStudioGUI
         private Matrix4 modelMatrixData;
         private Matrix4 viewMatrixData;
         private Matrix4 projMatrixData;
+
+        // Animator preview (mesh + skeletal animation playback)
+        private AnimationPlayer animPlayer;
+        private int animClipIndex = -1;      // -1 = bind pose
+        private float animTime;
+        private int[] animVertexOffset;      // per player-mesh start index in the combined arrays
+        private System.Windows.Forms.Timer animTimer;
+        private Panel animPanel;
+        private ComboBox animClipCombo;
+        private Button animPlayButton;
+        private TrackBar animTrackBar;
+        private bool animSuppressEvents;
         private int[] indiceData;
         private int wireFrameMode;
         private int shadeMode;
@@ -886,6 +898,7 @@ namespace AssetStudioGUI
             lastPreviewItem = assetItem;
             if (assetItem == null)
                 return;
+            StopAnimator(); // stop any running animator preview before showing the next asset
             try
             {
                 switch (assetItem.Type)
@@ -934,7 +947,7 @@ namespace AssetStudioGUI
                         PreviewSprite(assetItem, assetItem.Asset as Sprite);
                         break;
                     case ClassIDType.Animator:
-                        StatusStripUpdate("Can be exported to FBX file.");
+                        PreviewAnimator(assetItem.Asset as Animator);
                         break;
                     case ClassIDType.AnimationClip:
                         StatusStripUpdate("Can be exported with Animator or Objects");
@@ -1590,6 +1603,7 @@ namespace AssetStudioGUI
                 Logger.Info("Resetting program...");
 
             Text = guiTitle;
+            StopAnimator();
             Studio.assetsManager.Clear();
             Studio.assemblyLoader.Clear();
             Studio.exportableAssets.Clear();
@@ -3093,29 +3107,267 @@ namespace AssetStudioGUI
                 BufferUsageHint.StaticDraw);
         }
 
+        private readonly List<int> glBufferHandles = new List<int>();
+
         private void CreateVAO()
         {
             GL.DeleteVertexArray(vao);
+            // Delete the previous call's buffers so repeated uploads (e.g. animation
+            // playback re-uploading every frame) don't leak GPU memory.
+            foreach (var h in glBufferHandles)
+                GL.DeleteBuffer(h);
+            glBufferHandles.Clear();
             GL.GenVertexArrays(1, out vao);
             GL.BindVertexArray(vao);
             CreateVBO(out var vboPositions, vertexData, attributeVertexPosition);
+            glBufferHandles.Add(vboPositions);
             if (normalMode == 1)
             {
                 CreateVBO(out var vboNormals, normal2Data, attributeNormalDirection);
+                glBufferHandles.Add(vboNormals);
             }
             else
             {
                 if (normalData != null)
+                {
                     CreateVBO(out var vboNormals, normalData, attributeNormalDirection);
+                    glBufferHandles.Add(vboNormals);
+                }
             }
             CreateVBO(out var vboColors, colorData, attributeVertexColor);
+            glBufferHandles.Add(vboColors);
             CreateVBO(out var vboModelMatrix, modelMatrixData, uniformModelMatrix);
+            glBufferHandles.Add(vboModelMatrix);
             CreateVBO(out var vboViewMatrix, viewMatrixData, uniformViewMatrix);
+            glBufferHandles.Add(vboViewMatrix);
             CreateVBO(out var vboProjMatrix, projMatrixData, uniformProjMatrix);
+            glBufferHandles.Add(vboProjMatrix);
             CreateEBO(out var eboElements, indiceData);
+            glBufferHandles.Add(eboElements);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.BindVertexArray(0);
         }
+
+        #region Animator preview
+
+        private void PreviewAnimator(Animator animator)
+        {
+            try
+            {
+                StopAnimator();
+                var imported = new ModelConverter(animator, Properties.Settings.Default.convertType);
+                animPlayer = new AnimationPlayer(imported);
+                if (animPlayer.Meshes.Count == 0)
+                {
+                    StatusStripUpdate("Animator has no previewable mesh.");
+                    animPlayer = null;
+                    return;
+                }
+
+                BuildAnimBuffers();
+                viewMatrixData = Matrix4.CreateRotationY(-MathF.PI / 4) * Matrix4.CreateRotationX(-MathF.PI / 6);
+                EnsureAnimControls();
+
+                animSuppressEvents = true;
+                animClipCombo.Items.Clear();
+                animClipCombo.Items.Add("(bind pose)");
+                foreach (var c in animPlayer.Clips)
+                    animClipCombo.Items.Add($"{c.Name}  ({c.Duration:0.00}s)");
+                animClipCombo.SelectedIndex = animPlayer.Clips.Count > 0 ? 1 : 0;
+                animSuppressEvents = false;
+
+                animClipIndex = animPlayer.Clips.Count > 0 ? 0 : -1;
+                animTime = 0f;
+
+                glControl1.Visible = true;
+                animPanel.Visible = true;
+                animPanel.BringToFront();
+                UpdateAnimFrame();
+
+                if (animClipIndex >= 0 && animPlayer.Clips[animClipIndex].Duration > 0f)
+                {
+                    animPlayButton.Text = "Pause";
+                    animTimer.Start();
+                }
+                else
+                {
+                    animPlayButton.Text = "Play";
+                }
+                StatusStripUpdate($"Animator preview: {animPlayer.Meshes.Count} mesh(es), {animPlayer.Clips.Count} clip(s). Pick a clip, Play/Pause, scrub the timeline. Mouse to rotate/zoom.");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Animator preview failed", ex);
+                StatusStripUpdate("Animator preview failed: " + ex.Message);
+                StopAnimator();
+            }
+        }
+
+        private void BuildAnimBuffers()
+        {
+            var count = 0;
+            animVertexOffset = new int[animPlayer.Meshes.Count];
+            for (var i = 0; i < animPlayer.Meshes.Count; i++)
+            {
+                animVertexOffset[i] = count;
+                count += animPlayer.Meshes[i].VertexCount;
+            }
+
+            vertexData = new Vector3[count];
+            normal2Data = new Vector3[count];
+            normalData = normal2Data; // same array so either normalMode uploads normals
+            colorData = new Vector4[count];
+            for (var i = 0; i < count; i++)
+                colorData[i] = new Vector4(0.75f, 0.75f, 0.75f, 1.0f);
+
+            var indices = new List<int>();
+            for (var m = 0; m < animPlayer.Meshes.Count; m++)
+            {
+                var off = animVertexOffset[m];
+                foreach (var ind in animPlayer.Meshes[m].Indices)
+                    indices.Add(ind + off);
+            }
+            indiceData = indices.ToArray();
+
+            var mn = animPlayer.BoundsMin;
+            var mx = animPlayer.BoundsMax;
+            var offset = new Vector3((mn.X + mx.X) / 2, (mn.Y + mx.Y) / 2, (mn.Z + mx.Z) / 2);
+            var dist = new Vector3(mx.X - mn.X, mx.Y - mn.Y, mx.Z - mn.Z);
+            var d = Math.Max(1e-5f, dist.Length);
+            modelMatrixData = Matrix4.CreateTranslation(-offset) * Matrix4.CreateScale(2f / d);
+        }
+
+        private void UpdateAnimFrame()
+        {
+            if (animPlayer == null)
+                return;
+            animPlayer.Evaluate(animClipIndex, animTime);
+            for (var m = 0; m < animPlayer.Meshes.Count; m++)
+            {
+                var pm = animPlayer.Meshes[m];
+                var off = animVertexOffset[m];
+                for (var v = 0; v < pm.VertexCount; v++)
+                {
+                    var p = pm.Positions[v];
+                    var n = pm.Normals[v];
+                    vertexData[off + v] = new Vector3(p.X, p.Y, p.Z);
+                    normal2Data[off + v] = new Vector3(n.X, n.Y, n.Z);
+                }
+            }
+            if (glControlLoaded)
+            {
+                glControl1.MakeCurrent();
+                CreateVAO();
+                glControl1.Invalidate();
+            }
+        }
+
+        private void EnsureAnimControls()
+        {
+            if (animPanel != null)
+                return;
+
+            animPanel = new Panel { Height = 30, Visible = false };
+            animPanel.Location = new Point(0, Math.Max(0, previewPanel.ClientSize.Height - animPanel.Height));
+            animPanel.Width = previewPanel.ClientSize.Width;
+            animPanel.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+
+            animClipCombo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240, Dock = DockStyle.Left };
+            animPlayButton = new Button { Text = "Pause", Width = 60, Dock = DockStyle.Left };
+            animTrackBar = new TrackBar { Minimum = 0, Maximum = 1000, TickStyle = TickStyle.None, Dock = DockStyle.Fill };
+
+            // Add Fill last so it takes the remaining width beside the left-docked controls.
+            animPanel.Controls.Add(animTrackBar);
+            animPanel.Controls.Add(animPlayButton);
+            animPanel.Controls.Add(animClipCombo);
+            previewPanel.Controls.Add(animPanel);
+
+            animClipCombo.SelectedIndexChanged += (s, e) => { if (!animSuppressEvents) SetAnimClip(animClipCombo.SelectedIndex); };
+            animPlayButton.Click += (s, e) => ToggleAnimPlay();
+            animTrackBar.Scroll += (s, e) => { if (!animSuppressEvents) ScrubAnim(animTrackBar.Value / 1000f); };
+
+            animTimer = new System.Windows.Forms.Timer { Interval = 33 };
+            animTimer.Tick += AnimTimer_Tick;
+        }
+
+        private void AnimTimer_Tick(object sender, EventArgs e)
+        {
+            if (animPlayer == null || animClipIndex < 0)
+                return;
+            var dur = animPlayer.Clips[animClipIndex].Duration;
+            if (dur <= 0f)
+            {
+                animTimer.Stop();
+                return;
+            }
+            animTime += animTimer.Interval / 1000f;
+            if (animTime > dur)
+                animTime -= dur;
+            animSuppressEvents = true;
+            animTrackBar.Value = (int)Math.Min(1000, Math.Max(0, animTime / dur * 1000));
+            animSuppressEvents = false;
+            UpdateAnimFrame();
+        }
+
+        private void SetAnimClip(int comboIndex)
+        {
+            if (animPlayer == null)
+                return;
+            animClipIndex = comboIndex - 1; // 0 => bind pose (-1)
+            animTime = 0f;
+            animSuppressEvents = true;
+            animTrackBar.Value = 0;
+            animSuppressEvents = false;
+            if (animClipIndex >= 0 && animPlayer.Clips[animClipIndex].Duration > 0f)
+            {
+                animTimer.Start();
+                animPlayButton.Text = "Pause";
+            }
+            else
+            {
+                animTimer.Stop();
+                animPlayButton.Text = "Play";
+            }
+            UpdateAnimFrame();
+        }
+
+        private void ToggleAnimPlay()
+        {
+            if (animPlayer == null)
+                return;
+            if (animTimer.Enabled)
+            {
+                animTimer.Stop();
+                animPlayButton.Text = "Play";
+            }
+            else if (animClipIndex >= 0 && animPlayer.Clips[animClipIndex].Duration > 0f)
+            {
+                animTimer.Start();
+                animPlayButton.Text = "Pause";
+            }
+        }
+
+        private void ScrubAnim(float fraction)
+        {
+            if (animPlayer == null || animClipIndex < 0)
+                return;
+            animTimer.Stop();
+            animPlayButton.Text = "Play";
+            animTime = fraction * animPlayer.Clips[animClipIndex].Duration;
+            UpdateAnimFrame();
+        }
+
+        private void StopAnimator()
+        {
+            animTimer?.Stop();
+            if (animPanel != null)
+                animPanel.Visible = false;
+            animPlayer = null;
+            animClipIndex = -1;
+            animTime = 0f;
+        }
+
+        #endregion
 
         private void ChangeGLSize(Size size)
         {
