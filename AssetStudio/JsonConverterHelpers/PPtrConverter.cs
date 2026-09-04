@@ -6,7 +6,17 @@ namespace AssetStudio
 {
     public static partial class JsonConverterHelper
     {
-        public static SerializedFile AssetsFile { get; set; }
+        // Set by the thread that is deserializing an object so PPtr converters can
+        // resolve against the right file. Assets are read on several threads at once,
+        // so this must be per-thread.
+        [ThreadStatic]
+        private static SerializedFile assetsFile;
+
+        public static SerializedFile AssetsFile
+        {
+            get => assetsFile;
+            set => assetsFile = value;
+        }
 
         public class PPtrConverter : JsonConverterFactory
         {

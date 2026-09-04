@@ -208,22 +208,25 @@ namespace AssetStudio
             // Cache key: major/minor/patch + classID (build type/number omitted — trees
             // effectively never differ within a patch release).
             var cacheKey = unchecked(((long)version.Major << 40) | ((long)version.Minor << 32) | ((long)version.Patch << 20) | ((uint)classId & 0xFFFFF));
-            if (_cache.TryGetValue(cacheKey, out typeTree))
-                return typeTree != null;
-
-            var type = GetTypeForVersion(classId, packed);
-            var root = SelectRoot(type);
-            if (root == ushort.MaxValue)
+            lock (_cache)
             {
-                _cache[cacheKey] = null;
-                return false;
-            }
+                if (_cache.TryGetValue(cacheKey, out typeTree))
+                    return typeTree != null;
 
-            var nodes = new List<TypeTreeNode>();
-            Flatten(root, 0, nodes);
-            typeTree = new TypeTree { m_Nodes = nodes, m_StringBuffer = Array.Empty<byte>() };
-            _cache[cacheKey] = typeTree;
-            return true;
+                var type = GetTypeForVersion(classId, packed);
+                var root = SelectRoot(type);
+                if (root == ushort.MaxValue)
+                {
+                    _cache[cacheKey] = null;
+                    return false;
+                }
+
+                var nodes = new List<TypeTreeNode>();
+                Flatten(root, 0, nodes);
+                typeTree = new TypeTree { m_Nodes = nodes, m_StringBuffer = Array.Empty<byte>() };
+                _cache[cacheKey] = typeTree;
+                return true;
+            }
         }
 
         private TpkClassType GetTypeForVersion(int classId, ulong packed)

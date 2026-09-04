@@ -145,6 +145,8 @@ namespace AssetStudio
         public static uint[][] ReadUInt32ArrayArray(this BinaryReader reader)
         {
             var length = reader.ReadInt32();
+            if (length < 0 || length * 4L > reader.BaseStream.Length - reader.BaseStream.Position)
+                throw new EndOfStreamException();
             var list = new List<uint[]>();
             for (var i = 0; i < length; i++)
             {
@@ -163,6 +165,8 @@ namespace AssetStudio
         public static string[] ReadStringArray(this BinaryReader reader)
         {
             var length = reader.ReadInt32();
+            if (length < 0 || length * 4L > reader.BaseStream.Length - reader.BaseStream.Position)
+                throw new EndOfStreamException();
             var list = new List<string>();
             for (var i = 0; i < length; i++)
             {

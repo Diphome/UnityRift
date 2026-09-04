@@ -41,10 +41,17 @@ namespace AssetStudio
 
         private static void _Report(int value, int index)
         {
-            if (value > PreValues[index])
+            // Called from worker threads during loading; only publish increases.
+            var previous = System.Threading.Volatile.Read(ref PreValues[index]);
+            while (value > previous)
             {
-                PreValues[index] = value;
-                Instances[index].Report(value);
+                var seen = System.Threading.Interlocked.CompareExchange(ref PreValues[index], value, previous);
+                if (seen == previous)
+                {
+                    Instances[index].Report(value);
+                    return;
+                }
+                previous = seen;
             }
         }
 

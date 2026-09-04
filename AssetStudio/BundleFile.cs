@@ -237,6 +237,13 @@ namespace AssetStudio
         private void ReadFiles(Stream inputStream, long blocksOffset = 0)
         {
             fileList = new List<StreamFile>(m_DirectoryInfo.Length);
+            // When the block data lives in memory, give every file its own read-only view
+            // over the same buffer (no copy). Each view has an independent position, so
+            // the serialized files of one bundle can be read on different threads.
+            // Disk-backed (TempFileStream) and raw uncompressed bundles keep sharing the
+            // single stream and are read sequentially.
+            var sharedBuffer = default(ArraySegment<byte>);
+            var hasSharedBuffer = inputStream is MemoryStream memoryStream && memoryStream.TryGetBuffer(out sharedBuffer);
             foreach (var node in m_DirectoryInfo)
             {
                 var file = new StreamFile();
@@ -245,7 +252,10 @@ namespace AssetStudio
                 file.fileName = Path.GetFileName(node.path);
                 try
                 {
-                    file.stream = new OffsetStream(inputStream, node.offset + blocksOffset, node.size);
+                    var baseStream = hasSharedBuffer
+                        ? new MemoryStream(sharedBuffer.Array, sharedBuffer.Offset, sharedBuffer.Count, false, true)
+                        : inputStream;
+                    file.stream = new OffsetStream(baseStream, node.offset + blocksOffset, node.size);
                 }
                 catch (IOException e)
                 {

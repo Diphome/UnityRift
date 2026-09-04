@@ -40,6 +40,7 @@ namespace AssetStudio
         public SkeletonMask(ObjectReader reader)
         {
             int numElements = reader.ReadInt32();
+            reader.ThrowIfTooLarge(numElements * 8f);
             m_Data = new List<SkeletonMaskElement>();
             for (var i = 0; i < numElements; i++)
             {

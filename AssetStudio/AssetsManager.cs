@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using AssetStudio.CustomOptions;
 using AssetStudio.CustomOptions.Asmo;
 using static AssetStudio.ImportHelper;
@@ -17,6 +19,10 @@ namespace AssetStudio
     {
         public bool LoadViaTypeTree = true;
         public bool MeshLazyLoad = true;
+        // Upper bound on threads used to read assets. Files that share one underlying
+        // stream (e.g. all serialized files inside a bundle) are always read on one
+        // thread; independent files/bundles are read concurrently. 0 = processor count.
+        public int MaxReadThreads = 0;
         // Optional external type-tree database (TPK). When set, objects from
         // type-tree-stripped files get a DB-provided tree so they can be read/dumped.
         public TypeTreeDatabase TypeTreeDb;
@@ -160,6 +166,7 @@ namespace AssetStudio
             }
 
             Progress.Reset();
+            var swLoad = System.Diagnostics.Stopwatch.StartNew();
             //use a for loop because list size can change
             for (var i = 0; i < importFiles.Count; i++)
             {
@@ -179,9 +186,14 @@ namespace AssetStudio
             assetsFileListHash.Clear();
             if (AssetsFileList.Count == 0)
                 return;
+            Logger.Debug($"Loaded {AssetsFileList.Count} file(s) in {swLoad.ElapsedMilliseconds} ms");
 
+            var swRead = System.Diagnostics.Stopwatch.StartNew();
             ReadAssets();
+            Logger.Debug($"Read assets in {swRead.ElapsedMilliseconds} ms");
+            var swProcess = System.Diagnostics.Stopwatch.StartNew();
             ProcessAssets();
+            Logger.Debug($"Processed assets in {swProcess.ElapsedMilliseconds} ms");
         }
 
         private bool LoadFile(string fullName)
@@ -654,53 +666,112 @@ namespace AssetStudio
             assetsFileIndexCache.Clear();
         }
 
+        // Shared across loads so System.Text.Json keeps its per-type metadata cache
+        // (rebuilding it on every load costs tens of ms per type on first use).
+        private static readonly JsonSerializerOptions LoadJsonOptions = new JsonSerializerOptions
+        {
+            Converters = { new JsonConverterHelper.ByteArrayConverter(), new JsonConverterHelper.PPtrConverter(), new JsonConverterHelper.KVPConverter() },
+            NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
+            PropertyNameCaseInsensitive = true,
+            IncludeFields = true,
+        };
+
+        private static Stream GetRootStream(Stream stream)
+        {
+            while (stream is OffsetStream offsetStream)
+            {
+                stream = offsetStream.BaseStream;
+            }
+            return stream;
+        }
+
         private void ReadAssets()
         {
             Logger.Info("Read assets...");
 
-            var jsonOptions = new JsonSerializerOptions
-            {
-                Converters = { new JsonConverterHelper.ByteArrayConverter(), new JsonConverterHelper.PPtrConverter(), new JsonConverterHelper.KVPConverter() },
-                NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
-                PropertyNameCaseInsensitive = true,
-                IncludeFields = true,
-            };
-
             var progressCount = AssetsFileList.Sum(x => x.m_Objects.Count);
-            var i = 0;
+            var progress = 0;
             Progress.Reset();
+
+            // Object readers share their file's stream position, so files that sit on the
+            // same underlying stream (every serialized file of a bundle) must be read one
+            // after another. Files on different streams are independent and are read in
+            // parallel. Each file's object list is still built in its original order.
+            var groups = new List<List<SerializedFile>>();
+            var groupByStream = new Dictionary<Stream, List<SerializedFile>>();
             foreach (var assetsFile in AssetsFileList)
             {
-                JsonConverterHelper.AssetsFile = assetsFile;
-                foreach (var objectInfo in assetsFile.m_Objects)
+                var rootStream = GetRootStream(assetsFile.reader.BaseStream);
+                if (!groupByStream.TryGetValue(rootStream, out var group))
                 {
-                    var objectReader = new ObjectReader(assetsFile.reader, assetsFile, objectInfo);
-                    if (filteredAssetTypesList.Count > 0 && !filteredAssetTypesList.Contains(objectReader.type))
+                    group = new List<SerializedFile>();
+                    groupByStream.Add(rootStream, group);
+                    groups.Add(group);
+                }
+                group.Add(assetsFile);
+            }
+
+            var maxThreads = MaxReadThreads > 0 ? MaxReadThreads : Environment.ProcessorCount;
+            maxThreads = Math.Max(1, Math.Min(maxThreads, groups.Count));
+            if (maxThreads == 1)
+            {
+                foreach (var group in groups)
+                {
+                    foreach (var assetsFile in group)
                     {
-                        continue;
+                        ReadAssetsFile(assetsFile, ref progress, progressCount);
                     }
-                    // For type-tree-stripped files, supply a tree from the database so the
-                    // type-tree read paths (and Object.Dump/ToType) work for every class.
-                    // MonoBehaviour (114) is excluded: its script-defined body is
-                    // reconstructed from assemblies (MonoBehaviourConverter), which already
-                    // seeds the base layout; a DB base-only tree would short-circuit that.
-                    // Skip built-in engine resource files: their objects use a legacy
-                    // layout that doesn't match the version they declare, so a version-keyed
-                    // DB tree would mis-read them. Let them fall back to the graceful
-                    // built-in handling below instead of logging read mismatches.
-                    if (TypeTreeDb != null && TypeTreeDb.IsLoaded
-                        && objectReader.classID != (int)ClassIDType.MonoBehaviour
-                        && !IsBuiltInResourceFile(assetsFile.fileName)
-                        && (objectReader.serializedType == null || objectReader.serializedType.m_Type == null)
-                        && TypeTreeDb.TryGetTypeTree(assetsFile.version, objectReader.classID, out var dbTypeTree))
+                }
+            }
+            else
+            {
+                Logger.Debug($"Reading {groups.Count} independent file group(s) on up to {maxThreads} threads");
+                var options = new ParallelOptions { MaxDegreeOfParallelism = maxThreads };
+                Parallel.ForEach(groups, options, group =>
+                {
+                    foreach (var assetsFile in group)
                     {
-                        if (objectReader.serializedType == null)
-                            objectReader.serializedType = new SerializedType { classID = objectReader.classID };
-                        objectReader.serializedType.m_Type = dbTypeTree;
+                        ReadAssetsFile(assetsFile, ref progress, progressCount);
                     }
-                    try
-                    {
-                        Object obj = null;
+                });
+            }
+        }
+
+        private void ReadAssetsFile(SerializedFile assetsFile, ref int progress, int progressCount)
+        {
+            JsonConverterHelper.AssetsFile = assetsFile;
+            var jsonOptions = LoadJsonOptions;
+            var useTypeTreeDb = TypeTreeDb != null && TypeTreeDb.IsLoaded && !IsBuiltInResourceFile(assetsFile.fileName);
+            var isBuiltInFile = IsBuiltInResourceFile(assetsFile.fileName);
+            foreach (var objectInfo in assetsFile.m_Objects)
+            {
+                var objectReader = new ObjectReader(assetsFile.reader, assetsFile, objectInfo);
+                if (filteredAssetTypesList.Count > 0 && !filteredAssetTypesList.Contains(objectReader.type))
+                {
+                    continue;
+                }
+                // For type-tree-stripped files, supply a tree from the database so the
+                // type-tree read paths (and Object.Dump/ToType) work for every class.
+                // MonoBehaviour (114) is excluded: its script-defined body is
+                // reconstructed from assemblies (MonoBehaviourConverter), which already
+                // seeds the base layout; a DB base-only tree would short-circuit that.
+                // Built-in engine resource files are skipped: their objects use a legacy
+                // layout that doesn't match the version they declare, so a version-keyed
+                // DB tree would mis-read them. Let them fall back to the graceful
+                // built-in handling below instead of logging read mismatches.
+                if (useTypeTreeDb
+                    && objectReader.classID != (int)ClassIDType.MonoBehaviour
+                    && (objectReader.serializedType == null || objectReader.serializedType.m_Type == null)
+                    && TypeTreeDb.TryGetTypeTree(assetsFile.version, objectReader.classID, out var dbTypeTree))
+                {
+                    if (objectReader.serializedType == null)
+                        objectReader.serializedType = new SerializedType { classID = objectReader.classID };
+                    objectReader.serializedType.m_Type = dbTypeTree;
+                }
+                var readStart = System.Diagnostics.Stopwatch.GetTimestamp();
+                try
+                {
+                    Object obj = null;
                         switch (objectReader.type)
                         {
                             case ClassIDType.Animation:
@@ -809,40 +880,48 @@ namespace AssetStudio
                                 obj = new Object(objectReader);
                                 break;
                         }
-                        if (obj != null)
-                        {
-                            assetsFile.AddObject(obj);
-                        }
-                    }
-                    catch (Exception e)
+                    if (obj != null)
                     {
-                        // Unity's built-in resource files (unity default resources,
-                        // unity_builtin_extra) hold engine defaults serialized in a
-                        // legacy format that doesn't match their header version. Without
-                        // a type tree they can't be parsed by the version-based reader.
-                        // These aren't the user's content, so fail quietly (full detail
-                        // at Debug level) instead of alarming with an exception stack.
-                        if (IsBuiltInResourceFile(assetsFile.fileName))
-                        {
-                            Logger.Debug($"Skipped built-in engine object ({objectReader.type}, PathID {objectInfo.m_PathID}) in \"{assetsFile.fileName}\": {e.Message}");
-                        }
-                        else
-                        {
-                            var sb = new StringBuilder();
-                            sb.AppendLine("Unable to load object")
-                                .AppendLine($"Assets {assetsFile.fileName}")
-                                .AppendLine($"Path {assetsFile.originalPath}")
-                                .AppendLine($"Type {objectReader.type}")
-                                .AppendLine($"PathID {objectInfo.m_PathID}")
-                                .Append(e);
-                            Logger.Warning(sb.ToString());
-                        }
+                        assetsFile.AddObject(obj);
                     }
-
-                    Progress.Report(++i, progressCount);
                 }
+                catch (Exception e)
+                {
+                    // Unity's built-in resource files (unity default resources,
+                    // unity_builtin_extra) hold engine defaults serialized in a
+                    // legacy format that doesn't match their header version. Without
+                    // a type tree they can't be parsed by the version-based reader.
+                    // These aren't the user's content, so fail quietly (full detail
+                    // at Debug level) instead of alarming with an exception stack.
+                    if (isBuiltInFile)
+                    {
+                        Logger.Debug($"Skipped built-in engine object ({objectReader.type}, PathID {objectInfo.m_PathID}) in \"{assetsFile.fileName}\": {e.Message}");
+                    }
+                    else
+                    {
+                        var sb = new StringBuilder();
+                        sb.AppendLine("Unable to load object")
+                            .AppendLine($"Assets {assetsFile.fileName}")
+                            .AppendLine($"Path {assetsFile.originalPath}")
+                            .AppendLine($"Type {objectReader.type}")
+                            .AppendLine($"PathID {objectInfo.m_PathID}")
+                            .Append(e);
+                        Logger.Warning(sb.ToString());
+                    }
+                }
+
+                var readMs = (System.Diagnostics.Stopwatch.GetTimestamp() - readStart) * 1000 / System.Diagnostics.Stopwatch.Frequency;
+                if (readMs >= SlowObjectReadMs)
+                {
+                    Logger.Debug($"Slow object read: {objectReader.type} PathID {objectInfo.m_PathID} ({objectInfo.byteSize} bytes) in \"{assetsFile.fileName}\" took {readMs} ms");
+                }
+
+                Progress.Report(Interlocked.Increment(ref progress), progressCount);
             }
         }
+
+        // Objects that take at least this long to read are logged at Debug level.
+        private const long SlowObjectReadMs = 100;
 
         private void ProcessAssets()
         {
