@@ -157,6 +157,7 @@ namespace AssetStudioGUI
             InitializeComponent();
             ApplyColorTheme(out isDarkMode);
             InitDotNetTab();
+            InitRecentProjectsMenu();
 
             var appAssembly = typeof(Program).Assembly.GetName();
             guiTitle = $"{appAssembly.Name} v{appAssembly.Version}";
@@ -231,8 +232,10 @@ namespace AssetStudioGUI
                     }
                 }
             }
+            var loadedPaths = pathList.ToArray();
             await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, pathList));
             saveDirectoryBackup = openDirectoryBackup;
+            AddRecentProject(loadedPaths);
             BuildAssetStructures();
         }
 
@@ -246,7 +249,9 @@ namespace AssetStudioGUI
                 if (pathList.Count == 0)
                     return;
                 ResetForm();
+                var loadedPaths = pathList.ToArray();
                 await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, pathList));
+                AddRecentProject(loadedPaths);
                 BuildAssetStructures();
             }
         }
@@ -259,6 +264,7 @@ namespace AssetStudioGUI
             {
                 ResetForm();
                 await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, openFolderDialog.Folder));
+                AddRecentProject(new[] { openFolderDialog.Folder });
                 BuildAssetStructures();
             }
         }

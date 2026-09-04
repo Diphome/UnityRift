@@ -382,5 +382,17 @@ namespace AssetStudioGUI.Properties {
                 this["rawByteArrayFromMono"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string recentProjects {
+            get {
+                return ((string)(this["recentProjects"]));
+            }
+            set {
+                this["recentProjects"] = value;
+            }
+        }
     }
 }
