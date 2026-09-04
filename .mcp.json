@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "assetstudio": {
+      "command": "node",
+      "args": ["tools/mcp/assetstudio-mcp.mjs"]
+    }
+  }
+}
