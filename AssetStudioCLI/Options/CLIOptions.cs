@@ -153,6 +153,7 @@ namespace AssetStudioCLI.Options
         public static Option<bool> f_il2cpp;
         public static Option<List<string>> o_il2cppLookup;
         public static Option<List<string>> o_il2cppStrings;
+        public static Option<bool> f_il2cppDummyDll;
 
         static CLIOptions()
         {
@@ -637,6 +638,16 @@ namespace AssetStudioCLI.Options
                 optionExample: "Example: \"-m il2cpp --il2cpp-strings error\"\n",
                 optionHelpGroup: HelpGroups.Il2Cpp
             );
+            f_il2cppDummyDll = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--il2cpp-dummy-dll",
+                optionDescription: "(Flag) Also export the generated dummy .NET assemblies (*.dll) to <output>/DummyDll,\n" +
+                    "so they can be opened in dnSpy / ILSpy / dotPeek.\n" +
+                    "Only for \"-m il2cpp\".\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-dummy-dll\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp
+            );
             #endregion
 
             o_assemblyPath = new GroupedOption<string>
@@ -882,6 +893,16 @@ namespace AssetStudioCLI.Options
                         break;
                     case "--il2cpp":
                         f_il2cpp.Value = true;
+                        flagIndexes.Add(i);
+                        break;
+                    case "--il2cpp-dummy-dll":
+                        if (o_workMode.Value != WorkMode.Il2Cpp)
+                        {
+                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is only for \"-m il2cpp\".\n");
+                            ShowOptionDescription(o_workMode);
+                            return;
+                        }
+                        f_il2cppDummyDll.Value = true;
                         flagIndexes.Add(i);
                         break;
                     case "--dotnet-il":
@@ -1687,6 +1708,7 @@ namespace AssetStudioCLI.Options
                     sb.AppendLine($"# Lookup: \"{string.Join("\", \"", o_il2cppLookup.Value)}\"");
                     sb.AppendLine($"# Strings: \"{string.Join("\", \"", o_il2cppStrings.Value)}\"");
                     sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");
+                    sb.AppendLine($"# Export Dummy DLLs: {f_il2cppDummyDll}");
                     sb.AppendLine($"# Unity Version: {unityVer}");
                     break;
                 case WorkMode.Live2D:

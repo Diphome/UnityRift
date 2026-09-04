@@ -257,6 +257,24 @@ namespace AssetStudio
             return copied;
         }
 
+        /// <summary>
+        /// Copies the generated dummy .NET assemblies (the *.dll files Cpp2IL produced) from the cache
+        /// folder to <paramref name="destFolder"/>, so they can be opened in dnSpy / ILSpy / dotPeek
+        /// (the same output Il2CppDumper writes to its DummyDll folder). Returns the copied file paths.
+        /// </summary>
+        public static List<string> ExportDummyDlls(string cacheFolder, string destFolder)
+        {
+            Directory.CreateDirectory(destFolder);
+            var copied = new List<string>();
+            foreach (var src in Directory.GetFiles(cacheFolder, "*.dll", SearchOption.AllDirectories))
+            {
+                var dst = Path.Combine(destFolder, Path.GetFileName(src));
+                File.Copy(src, dst, true);
+                copied.Add(dst);
+            }
+            return copied;
+        }
+
         #endregion
 
         #region Generation

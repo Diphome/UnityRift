@@ -401,6 +401,12 @@ const tools = [
       properties: {
         input_path: { type: "string", description: "Game folder, GameAssembly.dll / libil2cpp.so, or a file inside the game." },
         output_path: { type: "string", description: `Output folder (package is written to <output>/il2cpp). Default: ${defaultOutDir()}` },
+        dummy_dll: {
+          type: "boolean",
+          description:
+            "Also export the generated dummy .NET assemblies (*.dll) to <output>/DummyDll, " +
+            "for opening in dnSpy / ILSpy / dotPeek.",
+        },
         unity_version: { type: "string", description: "Override Unity version if it cannot be detected (e.g. '2021.3.16f1')." },
         log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
         timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}; first generation can be slow).` },
@@ -410,10 +416,11 @@ const tools = [
     handler: async (a) => {
       const out = a.output_path || defaultOutDir();
       const args = [a.input_path, "-m", "il2cpp", "-o", out];
+      if (a.dummy_dll) args.push("--il2cpp-dummy-dll");
       if (a.unity_version) args.push("--unity-version", a.unity_version);
       if (a.log_level) args.push("--log-level", a.log_level);
       const r = await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600));
-      if (r.ok) r.output += `\n\n[output folder: ${out}/il2cpp]`;
+      if (r.ok) r.output += `\n\n[output folder: ${out}/il2cpp${a.dummy_dll ? `, ${out}/DummyDll` : ""}]`;
       return resultText(r);
     },
   },

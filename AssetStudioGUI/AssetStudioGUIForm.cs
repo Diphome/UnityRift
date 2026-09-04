@@ -3192,7 +3192,11 @@ namespace AssetStudioGUI
             try
             {
                 StopAnimator();
-                var imported = new ModelConverter(animator, Properties.Settings.Default.convertType);
+                // Always decode preview textures as PNG. The user's export format
+                // (convertType) may be TGA/WebP, which System.Drawing can't decode in
+                // DecodeTexture -> the mesh would render white. PNG is always decodable
+                // and only affects this in-memory preview, not exported files.
+                var imported = new ModelConverter(animator, AssetStudio.ImageFormat.Png);
                 animPlayer = new AnimationPlayer(imported);
                 if (animPlayer.Meshes.Count == 0)
                 {

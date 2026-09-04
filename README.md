@@ -8,7 +8,7 @@
 
 - **IL2CPP support** via [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL): `GameAssembly.dll` / `libil2cpp.so` + `global-metadata.dat` are detected automatically, dummy assemblies are generated and cached, and they feed the .NET explorer and MonoBehaviour field parsing.
 - **.NET class explorer** — browse the game's managed assemblies as C#-like stubs (with optional IL). GUI tab **".NET Classes"**, CLI `-m dotnet`, MCP `dotnet_list` / `dotnet_type`.
-- **Ghidra / Il2CppDumper package** (`-m il2cpp`) — generates `script.json`, `il2cpp.h`, `il2cpp_ghidra.h` and bundled `ghidra.py` / `ghidra_with_struct.py` scripts (patched for Ghidra Jython 2.7 **and** 11.3+ PyGhidra) so functions get named the same way [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) does. Plus `--il2cpp-lookup` and `--il2cpp-strings`.
+- **Ghidra / Il2CppDumper package** (`-m il2cpp`) — generates `script.json`, `il2cpp.h`, `il2cpp_ghidra.h` and bundled `ghidra.py` / `ghidra_with_struct.py` scripts (patched for Ghidra Jython 2.7 **and** 11.3+ PyGhidra) so functions get named the same way [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) does. Plus `--il2cpp-lookup`, `--il2cpp-strings`, and `--il2cpp-dummy-dll` (export the dummy .NET assemblies to `<out>/DummyDll` for dnSpy / ILSpy / dotPeek).
 - **Type-tree database (TPK)** — decode type-tree-stripped builds via a bundled `classdata.tpk` (`--typetree-db`, auto-loaded when present).
 - **glTF 2.0 export** (`.glb` / `.gltf`) as an FBX-free alternative (meshes, skinning, materials + embedded textures, node animations).
 - **MCP server** (`tools/mcp/assetstudio-mcp.mjs`) — exposes the CLI as tools so an agent can drive info/export/dump, the .NET explorer, and the IL2CPP/Ghidra workflow.

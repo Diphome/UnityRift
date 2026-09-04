@@ -63,6 +63,13 @@ namespace AssetStudioCLI
             Logger.Info($"Wrote {copied.Count} Ghidra helper file(s) to \"{dest.Color(Ansi.BrightCyan)}\"");
             Logger.Info("Ghidra: import GameAssembly.dll / libil2cpp.so, Parse C Source il2cpp_ghidra.h, then Script Manager → add the 'ghidra' folder and run ghidra.py (or ghidra_with_struct.py).");
 
+            if (CLIOptions.f_il2cppDummyDll.Value)
+            {
+                var dllDest = Path.Combine(CLIOptions.o_outputFolder.Value, "DummyDll");
+                var dlls = Il2CppAssemblyProvider.ExportDummyDlls(folder, dllDest);
+                Logger.Info($"Exported {dlls.Count} dummy assemblies to \"{dllDest.Color(Ansi.BrightCyan)}\" (open in dnSpy / ILSpy / dotPeek).");
+            }
+
             Il2CppSymbolIndex idx;
             try
             {
