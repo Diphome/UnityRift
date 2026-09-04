@@ -195,7 +195,8 @@ First, use [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) to generate d
 ## Build
 
 * Visual Studio 2022 or newer
-* **AssetStudioFBXNative** uses [FBX SDK 2020.2.1](https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-2-1), before building, you need to install the FBX SDK and modify the project file, change include directory and library directory to point to the FBX SDK directory
+* AssetStudioMod is **64-bit only**. 32-bit (x86) builds are no longer supported.
+* **AssetStudioFBXNative** uses the [FBX SDK 2020.3.x](https://aps.autodesk.com/developer/overview/fbx-sdk) (x64). Install it before building; the project looks for it in the default location (`C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.10`). To use a different version or path, set the `FBXSDK_ROOT` environment variable, or pass `/p:FbxSdkDir="<path>\"` to MSBuild — no need to edit the project file.
 
 ## Open source libraries used
 

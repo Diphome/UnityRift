@@ -1,0 +1,25 @@
+<Project>
+
+  <!--
+    AssetStudioMod ships 64-bit only. Some NuGet packages (Kyaru.Texture2DDecoder.*) carry
+    32-bit native assets under runtimes/<rid>-x86/, which would otherwise be copied into the
+    build and publish output even though nothing can load them. Drop them from both.
+  -->
+
+  <Target Name="StripX86RuntimeAssetsFromBuild" AfterTargets="ResolveReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths
+        Remove="@(ReferenceCopyLocalPaths)"
+        Condition="$([System.String]::Copy('%(ReferenceCopyLocalPaths.DestinationSubPath)').Contains('-x86'))" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="StripX86RuntimeAssetsFromPublish" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish
+        Remove="@(ResolvedFileToPublish)"
+        Condition="$([System.String]::Copy('%(ResolvedFileToPublish.RelativePath)').Contains('-x86'))" />
+    </ItemGroup>
+  </Target>
+
+</Project>
