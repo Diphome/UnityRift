@@ -20,8 +20,14 @@ MCP **stdio** transport (newline-delimited JSON-RPC 2.0). No `npm install` neede
 | `asset_help` | Print the full CLI help / option reference. |
 | `asset_info` | Load asset file(s)/folder and list counts per asset type (`-m info`). |
 | `asset_export` | Convert/export assets. Covers export / exportRaw / dump / extract / live2d / splitObjects / animator modes, grouping, formats, filters. |
+| `asset_dump` | Dump assets to text (`-m dump`). Best for inspecting fields, incl. type-tree-stripped builds via `typetree_db`. |
 | `asset_run` | Run the CLI with a verbatim argument list (escape hatch). |
 | `list_output` | Recursively list files in an output folder with sizes. |
+
+`asset_info`, `asset_export`, and `asset_dump` accept `typetree_db` (path to a `.tpk`
+type tree database) and `assembly_folder`. `typetree_db` lets stripped builds be
+read/dumped; omit it to use the `classdata.tpk` bundled next to the CLI. Custom
+MonoBehaviour fields additionally require `assembly_folder`.
 
 Every CLI-invoking tool returns the exact command line, the exit code, elapsed
 time, and the combined stdout+stderr (ANSI stripped) — i.e. the CLI's own log.

@@ -3,6 +3,9 @@
 ###############################################################################
 * text=auto
 
+# Type tree database is binary.
+*.tpk binary
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #

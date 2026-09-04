@@ -141,10 +141,20 @@ function pushCommon(args, a) {
   if (a.asset_types) args.push("-t", a.asset_types);
   if (a.unity_version) args.push("--unity-version", a.unity_version);
   if (a.assembly_folder) args.push("--assembly-folder", a.assembly_folder);
+  if (a.typetree_db) args.push("--typetree-db", a.typetree_db);
   if (a.log_level) args.push("--log-level", a.log_level);
   if (a.load_all) args.push("--load-all");
   pushFilters(args, a);
 }
+
+const typeTreeDbProp = {
+  typetree_db: {
+    type: "string",
+    description:
+      "Path to a type tree database (.tpk). Enables reading/dumping assets from " +
+      "type-tree-stripped builds. Omit to use the bundled classdata.tpk next to the CLI.",
+  },
+};
 
 function resultText(r) {
   if (!r.ok) return { content: [{ type: "text", text: `ERROR: ${r.error}` }], isError: true };
@@ -191,6 +201,7 @@ const tools = [
         load_all: { type: "boolean", description: "Load assets of all types (like 'Display all assets')." },
         unity_version: { type: "string", description: "Override Unity version, e.g. '2017.4.39f1'." },
         assembly_folder: { type: "string", description: "Path to the assembly (Managed) folder." },
+        ...typeTreeDbProp,
         log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
         ...filterProps,
         timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
@@ -229,6 +240,7 @@ const tools = [
         overwrite: { type: "boolean", description: "Overwrite existing files." },
         unity_version: { type: "string" },
         assembly_folder: { type: "string" },
+        ...typeTreeDbProp,
         max_export_tasks: { type: "integer", description: "Number of parallel export tasks." },
         log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
         load_all: { type: "boolean" },
@@ -254,6 +266,39 @@ const tools = [
       if (a.max_export_tasks) args.push("--max-export-tasks", String(a.max_export_tasks));
       pushCommon(args, a);
       if (Array.isArray(a.extra_args)) args.push(...a.extra_args);
+      const r = await runCli(args, a.timeout_sec || DEFAULT_TIMEOUT);
+      if (r.ok) r.output += `\n\n[output folder: ${out}]`;
+      return resultText(r);
+    },
+  },
+  {
+    name: "asset_dump",
+    description:
+      "Dump assets to text (CLI '-m dump'). Best for inspecting object fields, including on " +
+      "type-tree-stripped builds when a type tree DB is supplied. For custom MonoBehaviour " +
+      "fields also pass assembly_folder.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Path to an asset file or folder." },
+        output_path: { type: "string", description: `Output folder. Default: ${defaultOutDir()}` },
+        asset_types: { type: "string", description: "Asset type(s) to dump, e.g. 'sprite' or 'monoBehaviour'." },
+        ...typeTreeDbProp,
+        assembly_folder: { type: "string", description: "Path to the assembly (Managed) folder (custom MonoBehaviour fields)." },
+        unity_version: { type: "string" },
+        load_all: { type: "boolean" },
+        overwrite: { type: "boolean" },
+        log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
+        ...filterProps,
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "dump", "-o", out];
+      if (a.overwrite) args.push("-r");
+      pushCommon(args, a);
       const r = await runCli(args, a.timeout_sec || DEFAULT_TIMEOUT);
       if (r.ok) r.output += `\n\n[output folder: ${out}]`;
       return resultText(r);

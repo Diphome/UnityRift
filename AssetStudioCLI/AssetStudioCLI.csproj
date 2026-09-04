@@ -19,6 +19,11 @@
         <ProjectReference Include="..\AssetStudioUtility\AssetStudioUtility.csproj" />
         <ProjectReference Include="..\AssetStudio\AssetStudio.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+        <!-- Bundled type tree database, copied next to the program for the default typetree-db fallback -->
+        <Content Include="..\classdata.tpk" Link="classdata.tpk" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
     
     <!-- Use local compiled win-x64 Texture2DDecoder libs, because libs from Kyaru.Texture2DDecoder.Windows were compiled with /MD flag -->
 

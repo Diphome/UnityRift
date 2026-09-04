@@ -51,6 +51,11 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <TargetPath>LICENSE</TargetPath>
         </ContentWithTargetPath>
+        <!-- Bundled type tree database, copied next to the program for the default type tree DB fallback -->
+        <ContentWithTargetPath Include="..\classdata.tpk">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>classdata.tpk</TargetPath>
+        </ContentWithTargetPath>
     </ItemGroup>
 
     <ItemGroup>

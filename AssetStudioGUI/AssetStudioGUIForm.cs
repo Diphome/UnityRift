@@ -152,6 +152,9 @@ namespace AssetStudioGUI
             customBlockCompressionComboBox.SelectedIndex = 0;
             customBlockInfoCompressionComboBox.SelectedIndex = 0;
             assetsManager.Options.BundleOptions.DecompressToDisk = Properties.Settings.Default.decompressToDisk;
+            var typeTreeDbPath = Path.Combine(Application.StartupPath, "classdata.tpk");
+            if (File.Exists(typeTreeDbPath))
+                assetsManager.LoadTypeTreeDatabase(typeTreeDbPath);
             FMODinit();
             listSearchFilterMode.SelectedIndex = 0;
             FbxInitOptions(Properties.Settings.Default.fbxSettings);
