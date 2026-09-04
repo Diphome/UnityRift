@@ -37,6 +37,21 @@ namespace AssetStudioCLI
             assetsManager.Options.BundleOptions.CustomBlockCompression = CLIOptions.o_bundleBlockCompression.Value;
             assetsManager.Options.BundleOptions.DecompressToDisk = CLIOptions.f_decompressToDisk.Value;
             assetsManager.OptionLoaders.Clear();
+            LoadTypeTreeDatabase();
+        }
+
+        private static void LoadTypeTreeDatabase()
+        {
+            var dbPath = CLIOptions.o_typeTreeDBPath.Value;
+            if (string.IsNullOrEmpty(dbPath))
+            {
+                // Fall back to a bundled classdata.tpk next to the program, if present.
+                var bundled = Path.Combine(AppContext.BaseDirectory, "classdata.tpk");
+                if (File.Exists(bundled))
+                    dbPath = bundled;
+            }
+            if (!string.IsNullOrEmpty(dbPath))
+                assetsManager.LoadTypeTreeDatabase(dbPath);
         }
 
         private static void ShowCurProgressValue(int value)

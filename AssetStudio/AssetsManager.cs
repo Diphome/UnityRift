@@ -17,6 +17,9 @@ namespace AssetStudio
     {
         public bool LoadViaTypeTree = true;
         public bool MeshLazyLoad = true;
+        // Optional external type-tree database (TPK). When set, objects from
+        // type-tree-stripped files get a DB-provided tree so they can be read/dumped.
+        public TypeTreeDatabase TypeTreeDb;
         public ImportOptions Options = new ImportOptions();
         public readonly List<Action<OptionsFile>> OptionLoaders = new List<Action<OptionsFile>>();
         public readonly List<SerializedFile> AssetsFileList = new List<SerializedFile>();
@@ -33,6 +36,25 @@ namespace AssetStudio
         public AssetsManager()
         {
             OptionLoaders.Add(LoadImportOptions);
+        }
+
+        public void LoadTypeTreeDatabase(string path)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                {
+                    Logger.Warning($"Type tree database not found: \"{path}\"");
+                    return;
+                }
+                TypeTreeDb = TypeTreeDatabase.Load(path);
+                Logger.Info($"Loaded type tree database \"{Path.GetFileName(path)}\"");
+            }
+            catch (Exception e)
+            {
+                Logger.Warning($"Failed to load type tree database \"{path}\": {e.Message}");
+                TypeTreeDb = null;
+            }
         }
 
         public void SetAssetFilter(params ClassIDType[] classIDTypes)
@@ -656,6 +678,16 @@ namespace AssetStudio
                     if (filteredAssetTypesList.Count > 0 && !filteredAssetTypesList.Contains(objectReader.type))
                     {
                         continue;
+                    }
+                    // For type-tree-stripped files, supply a tree from the database so the
+                    // type-tree read paths (and Object.Dump/ToType) work for every class.
+                    if (TypeTreeDb != null && TypeTreeDb.IsLoaded
+                        && (objectReader.serializedType == null || objectReader.serializedType.m_Type == null)
+                        && TypeTreeDb.TryGetTypeTree(assetsFile.version, objectReader.classID, out var dbTypeTree))
+                    {
+                        if (objectReader.serializedType == null)
+                            objectReader.serializedType = new SerializedType { classID = objectReader.classID };
+                        objectReader.serializedType.m_Type = dbTypeTree;
                     }
                     try
                     {

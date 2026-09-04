@@ -133,6 +133,7 @@ namespace AssetStudioCLI.Options
         public static Option<int> o_maxParallelExportTasks;
         public static Option<ExportListType> o_exportAssetList;
         public static Option<string> o_assemblyPath;
+        public static Option<string> o_typeTreeDBPath;
         public static Option<UnityVersion> o_unityVersion;
         public static Option<bool> f_decompressToDisk;
         public static Option<bool> f_notRestoreExtensionName;
@@ -545,6 +546,16 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: "",
                 optionName: "--assembly-folder <path>",
                 optionDescription: "Specify the path to the assembly folder\n",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.Advanced
+            );
+            o_typeTreeDBPath = new GroupedOption<string>
+            (
+                optionDefaultValue: "",
+                optionName: "--typetree-db <path>",
+                optionDescription: "Specify the path to a type tree database (.tpk) file\n" +
+                    "Enables reading/dumping assets from type-tree-stripped files.\n" +
+                    "If not specified, a bundled 'classdata.tpk' next to the program is used when present.\n",
                 optionExample: "",
                 optionHelpGroup: HelpGroups.Advanced
             );
@@ -1260,6 +1271,17 @@ namespace AssetStudioCLI.Options
                         case "--filter-by-text":
                             o_filterByText.Value.AddRange(ValueSplitter(value, isRegex: f_filterWithRegex.Value));
                             filterBy = FilterBy.NameOrContainer;
+                            break;
+                        case "--typetree-db":
+                            if (File.Exists(value))
+                            {
+                                o_typeTreeDBPath.Value = value;
+                            }
+                            else
+                            {
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Type tree database [{value.Color(brightRed)}] was not found.");
+                                return;
+                            }
                             break;
                         case "--assembly-folder":
                             if (Directory.Exists(value))
