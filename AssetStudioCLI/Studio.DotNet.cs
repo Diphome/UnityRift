@@ -50,9 +50,38 @@ namespace AssetStudioCLI
 
             var typeFilters = CLIOptions.o_dotnetTypes.Value;
             if (typeFilters.Count == 0)
+            {
                 ListDotNetTypes(modules);
+                if (CLIOptions.f_dotnetToFiles.Value)
+                    ExportDotNetStubs(modules.Select(p => p.Value), null);
+            }
             else
+            {
                 DumpDotNetTypes(modules, typeFilters);
+            }
+
+            if (CLIOptions.f_dotnetExportDll.Value)
+            {
+                var dir = Path.Combine(CLIOptions.o_outputFolder.Value, "DotNet", "Assemblies");
+                Logger.Info($"Copying {modules.Count} assembly file(s)...");
+                Progress.Reset();
+                var result = DotNetExporter.ExportAssemblyFiles(modules.Select(p => p.Value), dir, (cur, total) => Progress.Report(cur, total), Logger.Warning);
+                Logger.Info($"Copied {result.Files} assembly file(s) to \"{dir.Color(Ansi.BrightCyan)}\"" + (result.Failed > 0 ? $" ({result.Failed} failed)" : ""));
+            }
+        }
+
+        private static string DotNetStubsFolder => Path.Combine(CLIOptions.o_outputFolder.Value, "DotNet");
+
+        /// <summary>Writes .cs stubs for all types of <paramref name="modules"/> (or only those in <paramref name="onlyTypes"/>).</summary>
+        private static void ExportDotNetStubs(IEnumerable<ModuleDefinition> modules, HashSet<TypeDefinition> onlyTypes)
+        {
+            var dir = DotNetStubsFolder;
+            Logger.Info("Writing .NET type stubs...");
+            Progress.Reset();
+            var result = DotNetExporter.ExportStubs(modules, dir, CLIOptions.f_dotnetIL.Value,
+                onlyTypes == null ? (Func<TypeDefinition, bool>)null : onlyTypes.Contains,
+                (cur, total) => Progress.Report(cur, total), Logger.Warning);
+            Logger.Info($"Wrote {result.Types} .cs stub file(s) to \"{dir.Color(Ansi.BrightCyan)}\"" + (result.Failed > 0 ? $" ({result.Failed} failed)" : ""));
         }
 
         private static string il2cppFolder;
@@ -273,30 +302,22 @@ namespace AssetStudioCLI
                 }
                 sb.AppendLine();
                 sb.Append(text);
-                if (toFiles)
-                    WriteStubFile(t, text);
             }
             sb.AppendLine("======");
             Logger.Default.Log(LoggerEvent.Info, sb.ToString(), ignoreLevel: true);
             if (toFiles)
-                Logger.Info($"Wrote {Math.Min(matches.Count, maxDump)} .cs stub file(s) to \"{Path.Combine(CLIOptions.o_outputFolder.Value, "DotNet").Color(Ansi.BrightCyan)}\"");
-        }
-
-        private static void WriteStubFile(TypeDefinition t, string text)
-        {
-            try
             {
-                var asm = Path.GetFileNameWithoutExtension(t.Module.Name);
-                var dir = Path.Combine(CLIOptions.o_outputFolder.Value, "DotNet", asm);
-                Directory.CreateDirectory(dir);
-                var name = t.FullName.Replace('/', '.');
-                foreach (var c in Path.GetInvalidFileNameChars())
-                    name = name.Replace(c, '_');
-                File.WriteAllText(Path.Combine(dir, name + ".cs"), text);
-            }
-            catch (Exception ex)
-            {
-                Logger.Warning($"Failed to write stub for {t.FullName}: {ex.Message}");
+                // Files are written per top-level type (nested matches are inlined in their
+                // declaring type's file); all matches are exported, not just the displayed ones.
+                var topLevel = new HashSet<TypeDefinition>();
+                foreach (var t in matches)
+                {
+                    var top = t;
+                    while (top.DeclaringType != null)
+                        top = top.DeclaringType;
+                    topLevel.Add(top);
+                }
+                ExportDotNetStubs(modules.Select(p => p.Value), topLevel);
             }
         }
     }

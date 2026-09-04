@@ -87,6 +87,7 @@ namespace AssetStudioGUI
             dotnetShowIL.CheckedChanged += (s, e) => ShowDotNetNode(dotnetTreeView.SelectedNode);
             topPanel.Controls.Add(dotnetSearch);
             topPanel.Controls.Add(dotnetShowIL);
+            InitDotNetExport(topPanel);
 
             dotnetStatusLabel = new Label
             {

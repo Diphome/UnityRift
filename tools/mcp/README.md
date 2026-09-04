@@ -23,6 +23,9 @@ MCP **stdio** transport (newline-delimited JSON-RPC 2.0). No `npm install` neede
 | `asset_dump` | Dump assets to text (`-m dump`). Best for inspecting fields, incl. type-tree-stripped builds via `typetree_db`. |
 | `dotnet_list` | List the game's .NET assemblies and types (`-m dotnet`). Managed folder auto-detected from the game folder / an asset file. |
 | `dotnet_type` | Dump .NET type(s) as C#-like class stubs, optionally with IL (`-m dotnet --dotnet-type`). Can also write `.cs` stub files. |
+| `il2cpp_export` | Generate an Il2CppDumper-compatible Ghidra package (`script.json`, `il2cpp.h`, `ghidra.py`) from GameAssembly/libil2cpp (`-m il2cpp`). |
+| `il2cpp_lookup` | Translate managed names ↔ RVAs/VAs while decompiling (`-m il2cpp --il2cpp-lookup`). |
+| `il2cpp_strings` | Search IL2CPP string literals by text (`-m il2cpp --il2cpp-strings`). |
 | `asset_run` | Run the CLI with a verbatim argument list (escape hatch). |
 | `list_output` | Recursively list files in an output folder with sizes. |
 
@@ -41,6 +44,11 @@ assemblies (types, fields, signatures, RVAs; no method bodies). The result is
 cached under `%LOCALAPPDATA%\AssetStudioMod\il2cpp`; the first run takes
 ~10-60 s and a few GB of RAM. `asset_info` / `asset_export` / `asset_dump` accept
 `il2cpp: true` to use those stubs for custom MonoBehaviour fields.
+
+`il2cpp_export` writes the Ghidra helpers next to those stubs (`<output>/il2cpp/script.json`,
+`il2cpp_ghidra.h`, and a `ghidra/` folder with `ghidra.py` / `ghidra_with_struct.py`). Import
+the native binary into Ghidra, parse `il2cpp_ghidra.h`, then run the script and pick `script.json`.
+`il2cpp_lookup` / `il2cpp_strings` translate names and addresses while you decompile.
 
 Every CLI-invoking tool returns the exact command line, the exit code, elapsed
 time, and the combined stdout+stderr (ANSI stripped) — i.e. the CLI's own log.

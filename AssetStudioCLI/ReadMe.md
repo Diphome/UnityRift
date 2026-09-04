@@ -26,7 +26,7 @@ AssetStudioModCLI <input path to asset file(s)/folder> [-m, --mode <value>]
 General Options:
   -m, --mode <value>            Specify working mode
                                 <Value: extract | export(default) | exportRaw | dump | info | live2d |
-                                splitObjects | animator>
+                                splitObjects | animator | dotnet | il2cpp>
                                 Extract - Extract(Decompress) asset bundles
                                 Export - Convert and export assets
                                 ExportRaw - Export raw assets
@@ -35,6 +35,8 @@ General Options:
                                 Live2D - Export Live2D Cubism models
                                 SplitObjects - Export all model objects (split) (fbx)
                                 Animator - Export Animator assets (fbx)
+                                DotNet - Browse the game's .NET assemblies
+                                Il2Cpp - Generate Il2CppDumper-compatible Ghidra helpers (script.json, il2cpp.h)
                                 Example: "-m info"
 
   -t, --asset-type <value(s)>   Specify asset type(s) to export

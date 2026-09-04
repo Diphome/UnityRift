@@ -16,6 +16,7 @@ namespace AssetStudioCLI.Options
         FBX,
         Filter,
         DotNet,
+        Il2Cpp,
         Advanced,
     }
 
@@ -30,6 +31,7 @@ namespace AssetStudioCLI.Options
         SplitObjects,
         Animator,
         DotNet,
+        Il2Cpp,
     }
 
     internal enum AssetGroupOption
@@ -147,7 +149,10 @@ namespace AssetStudioCLI.Options
         public static Option<List<string>> o_dotnetAssemblies;
         public static Option<bool> f_dotnetIL;
         public static Option<bool> f_dotnetToFiles;
+        public static Option<bool> f_dotnetExportDll;
         public static Option<bool> f_il2cpp;
+        public static Option<List<string>> o_il2cppLookup;
+        public static Option<List<string>> o_il2cppStrings;
 
         static CLIOptions()
         {
@@ -214,7 +219,7 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: WorkMode.Export,
                 optionName: "-m, --mode <value>",
                 optionDescription: "Specify working mode\n" +
-                    "<Value: extract | export(default) | exportRaw | dump | info | live2d |\nsplitObjects | animator | dotnet>\n" +
+                    "<Value: extract | export(default) | exportRaw | dump | info | live2d |\nsplitObjects | animator | dotnet | il2cpp>\n" +
                     "Extract - Extract(Decompress) asset bundles\n" +
                     "Export - Convert and export assets\n" +
                     "ExportRaw - Export raw assets\n" +
@@ -223,7 +228,8 @@ namespace AssetStudioCLI.Options
                     "Live2D - Export Live2D Cubism models\n" +
                     "SplitObjects - Export all model objects (split) (fbx)\n" +
                     "Animator - Export Animator assets (fbx)\n" +
-                    "DotNet - Browse the game's .NET assemblies (list types / dump C#-like class stubs)\n",
+                    "DotNet - Browse the game's .NET assemblies (list types / dump C#-like class stubs)\n" +
+                    "Il2Cpp - Generate Il2CppDumper-compatible Ghidra helpers (script.json, il2cpp.h) from GameAssembly/libil2cpp\n",
                 optionExample: "Example: \"-m info\"\n",
                 optionHelpGroup: HelpGroups.General
             );
@@ -584,7 +590,18 @@ namespace AssetStudioCLI.Options
             (
                 optionDefaultValue: false,
                 optionName: "--dotnet-to-files",
-                optionDescription: "(Flag) Also write each dumped .NET type as a .cs stub file into the output folder\n",
+                optionDescription: "(Flag) Write .NET types as .cs stub files into <output>/DotNet/<Assembly>/<Namespace>/\n" +
+                    "With --dotnet-type: the matching types. Without it: every type of the selected assemblies\n",
+                optionExample: "Example: \"-m dotnet --dotnet-to-files --dotnet-assembly Assembly-CSharp\"\n",
+                optionHelpGroup: HelpGroups.DotNet,
+                isFlag: true
+            );
+            f_dotnetExportDll = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--dotnet-export-dll",
+                optionDescription: "(Flag) Copy the loaded assembly files (.dll) into <output>/DotNet/Assemblies\n" +
+                    "(e.g. to keep the dummy assemblies generated from an IL2CPP binary)\n",
                 optionExample: "",
                 optionHelpGroup: HelpGroups.DotNet,
                 isFlag: true
@@ -596,10 +613,29 @@ namespace AssetStudioCLI.Options
                 optionDescription: "(Flag) Generate .NET assemblies from the game's IL2CPP binary (GameAssembly.dll / libil2cpp.so +\n" +
                     "global-metadata.dat, auto-detected near the input) with Cpp2IL and use them like --assembly-folder\n" +
                     "(custom MonoBehaviour fields, .NET class browsing). Results are cached. Requires the .NET 8+ build.\n" +
-                    "Implied by \"-m dotnet\" when no Managed folder is found.\n",
+                    "Implied by \"-m dotnet\" / \"-m il2cpp\" when no Managed folder is found.\n",
                 optionExample: "Example: \"-m dump -t monoBehaviour --il2cpp\"\n",
                 optionHelpGroup: HelpGroups.Advanced,
                 isFlag: true
+            );
+            o_il2cppLookup = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--il2cpp-lookup <text>",
+                optionDescription: "Look up a managed method/symbol by name or address in the generated IL2CPP package\n" +
+                    "<Value: Type$$Method | Type.Method | 0xRVA | va:0x... | rva:0x...>\n" +
+                    "Only for \"-m il2cpp\". Use --filter-with-regex to treat the name as a regular expression.\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-lookup PlayerController$$Update\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp
+            );
+            o_il2cppStrings = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--il2cpp-strings <text>",
+                optionDescription: "Search IL2CPP string literals (substring, or regexp with --filter-with-regex)\n" +
+                    "Only for \"-m il2cpp\".\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-strings error\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp
             );
             #endregion
 
@@ -773,6 +809,9 @@ namespace AssetStudioCLI.Options
                     case ".net":
                         o_workMode.Value = WorkMode.DotNet;
                         break;
+                    case "il2cpp":
+                        o_workMode.Value = WorkMode.Il2Cpp;
+                        break;
                     case "animator":
                     case "splitobjects":
                         o_workMode.Value = value.ToLower() == "animator"
@@ -847,13 +886,16 @@ namespace AssetStudioCLI.Options
                         break;
                     case "--dotnet-il":
                     case "--dotnet-to-files":
+                    case "--dotnet-export-dll":
                         if (o_workMode.Value != WorkMode.DotNet)
                         {
                             Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
                             ShowOptionDescription(o_workMode);
                             return;
                         }
-                        if (flag == "--dotnet-il") f_dotnetIL.Value = true; else f_dotnetToFiles.Value = true;
+                        if (flag == "--dotnet-il") f_dotnetIL.Value = true;
+                        else if (flag == "--dotnet-to-files") f_dotnetToFiles.Value = true;
+                        else f_dotnetExportDll.Value = true;
                         flagIndexes.Add(i);
                         break;
                     case "--decompress-to-disk":
@@ -1359,6 +1401,24 @@ namespace AssetStudioCLI.Options
                         case "--dotnet-assembly":
                             o_dotnetAssemblies.Value.AddRange(ValueSplitter(value));
                             break;
+                        case "--il2cpp-lookup":
+                            if (o_workMode.Value != WorkMode.Il2Cpp)
+                            {
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. This option is only for \"-m il2cpp\".\n");
+                                ShowOptionDescription(o_workMode);
+                                return;
+                            }
+                            o_il2cppLookup.Value.AddRange(ValueSplitter(value, isRegex: f_filterWithRegex.Value));
+                            break;
+                        case "--il2cpp-strings":
+                            if (o_workMode.Value != WorkMode.Il2Cpp)
+                            {
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. This option is only for \"-m il2cpp\".\n");
+                                ShowOptionDescription(o_workMode);
+                                return;
+                            }
+                            o_il2cppStrings.Value.AddRange(ValueSplitter(value, isRegex: f_filterWithRegex.Value));
+                            break;
                         case "--typetree-db":
                             if (File.Exists(value))
                             {
@@ -1619,7 +1679,15 @@ namespace AssetStudioCLI.Options
                     sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");
                     sb.AppendLine($"# Include IL: {f_dotnetIL}");
                     sb.AppendLine($"# Write .cs Files: {f_dotnetToFiles}");
+                    sb.AppendLine($"# Export .dll Files: {f_dotnetExportDll}");
                     sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");
+                    break;
+                case WorkMode.Il2Cpp:
+                    sb.AppendLine($"# [{o_workMode} Options]");
+                    sb.AppendLine($"# Lookup: \"{string.Join("\", \"", o_il2cppLookup.Value)}\"");
+                    sb.AppendLine($"# Strings: \"{string.Join("\", \"", o_il2cppStrings.Value)}\"");
+                    sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");
+                    sb.AppendLine($"# Unity Version: {unityVer}");
                     break;
                 case WorkMode.Live2D:
                     sb.AppendLine($"# [{o_workMode} Options]");

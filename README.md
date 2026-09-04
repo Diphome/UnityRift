@@ -37,6 +37,8 @@
 - Support of Live2D Cubism model export
    - Ported from my fork of Perfare's [UnityLive2DExtractor](https://github.com/aelurum/UnityLive2DExtractor)
    - Using the Live2D export in AssetStudio allows you to specify a Unity version and assembly folder if needed
+- Browse the game's .NET assemblies (`-m dotnet`)
+- Generate Ghidra helpers from IL2CPP (`-m il2cpp`: script.json, il2cpp.h, ghidra.py)
 - Export of 3D models to glTF 2.0 (`.glb` / `.gltf`) as an alternative to FBX
    - CLI: add `--model-format glb` (or `gltf`) to Animator / SplitObjects / model exports
    - Meshes, skinning, materials and textures (embedded), and node animations
@@ -108,6 +110,15 @@ AssetStudioModCLI <asset folder path> -m splitObjects
 - Export Animator assets
 ```
 AssetStudioModCLI <asset folder path> -m animator
+```
+- Generate Il2CppDumper-compatible Ghidra helpers from an IL2CPP game (script.json, il2cpp.h, ghidra.py)
+```
+AssetStudioModCLI <game folder> -m il2cpp -o <output folder>
+```
+Look up a method/address while decompiling:
+```
+AssetStudioModCLI <game folder> -m il2cpp --il2cpp-lookup PlayerController$$Update
+AssetStudioModCLI <game folder> -m il2cpp --il2cpp-lookup 0x1A2B3C
 ```
 
 ### Advanced Samples
@@ -193,7 +204,16 @@ When you select an asset of the MonoBehaviour type for the first time, AssetStud
 
 #### For Il2Cpp
 
-First, use [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) to generate dummy dll, then when using AssetStudio to select the assembly directory, select the dummy dll folder.
+AssetStudioMod generates dummy assemblies itself: **File → Load IL2CPP binary**, or just load the game folder (GameAssembly.dll / libil2cpp.so + `global-metadata.dat` are detected automatically). The first run uses [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) and is cached.
+
+To name functions in Ghidra the same way [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) does:
+
+1. CLI: `AssetStudioModCLI <game folder> -m il2cpp -o <out>` (or GUI **.NET Classes → Export → Export Ghidra / Il2CppDumper package**).
+2. Import `GameAssembly.dll` / `libil2cpp.so` into Ghidra and let auto-analysis finish.
+3. **File → Parse C Source...** and add `<out>/il2cpp/il2cpp_ghidra.h`.
+4. **Window → Script Manager** → add `<out>/il2cpp/ghidra` as a script directory, run `ghidra.py` (names) or `ghidra_with_struct.py` (names + types), and pick `script.json`.
+
+Scripts work in Ghidra's Jython 2.7 and in Ghidra 11.3+ PyGhidra (Python 3). Addresses in `script.json` are RVAs; the scripts add `currentProgram.getImageBase()`.
 
 ## Build
 

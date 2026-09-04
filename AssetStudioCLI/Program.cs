@@ -40,6 +40,10 @@ namespace AssetStudioCLI
                 {
                     Studio.ShowDotNetClasses();
                 }
+                else if (CLIOptions.o_workMode.Value == WorkMode.Il2Cpp)
+                {
+                    Studio.ExportIl2CppGhidraPackage();
+                }
                 else if (Studio.LoadAssets())
                 {
                     Studio.LoadIl2CppAssembliesIfRequested();

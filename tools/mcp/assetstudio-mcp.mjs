@@ -388,6 +388,88 @@ const tools = [
     },
   },
   {
+    name: "il2cpp_export",
+    description:
+      "Generate an Il2CppDumper-compatible Ghidra package from the game's IL2CPP binary " +
+      "(GameAssembly.dll / libil2cpp.so + global-metadata.dat): script.json, stringliteral.json, " +
+      "il2cpp.h, il2cpp_ghidra.h, and the bundled ghidra.py / ghidra_with_struct.py (CLI '-m il2cpp'). " +
+      "First run also builds dummy .NET assemblies (cached; ~10-60 s). Point input_path at the game " +
+      "folder or the binary. Then in Ghidra: import the binary, Parse C Source il2cpp_ghidra.h, add " +
+      "the 'ghidra' folder in Script Manager, run ghidra.py (or ghidra_with_struct.py) and pick script.json.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder, GameAssembly.dll / libil2cpp.so, or a file inside the game." },
+        output_path: { type: "string", description: `Output folder (package is written to <output>/il2cpp). Default: ${defaultOutDir()}` },
+        unity_version: { type: "string", description: "Override Unity version if it cannot be detected (e.g. '2021.3.16f1')." },
+        log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}; first generation can be slow).` },
+      },
+      required: ["input_path"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "il2cpp", "-o", out];
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      if (a.log_level) args.push("--log-level", a.log_level);
+      const r = await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600));
+      if (r.ok) r.output += `\n\n[output folder: ${out}/il2cpp]`;
+      return resultText(r);
+    },
+  },
+  {
+    name: "il2cpp_lookup",
+    description:
+      "Translate between IL2CPP managed names and addresses while decompiling in Ghidra " +
+      "(CLI '-m il2cpp --il2cpp-lookup'). Query is a method/symbol name (Type$$Method or Type.Method, " +
+      "substring or regex) or an address (0xRVA, va:0x..., rva:0x...). Uses the cached package from " +
+      "il2cpp_export / a previous -m il2cpp or -m dotnet run.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder or IL2CPP binary (same as il2cpp_export)." },
+        query: { type: "string", description: "Name (PlayerController$$Update) or address (0x1A2B3C or va:0x1800...). " },
+        use_regex: { type: "boolean", description: "Treat query as a regular expression (names only)." },
+        unity_version: { type: "string" },
+        output_path: { type: "string", description: `Also copy the Ghidra package to <output>/il2cpp. Default: ${defaultOutDir()}` },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path", "query"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-lookup", a.query];
+      if (a.use_regex) args.push("--filter-with-regex");
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
+    },
+  },
+  {
+    name: "il2cpp_strings",
+    description:
+      "Search IL2CPP string literals by substring or regex and return their RVAs/VAs " +
+      "(CLI '-m il2cpp --il2cpp-strings'). Useful to jump from a decompiled string in Ghidra to its xref.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder or IL2CPP binary." },
+        query: { type: "string", description: "Substring (or regex) to find in string literals." },
+        use_regex: { type: "boolean", description: "Treat query as a regular expression." },
+        unity_version: { type: "string" },
+        output_path: { type: "string", description: `Also copy the Ghidra package to <output>/il2cpp. Default: ${defaultOutDir()}` },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path", "query"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-strings", a.query];
+      if (a.use_regex) args.push("--filter-with-regex");
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
+    },
+  },
+  {
     name: "asset_run",
     description:
       "Run AssetStudioModCLI with a verbatim argument list. Escape hatch for anything the typed " +
@@ -484,7 +566,7 @@ async function handle(msg) {
       reply(id, {
         protocolVersion: params?.protocolVersion || "2025-06-18",
         capabilities: { tools: {} },
-        serverInfo: { name: "assetstudio-cli", version: "0.3.0" },
+        serverInfo: { name: "assetstudio-cli", version: "0.4.0" },
       });
       return;
     case "notifications/initialized":
