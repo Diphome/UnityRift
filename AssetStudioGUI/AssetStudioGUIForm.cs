@@ -89,6 +89,8 @@ namespace AssetStudioGUI
         private Panel animPanel;
         private ComboBox animClipCombo;
         private Button animPlayButton;
+        private CheckBox animLoopCheck;
+        private Label animTimeLabel;
         private TrackBar animTrackBar;
         private bool animSuppressEvents;
         private int[] indiceData;
@@ -3242,6 +3244,11 @@ namespace AssetStudioGUI
             if (animPlayer == null)
                 return;
             animPlayer.Evaluate(animClipIndex, animTime);
+            if (animTimeLabel != null)
+            {
+                var dur = animClipIndex >= 0 && animClipIndex < animPlayer.Clips.Count ? animPlayer.Clips[animClipIndex].Duration : 0f;
+                animTimeLabel.Text = $"{animTime:0.00} / {dur:0.00}s";
+            }
             for (var m = 0; m < animPlayer.Meshes.Count; m++)
             {
                 var pm = animPlayer.Meshes[m];
@@ -3267,17 +3274,22 @@ namespace AssetStudioGUI
             if (animPanel != null)
                 return;
 
-            animPanel = new Panel { Height = 30, Visible = false };
+            animPanel = new Panel { Height = 34, Visible = false, Padding = new Padding(6, 4, 6, 4), BackColor = System.Drawing.SystemColors.Control };
             animPanel.Location = new Point(0, Math.Max(0, previewPanel.ClientSize.Height - animPanel.Height));
             animPanel.Width = previewPanel.ClientSize.Width;
             animPanel.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
 
-            animClipCombo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240, Dock = DockStyle.Left };
-            animPlayButton = new Button { Text = "Pause", Width = 60, Dock = DockStyle.Left };
+            animClipCombo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240, Dock = DockStyle.Left, Margin = new Padding(0, 0, 6, 0), FlatStyle = FlatStyle.System };
+            animPlayButton = new Button { Text = "Pause", Width = 64, Dock = DockStyle.Left, FlatStyle = FlatStyle.System };
+            animLoopCheck = new CheckBox { Text = "Loop", Checked = true, Width = 54, Dock = DockStyle.Left, TextAlign = System.Drawing.ContentAlignment.MiddleCenter };
+            animTimeLabel = new Label { Text = "0.00 / 0.00s", Width = 96, Dock = DockStyle.Right, TextAlign = System.Drawing.ContentAlignment.MiddleRight, AutoSize = false };
             animTrackBar = new TrackBar { Minimum = 0, Maximum = 1000, TickStyle = TickStyle.None, Dock = DockStyle.Fill };
 
-            // Add Fill last so it takes the remaining width beside the left-docked controls.
+            // Docking fills in reverse add-order, so add Fill first (backmost) and the
+            // left-group controls last (frontmost) to get: combo | play | loop |=track=| time
             animPanel.Controls.Add(animTrackBar);
+            animPanel.Controls.Add(animTimeLabel);
+            animPanel.Controls.Add(animLoopCheck);
             animPanel.Controls.Add(animPlayButton);
             animPanel.Controls.Add(animClipCombo);
             previewPanel.Controls.Add(animPanel);
@@ -3302,7 +3314,18 @@ namespace AssetStudioGUI
             }
             animTime += animTimer.Interval / 1000f;
             if (animTime > dur)
-                animTime -= dur;
+            {
+                if (animLoopCheck != null && animLoopCheck.Checked)
+                {
+                    animTime -= dur;
+                }
+                else
+                {
+                    animTime = dur;
+                    animTimer.Stop();
+                    animPlayButton.Text = "Play";
+                }
+            }
             animSuppressEvents = true;
             animTrackBar.Value = (int)Math.Min(1000, Math.Max(0, animTime / dur * 1000));
             animSuppressEvents = false;
