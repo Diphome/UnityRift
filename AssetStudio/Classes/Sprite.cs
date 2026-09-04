@@ -222,13 +222,16 @@ namespace AssetStudio
             }
 
             m_Extrude = reader.ReadUInt32();
-            // m_IsPolygon is present from 5.3 up to (but not including) Unity 6.
-            // In Unity 6000+ release builds it is no longer serialized here; reading it
-            // (bool + align) over-reads 4 bytes and corrupts every following field
-            // (m_RenderDataKey / m_AtlasTags / m_RD). Verified against 6000.5.0f1 assets:
-            // skipping these 4 bytes parses 133/133 sprites, the disputed byte is random
-            // GUID data (not a 0/1 bool). See docs/PROJECT_NOTES.md.
-            if (version >= (5, 3) && version < 6000) //5.3 up to Unity 6
+            // m_IsPolygon is present from 5.3 up to Unity 6000.4; in 6000.5+ release
+            // builds it is no longer serialized here. Reading it (bool + align) then
+            // over-reads 4 bytes and corrupts every following field (m_RenderDataKey /
+            // m_AtlasTags / m_RD). Verified: 6000.5.0f1 must SKIP it (skipping parses
+            // 133/133 raw sprites vs 71/133 keeping it; the disputed byte is random GUID
+            // data, not a 0/1 bool), while 6000.3 (Mario vs Luigi) must KEEP it (gating
+            // at < 6000 broke 1,183 of its sprites). Exact 6000.4 vs 6000.5 boundary is
+            // unconfirmed (no public 6000.4 type-tree dump); cut at 6000.5, the earliest
+            // version proven to drop it. See docs/PROJECT_NOTES.md.
+            if (version >= (5, 3) && version < (6000, 5)) //5.3 up to Unity 6000.4
             {
                 m_IsPolygon = reader.ReadBoolean();
                 reader.AlignStream();
