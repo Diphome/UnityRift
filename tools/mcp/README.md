@@ -21,6 +21,8 @@ MCP **stdio** transport (newline-delimited JSON-RPC 2.0). No `npm install` neede
 | `asset_info` | Load asset file(s)/folder and list counts per asset type (`-m info`). |
 | `asset_export` | Convert/export assets. Covers export / exportRaw / dump / extract / live2d / splitObjects / animator modes, grouping, formats, filters. |
 | `asset_dump` | Dump assets to text (`-m dump`). Best for inspecting fields, incl. type-tree-stripped builds via `typetree_db`. |
+| `dotnet_list` | List the game's .NET assemblies and types (`-m dotnet`). Managed folder auto-detected from the game folder / an asset file. |
+| `dotnet_type` | Dump .NET type(s) as C#-like class stubs, optionally with IL (`-m dotnet --dotnet-type`). Can also write `.cs` stub files. |
 | `asset_run` | Run the CLI with a verbatim argument list (escape hatch). |
 | `list_output` | Recursively list files in an output folder with sizes. |
 
@@ -28,6 +30,11 @@ MCP **stdio** transport (newline-delimited JSON-RPC 2.0). No `npm install` neede
 type tree database) and `assembly_folder`. `typetree_db` lets stripped builds be
 read/dumped; omit it to use the `classdata.tpk` bundled next to the CLI. Custom
 MonoBehaviour fields additionally require `assembly_folder`.
+
+`dotnet_list` / `dotnet_type` browse the game's managed code (Mono builds; IL2CPP is
+not supported yet). Give them the game folder, its `*_Data` folder, the `Managed`
+folder, or any asset file inside the game; the `Managed` folder is located
+automatically (or pass `assembly_folder`).
 
 Every CLI-invoking tool returns the exact command line, the exit code, elapsed
 time, and the combined stdout+stderr (ANSI stripped) — i.e. the CLI's own log.

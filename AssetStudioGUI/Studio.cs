@@ -85,6 +85,8 @@ namespace AssetStudioGUI
     {
         public static AssetsManager assetsManager = new AssetsManager();
         public static AssemblyLoader assemblyLoader = new AssemblyLoader();
+        /// <summary>Raised (on any thread) after assemblies were loaded via the folder prompt, so the GUI can refresh its .NET view.</summary>
+        public static Action AssembliesLoaded;
         public static List<AssetItem> exportableAssets = new List<AssetItem>();
         public static List<AssetItem> visibleAssets = new List<AssetItem>();
         public static Dictionary<MonoBehaviour, CubismModel> l2dModelDict = new Dictionary<MonoBehaviour, CubismModel>();
@@ -985,6 +987,7 @@ namespace AssetStudioGUI
                 if (openFolderDialog.ShowDialog() == DialogResult.OK)
                 {
                     assemblyLoader.Load(openFolderDialog.Folder);
+                    AssembliesLoaded?.Invoke();
                 }
                 else
                 {

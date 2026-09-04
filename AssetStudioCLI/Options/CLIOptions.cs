@@ -15,6 +15,7 @@ namespace AssetStudioCLI.Options
         Live2D,
         FBX,
         Filter,
+        DotNet,
         Advanced,
     }
 
@@ -28,6 +29,7 @@ namespace AssetStudioCLI.Options
         Live2D,
         SplitObjects,
         Animator,
+        DotNet,
     }
 
     internal enum AssetGroupOption
@@ -140,6 +142,11 @@ namespace AssetStudioCLI.Options
         public static Option<bool> f_avoidLoadingViaTypetree;
         public static Option<bool> f_rawByteArrayFromMono;
         public static Option<bool> f_loadAllAssets;
+        //.NET
+        public static Option<List<string>> o_dotnetTypes;
+        public static Option<List<string>> o_dotnetAssemblies;
+        public static Option<bool> f_dotnetIL;
+        public static Option<bool> f_dotnetToFiles;
 
         static CLIOptions()
         {
@@ -206,7 +213,7 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: WorkMode.Export,
                 optionName: "-m, --mode <value>",
                 optionDescription: "Specify working mode\n" +
-                    "<Value: extract | export(default) | exportRaw | dump | info | live2d |\nsplitObjects | animator>\n" +
+                    "<Value: extract | export(default) | exportRaw | dump | info | live2d |\nsplitObjects | animator | dotnet>\n" +
                     "Extract - Extract(Decompress) asset bundles\n" +
                     "Export - Convert and export assets\n" +
                     "ExportRaw - Export raw assets\n" +
@@ -214,7 +221,8 @@ namespace AssetStudioCLI.Options
                     "Info - Load file(s) and show the number of available for export assets\n" +
                     "Live2D - Export Live2D Cubism models\n" +
                     "SplitObjects - Export all model objects (split) (fbx)\n" +
-                    "Animator - Export Animator assets (fbx)\n",
+                    "Animator - Export Animator assets (fbx)\n" +
+                    "DotNet - Browse the game's .NET assemblies (list types / dump C#-like class stubs)\n",
                 optionExample: "Example: \"-m info\"\n",
                 optionHelpGroup: HelpGroups.General
             );
@@ -541,6 +549,47 @@ namespace AssetStudioCLI.Options
                 optionExample: "Example: \"--export-asset-list xml\"\n",
                 optionHelpGroup: HelpGroups.Advanced
             );
+            #region Init .NET Options
+            o_dotnetTypes = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--dotnet-type <text>",
+                optionDescription: "Specify the .NET type name(s) (or regexp with --filter-with-regex) to dump as C#-like stubs\n" +
+                    "Matched against the full type name (Namespace.Type), case-insensitive substring.\n" +
+                    "If omitted, only the list of assemblies and types is shown.\n" +
+                    "*To specify multiple names write them separated by ',' or ';' without spaces\n",
+                optionExample: "Example: \"-m dotnet --dotnet-type PlayerController\"\n",
+                optionHelpGroup: HelpGroups.DotNet
+            );
+            o_dotnetAssemblies = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--dotnet-assembly <text>",
+                optionDescription: "Restrict the .NET listing/dump to the specified assembly file name(s)\n" +
+                    "*To specify multiple names write them separated by ',' or ';' without spaces\n",
+                optionExample: "Example: \"-m dotnet --dotnet-assembly Assembly-CSharp.dll\"\n",
+                optionHelpGroup: HelpGroups.DotNet
+            );
+            f_dotnetIL = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--dotnet-il",
+                optionDescription: "(Flag) Include IL instruction listings of method bodies in .NET type dumps\n",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.DotNet,
+                isFlag: true
+            );
+            f_dotnetToFiles = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--dotnet-to-files",
+                optionDescription: "(Flag) Also write each dumped .NET type as a .cs stub file into the output folder\n",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.DotNet,
+                isFlag: true
+            );
+            #endregion
+
             o_assemblyPath = new GroupedOption<string>
             (
                 optionDefaultValue: "",
@@ -707,6 +756,10 @@ namespace AssetStudioCLI.Options
                             ClassIDType.Texture2D,
                         };
                         break;
+                    case "dotnet":
+                    case ".net":
+                        o_workMode.Value = WorkMode.DotNet;
+                        break;
                     case "animator":
                     case "splitobjects":
                         o_workMode.Value = value.ToLower() == "animator"
@@ -773,6 +826,17 @@ namespace AssetStudioCLI.Options
                         break;
                     case "--filter-with-regex":
                         f_filterWithRegex.Value = true;
+                        flagIndexes.Add(i);
+                        break;
+                    case "--dotnet-il":
+                    case "--dotnet-to-files":
+                        if (o_workMode.Value != WorkMode.DotNet)
+                        {
+                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
+                            ShowOptionDescription(o_workMode);
+                            return;
+                        }
+                        if (flag == "--dotnet-il") f_dotnetIL.Value = true; else f_dotnetToFiles.Value = true;
                         flagIndexes.Add(i);
                         break;
                     case "--decompress-to-disk":
@@ -1272,6 +1336,12 @@ namespace AssetStudioCLI.Options
                             o_filterByText.Value.AddRange(ValueSplitter(value, isRegex: f_filterWithRegex.Value));
                             filterBy = FilterBy.NameOrContainer;
                             break;
+                        case "--dotnet-type":
+                            o_dotnetTypes.Value.AddRange(ValueSplitter(value, isRegex: f_filterWithRegex.Value));
+                            break;
+                        case "--dotnet-assembly":
+                            o_dotnetAssemblies.Value.AddRange(ValueSplitter(value));
+                            break;
                         case "--typetree-db":
                             if (File.Exists(value))
                             {
@@ -1522,6 +1592,15 @@ namespace AssetStudioCLI.Options
                     }
                     sb.AppendLine(ShowCurrentFilter());
                     sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");
+                    sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");
+                    break;
+                case WorkMode.DotNet:
+                    sb.AppendLine($"# [{o_workMode} Options]");
+                    sb.AppendLine($"# Type(s): \"{string.Join("\", \"", o_dotnetTypes.Value)}\"");
+                    sb.AppendLine($"# Assembly filter: \"{string.Join("\", \"", o_dotnetAssemblies.Value)}\"");
+                    sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");
+                    sb.AppendLine($"# Include IL: {f_dotnetIL}");
+                    sb.AppendLine($"# Write .cs Files: {f_dotnetToFiles}");
                     sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");
                     break;
                 case WorkMode.Live2D:

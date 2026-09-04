@@ -36,6 +36,10 @@ namespace AssetStudioCLI
                 {
                     Studio.ExtractBundles();
                 }
+                else if (CLIOptions.o_workMode.Value == WorkMode.DotNet)
+                {
+                    Studio.ShowDotNetClasses();
+                }
                 else if (Studio.LoadAssets())
                 {
                     Studio.ParseAssets();

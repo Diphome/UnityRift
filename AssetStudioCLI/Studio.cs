@@ -17,7 +17,7 @@ using Ansi = AssetStudio.ColorConsole;
 
 namespace AssetStudioCLI
 {
-    internal static class Studio
+    internal static partial class Studio
     {
         public static AssetsManager assetsManager = new AssetsManager();
         public static List<AssetItem> parsedAssetsList = new List<AssetItem>();

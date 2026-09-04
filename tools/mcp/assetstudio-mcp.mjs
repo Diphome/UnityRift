@@ -305,6 +305,72 @@ const tools = [
     },
   },
   {
+    name: "dotnet_list",
+    description:
+      "List the game's .NET assemblies and their types (CLI '-m dotnet'). Point input_path at the " +
+      "game folder, its <Game>_Data folder, the Managed folder, or any asset file inside; the Managed " +
+      "folder is auto-detected. Without assembly_filter only game-code assemblies are expanded " +
+      "(Unity/System ones are summarised). Mono/managed builds only (IL2CPP is not supported yet).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder, *_Data folder, Managed folder, or an asset file inside the game." },
+        assembly_filter: {
+          type: "string",
+          description: "Restrict to assembly file name(s), e.g. 'Assembly-CSharp.dll' or 'UnityEngine.CoreModule' (comma separated).",
+        },
+        assembly_folder: { type: "string", description: "Explicit path to the Managed folder (overrides auto-detection)." },
+        log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path"],
+    },
+    handler: async (a) => {
+      const args = [a.input_path, "-m", "dotnet"];
+      if (a.assembly_filter) args.push("--dotnet-assembly", a.assembly_filter);
+      if (a.assembly_folder) args.push("--assembly-folder", a.assembly_folder);
+      if (a.log_level) args.push("--log-level", a.log_level);
+      return resultText(await runCli(args, a.timeout_sec || DEFAULT_TIMEOUT));
+    },
+  },
+  {
+    name: "dotnet_type",
+    description:
+      "Dump .NET type(s) from the game's assemblies as C#-like class stubs (fields, properties, " +
+      "events, methods, nested types; optionally IL of method bodies) (CLI '-m dotnet --dotnet-type'). " +
+      "type_name matches the full type name case-insensitively (substring, or regex with use_regex); " +
+      "an exact name wins over substring matches. At most 50 types are dumped per call.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder, *_Data folder, Managed folder, or an asset file inside the game." },
+        type_name: { type: "string", description: "Type name(s) to dump, e.g. 'PlayerController' or 'NSMB.Sound.SoundEffectPlayer' (comma separated)." },
+        use_regex: { type: "boolean", description: "Treat type_name as a regular expression." },
+        include_il: { type: "boolean", description: "Include IL instruction listings for method bodies." },
+        assembly_filter: { type: "string", description: "Restrict the search to assembly file name(s) (comma separated)." },
+        assembly_folder: { type: "string", description: "Explicit path to the Managed folder (overrides auto-detection)." },
+        to_files: { type: "boolean", description: "Also write each dumped type as a .cs stub under <output_path>/DotNet/<Assembly>/." },
+        output_path: { type: "string", description: `Output folder for to_files. Default: ${defaultOutDir()}` },
+        log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path", "type_name"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "dotnet", "--dotnet-type", a.type_name, "-o", out];
+      if (a.use_regex) args.push("--filter-with-regex");
+      if (a.include_il) args.push("--dotnet-il");
+      if (a.to_files) args.push("--dotnet-to-files");
+      if (a.assembly_filter) args.push("--dotnet-assembly", a.assembly_filter);
+      if (a.assembly_folder) args.push("--assembly-folder", a.assembly_folder);
+      if (a.log_level) args.push("--log-level", a.log_level);
+      const r = await runCli(args, a.timeout_sec || DEFAULT_TIMEOUT);
+      if (r.ok && a.to_files) r.output += `\n\n[output folder: ${out}]`;
+      return resultText(r);
+    },
+  },
+  {
     name: "asset_run",
     description:
       "Run AssetStudioModCLI with a verbatim argument list. Escape hatch for anything the typed " +
@@ -401,7 +467,7 @@ async function handle(msg) {
       reply(id, {
         protocolVersion: params?.protocolVersion || "2025-06-18",
         capabilities: { tools: {} },
-        serverInfo: { name: "assetstudio-cli", version: "0.1.0" },
+        serverInfo: { name: "assetstudio-cli", version: "0.2.0" },
       });
       return;
     case "notifications/initialized":

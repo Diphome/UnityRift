@@ -156,6 +156,7 @@ namespace AssetStudioGUI
             ConsoleWindow.RunConsole(Properties.Settings.Default.showConsole);
             InitializeComponent();
             ApplyColorTheme(out isDarkMode);
+            InitDotNetTab();
 
             var appAssembly = typeof(Program).Assembly.GetName();
             guiTitle = $"{appAssembly.Name} v{appAssembly.Version}";
@@ -365,6 +366,8 @@ namespace AssetStudioGUI
                 log += $" and {m_ObjectsCount - objectsCount} assets failed to read";
             }
             Logger.Info(log);
+
+            await TryAutoLoadAssembliesAsync();
         }
 
         private void typeToolStripMenuItem_Click(object sender, EventArgs e)
@@ -601,6 +604,9 @@ namespace AssetStudioGUI
                     break;
                 case 1:
                     assetListView.Select();
+                    break;
+                case 3:
+                    dotnetTreeView?.Select();
                     break;
             }
         }
@@ -1617,6 +1623,7 @@ namespace AssetStudioGUI
             StopAnimator();
             Studio.assetsManager.Clear();
             Studio.assemblyLoader.Clear();
+            ClearDotNetTab();
             Studio.exportableAssets.Clear();
             Studio.visibleAssets.Clear();
             Studio.l2dModelDict.Clear();
