@@ -21,9 +21,11 @@ using Font = AssetStudio.Font;
 using Microsoft.WindowsAPICodePack.Taskbar;
 #if NET472
 using OpenTK;
+using Vector2 = OpenTK.Vector2;
 using Vector3 = OpenTK.Vector3;
 using Vector4 = OpenTK.Vector4;
 #else
+using Vector2 = OpenTK.Mathematics.Vector2;
 using Vector3 = OpenTK.Mathematics.Vector3;
 using Vector4 = OpenTK.Mathematics.Vector4;
 using Matrix4 = OpenTK.Mathematics.Matrix4;
@@ -65,6 +67,9 @@ namespace AssetStudioGUI
         private int mdx, mdy;
         private bool lmdown, rmdown;
         private int pgmID, pgmColorID, pgmBlackID;
+        private int pgmTexID;
+        private int attributeTexPos, attributeTexNormal, attributeTexUv;
+        private int uniformTexModel, uniformTexView, uniformTexProj, uniformTexSampler;
         private int attributeVertexPosition;
         private int attributeNormalDirection;
         private int attributeVertexColor;
@@ -85,6 +90,9 @@ namespace AssetStudioGUI
         private int animClipIndex = -1;      // -1 = bind pose
         private float animTime;
         private int[] animVertexOffset;      // per player-mesh start index in the combined arrays
+        private int animDefaultTex = -1;     // 1x1 white fallback for meshes without a texture
+        private sealed class AnimGLMesh { public int Vao, Pos, Nor, Uv, Ebo, Tex, Count; public Vector3[] PosBuf, NorBuf; public bool OwnsTex; }
+        private readonly List<AnimGLMesh> animGL = new List<AnimGLMesh>();
         private System.Windows.Forms.Timer animTimer;
         private Panel animPanel;
         private ComboBox animClipCombo;
@@ -3051,12 +3059,25 @@ namespace AssetStudioGUI
             LoadShader("fsBlack", ShaderType.FragmentShader, pgmBlackID, out fsID);
             GL.LinkProgram(pgmBlackID);
 
+            pgmTexID = GL.CreateProgram();
+            LoadShader("vsTex", ShaderType.VertexShader, pgmTexID, out vsID);
+            LoadShader("fsTex", ShaderType.FragmentShader, pgmTexID, out fsID);
+            GL.LinkProgram(pgmTexID);
+
             attributeVertexPosition = GL.GetAttribLocation(pgmID, "vertexPosition");
             attributeNormalDirection = GL.GetAttribLocation(pgmID, "normalDirection");
             attributeVertexColor = GL.GetAttribLocation(pgmColorID, "vertexColor");
             uniformModelMatrix = GL.GetUniformLocation(pgmID, "modelMatrix");
             uniformViewMatrix = GL.GetUniformLocation(pgmID, "viewMatrix");
             uniformProjMatrix = GL.GetUniformLocation(pgmID, "projMatrix");
+
+            attributeTexPos = GL.GetAttribLocation(pgmTexID, "vertexPosition");
+            attributeTexNormal = GL.GetAttribLocation(pgmTexID, "normalDirection");
+            attributeTexUv = GL.GetAttribLocation(pgmTexID, "vertexUV");
+            uniformTexModel = GL.GetUniformLocation(pgmTexID, "modelMatrix");
+            uniformTexView = GL.GetUniformLocation(pgmTexID, "viewMatrix");
+            uniformTexProj = GL.GetUniformLocation(pgmTexID, "projMatrix");
+            uniformTexSampler = GL.GetUniformLocation(pgmTexID, "tex");
         }
 
         private static void LoadShader(string filename, ShaderType type, int program, out int address)
@@ -3166,8 +3187,9 @@ namespace AssetStudioGUI
                     return;
                 }
 
-                BuildAnimBuffers();
                 viewMatrixData = Matrix4.CreateRotationY(-MathF.PI / 4) * Matrix4.CreateRotationX(-MathF.PI / 6);
+                glControl1.Visible = true;
+                BuildAnimGL();
                 EnsureAnimControls();
 
                 animSuppressEvents = true;
@@ -3181,7 +3203,6 @@ namespace AssetStudioGUI
                 animClipIndex = animPlayer.Clips.Count > 0 ? 0 : -1;
                 animTime = 0f;
 
-                glControl1.Visible = true;
                 animPanel.Visible = true;
                 animPanel.BringToFront();
                 UpdateAnimFrame();
@@ -3205,38 +3226,73 @@ namespace AssetStudioGUI
             }
         }
 
-        private void BuildAnimBuffers()
+        private void BuildAnimGL()
         {
-            var count = 0;
-            animVertexOffset = new int[animPlayer.Meshes.Count];
-            for (var i = 0; i < animPlayer.Meshes.Count; i++)
-            {
-                animVertexOffset[i] = count;
-                count += animPlayer.Meshes[i].VertexCount;
-            }
-
-            vertexData = new Vector3[count];
-            normal2Data = new Vector3[count];
-            normalData = normal2Data; // same array so either normalMode uploads normals
-            colorData = new Vector4[count];
-            for (var i = 0; i < count; i++)
-                colorData[i] = new Vector4(0.75f, 0.75f, 0.75f, 1.0f);
-
-            var indices = new List<int>();
-            for (var m = 0; m < animPlayer.Meshes.Count; m++)
-            {
-                var off = animVertexOffset[m];
-                foreach (var ind in animPlayer.Meshes[m].Indices)
-                    indices.Add(ind + off);
-            }
-            indiceData = indices.ToArray();
-
+            // Model bounds -> centering/scale matrix (mouse rotates via viewMatrixData).
             var mn = animPlayer.BoundsMin;
             var mx = animPlayer.BoundsMax;
             var offset = new Vector3((mn.X + mx.X) / 2, (mn.Y + mx.Y) / 2, (mn.Z + mx.Z) / 2);
             var dist = new Vector3(mx.X - mn.X, mx.Y - mn.Y, mx.Z - mn.Z);
             var d = Math.Max(1e-5f, dist.Length);
             modelMatrixData = Matrix4.CreateTranslation(-offset) * Matrix4.CreateScale(2f / d);
+
+            DeleteAnimGL();
+            try
+            {
+                glControl1.MakeCurrent();
+            }
+            catch
+            {
+                return; // GL context not ready yet; first paint/re-select will build it
+            }
+            EnsureWhiteTex();
+
+            foreach (var pm in animPlayer.Meshes)
+            {
+                var gm = new AnimGLMesh { Count = pm.Indices.Length };
+                gm.PosBuf = new Vector3[pm.VertexCount];
+                gm.NorBuf = new Vector3[pm.VertexCount];
+                var uvBuf = new Vector2[pm.VertexCount];
+                for (var v = 0; v < pm.VertexCount; v++)
+                {
+                    var uv = pm.UV0 != null ? pm.UV0[v] : null;
+                    // glTF/GL sample from the top; Unity UV origin is bottom -> flip V.
+                    uvBuf[v] = uv != null && uv.Length >= 2 ? new Vector2(uv[0], 1f - uv[1]) : Vector2.Zero;
+                }
+
+                GL.GenVertexArrays(1, out gm.Vao);
+                GL.BindVertexArray(gm.Vao);
+
+                GL.GenBuffers(1, out gm.Pos);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, gm.Pos);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(pm.VertexCount * Vector3.SizeInBytes), IntPtr.Zero, BufferUsageHint.DynamicDraw);
+                GL.VertexAttribPointer(attributeTexPos, 3, VertexAttribPointerType.Float, false, 0, 0);
+                GL.EnableVertexAttribArray(attributeTexPos);
+
+                GL.GenBuffers(1, out gm.Nor);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, gm.Nor);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(pm.VertexCount * Vector3.SizeInBytes), IntPtr.Zero, BufferUsageHint.DynamicDraw);
+                GL.VertexAttribPointer(attributeTexNormal, 3, VertexAttribPointerType.Float, false, 0, 0);
+                GL.EnableVertexAttribArray(attributeTexNormal);
+
+                GL.GenBuffers(1, out gm.Uv);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, gm.Uv);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(pm.VertexCount * Vector2.SizeInBytes), uvBuf, BufferUsageHint.StaticDraw);
+                GL.VertexAttribPointer(attributeTexUv, 2, VertexAttribPointerType.Float, false, 0, 0);
+                GL.EnableVertexAttribArray(attributeTexUv);
+
+                GL.GenBuffers(1, out gm.Ebo);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, gm.Ebo);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(pm.Indices.Length * sizeof(int)), pm.Indices, BufferUsageHint.StaticDraw);
+
+                GL.BindVertexArray(0);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+
+                var decoded = DecodeTexture(pm.BaseColorTexture);
+                gm.Tex = decoded >= 0 ? decoded : animDefaultTex;
+                gm.OwnsTex = decoded >= 0;
+                animGL.Add(gm);
+            }
         }
 
         private void UpdateAnimFrame()
@@ -3249,24 +3305,114 @@ namespace AssetStudioGUI
                 var dur = animClipIndex >= 0 && animClipIndex < animPlayer.Clips.Count ? animPlayer.Clips[animClipIndex].Duration : 0f;
                 animTimeLabel.Text = $"{animTime:0.00} / {dur:0.00}s";
             }
+            if (!glControlLoaded || animGL.Count != animPlayer.Meshes.Count)
+                return;
+            glControl1.MakeCurrent();
             for (var m = 0; m < animPlayer.Meshes.Count; m++)
             {
                 var pm = animPlayer.Meshes[m];
-                var off = animVertexOffset[m];
+                var gm = animGL[m];
                 for (var v = 0; v < pm.VertexCount; v++)
                 {
                     var p = pm.Positions[v];
                     var n = pm.Normals[v];
-                    vertexData[off + v] = new Vector3(p.X, p.Y, p.Z);
-                    normal2Data[off + v] = new Vector3(n.X, n.Y, n.Z);
+                    gm.PosBuf[v] = new Vector3(p.X, p.Y, p.Z);
+                    gm.NorBuf[v] = new Vector3(n.X, n.Y, n.Z);
+                }
+                GL.BindBuffer(BufferTarget.ArrayBuffer, gm.Pos);
+                GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, (IntPtr)(pm.VertexCount * Vector3.SizeInBytes), gm.PosBuf);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, gm.Nor);
+                GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, (IntPtr)(pm.VertexCount * Vector3.SizeInBytes), gm.NorBuf);
+            }
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            glControl1.Invalidate();
+        }
+
+        private void PaintAnimator()
+        {
+            GL.UseProgram(pgmTexID);
+            GL.UniformMatrix4(uniformTexModel, false, ref modelMatrixData);
+            GL.UniformMatrix4(uniformTexView, false, ref viewMatrixData);
+            GL.UniformMatrix4(uniformTexProj, false, ref projMatrixData);
+            GL.Uniform1(uniformTexSampler, 0);
+#if NETFRAMEWORK
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+#else
+            GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
+#endif
+            foreach (var gm in animGL)
+            {
+                GL.ActiveTexture(TextureUnit.Texture0);
+                GL.BindTexture(TextureTarget.Texture2D, gm.Tex);
+                GL.BindVertexArray(gm.Vao);
+                GL.DrawElements(BeginMode.Triangles, gm.Count, DrawElementsType.UnsignedInt, 0);
+            }
+            GL.BindVertexArray(0);
+        }
+
+        private int DecodeTexture(byte[] bytes)
+        {
+            if (bytes == null || bytes.Length == 0)
+                return -1;
+            try
+            {
+                using (var ms = new MemoryStream(bytes))
+                using (var bmp = new System.Drawing.Bitmap(ms))
+                {
+                    var rect = new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height);
+                    var data = bmp.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                    GL.GenTextures(1, out int tex);
+                    GL.BindTexture(TextureTarget.Texture2D, tex);
+                    GL.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
+                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bmp.Width, bmp.Height, 0, PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+                    bmp.UnlockBits(data);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+                    GL.BindTexture(TextureTarget.Texture2D, 0);
+                    return tex;
                 }
             }
-            if (glControlLoaded)
+            catch
+            {
+                return -1;
+            }
+        }
+
+        private void EnsureWhiteTex()
+        {
+            if (animDefaultTex >= 0)
+                return;
+            GL.GenTextures(1, out animDefaultTex);
+            GL.BindTexture(TextureTarget.Texture2D, animDefaultTex);
+            var white = new byte[] { 255, 255, 255, 255 };
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, 1, 1, 0, PixelFormat.Rgba, PixelType.UnsignedByte, white);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+            GL.BindTexture(TextureTarget.Texture2D, 0);
+        }
+
+        private void DeleteAnimGL()
+        {
+            if (animGL.Count == 0)
+                return;
+            try
             {
                 glControl1.MakeCurrent();
-                CreateVAO();
-                glControl1.Invalidate();
+                foreach (var gm in animGL)
+                {
+                    GL.DeleteVertexArray(gm.Vao);
+                    GL.DeleteBuffer(gm.Pos);
+                    GL.DeleteBuffer(gm.Nor);
+                    GL.DeleteBuffer(gm.Uv);
+                    GL.DeleteBuffer(gm.Ebo);
+                    if (gm.OwnsTex)
+                        GL.DeleteTexture(gm.Tex);
+                }
             }
+            catch { }
+            animGL.Clear();
         }
 
         private void EnsureAnimControls()
@@ -3385,6 +3531,7 @@ namespace AssetStudioGUI
             animTimer?.Stop();
             if (animPanel != null)
                 animPanel.Visible = false;
+            DeleteAnimGL();
             animPlayer = null;
             animClipIndex = -1;
             animTime = 0f;
@@ -3420,6 +3567,13 @@ namespace AssetStudioGUI
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Lequal);
+            if (animGL.Count > 0)
+            {
+                PaintAnimator();
+                GL.Flush();
+                glControl1.SwapBuffers();
+                return;
+            }
             GL.BindVertexArray(vao);
             if (wireFrameMode == 0 || wireFrameMode == 2)
             {
