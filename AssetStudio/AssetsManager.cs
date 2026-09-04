@@ -684,8 +684,13 @@ namespace AssetStudio
                     // MonoBehaviour (114) is excluded: its script-defined body is
                     // reconstructed from assemblies (MonoBehaviourConverter), which already
                     // seeds the base layout; a DB base-only tree would short-circuit that.
+                    // Skip built-in engine resource files: their objects use a legacy
+                    // layout that doesn't match the version they declare, so a version-keyed
+                    // DB tree would mis-read them. Let them fall back to the graceful
+                    // built-in handling below instead of logging read mismatches.
                     if (TypeTreeDb != null && TypeTreeDb.IsLoaded
                         && objectReader.classID != (int)ClassIDType.MonoBehaviour
+                        && !IsBuiltInResourceFile(assetsFile.fileName)
                         && (objectReader.serializedType == null || objectReader.serializedType.m_Type == null)
                         && TypeTreeDb.TryGetTypeTree(assetsFile.version, objectReader.classID, out var dbTypeTree))
                     {
