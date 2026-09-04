@@ -27,10 +27,15 @@ namespace AssetStudioCLI
             }
             if (!assemblyLoader.Loaded || assemblyLoader.LoadedPath == null)
             {
+                var il2cpp = folder == il2cppFolder;
                 assemblyLoader.Clear();
                 assemblyLoader.Load(folder);
+                assemblyLoader.IsIl2CppStubs = il2cpp;
             }
-            Logger.Info($"Loaded {assemblyLoader.Modules.Count} assemblies from \"{assemblyLoader.LoadedPath.Color(Ansi.BrightCyan)}\"");
+            Logger.Info($"Loaded {assemblyLoader.Modules.Count} assemblies from \"{assemblyLoader.LoadedPath.Color(Ansi.BrightCyan)}\""
+                + (assemblyLoader.IsIl2CppStubs ? " (IL2CPP stubs: metadata only, no method bodies)" : ""));
+            if (assemblyLoader.IsIl2CppStubs && CLIOptions.f_dotnetIL.Value)
+                Logger.Warning("--dotnet-il has no effect on IL2CPP stubs (no method bodies are available).");
 
             var modules = assemblyLoader.Modules
                 .Where(p => MatchesAssemblyFilter(p.Key))
@@ -50,6 +55,11 @@ namespace AssetStudioCLI
                 DumpDotNetTypes(modules, typeFilters);
         }
 
+        private static string il2cppFolder;
+        /// <summary>Copy of the CLI input paths taken before loading (AssetsManager clears the list it is given).</summary>
+        internal static List<string> inputPathsSnapshot;
+        private static List<string> InputPaths => inputPathsSnapshot ?? CLIOptions.inputPathList;
+
         private static string ResolveDotNetAssemblyFolder()
         {
             if (!string.IsNullOrEmpty(CLIOptions.o_assemblyPath.Value))
@@ -57,6 +67,9 @@ namespace AssetStudioCLI
             var managed = AssemblyLoader.FindManagedFolder(CLIOptions.inputPathList);
             if (managed != null)
                 return managed;
+            var il2cpp = ResolveIl2CppAssemblyFolder(CLIOptions.o_unityVersion.Value?.FullVersion);
+            if (il2cpp != null)
+                return il2cpp;
             // Fallback: an input folder that directly contains DLLs
             foreach (var input in CLIOptions.inputPathList)
             {
@@ -71,6 +84,50 @@ namespace AssetStudioCLI
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Finds the IL2CPP binary + metadata near the inputs and returns a folder of Cpp2IL-generated
+        /// dummy assemblies (cached). Returns null when the game is not IL2CPP or processing fails.
+        /// </summary>
+        private static string ResolveIl2CppAssemblyFolder(string unityVersion)
+        {
+            var game = Il2CppAssemblyProvider.Find(InputPaths);
+            if (game == null)
+                return null;
+            if (!Il2CppAssemblyProvider.IsSupported)
+            {
+                Logger.Warning($"IL2CPP game detected ({game.BinaryPath}) but IL2CPP support requires the .NET 8+ build of the CLI.");
+                return null;
+            }
+            try
+            {
+                il2cppFolder = Il2CppAssemblyProvider.GetOrGenerateAssemblies(game, unityVersion, msg => Logger.Info(msg));
+                return il2cppFolder;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"IL2CPP processing failed: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>--il2cpp for asset modes: after assets are loaded, generate + load IL2CPP assemblies unless --assembly-folder was given.</summary>
+        public static void LoadIl2CppAssembliesIfRequested()
+        {
+            if (!CLIOptions.f_il2cpp.Value || assemblyLoader.Modules.Count > 0)
+                return;
+            var version = assetsManager.AssetsFileList.Count > 0 ? assetsManager.AssetsFileList[0].version?.FullVersion : CLIOptions.o_unityVersion.Value?.FullVersion;
+            var folder = ResolveIl2CppAssemblyFolder(version);
+            if (folder == null)
+            {
+                Logger.Warning("--il2cpp: no IL2CPP binary/metadata found near the input path(s).");
+                return;
+            }
+            assemblyLoader.Clear();
+            assemblyLoader.Load(folder);
+            assemblyLoader.IsIl2CppStubs = true;
+            Logger.Info($"Loaded {assemblyLoader.Modules.Count} IL2CPP dummy assemblies from \"{folder.Color(Ansi.BrightCyan)}\"");
         }
 
         private static bool MatchesAssemblyFilter(string moduleName)

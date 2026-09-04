@@ -42,6 +42,7 @@ namespace AssetStudioCLI
                 }
                 else if (Studio.LoadAssets())
                 {
+                    Studio.LoadIl2CppAssembliesIfRequested();
                     Studio.ParseAssets();
                     if (CLIOptions.filterBy != FilterBy.None)
                     {

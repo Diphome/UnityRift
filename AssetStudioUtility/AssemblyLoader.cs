@@ -11,6 +11,8 @@ namespace AssetStudio
         public bool Loaded;
         /// <summary>Folder the assemblies were loaded from (null when nothing was loaded).</summary>
         public string LoadedPath;
+        /// <summary>True when the loaded assemblies are IL2CPP dummy DLLs (metadata only, no method bodies).</summary>
+        public bool IsIl2CppStubs;
         private Dictionary<string, ModuleDefinition> moduleDic = new Dictionary<string, ModuleDefinition>();
 
         /// <summary>All loaded modules, keyed by module file name (e.g. "Assembly-CSharp.dll").</summary>
@@ -143,6 +145,7 @@ namespace AssetStudio
             }
             moduleDic.Clear();
             LoadedPath = null;
+            IsIl2CppStubs = false;
             Loaded = false;
         }
     }

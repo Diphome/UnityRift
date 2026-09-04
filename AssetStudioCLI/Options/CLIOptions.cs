@@ -147,6 +147,7 @@ namespace AssetStudioCLI.Options
         public static Option<List<string>> o_dotnetAssemblies;
         public static Option<bool> f_dotnetIL;
         public static Option<bool> f_dotnetToFiles;
+        public static Option<bool> f_il2cpp;
 
         static CLIOptions()
         {
@@ -588,6 +589,18 @@ namespace AssetStudioCLI.Options
                 optionHelpGroup: HelpGroups.DotNet,
                 isFlag: true
             );
+            f_il2cpp = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--il2cpp",
+                optionDescription: "(Flag) Generate .NET assemblies from the game's IL2CPP binary (GameAssembly.dll / libil2cpp.so +\n" +
+                    "global-metadata.dat, auto-detected near the input) with Cpp2IL and use them like --assembly-folder\n" +
+                    "(custom MonoBehaviour fields, .NET class browsing). Results are cached. Requires the .NET 8+ build.\n" +
+                    "Implied by \"-m dotnet\" when no Managed folder is found.\n",
+                optionExample: "Example: \"-m dump -t monoBehaviour --il2cpp\"\n",
+                optionHelpGroup: HelpGroups.Advanced,
+                isFlag: true
+            );
             #endregion
 
             o_assemblyPath = new GroupedOption<string>
@@ -826,6 +839,10 @@ namespace AssetStudioCLI.Options
                         break;
                     case "--filter-with-regex":
                         f_filterWithRegex.Value = true;
+                        flagIndexes.Add(i);
+                        break;
+                    case "--il2cpp":
+                        f_il2cpp.Value = true;
                         flagIndexes.Add(i);
                         break;
                     case "--dotnet-il":
@@ -1593,6 +1610,7 @@ namespace AssetStudioCLI.Options
                     sb.AppendLine(ShowCurrentFilter());
                     sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");
                     sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");
+                    sb.AppendLine($"# IL2CPP: {f_il2cpp}");
                     break;
                 case WorkMode.DotNet:
                     sb.AppendLine($"# [{o_workMode} Options]");

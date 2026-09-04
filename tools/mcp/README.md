@@ -31,10 +31,16 @@ type tree database) and `assembly_folder`. `typetree_db` lets stripped builds be
 read/dumped; omit it to use the `classdata.tpk` bundled next to the CLI. Custom
 MonoBehaviour fields additionally require `assembly_folder`.
 
-`dotnet_list` / `dotnet_type` browse the game's managed code (Mono builds; IL2CPP is
-not supported yet). Give them the game folder, its `*_Data` folder, the `Managed`
-folder, or any asset file inside the game; the `Managed` folder is located
-automatically (or pass `assembly_folder`).
+`dotnet_list` / `dotnet_type` browse the game's managed code. Give them the game
+folder, its `*_Data` folder, the `Managed` folder, or any asset file inside the
+game; the `Managed` folder is located automatically (or pass `assembly_folder`).
+**IL2CPP games** work too: when there is no `Managed` folder, the IL2CPP binary
+(`GameAssembly.dll` / `libil2cpp.so`) and `global-metadata.dat` are processed with
+[Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) into metadata-only stub
+assemblies (types, fields, signatures, RVAs; no method bodies). The result is
+cached under `%LOCALAPPDATA%\AssetStudioMod\il2cpp`; the first run takes
+~10-60 s and a few GB of RAM. `asset_info` / `asset_export` / `asset_dump` accept
+`il2cpp: true` to use those stubs for custom MonoBehaviour fields.
 
 Every CLI-invoking tool returns the exact command line, the exit code, elapsed
 time, and the combined stdout+stderr (ANSI stripped) — i.e. the CLI's own log.

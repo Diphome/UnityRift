@@ -142,10 +142,21 @@ function pushCommon(args, a) {
   if (a.unity_version) args.push("--unity-version", a.unity_version);
   if (a.assembly_folder) args.push("--assembly-folder", a.assembly_folder);
   if (a.typetree_db) args.push("--typetree-db", a.typetree_db);
+  if (a.il2cpp) args.push("--il2cpp");
   if (a.log_level) args.push("--log-level", a.log_level);
   if (a.load_all) args.push("--load-all");
   pushFilters(args, a);
 }
+
+const il2cppProp = {
+  il2cpp: {
+    type: "boolean",
+    description:
+      "IL2CPP game: generate .NET assemblies from GameAssembly.dll/libil2cpp.so + global-metadata.dat " +
+      "(auto-detected near the input) with Cpp2IL and use them for custom MonoBehaviour fields. " +
+      "Cached after the first run (which takes ~10-60 s and a few GB of RAM).",
+  },
+};
 
 const typeTreeDbProp = {
   typetree_db: {
@@ -202,6 +213,7 @@ const tools = [
         unity_version: { type: "string", description: "Override Unity version, e.g. '2017.4.39f1'." },
         assembly_folder: { type: "string", description: "Path to the assembly (Managed) folder." },
         ...typeTreeDbProp,
+        ...il2cppProp,
         log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
         ...filterProps,
         timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
@@ -241,6 +253,7 @@ const tools = [
         unity_version: { type: "string" },
         assembly_folder: { type: "string" },
         ...typeTreeDbProp,
+        ...il2cppProp,
         max_export_tasks: { type: "integer", description: "Number of parallel export tasks." },
         log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
         load_all: { type: "boolean" },
@@ -276,7 +289,7 @@ const tools = [
     description:
       "Dump assets to text (CLI '-m dump'). Best for inspecting object fields, including on " +
       "type-tree-stripped builds when a type tree DB is supplied. For custom MonoBehaviour " +
-      "fields also pass assembly_folder.",
+      "fields also pass assembly_folder (Mono games) or il2cpp: true (IL2CPP games).",
     inputSchema: {
       type: "object",
       properties: {
@@ -285,6 +298,7 @@ const tools = [
         asset_types: { type: "string", description: "Asset type(s) to dump, e.g. 'sprite' or 'monoBehaviour'." },
         ...typeTreeDbProp,
         assembly_folder: { type: "string", description: "Path to the assembly (Managed) folder (custom MonoBehaviour fields)." },
+        ...il2cppProp,
         unity_version: { type: "string" },
         load_all: { type: "boolean" },
         overwrite: { type: "boolean" },
@@ -310,7 +324,9 @@ const tools = [
       "List the game's .NET assemblies and their types (CLI '-m dotnet'). Point input_path at the " +
       "game folder, its <Game>_Data folder, the Managed folder, or any asset file inside; the Managed " +
       "folder is auto-detected. Without assembly_filter only game-code assemblies are expanded " +
-      "(Unity/System ones are summarised). Mono/managed builds only (IL2CPP is not supported yet).",
+      "(Unity/System ones are summarised). IL2CPP games are supported: when no Managed folder exists, " +
+      "GameAssembly.dll/libil2cpp.so + global-metadata.dat are processed with Cpp2IL into metadata-only " +
+      "stub assemblies (cached; first run takes ~10-60 s).",
     inputSchema: {
       type: "object",
       properties: {
@@ -339,7 +355,8 @@ const tools = [
       "Dump .NET type(s) from the game's assemblies as C#-like class stubs (fields, properties, " +
       "events, methods, nested types; optionally IL of method bodies) (CLI '-m dotnet --dotnet-type'). " +
       "type_name matches the full type name case-insensitively (substring, or regex with use_regex); " +
-      "an exact name wins over substring matches. At most 50 types are dumped per call.",
+      "an exact name wins over substring matches. At most 50 types are dumped per call. For IL2CPP games " +
+      "the stubs carry [Address(RVA=...)] / [FieldOffset] attributes but no IL (include_il is ignored).",
     inputSchema: {
       type: "object",
       properties: {
@@ -467,7 +484,7 @@ async function handle(msg) {
       reply(id, {
         protocolVersion: params?.protocolVersion || "2025-06-18",
         capabilities: { tools: {} },
-        serverInfo: { name: "assetstudio-cli", version: "0.2.0" },
+        serverInfo: { name: "assetstudio-cli", version: "0.3.0" },
       });
       return;
     case "notifications/initialized":

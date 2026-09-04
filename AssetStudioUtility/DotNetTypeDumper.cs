@@ -35,6 +35,7 @@ namespace AssetStudio
             "System.Diagnostics.DebuggerHiddenAttribute",
             "System.Diagnostics.DebuggerStepThroughAttribute",
             "System.ParamArrayAttribute",
+            "Cpp2ILInjected.TokenAttribute", // IL2CPP dummy DLLs: metadata token, noise (Address/FieldOffset are kept)
         };
 
         #region Type names

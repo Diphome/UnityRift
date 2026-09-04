@@ -1,4 +1,4 @@
-using AssetStudio;
+﻿using AssetStudio;
 using Mono.Cecil;
 using System;
 using System.Collections.Generic;
@@ -24,6 +24,7 @@ namespace AssetStudioGUI
         private CheckBox dotnetShowIL;
         private Label dotnetStatusLabel;
         private ToolStripMenuItem loadAssembliesToolStripMenuItem;
+        private ToolStripMenuItem loadIl2CppToolStripMenuItem;
         private const string DotnetSearchHint = " Search types (Enter) ";
         private const string DotnetLoadingTag = "__loading__";
 
@@ -104,8 +105,13 @@ namespace AssetStudioGUI
 
             loadAssembliesToolStripMenuItem = new ToolStripMenuItem("Load .NET assemblies folder");
             loadAssembliesToolStripMenuItem.Click += loadAssembliesToolStripMenuItem_Click;
+            loadIl2CppToolStripMenuItem = new ToolStripMenuItem("Load IL2CPP binary (GameAssembly.dll / libil2cpp.so)");
+            loadIl2CppToolStripMenuItem.Click += loadIl2CppToolStripMenuItem_Click;
+            loadIl2CppToolStripMenuItem.Enabled = Il2CppAssemblyProvider.IsSupported;
             var idx = fileToolStripMenuItem.DropDownItems.IndexOf(toolStripMenuItem1);
-            fileToolStripMenuItem.DropDownItems.Insert(idx < 0 ? fileToolStripMenuItem.DropDownItems.Count : idx, loadAssembliesToolStripMenuItem);
+            if (idx < 0) idx = fileToolStripMenuItem.DropDownItems.Count;
+            fileToolStripMenuItem.DropDownItems.Insert(idx, loadAssembliesToolStripMenuItem);
+            fileToolStripMenuItem.DropDownItems.Insert(idx + 1, loadIl2CppToolStripMenuItem);
 
             Studio.AssembliesLoaded = () => BeginInvoke(new Action(BuildDotNetTree));
         }
@@ -120,7 +126,39 @@ namespace AssetStudioGUI
             await LoadAssembliesAsync(openFolderDialog.Folder);
         }
 
-        /// <summary>Called after files are loaded: looks for a Managed folder next to them.</summary>
+        private async void loadIl2CppToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new OpenFileDialog())
+            {
+                dlg.Title = "Select the IL2CPP binary";
+                dlg.Filter = "IL2CPP binary|GameAssembly.dll;libil2cpp.so;GameAssembly.so;GameAssembly.dylib;libil2cpp.dylib|All files|*.*";
+                dlg.InitialDirectory = openDirectoryBackup;
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                var game = Il2CppAssemblyProvider.FromBinary(dlg.FileName);
+                if (game == null)
+                {
+                    // metadata not found automatically: ask for it
+                    using (var mdDlg = new OpenFileDialog())
+                    {
+                        mdDlg.Title = "Select global-metadata.dat";
+                        mdDlg.Filter = "global-metadata.dat|global-metadata.dat|All files|*.*";
+                        mdDlg.InitialDirectory = Path.GetDirectoryName(dlg.FileName);
+                        if (mdDlg.ShowDialog(this) != DialogResult.OK)
+                            return;
+                        game = Il2CppAssemblyProvider.FromBinary(dlg.FileName, mdDlg.FileName);
+                    }
+                }
+                if (game == null)
+                {
+                    MessageBox.Show(this, "Could not find global-metadata.dat for this binary.", "IL2CPP", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                await LoadIl2CppAsync(game);
+            }
+        }
+
+        /// <summary>Called after files are loaded: looks for a Managed folder (Mono) or an IL2CPP binary next to them.</summary>
         private async Task TryAutoLoadAssembliesAsync()
         {
             if (assemblyLoader.Loaded)
@@ -129,21 +167,62 @@ namespace AssetStudioGUI
             if (!string.IsNullOrEmpty(openDirectoryBackup))
                 paths.Add(openDirectoryBackup);
             var managed = await Task.Run(() => AssemblyLoader.FindManagedFolder(paths));
-            if (managed == null)
+            if (managed != null)
+            {
+                Logger.Info($"Found .NET assemblies folder: {managed}");
+                await LoadAssembliesAsync(managed);
                 return;
-            Logger.Info($"Found .NET assemblies folder: {managed}");
-            await LoadAssembliesAsync(managed);
+            }
+            var game = await Task.Run(() => Il2CppAssemblyProvider.Find(paths));
+            if (game == null)
+                return;
+            if (!Il2CppAssemblyProvider.IsSupported)
+            {
+                Logger.Info($"IL2CPP game detected ({game.BinaryPath}) but IL2CPP support needs the .NET 8+ build.");
+                dotnetStatusLabel.Text = "IL2CPP game detected. IL2CPP support requires the .NET 8+ build of AssetStudioMod.";
+                return;
+            }
+            Logger.Info($"Found IL2CPP binary: {game.BinaryPath}");
+            await LoadIl2CppAsync(game);
         }
 
-        private async Task LoadAssembliesAsync(string folder)
+        private string LoadedUnityVersionString()
+        {
+            var first = assetsManager.AssetsFileList.FirstOrDefault();
+            return first?.version?.FullVersion;
+        }
+
+        private async Task LoadIl2CppAsync(Il2CppGame game)
+        {
+            var version = LoadedUnityVersionString();
+            var cached = Il2CppAssemblyProvider.IsCached(game);
+            dotnetStatusLabel.Text = cached
+                ? "Loading cached IL2CPP dummy assemblies..."
+                : "Generating dummy assemblies from the IL2CPP binary with Cpp2IL (this can take a while and needs a few GB of RAM)...";
+            string folder;
+            try
+            {
+                folder = await Task.Run(() => Il2CppAssemblyProvider.GetOrGenerateAssemblies(game, version, msg => Logger.Info(msg)));
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning($"IL2CPP processing failed: {ex.Message}");
+                dotnetStatusLabel.Text = $"IL2CPP processing failed: {ex.Message}";
+                return;
+            }
+            await LoadAssembliesAsync(folder, il2cpp: true);
+        }
+
+        private async Task LoadAssembliesAsync(string folder, bool il2cpp = false)
         {
             dotnetStatusLabel.Text = $"Loading assemblies from {folder}...";
             await Task.Run(() =>
             {
                 assemblyLoader.Clear();
                 assemblyLoader.Load(folder);
+                assemblyLoader.IsIl2CppStubs = il2cpp;
             });
-            Logger.Info($"Loaded {assemblyLoader.Modules.Count} .NET assemblies from {folder}");
+            Logger.Info($"Loaded {assemblyLoader.Modules.Count} .NET assemblies from {folder}" + (il2cpp ? " (IL2CPP stubs, no method bodies)" : ""));
             BuildDotNetTree();
         }
 
@@ -152,6 +231,8 @@ namespace AssetStudioGUI
             if (dotnetTreeView == null)
                 return;
             dotnetTreeView.Nodes.Clear();
+            dotnetShowIL.Enabled = true;
+            dotnetShowIL.Text = "Show IL";
             dotnetStatusLabel.Text = "No assemblies loaded. File → Load .NET assemblies, or load a game folder with a Managed directory.";
         }
 
@@ -214,11 +295,16 @@ namespace AssetStudioGUI
             }
             dotnetTreeView.EndUpdate();
 
+            var kind = assemblyLoader.IsIl2CppStubs ? " [IL2CPP stubs, no method bodies]" : "";
             dotnetStatusLabel.Text = assemblyLoader.Modules.Count == 0
                 ? "No assemblies loaded. File → Load .NET assemblies, or load a game folder with a Managed directory."
                 : filter.Length > 0
-                    ? $"{shown} / {typeCount} types match \"{filter}\" in {assemblyLoader.Modules.Count} assemblies ({assemblyLoader.LoadedPath})"
-                    : $"{typeCount} types in {assemblyLoader.Modules.Count} assemblies ({assemblyLoader.LoadedPath})";
+                    ? $"{shown} / {typeCount} types match \"{filter}\" in {assemblyLoader.Modules.Count} assemblies{kind} ({assemblyLoader.LoadedPath})"
+                    : $"{typeCount} types in {assemblyLoader.Modules.Count} assemblies{kind} ({assemblyLoader.LoadedPath})";
+            dotnetShowIL.Enabled = !assemblyLoader.IsIl2CppStubs;
+            dotnetShowIL.Text = assemblyLoader.IsIl2CppStubs ? "No IL (IL2CPP)" : "Show IL";
+            if (assemblyLoader.IsIl2CppStubs)
+                dotnetShowIL.Checked = false;
         }
 
         private static int AssemblyRank(string name)

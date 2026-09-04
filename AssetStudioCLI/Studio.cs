@@ -197,6 +197,7 @@ namespace AssetStudioCLI
             {
                 assetsManager.SetAssetFilter(CLIOptions.o_exportAssetTypes.Value);
             }
+            inputPathsSnapshot = CLIOptions.inputPathList.ToList();
             assetsManager.LoadFilesAndFolders(out _, CLIOptions.inputPathList);
             if (assetsManager.AssetsFileList.Count == 0)
             {
