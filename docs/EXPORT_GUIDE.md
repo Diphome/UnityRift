@@ -62,6 +62,26 @@ format with `--model-format`:
 > A plain `mesh` export is just geometry (`.obj`). Use `animator`/`splitObjects` (or the
 > GUI Model menu) when you want the rig and animations too.
 
+### Which animation clips get included
+
+An `animator` export bakes a rigged model **plus animation tracks** into the file. Which
+clips are included differs by front-end:
+
+- **GUI — hand-pick clips.** Ctrl-click the Animator **and** the specific AnimationClip(s)
+  in the Asset List, then **Export → "Export Animator with selected AnimationClip"** (or
+  **Model → "Export selected objects with AnimationClip"**). Only the selected clips are
+  bound in. This is the precise, surgical option.
+- **CLI — choose a policy, not individual clips**, via `--fbx-animation`:
+
+  | `--fbx-animation` | Clips baked in |
+  |-------------------|----------------|
+  | `auto` *(default)* | Only the clips **bound to that Animator's controller** (its own set). |
+  | `all` | **Every** loaded AnimationClip, bound onto **each** model (can be large/messy). |
+  | `skip` | None — model only. |
+
+  Narrow **which animators** (not clips) with `--filter-by-name`. The `--model-format`
+  choice (fbx/gltf/glb) carries the animation tracks either way.
+
 ---
 
 ## Filtering (works with export/dump/info)
