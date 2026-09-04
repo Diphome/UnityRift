@@ -587,6 +587,18 @@ namespace AssetStudio
             }
         }
 
+        // Unity ships these built-in engine resource files with objects serialized in a
+        // legacy format that does not match the file's header version, so they can only
+        // be read when a type tree is present.
+        private static bool IsBuiltInResourceFile(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+                return false;
+            return fileName.Equals("unity default resources", StringComparison.OrdinalIgnoreCase)
+                || fileName.Equals("unity_builtin_extra", StringComparison.OrdinalIgnoreCase)
+                || fileName.Equals("unity default resources extra", StringComparison.OrdinalIgnoreCase);
+        }
+
         public void CheckStrippedVersion(SerializedFile assetsFile, UnityVersion bundleUnityVer = null)
         {
             if (assetsFile.version.IsStripped && Options.CustomUnityVersion == null)
@@ -763,14 +775,27 @@ namespace AssetStudio
                     }
                     catch (Exception e)
                     {
-                        var sb = new StringBuilder();
-                        sb.AppendLine("Unable to load object")
-                            .AppendLine($"Assets {assetsFile.fileName}")
-                            .AppendLine($"Path {assetsFile.originalPath}")
-                            .AppendLine($"Type {objectReader.type}")
-                            .AppendLine($"PathID {objectInfo.m_PathID}")
-                            .Append(e);
-                        Logger.Warning(sb.ToString());
+                        // Unity's built-in resource files (unity default resources,
+                        // unity_builtin_extra) hold engine defaults serialized in a
+                        // legacy format that doesn't match their header version. Without
+                        // a type tree they can't be parsed by the version-based reader.
+                        // These aren't the user's content, so fail quietly (full detail
+                        // at Debug level) instead of alarming with an exception stack.
+                        if (IsBuiltInResourceFile(assetsFile.fileName))
+                        {
+                            Logger.Debug($"Skipped built-in engine object ({objectReader.type}, PathID {objectInfo.m_PathID}) in \"{assetsFile.fileName}\": {e.Message}");
+                        }
+                        else
+                        {
+                            var sb = new StringBuilder();
+                            sb.AppendLine("Unable to load object")
+                                .AppendLine($"Assets {assetsFile.fileName}")
+                                .AppendLine($"Path {assetsFile.originalPath}")
+                                .AppendLine($"Type {objectReader.type}")
+                                .AppendLine($"PathID {objectInfo.m_PathID}")
+                                .Append(e);
+                            Logger.Warning(sb.ToString());
+                        }
                     }
 
                     Progress.Report(++i, progressCount);
