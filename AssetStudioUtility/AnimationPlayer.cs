@@ -27,8 +27,16 @@ namespace AssetStudio
             public float SampleRate;
         }
 
-        // A drawable mesh: static topology (indices) + material/texture, with per-frame
-        // Positions/Normals refreshed by Evaluate().
+        // One material group within a mesh: its own triangle list and base-color texture.
+        public sealed class SubMesh
+        {
+            public int[] Indices;           // triangle list into the mesh's vertex arrays
+            public byte[] BaseColorTexture; // encoded image bytes (png/…), may be null
+            public string Material;
+        }
+
+        // A drawable mesh: shared vertex arrays (refreshed per frame by Evaluate) plus
+        // one or more material submeshes, each with its own indices + texture.
         public sealed class PreviewMesh
         {
             public string Name;
@@ -36,8 +44,7 @@ namespace AssetStudio
             public NVector3[] Positions;   // world space, updated each Evaluate
             public NVector3[] Normals;     // world space, updated each Evaluate
             public float[][] UV0;          // per-vertex UV (may be null)
-            public int[] Indices;          // triangle list into the vertex arrays
-            public byte[] BaseColorTexture; // encoded image bytes (png/…), may be null
+            public List<SubMesh> Submeshes = new List<SubMesh>();
             public ImportedMesh Source;
 
             internal (int joint, float weight)[][] Skin; // per-vertex up to 4 (jointIndex, weight); null = rigid
@@ -116,19 +123,26 @@ namespace AssetStudio
                     Positions = new NVector3[m.VertexList.Count],
                     Normals = new NVector3[m.VertexList.Count],
                     UV0 = new float[m.VertexList.Count][],
-                    BaseColorTexture = FindBaseColorTexture(m),
                 };
 
-                // Triangle indices (global vertex indices = face index + submesh base vertex)
-                var indices = new List<int>();
+                // One draw group per material submesh, each with its own texture, so the
+                // model renders with the same per-material textures it uses in game.
                 foreach (var sub in m.SubmeshList)
+                {
+                    var subIndices = new List<int>(sub.FaceList.Count * 3);
                     foreach (var face in sub.FaceList)
                     {
-                        indices.Add(face.VertexIndices[0] + sub.BaseVertex);
-                        indices.Add(face.VertexIndices[1] + sub.BaseVertex);
-                        indices.Add(face.VertexIndices[2] + sub.BaseVertex);
+                        subIndices.Add(face.VertexIndices[0] + sub.BaseVertex);
+                        subIndices.Add(face.VertexIndices[1] + sub.BaseVertex);
+                        subIndices.Add(face.VertexIndices[2] + sub.BaseVertex);
                     }
-                pm.Indices = indices.ToArray();
+                    pm.Submeshes.Add(new SubMesh
+                    {
+                        Indices = subIndices.ToArray(),
+                        Material = sub.Material,
+                        BaseColorTexture = FindBaseColorTexture(sub.Material),
+                    });
+                }
 
                 for (var v = 0; v < m.VertexList.Count; v++)
                 {
@@ -168,21 +182,16 @@ namespace AssetStudio
             }
         }
 
-        private byte[] FindBaseColorTexture(ImportedMesh mesh)
+        private byte[] FindBaseColorTexture(string materialName)
         {
-            if (_imported.MaterialList == null || _imported.TextureList == null || mesh.SubmeshList == null)
+            if (_imported.MaterialList == null || _imported.TextureList == null || materialName == null)
                 return null;
-            foreach (var sub in mesh.SubmeshList)
-            {
-                var mat = _imported.MaterialList.FirstOrDefault(x => x.Name == sub.Material);
-                var tex = mat?.Textures?.FirstOrDefault(t => t.Dest == 0);
-                if (tex == null)
-                    continue;
-                var it = _imported.TextureList.FirstOrDefault(t => t.Name == tex.Name);
-                if (it?.Data != null && it.Data.Length > 0)
-                    return it.Data;
-            }
-            return null;
+            var mat = _imported.MaterialList.FirstOrDefault(x => x.Name == materialName);
+            var tex = mat?.Textures?.FirstOrDefault(t => t.Dest == 0);
+            if (tex == null)
+                return null;
+            var it = _imported.TextureList.FirstOrDefault(t => t.Name == tex.Name);
+            return it?.Data != null && it.Data.Length > 0 ? it.Data : null;
         }
 
         private void BuildClips()

@@ -90,8 +90,9 @@ namespace AssetStudioGUI
         private int animClipIndex = -1;      // -1 = bind pose
         private float animTime;
         private int[] animVertexOffset;      // per player-mesh start index in the combined arrays
-        private int animDefaultTex = -1;     // 1x1 white fallback for meshes without a texture
-        private sealed class AnimGLMesh { public int Vao, Pos, Nor, Uv, Ebo, Tex, Count; public Vector3[] PosBuf, NorBuf; public bool OwnsTex; }
+        private int animDefaultTex = -1;     // 1x1 white fallback for submeshes without a texture
+        private sealed class AnimGLSub { public int Ebo, Count, Tex; public bool OwnsTex; }
+        private sealed class AnimGLMesh { public int Vao, Pos, Nor, Uv; public Vector3[] PosBuf, NorBuf; public List<AnimGLSub> Subs = new List<AnimGLSub>(); }
         private readonly List<AnimGLMesh> animGL = new List<AnimGLMesh>();
         private System.Windows.Forms.Timer animTimer;
         private Panel animPanel;
@@ -3249,7 +3250,7 @@ namespace AssetStudioGUI
 
             foreach (var pm in animPlayer.Meshes)
             {
-                var gm = new AnimGLMesh { Count = pm.Indices.Length };
+                var gm = new AnimGLMesh();
                 gm.PosBuf = new Vector3[pm.VertexCount];
                 gm.NorBuf = new Vector3[pm.VertexCount];
                 var uvBuf = new Vector2[pm.VertexCount];
@@ -3281,16 +3282,22 @@ namespace AssetStudioGUI
                 GL.VertexAttribPointer(attributeTexUv, 2, VertexAttribPointerType.Float, false, 0, 0);
                 GL.EnableVertexAttribArray(attributeTexUv);
 
-                GL.GenBuffers(1, out gm.Ebo);
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, gm.Ebo);
-                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(pm.Indices.Length * sizeof(int)), pm.Indices, BufferUsageHint.StaticDraw);
-
-                GL.BindVertexArray(0);
+                GL.BindVertexArray(0); // keep the element buffer out of the VAO; bound per-submesh at draw
                 GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
-                var decoded = DecodeTexture(pm.BaseColorTexture);
-                gm.Tex = decoded >= 0 ? decoded : animDefaultTex;
-                gm.OwnsTex = decoded >= 0;
+                // One index buffer + texture per material submesh.
+                foreach (var sub in pm.Submeshes)
+                {
+                    var sg = new AnimGLSub { Count = sub.Indices.Length };
+                    GL.GenBuffers(1, out sg.Ebo);
+                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, sg.Ebo);
+                    GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(sub.Indices.Length * sizeof(int)), sub.Indices, BufferUsageHint.StaticDraw);
+                    var decoded = DecodeTexture(sub.BaseColorTexture);
+                    sg.Tex = decoded >= 0 ? decoded : animDefaultTex;
+                    sg.OwnsTex = decoded >= 0;
+                    gm.Subs.Add(sg);
+                }
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
                 animGL.Add(gm);
             }
         }
@@ -3340,12 +3347,16 @@ namespace AssetStudioGUI
 #else
             GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
 #endif
+            GL.ActiveTexture(TextureUnit.Texture0);
             foreach (var gm in animGL)
             {
-                GL.ActiveTexture(TextureUnit.Texture0);
-                GL.BindTexture(TextureTarget.Texture2D, gm.Tex);
                 GL.BindVertexArray(gm.Vao);
-                GL.DrawElements(BeginMode.Triangles, gm.Count, DrawElementsType.UnsignedInt, 0);
+                foreach (var sg in gm.Subs)
+                {
+                    GL.BindTexture(TextureTarget.Texture2D, sg.Tex);
+                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, sg.Ebo);
+                    GL.DrawElements(BeginMode.Triangles, sg.Count, DrawElementsType.UnsignedInt, 0);
+                }
             }
             GL.BindVertexArray(0);
         }
@@ -3406,9 +3417,12 @@ namespace AssetStudioGUI
                     GL.DeleteBuffer(gm.Pos);
                     GL.DeleteBuffer(gm.Nor);
                     GL.DeleteBuffer(gm.Uv);
-                    GL.DeleteBuffer(gm.Ebo);
-                    if (gm.OwnsTex)
-                        GL.DeleteTexture(gm.Tex);
+                    foreach (var sg in gm.Subs)
+                    {
+                        GL.DeleteBuffer(sg.Ebo);
+                        if (sg.OwnsTex)
+                            GL.DeleteTexture(sg.Tex);
+                    }
                 }
             }
             catch { }
