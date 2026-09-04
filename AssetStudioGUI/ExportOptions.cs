@@ -14,6 +14,7 @@ namespace AssetStudioGUI
         {
             InitializeComponent();
             assetGroupOptions.SelectedIndex = Properties.Settings.Default.assetGroupOption;
+            modelFormatComboBox.SelectedIndex = Math.Min(Math.Max(Properties.Settings.Default.modelFormat, 0), modelFormatComboBox.Items.Count - 1);
             filenameFormatComboBox.SelectedIndex = Properties.Settings.Default.filenameFormat;
             overwriteExistingFiles.Checked = Properties.Settings.Default.overwriteExistingFiles;
             restoreExtensionName.Checked = Properties.Settings.Default.restoreExtensionName;
@@ -43,6 +44,7 @@ namespace AssetStudioGUI
         private void OKbutton_Click(object sender, EventArgs e)
         {
             Properties.Settings.Default.assetGroupOption = assetGroupOptions.SelectedIndex;
+            Properties.Settings.Default.modelFormat = modelFormatComboBox.SelectedIndex;
             Properties.Settings.Default.filenameFormat = filenameFormatComboBox.SelectedIndex;
             Properties.Settings.Default.overwriteExistingFiles = overwriteExistingFiles.Checked;
             Properties.Settings.Default.restoreExtensionName = restoreExtensionName.Checked;

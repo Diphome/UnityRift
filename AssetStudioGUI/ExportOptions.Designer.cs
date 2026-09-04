@@ -44,6 +44,8 @@
             this.restoreExtensionName = new System.Windows.Forms.CheckBox();
             this.assetGroupOptions = new System.Windows.Forms.ComboBox();
             this.label6 = new System.Windows.Forms.Label();
+            this.modelFormatComboBox = new System.Windows.Forms.ComboBox();
+            this.modelFormatLabel = new System.Windows.Forms.Label();
             this.convertAudio = new System.Windows.Forms.CheckBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.towebp = new System.Windows.Forms.RadioButton();
@@ -122,6 +124,8 @@
             // 
             this.groupBox1.AutoSize = true;
             this.groupBox1.BackColor = System.Drawing.SystemColors.Menu;
+            this.groupBox1.Controls.Add(this.modelFormatComboBox);
+            this.groupBox1.Controls.Add(this.modelFormatLabel);
             this.groupBox1.Controls.Add(this.rawByteArrayFromMono);
             this.groupBox1.Controls.Add(this.overwriteExistingFiles);
             this.groupBox1.Controls.Add(this.parallelExportMaxLabel);
@@ -294,7 +298,29 @@
             this.label6.Size = new System.Drawing.Size(127, 13);
             this.label6.TabIndex = 1;
             this.label6.Text = "Group exported assets by";
-            // 
+            //
+            // modelFormatLabel
+            //
+            this.modelFormatLabel.AutoSize = true;
+            this.modelFormatLabel.Location = new System.Drawing.Point(6, 291);
+            this.modelFormatLabel.Name = "modelFormatLabel";
+            this.modelFormatLabel.Size = new System.Drawing.Size(94, 13);
+            this.modelFormatLabel.TabIndex = 16;
+            this.modelFormatLabel.Text = "Export 3D models as";
+            //
+            // modelFormatComboBox
+            //
+            this.modelFormatComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.modelFormatComboBox.FormattingEnabled = true;
+            this.modelFormatComboBox.Items.AddRange(new object[] {
+            "FBX",
+            "glTF (.gltf)",
+            "GLB (.glb)"});
+            this.modelFormatComboBox.Location = new System.Drawing.Point(151, 288);
+            this.modelFormatComboBox.Name = "modelFormatComboBox";
+            this.modelFormatComboBox.Size = new System.Drawing.Size(159, 21);
+            this.modelFormatComboBox.TabIndex = 17;
+            //
             // convertAudio
             // 
             this.convertAudio.AutoSize = true;
@@ -856,6 +882,8 @@
         private System.Windows.Forms.CheckBox exportAnimations;
         private System.Windows.Forms.ComboBox assetGroupOptions;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.ComboBox modelFormatComboBox;
+        private System.Windows.Forms.Label modelFormatLabel;
         private System.Windows.Forms.CheckBox restoreExtensionName;
         private System.Windows.Forms.CheckBox openAfterExport;
         private System.Windows.Forms.CheckBox exportAllUvsAsDiffuseMaps;

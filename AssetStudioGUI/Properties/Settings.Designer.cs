@@ -82,7 +82,19 @@ namespace AssetStudioGUI.Properties {
                 this["assetGroupOption"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int modelFormat {
+            get {
+                return ((int)(this["modelFormat"]));
+            }
+            set {
+                this["modelFormat"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]

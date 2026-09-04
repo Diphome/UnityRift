@@ -37,6 +37,9 @@
 - Support of Live2D Cubism model export
    - Ported from my fork of Perfare's [UnityLive2DExtractor](https://github.com/aelurum/UnityLive2DExtractor)
    - Using the Live2D export in AssetStudio allows you to specify a Unity version and assembly folder if needed
+- Export of 3D models to glTF 2.0 (`.glb` / `.gltf`) as an alternative to FBX
+   - CLI: add `--model-format glb` (or `gltf`) to Animator / SplitObjects / model exports
+   - Meshes, skinning, materials and textures (embedded), and node animations
 - Support of swizzled Switch textures
     - Ported from nesrak1's [AssetStudio fork](https://github.com/nesrak1/AssetStudio/tree/switch-tex-deswizzle)
 - Detecting bundles with UnityCN encryption

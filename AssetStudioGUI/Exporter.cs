@@ -249,7 +249,29 @@ namespace AssetStudioGUI
 
         private static void ExportFbx(IImported convert, string exportPath)
         {
-            ModelExporter.ExportFbx(exportPath, convert, Studio.FbxSettings);
+            switch (Studio.ModelFormat)
+            {
+                case Studio.ModelExportFormat.Gltf:
+                    ExportGltf(convert, Path.ChangeExtension(exportPath, ".gltf"), Gltf.Format.Gltf);
+                    break;
+                case Studio.ModelExportFormat.Glb:
+                    ExportGltf(convert, Path.ChangeExtension(exportPath, ".glb"), Gltf.Format.Glb);
+                    break;
+                default:
+                    ModelExporter.ExportFbx(exportPath, convert, Studio.FbxSettings);
+                    break;
+            }
+        }
+
+        private static void ExportGltf(IImported convert, string exportPath, Gltf.Format format)
+        {
+            var gltfSettings = new Gltf.Settings
+            {
+                Format = format,
+                ScaleFactor = Studio.FbxSettings.ScaleFactor,
+                ExportAnimations = Studio.FbxSettings.ExportAnimations,
+            };
+            ModelExporter.ExportGltf(exportPath, convert, gltfSettings);
         }
 
         public static bool ExportRawFile(AssetItem item, string exportPath)

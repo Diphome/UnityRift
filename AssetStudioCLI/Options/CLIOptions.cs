@@ -76,6 +76,13 @@ namespace AssetStudioCLI.Options
         All,
     }
 
+    internal enum ModelFormat
+    {
+        Fbx,
+        Gltf,
+        Glb,
+    }
+
     internal static class CLIOptions
     {
         public static bool isParsed;
@@ -107,6 +114,8 @@ namespace AssetStudioCLI.Options
         public static Option<bool> f_l2dAssetSearchByFilename;
         public static Option<CubismLive2DExtractor.Live2DMotionMode> o_l2dMotionMode;
         public static Option<bool> f_l2dForceBezier;
+        //model
+        public static Option<ModelFormat> o_modelFormat;
         //fbx
         public static Option<float> o_fbxScaleFactor;
         public static Option<int> o_fbxBoneSize;
@@ -367,6 +376,22 @@ namespace AssetStudioCLI.Options
                 optionExample: "",
                 optionHelpGroup: HelpGroups.Live2D,
                 isFlag: true
+            );
+            #endregion
+
+            #region Init Model Options
+            o_modelFormat = new GroupedOption<ModelFormat>
+            (
+                optionDefaultValue: ModelFormat.Fbx,
+                optionName: "--model-format",
+                optionDescription: "Specify the export format for 3D models\n" +
+                    "(applies to Animator, SplitObjects and model exports)\n" +
+                    "<Value: fbx(default) | gltf | glb>\n" +
+                    "Fbx - Export models as FBX (uses the native FBX library)\n" +
+                    "Gltf - Export models as glTF 2.0 (.gltf, textures embedded)\n" +
+                    "Glb - Export models as binary glTF 2.0 (.glb, single file)\n",
+                optionExample: "Example: \"--model-format glb\"\n",
+                optionHelpGroup: HelpGroups.FBX
             );
             #endregion
 
@@ -1096,6 +1121,24 @@ namespace AssetStudioCLI.Options
                             }
                             break;
                         }
+                        case "--model-format":
+                            switch (value.ToLower())
+                            {
+                                case "fbx":
+                                    o_modelFormat.Value = ModelFormat.Fbx;
+                                    break;
+                                case "gltf":
+                                    o_modelFormat.Value = ModelFormat.Gltf;
+                                    break;
+                                case "glb":
+                                    o_modelFormat.Value = ModelFormat.Glb;
+                                    break;
+                                default:
+                                    Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Unsupported model format: [{value.Color(brightRed)}].\n");
+                                    ShowOptionDescription(o_modelFormat);
+                                    return;
+                            }
+                            break;
                         case "--fbx-animation":
                             switch (value.ToLower())
                             {

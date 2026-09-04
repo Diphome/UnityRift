@@ -92,6 +92,15 @@ namespace AssetStudioGUI
         internal static Action<string> StatusStripUpdate = x => { };
         internal static Fbx.Settings FbxSettings;
 
+        internal enum ModelExportFormat
+        {
+            Fbx,
+            Gltf,
+            Glb,
+        }
+
+        internal static ModelExportFormat ModelFormat => (ModelExportFormat)Properties.Settings.Default.modelFormat;
+
         public static int ExtractFolder(string path, string savePath)
         {
             int extractedCount = 0;

@@ -17,6 +17,9 @@
     <Setting Name="assetGroupOption" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
+    <Setting Name="modelFormat" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
     <Setting Name="convertTexture" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
