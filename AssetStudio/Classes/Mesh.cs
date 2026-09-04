@@ -177,7 +177,7 @@ namespace AssetStudio
 
         private void GetStreams(UnityVersion version)
         {
-            var streamCount = m_Channels.Max(x => x.stream) + 1;
+            var streamCount = m_Channels.Count > 0 ? m_Channels.Max(x => x.stream) + 1 : 0;
             m_Streams = new List<StreamInfo>();
             uint offset = 0;
             for (var s = 0; s < streamCount; s++)
