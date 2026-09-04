@@ -1,16 +1,21 @@
-# AssetStudioMod
+# Reunity
 
-[![Release](https://img.shields.io/github/v/release/aelurum/AssetStudio?color=blue)](https://github.com/aelurum/AssetStudio/releases/latest) [![Downloads](https://img.shields.io/github/downloads/aelurum/AssetStudio/total?color=blue)](https://github.com/aelurum/AssetStudio/releases/latest) [![Download latest release](https://img.shields.io/badge/Download_latest_release-blue)](https://github.com/aelurum/AssetStudio/releases/latest)
+**Reunity** is a fork of aelurum's [AssetStudioMod](https://github.com/aelurum/AssetStudio) (itself a fork of Perfare's [AssetStudio](https://github.com/Perfare/AssetStudio)), extended toward **reverse-engineering and reconstruction** of Unity games: IL2CPP support, a .NET class explorer, Ghidra helpers, a type-tree database for stripped builds, glTF export, and an MCP server for agent-driven tooling.
 
-[![Build status](https://ci.appveyor.com/api/projects/status/5qyai0hqs0ktyara/branch/AssetStudioMod?svg=true)](https://ci.appveyor.com/project/aelurum/assetstudiomod/branch/AssetStudioMod) [![Download latest build](https://img.shields.io/badge/Download_latest_build-brightgreen)](https://ci.appveyor.com/project/aelurum/assetstudiomod/branch/AssetStudioMod/artifacts)
+**Neither the repository, nor the tool, nor its authors are affiliated with, sponsored, or authorized by Unity Technologies or its affiliates.** Reunity extracts and inspects assets for interoperability, research, and preservation; respect the rights and terms of any content you process.
 
-**AssetStudioMod** - modified version of Perfare's [AssetStudio](https://github.com/Perfare/AssetStudio), mainly focused on UI optimization and some functionality enhancements.
+## What Reunity adds (on top of AssetStudioMod)
 
-**Neither the repository, nor the tool, nor the author of the tool, nor the author of the modification is affiliated with, sponsored, or authorized by Unity Technologies or its affiliates.**
+- **IL2CPP support** via [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL): `GameAssembly.dll` / `libil2cpp.so` + `global-metadata.dat` are detected automatically, dummy assemblies are generated and cached, and they feed the .NET explorer and MonoBehaviour field parsing.
+- **.NET class explorer** — browse the game's managed assemblies as C#-like stubs (with optional IL). GUI tab **".NET Classes"**, CLI `-m dotnet`, MCP `dotnet_list` / `dotnet_type`.
+- **Ghidra / Il2CppDumper package** (`-m il2cpp`) — generates `script.json`, `il2cpp.h`, `il2cpp_ghidra.h` and bundled `ghidra.py` / `ghidra_with_struct.py` scripts (patched for Ghidra Jython 2.7 **and** 11.3+ PyGhidra) so functions get named the same way [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) does. Plus `--il2cpp-lookup` and `--il2cpp-strings`.
+- **Type-tree database (TPK)** — decode type-tree-stripped builds via a bundled `classdata.tpk` (`--typetree-db`, auto-loaded when present).
+- **glTF 2.0 export** (`.glb` / `.gltf`) as an FBX-free alternative (meshes, skinning, materials + embedded textures, node animations).
+- **MCP server** (`tools/mcp/assetstudio-mcp.mjs`) — exposes the CLI as tools so an agent can drive info/export/dump, the .NET explorer, and the IL2CPP/Ghidra workflow.
+- **Animated model preview** in the GUI — select an Animator, pick a clip, play it with textured per-submesh rendering.
+- **Faster project loading** — parallel asset reads, direct type-tree→JSON streaming, and garbage-count guards.
 
-## Game specific modifications
-
-- [ArknightsStudio](https://github.com/aelurum/AssetStudio/tree/ArknightsStudio)
+See [`docs/PROJECT_NOTES.md`](docs/PROJECT_NOTES.md) for the full engineering log and the licensing inventory.
 
 ## AssetStudio Features
 
@@ -29,19 +34,14 @@
   - **MonoBehaviour** : json
   - **Animator** : export to FBX file with bound AnimationClip
  
-## AssetStudioMod Features
+## Inherited AssetStudioMod features
 
 - CLI version (for Windows, Linux, Mac)
 - Support of sprites with alpha mask
 - Support of image export in WebP format
 - Support of Live2D Cubism model export
-   - Ported from my fork of Perfare's [UnityLive2DExtractor](https://github.com/aelurum/UnityLive2DExtractor)
+   - Ported from aelurum's fork of Perfare's [UnityLive2DExtractor](https://github.com/aelurum/UnityLive2DExtractor)
    - Using the Live2D export in AssetStudio allows you to specify a Unity version and assembly folder if needed
-- Browse the game's .NET assemblies (`-m dotnet`)
-- Generate Ghidra helpers from IL2CPP (`-m il2cpp`: script.json, il2cpp.h, ghidra.py)
-- Export of 3D models to glTF 2.0 (`.glb` / `.gltf`) as an alternative to FBX
-   - CLI: add `--model-format glb` (or `gltf`) to Animator / SplitObjects / model exports
-   - Meshes, skinning, materials and textures (embedded), and node animations
 - Support of swizzled Switch textures
     - Ported from nesrak1's [AssetStudio fork](https://github.com/nesrak1/AssetStudio/tree/switch-tex-deswizzle)
 - Detecting bundles with UnityCN encryption
