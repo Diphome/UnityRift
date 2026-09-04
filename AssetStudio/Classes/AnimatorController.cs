@@ -593,6 +593,11 @@ namespace AssetStudio
             }
             m_StateMachineArray = stateMachineList.ToArray();
 
+            if (reader.version >= (6000, 5)) //6000.5 and up
+            {
+                // New 4-byte field before the value tables (0 in all 6000.5.0f1 samples).
+                var m_Unknown = reader.ReadUInt32();
+            }
             m_Values = new ValueArrayConstant(reader);
             m_DefaultValues = new ValueArray(reader);
         }
@@ -605,6 +610,12 @@ namespace AssetStudio
 
         public AnimatorController(ObjectReader reader) : base(reader)
         {
+            if (version >= (6000, 5)) //6000.5 and up
+            {
+                // New 4-byte field before the controller blob (observed as 0 in 6000.5.0f1
+                // assets; without skipping it the layer/mask data is read 4 bytes early).
+                var m_Unknown = reader.ReadUInt32();
+            }
             var m_ControllerSize = reader.ReadUInt32();
             var m_Controller = new ControllerConstant(reader);
 
