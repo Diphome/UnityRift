@@ -6,7 +6,7 @@ using NMatrix4x4 = System.Numerics.Matrix4x4;
 using NVector3 = System.Numerics.Vector3;
 using NQuaternion = System.Numerics.Quaternion;
 
-namespace AssetStudio
+namespace UnityRift
 {
     // Poses and skins a model (from a ModelConverter IImported IR) for real-time preview.
     // Given a clip index and a time, it evaluates the animation, computes each bone's

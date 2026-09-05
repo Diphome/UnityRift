@@ -1,8 +1,8 @@
-﻿using AssetStudio;
-using AssetStudioCLI.Options;
+﻿using UnityRift;
+using UnityRiftCLI.Options;
 using System;
 
-namespace AssetStudioCLI
+namespace UnityRiftCLI
 {
     class Program
     {

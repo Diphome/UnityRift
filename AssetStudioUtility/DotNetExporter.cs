@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace AssetStudio
+namespace UnityRift
 {
     /// <summary>
     /// Exports the loaded .NET assemblies: C#-like stub files (one .cs per top-level type,

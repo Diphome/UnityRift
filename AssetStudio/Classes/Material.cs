@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class UnityTexEnv
     {

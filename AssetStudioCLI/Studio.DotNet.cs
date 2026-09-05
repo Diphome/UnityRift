@@ -1,5 +1,5 @@
-using AssetStudio;
-using AssetStudioCLI.Options;
+using UnityRift;
+using UnityRiftCLI.Options;
 using Mono.Cecil;
 using System;
 using System.Collections.Generic;
@@ -7,9 +7,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Ansi = AssetStudio.ColorConsole;
+using Ansi = UnityRift.ColorConsole;
 
-namespace AssetStudioCLI
+namespace UnityRiftCLI
 {
     /// <summary>
     /// "-m dotnet": browse the game's managed assemblies. Lists assemblies/types, or dumps

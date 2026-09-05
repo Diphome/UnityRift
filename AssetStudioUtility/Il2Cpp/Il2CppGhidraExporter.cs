@@ -12,7 +12,7 @@ using LibCpp2IL.Metadata;
 using LibCpp2IL.Reflection;
 using Newtonsoft.Json;
 
-namespace AssetStudio
+namespace UnityRift
 {
     /// <summary>
     /// Writes Il2CppDumper-compatible reverse-engineering helpers from the LibCpp2IL state that

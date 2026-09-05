@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 #if NETFRAMEWORK
-using AssetStudio.PInvoke;
+using UnityRift.PInvoke;
 #endif
 
 namespace BundleCompression.Oodle

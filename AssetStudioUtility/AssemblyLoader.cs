@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class AssemblyLoader
     {

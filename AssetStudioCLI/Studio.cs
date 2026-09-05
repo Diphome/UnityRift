@@ -1,5 +1,5 @@
-﻿using AssetStudio;
-using AssetStudioCLI.Options;
+﻿using UnityRift;
+using UnityRiftCLI.Options;
 using CubismLive2DExtractor;
 using System;
 using System.Collections.Concurrent;
@@ -11,11 +11,11 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using static AssetStudioCLI.Exporter;
+using static UnityRiftCLI.Exporter;
 using static CubismLive2DExtractor.CubismParsers;
-using Ansi = AssetStudio.ColorConsole;
+using Ansi = UnityRift.ColorConsole;
 
-namespace AssetStudioCLI
+namespace UnityRiftCLI
 {
     internal static partial class Studio
     {
@@ -24,7 +24,7 @@ namespace AssetStudioCLI
         public static List<BaseNode> gameObjectTree = new List<BaseNode>();
         public static AssemblyLoader assemblyLoader = new AssemblyLoader();
         public static Dictionary<MonoBehaviour, CubismModel> l2dModelDict = new Dictionary<MonoBehaviour, CubismModel>();
-        private static Dictionary<AssetStudio.Object, string> containers = new Dictionary<AssetStudio.Object, string>();
+        private static Dictionary<UnityRift.Object, string> containers = new Dictionary<UnityRift.Object, string>();
 
         static Studio()
         {
@@ -218,14 +218,14 @@ namespace AssetStudioCLI
             var fileAssetsList = new List<AssetItem>();
             var tex2dArrayAssetList = new List<AssetItem>();
             var objectCount = assetsManager.AssetsFileList.Sum(x => x.Objects.Count);
-            var objectAssetItemDic = new Dictionary<AssetStudio.Object, AssetItem>(objectCount);
+            var objectAssetItemDic = new Dictionary<UnityRift.Object, AssetItem>(objectCount);
             var isL2dMode = CLIOptions.o_workMode.Value == WorkMode.Live2D;
 
             Progress.Reset();
             var i = 0;
             foreach (var assetsFile in assetsManager.AssetsFileList)
             {
-                var preloadTable = new List<PPtr<AssetStudio.Object>>();
+                var preloadTable = new List<PPtr<UnityRift.Object>>();
                 foreach (var asset in assetsFile.Objects)
                 {
                     var assetItem = new AssetItem(asset);
@@ -413,7 +413,7 @@ namespace AssetStudioCLI
             Logger.Info(log);
         }
 
-        public static void BuildTreeStructure(Dictionary<AssetStudio.Object, AssetItem> objectAssetItemDic)
+        public static void BuildTreeStructure(Dictionary<UnityRift.Object, AssetItem> objectAssetItemDic)
         {
             Logger.Info("Building tree structure...");
 
@@ -1177,7 +1177,7 @@ namespace AssetStudioCLI
             var searchByFilename = CLIOptions.f_l2dAssetSearchByFilename.Value;
             var mocDict = l2dModelDict;
             var l2dContainers = searchByFilename
-                ? new Dictionary<AssetStudio.Object, string>()
+                ? new Dictionary<UnityRift.Object, string>()
                 : containers;
 
             if (l2dModelDict.Count == 0)
@@ -1242,7 +1242,7 @@ namespace AssetStudioCLI
                 }
             }
 
-            var assetDict = new Dictionary<MonoBehaviour, List<AssetStudio.Object>>();
+            var assetDict = new Dictionary<MonoBehaviour, List<UnityRift.Object>>();
             foreach (var mocKvp in mocPathDict)
             {
                 var mocPath = searchByFilename

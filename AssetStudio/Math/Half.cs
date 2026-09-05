@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 
 #if NETFRAMEWORK
-namespace AssetStudio
+namespace UnityRift
 {
     /// <summary>
     /// Represents a half-precision floating point number. 

@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+﻿using UnityRift;
 
 namespace CubismLive2DExtractor
 {

@@ -2,12 +2,12 @@
 // by aelurum
 // Based on https://github.com/libyal/liblnk/blob/main/documentation/Windows%20Shortcut%20File%20(LNK)%20format.asciidoc
 
-using AssetStudio;
+using UnityRift;
 using System;
 using System.IO;
 using System.Text;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     public static class LnkReader
     {

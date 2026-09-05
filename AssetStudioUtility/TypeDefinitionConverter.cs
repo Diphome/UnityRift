@@ -5,7 +5,7 @@ using System.Linq;
 using Unity.CecilTools;
 using Unity.SerializationLogic;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class TypeDefinitionConverter
     {

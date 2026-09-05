@@ -1,5 +1,5 @@
 ﻿using System;
-using AssetStudio;
+using UnityRift;
 
 namespace CubismLive2DExtractor.CubismUnityClasses
 {

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     public partial class AboutForm : Form
     {

@@ -1,12 +1,12 @@
-using AssetStudio;
-using AssetStudioCLI.Options;
+using UnityRift;
+using UnityRiftCLI.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
-using Ansi = AssetStudio.ColorConsole;
+using Ansi = UnityRift.ColorConsole;
 
-namespace AssetStudioCLI
+namespace UnityRiftCLI
 {
     /// <summary>
     /// "-m il2cpp": generate the Il2CppDumper-compatible Ghidra package (script.json, il2cpp.h,

@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public sealed class Texture2D : Texture
     {

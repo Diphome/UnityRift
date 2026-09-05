@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using AssetStudio;
+using UnityRift;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     internal static class ConsoleWindow
     {

@@ -11,12 +11,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AssetStudio;
+using UnityRift;
 using CubismLive2DExtractor.CubismUnityClasses;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using static CubismLive2DExtractor.CubismParsers;
-using Object = AssetStudio.Object;
+using Object = UnityRift.Object;
 
 namespace CubismLive2DExtractor
 {

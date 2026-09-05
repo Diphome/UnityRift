@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
-using AssetStudio.FbxInterop;
+using UnityRift.FbxInterop;
 
-namespace AssetStudio
+namespace UnityRift
 {
     partial class Fbx
     {

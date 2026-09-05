@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace AssetStudioGUI.Properties {
+namespace UnityRiftGUI.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -122,9 +122,9 @@ namespace AssetStudioGUI.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Png")]
-        public global::AssetStudio.ImageFormat convertType {
+        public global::UnityRift.ImageFormat convertType {
             get {
-                return ((global::AssetStudio.ImageFormat)(this["convertType"]));
+                return ((global::UnityRift.ImageFormat)(this["convertType"]));
             }
             set {
                 this["convertType"] = value;
@@ -266,9 +266,9 @@ namespace AssetStudioGUI.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Light")]
-        public global::AssetStudioGUI.GuiColorTheme guiColorTheme {
+        public global::UnityRiftGUI.GuiColorTheme guiColorTheme {
             get {
-                return ((global::AssetStudioGUI.GuiColorTheme)(this["guiColorTheme"]));
+                return ((global::UnityRiftGUI.GuiColorTheme)(this["guiColorTheme"]));
             }
             set {
                 this["guiColorTheme"] = value;

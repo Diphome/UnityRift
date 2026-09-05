@@ -3,7 +3,7 @@ using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using Texture2DDecoder;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class Texture2DConverter
     {

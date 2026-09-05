@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public sealed class GameObject : EditorExtension
     {

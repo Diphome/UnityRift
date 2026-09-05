@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public static class TypeTreeHelper
     {

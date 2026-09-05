@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Buffers.Binary;
 
-namespace AssetStudio.CustomOptions.Asmo
+namespace UnityRift.CustomOptions.Asmo
 {
     public class OptionsFile
     {

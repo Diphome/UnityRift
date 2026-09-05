@@ -1,11 +1,11 @@
-﻿using AssetStudio;
+﻿using UnityRift;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     internal static class ParallelExporter
     {

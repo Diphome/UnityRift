@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class FileReader : EndianBinaryReader
     {

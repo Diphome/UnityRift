@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class WebFile
     {

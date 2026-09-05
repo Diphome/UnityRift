@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+﻿using UnityRift;
 using CubismLive2DExtractor;
 using System;
 using System.Collections.Concurrent;
@@ -13,11 +13,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
-using static AssetStudioGUI.Exporter;
+using static UnityRiftGUI.Exporter;
 using static CubismLive2DExtractor.CubismParsers;
-using Object = AssetStudio.Object;
+using Object = UnityRift.Object;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     internal enum GuiColorTheme
     {

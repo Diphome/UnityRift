@@ -2,9 +2,9 @@
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
-using AssetStudio.CustomOptions;
+using UnityRift.CustomOptions;
 
-namespace AssetStudio
+namespace UnityRift
 {
     [Flags]
     public enum ArchiveFlags

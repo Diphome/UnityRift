@@ -16,7 +16,7 @@ using NVector2 = System.Numerics.Vector2;
 using NQuaternion = System.Numerics.Quaternion;
 using NMatrix4x4 = System.Numerics.Matrix4x4;
 
-namespace AssetStudio
+namespace UnityRift
 {
     // glTF 2.0 exporter that consumes the same IImported IR as the FBX exporter.
     // The IR is already in a right-handed, X-negated space (see ModelConverter),
@@ -411,7 +411,7 @@ namespace AssetStudio
 
         private static NQuaternion ToQuat(Quaternion q) => new NQuaternion(q.X, q.Y, q.Z, q.W);
 
-        // AssetStudio.Matrix4x4 stores transforms row-vector (translation in the 4th
+        // UnityRift.Matrix4x4 stores transforms row-vector (translation in the 4th
         // row: M30/M31/M32), the same convention as System.Numerics (M41/M42/M43), so
         // this is a straight element copy: SN.M(r+1)(c+1) = m.M<r><c>.
         private static NMatrix4x4 ToNumerics(Matrix4x4 m)

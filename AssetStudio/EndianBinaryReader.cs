@@ -2,7 +2,7 @@
 using System.Buffers.Binary;
 using System.IO;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class EndianBinaryReader : BinaryReader
     {

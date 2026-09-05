@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace AssetStudio
+namespace UnityRift
 {
     /// <summary>
     /// Fast queries over a generated IL2CPP package (script.json / stringliteral.json / il2cpp_info.json):

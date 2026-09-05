@@ -1,4 +1,4 @@
-﻿namespace AssetStudioCLI.Options
+﻿namespace UnityRiftCLI.Options
 {
     internal class Option<T>
     {

@@ -1,4 +1,4 @@
-﻿using AssetStudio.CustomOptions.Asmo;
+﻿using UnityRift.CustomOptions.Asmo;
 using SevenZip;
 using System;
 using System.IO;
@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AssetStudio.CustomOptions
+namespace UnityRift.CustomOptions
 {
     public class ImportOptions
     {

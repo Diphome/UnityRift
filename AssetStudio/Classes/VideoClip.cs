@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class StreamedResource
     {

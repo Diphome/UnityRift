@@ -1,4 +1,4 @@
-﻿namespace AssetStudioGUI
+﻿namespace UnityRiftGUI
 {
     partial class AssetStudioGUIForm
     {
@@ -109,7 +109,7 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.sceneExactSearchCheckBox = new System.Windows.Forms.CheckBox();
-            this.sceneTreeView = new AssetStudioGUI.GOHierarchy();
+            this.sceneTreeView = new UnityRiftGUI.GOHierarchy();
             this.treeSearch = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.assetListView = new System.Windows.Forms.ListView();
@@ -1166,7 +1166,7 @@
             this.previewPanel.Controls.Add(this.textPreviewBox);
             this.previewPanel.Controls.Add(this.classTextBox);
             this.previewPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.previewPanel.Image = global::AssetStudioGUI.Properties.Resources.preview;
+            this.previewPanel.Image = global::UnityRiftGUI.Properties.Resources.preview;
             this.previewPanel.Location = new System.Drawing.Point(0, 0);
             this.previewPanel.Name = "previewPanel";
             this.previewPanel.Size = new System.Drawing.Size(768, 607);
@@ -1674,7 +1674,7 @@
             this.ClientSize = new System.Drawing.Size(1264, 681);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.menuStrip1);
-            this.Icon = global::AssetStudioGUI.Properties.Resources._as;
+            this.Icon = global::UnityRiftGUI.Properties.Resources._as;
             this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip1;
             this.MinimumSize = new System.Drawing.Size(620, 400);

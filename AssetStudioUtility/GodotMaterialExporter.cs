@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
-namespace AssetStudio
+namespace UnityRift
 {
     /// <summary>
     /// Converts a Unity <see cref="Material"/> (and, when available, its <see cref="Shader"/>) into a

@@ -1,4 +1,4 @@
-﻿namespace AssetStudio.CustomOptions
+﻿namespace UnityRift.CustomOptions
 {
     public class CustomBundleOptions
     {

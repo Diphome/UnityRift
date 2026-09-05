@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class SerializedFile
     {

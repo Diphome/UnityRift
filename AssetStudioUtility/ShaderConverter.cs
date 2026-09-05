@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public static class ShaderConverter
     {

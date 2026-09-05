@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using AssetStudio;
-using static AssetStudioGUI.Studio;
+using UnityRift;
+using static UnityRiftGUI.Studio;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     // "File > Recent projects": remembers what was loaded (a folder, or a set of files)
     // so it can be reopened with one click. Entries are persisted in user settings as

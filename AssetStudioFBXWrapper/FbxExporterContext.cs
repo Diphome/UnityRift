@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace AssetStudio.FbxInterop
+namespace UnityRift.FbxInterop
 {
     internal sealed partial class FbxExporterContext : IDisposable
     {

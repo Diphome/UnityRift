@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using K4os.Compression.LZ4;
 
-namespace AssetStudio
+namespace UnityRift
 {
     // Reads a "TPK*" class-database file (the type-tree package format used by
-    // UABE/AssetsTools.NET) and produces AssetStudio TypeTrees on demand, keyed by
+    // UABE/AssetsTools.NET) and produces UnityRift TypeTrees on demand, keyed by
     // (Unity version, classID). This lets objects from type-tree-STRIPPED builds be
     // deserialized/dumped as if the tree were embedded.
     //

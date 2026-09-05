@@ -1,13 +1,13 @@
-using AssetStudio;
-using AssetStudioCLI.Options;
+using UnityRift;
+using UnityRiftCLI.Options;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
-using static AssetStudioCLI.Exporter;
-using Ansi = AssetStudio.ColorConsole;
+using static UnityRiftCLI.Exporter;
+using Ansi = UnityRift.ColorConsole;
 
-namespace AssetStudioCLI
+namespace UnityRiftCLI
 {
     /// <summary>
     /// "-m godotscripts": for each unique MonoBehaviour script class, generate a Godot 4 GDScript stub

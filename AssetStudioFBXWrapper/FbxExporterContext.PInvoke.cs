@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using AssetStudio.PInvoke;
+using UnityRift.PInvoke;
 
-namespace AssetStudio.FbxInterop
+namespace UnityRift.FbxInterop
 {
     partial class FbxExporterContext
     {

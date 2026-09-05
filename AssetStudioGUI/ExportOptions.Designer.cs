@@ -1,4 +1,4 @@
-﻿namespace AssetStudioGUI
+﻿namespace UnityRiftGUI
 {
     partial class ExportOptions
     {

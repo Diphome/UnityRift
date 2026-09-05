@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using FMOD;
 using WavHelper;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public sealed class AudioClipConverter
     {

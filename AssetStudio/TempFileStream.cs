@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Runtime.InteropServices;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class TempFileStream : FileStream
     {

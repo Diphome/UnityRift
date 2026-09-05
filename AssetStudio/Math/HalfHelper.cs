@@ -2,7 +2,7 @@
 using System.Buffers.Binary;
 using System.Runtime.InteropServices;
 
-namespace AssetStudio
+namespace UnityRift
 {
 #if NET
     public static class HalfHelper

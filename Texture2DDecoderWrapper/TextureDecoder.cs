@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 
 #if NETFRAMEWORK
-using AssetStudio.PInvoke;
+using UnityRift.PInvoke;
 #endif
 
 namespace Texture2DDecoder

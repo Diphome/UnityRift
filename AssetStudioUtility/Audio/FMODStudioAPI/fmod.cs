@@ -11,7 +11,7 @@ using System.Text;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 #if NETFRAMEWORK
-using AssetStudio.PInvoke;
+using UnityRift.PInvoke;
 #endif
 
 namespace FMOD

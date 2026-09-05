@@ -3,6 +3,7 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFrameworks>net472;net8.0-windows;net9.0-windows</TargetFrameworks>
+        <RootNamespace>UnityRiftGUI</RootNamespace>
         <UseWindowsForms>true</UseWindowsForms>
         <ApplicationIcon>Resources\as.ico</ApplicationIcon>
         <AssemblyTitle>UnityRift</AssemblyTitle>

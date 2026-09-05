@@ -1,7 +1,7 @@
 // LzmaDecoder.cs
 
 using System;
-using AssetStudio;
+using UnityRift;
 
 namespace SevenZip.Compression.LZMA
 {

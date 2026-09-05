@@ -6,7 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
-namespace AssetStudio
+namespace UnityRift
 {
     /// <summary>
     /// Converts a Unity <see cref="ParticleSystem"/> (read generically from its type tree, so no

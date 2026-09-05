@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public static class Progress
     {

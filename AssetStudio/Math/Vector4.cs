@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace AssetStudio
+namespace UnityRift
 {
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct Vector4 : IEquatable<Vector4>

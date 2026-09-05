@@ -5,7 +5,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 
 #if NETFRAMEWORK
-namespace AssetStudio.PInvoke
+namespace UnityRift.PInvoke
 {
     public static class DllLoader
     {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class StaticBatchInfo
     {

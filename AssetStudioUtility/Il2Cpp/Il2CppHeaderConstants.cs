@@ -2,7 +2,7 @@
 // Source: Il2CppDumper (https://github.com/Perfare/Il2CppDumper) — Outputs/HeaderConstants.cs
 // Copyright (c) 2016 Perfare. Licensed under the MIT License (see tools/ghidra/LICENSE-Il2CppDumper.txt).
 // Only the namespace/class name were changed.
-namespace AssetStudio
+namespace UnityRift
 {
     internal static class Il2CppHeaderConstants
     {

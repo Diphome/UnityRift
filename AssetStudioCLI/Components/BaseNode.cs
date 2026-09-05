@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace AssetStudioCLI
+namespace UnityRiftCLI
 {
     internal class BaseNode
     {

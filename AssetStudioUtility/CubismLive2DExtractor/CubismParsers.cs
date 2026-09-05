@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Linq;
-using AssetStudio;
+using UnityRift;
 using CubismLive2DExtractor.CubismUnityClasses;
 using Newtonsoft.Json;
 

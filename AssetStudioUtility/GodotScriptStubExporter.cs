@@ -5,7 +5,7 @@ using System.Collections.Specialized;
 using System.Globalization;
 using System.Text;
 
-namespace AssetStudio
+namespace UnityRift
 {
     /// <summary>
     /// Generates a Godot 4 GDScript stub from a Unity MonoBehaviour's script class and its serialized fields

@@ -1,13 +1,13 @@
-using AssetStudio;
-using AssetStudioCLI.Options;
+using UnityRift;
+using UnityRiftCLI.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using static AssetStudioCLI.Exporter;
-using Ansi = AssetStudio.ColorConsole;
+using static UnityRiftCLI.Exporter;
+using Ansi = UnityRift.ColorConsole;
 
-namespace AssetStudioCLI
+namespace UnityRiftCLI
 {
     /// <summary>
     /// "-m godot": convert loaded Unity materials into Godot 4 scaffolds

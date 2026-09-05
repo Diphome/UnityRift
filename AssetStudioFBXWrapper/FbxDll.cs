@@ -1,4 +1,4 @@
-﻿namespace AssetStudio.FbxInterop
+﻿namespace UnityRift.FbxInterop
 {
     internal static class FbxDll
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AssetStudioCLI.Options
+namespace UnityRiftCLI.Options
 {
     internal static class OptionExtensions
     {

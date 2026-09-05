@@ -1,6 +1,6 @@
 ﻿using System.Buffers;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public static class BigArrayPool<T>
     {

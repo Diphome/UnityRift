@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class Node
     {

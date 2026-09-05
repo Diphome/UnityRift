@@ -1,4 +1,4 @@
-﻿namespace AssetStudio
+﻿namespace UnityRift
 {
     public enum FileType
     {

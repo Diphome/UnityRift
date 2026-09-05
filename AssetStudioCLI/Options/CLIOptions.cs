@@ -1,11 +1,11 @@
-﻿using AssetStudio;
+﻿using UnityRift;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace AssetStudioCLI.Options
+namespace UnityRiftCLI.Options
 {
     internal enum HelpGroups
     {

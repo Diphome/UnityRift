@@ -2,7 +2,7 @@
 using System.Buffers.Binary;
 using System.Text;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public static class EndianSpanReader
     {

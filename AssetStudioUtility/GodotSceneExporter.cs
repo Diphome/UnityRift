@@ -9,7 +9,7 @@ using NVector3 = System.Numerics.Vector3;
 using NQuaternion = System.Numerics.Quaternion;
 using NMatrix = System.Numerics.Matrix4x4;
 
-namespace AssetStudio
+namespace UnityRift
 {
     /// <summary>
     /// Builds a complete Godot 4 project from a Unity scene: mesh roots as instanced glTF, ParticleSystems/

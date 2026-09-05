@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public static partial class MathHelper
     {

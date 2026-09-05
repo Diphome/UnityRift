@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using K4os.Compression.LZ4;
 using ZstdSharp;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public static class BundleDecompressionHelper
     {

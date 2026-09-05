@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using System.Windows.Forms;
-using AssetStudio;
+using UnityRift;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     public static class JsonTreeView
     {

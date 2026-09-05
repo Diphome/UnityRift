@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+﻿using UnityRift;
 using Newtonsoft.Json;
 using OpenTK.Graphics.OpenGL;
 using System;
@@ -16,8 +16,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
-using static AssetStudioGUI.Studio;
-using Font = AssetStudio.Font;
+using static UnityRiftGUI.Studio;
+using Font = UnityRift.Font;
 using Microsoft.WindowsAPICodePack.Taskbar;
 #if NET472
 using OpenTK;
@@ -31,7 +31,7 @@ using Vector4 = OpenTK.Mathematics.Vector4;
 using Matrix4 = OpenTK.Mathematics.Matrix4;
 #endif
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     partial class AssetStudioGUIForm : Form
     {
@@ -3033,7 +3033,7 @@ namespace AssetStudioGUI
             }
 
             FMODtimerLabel.Text = $"{ms / 1000 / 60:00}:{ms / 1000 % 60:00}.{ms / 10 % 100:00} / {FMODlenms / 1000 / 60:00}:{FMODlenms / 1000 % 60:00}.{FMODlenms / 10 % 100:00}";
-            FMODprogressBar.Value = (int)AssetStudio.MathHelper.Clamp(ms * 1000f / FMODlenms, 0, 1000);
+            FMODprogressBar.Value = (int)UnityRift.MathHelper.Clamp(ms * 1000f / FMODlenms, 0, 1000);
             FMODstatusLabel.Text = paused ? "Paused " : playing ? "Playing" : "Stopped";
 
             if (system.hasHandle() && channel.hasHandle())
@@ -3197,7 +3197,7 @@ namespace AssetStudioGUI
                 // (convertType) may be TGA/WebP, which System.Drawing can't decode in
                 // DecodeTexture -> the mesh would render white. PNG is always decodable
                 // and only affects this in-memory preview, not exported files.
-                var imported = new ModelConverter(animator, AssetStudio.ImageFormat.Png);
+                var imported = new ModelConverter(animator, UnityRift.ImageFormat.Png);
                 animPlayer = new AnimationPlayer(imported);
                 if (animPlayer.Meshes.Count == 0)
                 {

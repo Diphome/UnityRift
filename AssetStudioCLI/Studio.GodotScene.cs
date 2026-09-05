@@ -1,9 +1,9 @@
-using AssetStudio;
-using AssetStudioCLI.Options;
+using UnityRift;
+using UnityRiftCLI.Options;
 using System.Linq;
-using Ansi = AssetStudio.ColorConsole;
+using Ansi = UnityRift.ColorConsole;
 
-namespace AssetStudioCLI
+namespace UnityRiftCLI
 {
     /// <summary>
     /// "-m godotscene": export the loaded scene as a Godot 4 project (glTF mesh roots + native

@@ -4,7 +4,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public static class Texture2DExtensions
     {

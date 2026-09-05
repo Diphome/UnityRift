@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+﻿using UnityRift;
 using Newtonsoft.Json;
 
 namespace CubismLive2DExtractor.CubismUnityClasses

@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+﻿using UnityRift;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     class GUILogger : ILogger
     {

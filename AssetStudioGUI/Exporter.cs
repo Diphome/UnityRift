@@ -1,11 +1,11 @@
-﻿using AssetStudio;
+﻿using UnityRift;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     internal static class Exporter
     {

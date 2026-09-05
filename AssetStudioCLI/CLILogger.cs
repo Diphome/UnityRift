@@ -1,12 +1,12 @@
-﻿using AssetStudio;
-using AssetStudioCLI.Options;
+﻿using UnityRift;
+using UnityRiftCLI.Options;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace AssetStudioCLI
+namespace UnityRiftCLI
 {
     internal enum LogOutputMode
     {

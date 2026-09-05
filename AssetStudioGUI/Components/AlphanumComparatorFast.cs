@@ -5,7 +5,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     internal class AlphanumComparatorFast : IComparer<string>
     {

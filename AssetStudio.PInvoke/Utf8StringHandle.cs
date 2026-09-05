@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
 
-namespace AssetStudio.PInvoke
+namespace UnityRift.PInvoke
 {
     // Generally the technique from Steamworks.NET
     public class Utf8StringHandle : SafeHandleZeroOrMinusOneIsInvalid

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AssetStudio
+namespace UnityRift
 {
     // Represents set with 16 base colors using ANSI escape codes, which should be supported in most terminals
     // (well, except for windows editions before windows 10)

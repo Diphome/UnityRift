@@ -1,4 +1,4 @@
-using AssetStudio;
+using UnityRift;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static AssetStudioGUI.Studio;
+using static UnityRiftGUI.Studio;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     // Godot 4 export (materials -> .gdshader/.tres, ParticleSystems -> .tscn), added in code so no
     // Designer edits are needed. Mirrors the CLI "-m godot" mode, reusing the shared exporters in
@@ -81,7 +81,7 @@ namespace AssetStudioGUI
         private void exportGodotMenuItem_Click(object sender, EventArgs e)
         {
             var mats = new List<Material>();
-            var particles = new List<AssetStudio.Object>();
+            var particles = new List<UnityRift.Object>();
             foreach (var file in assetsManager.AssetsFileList)
                 foreach (var obj in file.Objects)
                 {
@@ -119,7 +119,7 @@ namespace AssetStudioGUI
         }
 
         private (int materials, int particles, int textures) ExportGodotCore(
-            string outRoot, List<Material> mats, List<AssetStudio.Object> particles)
+            string outRoot, List<Material> mats, List<UnityRift.Object> particles)
         {
             var texDir = Path.Combine(outRoot, "textures");
             Directory.CreateDirectory(outRoot);

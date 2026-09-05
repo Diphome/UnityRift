@@ -1,6 +1,6 @@
-using AssetStudio;
+using UnityRift;
 
-namespace AssetStudioCLI
+namespace UnityRiftCLI
 {
     internal class GameObjectNode : BaseNode
     {

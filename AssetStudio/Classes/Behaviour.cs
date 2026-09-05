@@ -1,4 +1,4 @@
-﻿namespace AssetStudio
+﻿namespace UnityRift
 {
     public abstract class Behaviour : Component
     {

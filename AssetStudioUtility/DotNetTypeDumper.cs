@@ -6,7 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
-namespace AssetStudio
+namespace UnityRift
 {
     /// <summary>
     /// Renders Mono.Cecil type/member definitions as C#-like declarations (a "stub" view of the

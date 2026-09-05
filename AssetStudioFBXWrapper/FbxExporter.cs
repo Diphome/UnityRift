@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace AssetStudio.FbxInterop
+namespace UnityRift.FbxInterop
 {
     internal sealed class FbxExporter : IDisposable
     {

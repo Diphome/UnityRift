@@ -2,7 +2,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace AssetStudio
+namespace UnityRift
 {
     internal static class ColorConsoleHelper
     {

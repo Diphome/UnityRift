@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class MyAssemblyResolver : DefaultAssemblyResolver
     {

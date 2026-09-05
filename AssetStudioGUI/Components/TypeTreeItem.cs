@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
-using AssetStudio;
+using UnityRift;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     internal class TypeTreeItem : ListViewItem
     {

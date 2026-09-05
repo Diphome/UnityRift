@@ -1,4 +1,4 @@
-﻿namespace AssetStudioGUI
+﻿namespace UnityRiftGUI
 {
     partial class AboutForm
     {
@@ -378,7 +378,7 @@
             // 
             this.pictureBox1.BackColor = System.Drawing.Color.Transparent;
             this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pictureBox1.Image = global::AssetStudioGUI.Properties.Resources.as_logo;
+            this.pictureBox1.Image = global::UnityRiftGUI.Properties.Resources.as_logo;
             this.pictureBox1.Location = new System.Drawing.Point(0, 0);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(384, 50);

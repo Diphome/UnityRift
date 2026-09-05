@@ -4,7 +4,7 @@ using SixLabors.ImageSharp.Formats.Tga;
 using SixLabors.ImageSharp.Formats.Webp;
 using System.IO;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public static class ImageExtensions
     {

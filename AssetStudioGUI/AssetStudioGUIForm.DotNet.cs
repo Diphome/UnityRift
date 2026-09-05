@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+﻿using UnityRift;
 using Mono.Cecil;
 using System;
 using System.Collections.Generic;
@@ -7,9 +7,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static AssetStudioGUI.Studio;
+using static UnityRiftGUI.Studio;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     /// <summary>
     /// ".NET Classes" tab: a browser over the game's managed assemblies (Mono.Cecil).

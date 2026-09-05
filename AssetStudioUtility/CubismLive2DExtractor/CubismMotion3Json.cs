@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AssetStudio;
+using UnityRift;
 
 namespace CubismLive2DExtractor
 {

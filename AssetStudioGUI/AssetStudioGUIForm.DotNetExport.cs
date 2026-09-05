@@ -5,11 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using AssetStudio;
+using UnityRift;
 using Mono.Cecil;
-using static AssetStudioGUI.Studio;
+using static UnityRiftGUI.Studio;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     // Export for the ".NET Classes" tab: C# stub files for the selected type / assembly /
     // everything, or a copy of the assembly files themselves (useful for IL2CPP dummy

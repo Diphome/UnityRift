@@ -3,7 +3,7 @@
 using SixLabors.ImageSharp;
 using System;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class Texture2DSwitchDeswizzler
     {

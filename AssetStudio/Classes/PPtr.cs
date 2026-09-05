@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public sealed class PPtr<T> where T : Object
     {

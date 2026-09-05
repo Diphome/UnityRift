@@ -5,7 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace AssetStudio
+namespace UnityRift
 {
     /// <summary>An IL2CPP game located on disk: native binary + global-metadata.dat (+ data/player paths when known).</summary>
     public class Il2CppGame

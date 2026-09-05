@@ -1,13 +1,13 @@
-﻿using AssetStudio.FbxInterop;
+﻿using UnityRift.FbxInterop;
 using System.IO;
 using System.Text.Json;
 using System.Collections.Generic;
 
 #if NETFRAMEWORK
-using AssetStudio.PInvoke;
+using UnityRift.PInvoke;
 #endif
 
-namespace AssetStudio
+namespace UnityRift
 {
     public static partial class Fbx
     {

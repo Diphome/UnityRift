@@ -1,4 +1,4 @@
-﻿using AssetStudio;
+﻿using UnityRift;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
-namespace AssetStudioGUI
+namespace UnityRiftGUI
 {
     public sealed class DirectBitmap : IDisposable
     {

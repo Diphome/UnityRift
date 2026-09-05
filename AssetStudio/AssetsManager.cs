@@ -9,11 +9,11 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using AssetStudio.CustomOptions;
-using AssetStudio.CustomOptions.Asmo;
-using static AssetStudio.ImportHelper;
+using UnityRift.CustomOptions;
+using UnityRift.CustomOptions.Asmo;
+using static UnityRift.ImportHelper;
 
-namespace AssetStudio
+namespace UnityRift
 {
     public class AssetsManager
     {
