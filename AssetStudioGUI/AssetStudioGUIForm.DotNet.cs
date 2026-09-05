@@ -180,7 +180,7 @@ namespace AssetStudioGUI
             if (!Il2CppAssemblyProvider.IsSupported)
             {
                 Logger.Info($"IL2CPP game detected ({game.BinaryPath}) but IL2CPP support needs the .NET 8+ build.");
-                dotnetStatusLabel.Text = "IL2CPP game detected. IL2CPP support requires the .NET 8+ build of AssetStudioMod.";
+                dotnetStatusLabel.Text = "IL2CPP game detected. IL2CPP support requires the .NET 8+ build of UnityRift.";
                 return;
             }
             Logger.Info($"Found IL2CPP binary: {game.BinaryPath}");

@@ -37,7 +37,7 @@ namespace AssetStudio
 
         /// <summary>Root of the dummy-DLL cache (one sub-folder per binary+metadata pair).</summary>
         public static string CacheRoot { get; set; } =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AssetStudioMod", "il2cpp");
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "UnityRift", "il2cpp");
 
         #region Detection
 
@@ -293,7 +293,7 @@ namespace AssetStudio
                 return folder;
             }
 #if NETFRAMEWORK
-            throw new NotSupportedException("IL2CPP support (Cpp2IL) requires the .NET 8+ build of AssetStudioMod.");
+            throw new NotSupportedException("IL2CPP support (Cpp2IL) requires the .NET 8+ build of UnityRift.");
 #else
             lock (Il2CppLock)
             {

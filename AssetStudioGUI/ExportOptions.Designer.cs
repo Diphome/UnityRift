@@ -271,7 +271,7 @@
             this.restoreExtensionName.Size = new System.Drawing.Size(275, 17);
             this.restoreExtensionName.TabIndex = 6;
             this.restoreExtensionName.Text = "Try to restore/Use original TextAsset extension name";
-            this.optionTooltip.SetToolTip(this.restoreExtensionName, "If not checked, AssetStudio will export all TextAssets with the \".txt\" extension");
+            this.optionTooltip.SetToolTip(this.restoreExtensionName, "If not checked, UnityRift will export all TextAssets with the \".txt\" extension");
             this.restoreExtensionName.UseVisualStyleBackColor = true;
             // 
             // assetGroupOptions

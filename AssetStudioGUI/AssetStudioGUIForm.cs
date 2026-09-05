@@ -2352,7 +2352,7 @@ namespace AssetStudioGUI
 
         private void AssetStudioGUIForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Logger.Verbose("Closing AssetStudio");
+            Logger.Verbose("Closing UnityRift");
         }
 
         private void buildTreeStructureToolStripMenuItem_CheckedChanged(object sender, EventArgs e)

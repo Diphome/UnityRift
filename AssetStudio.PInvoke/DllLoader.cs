@@ -27,7 +27,7 @@ namespace AssetStudio.PInvoke
             if (!Environment.Is64BitProcess)
             {
                 throw new PlatformNotSupportedException(
-                    "AssetStudio requires a 64-bit process. 32-bit (x86) native libraries are no longer shipped.");
+                    "UnityRift requires a 64-bit process. 32-bit (x86) native libraries are no longer shipped.");
             }
 
             var subDir = Path.Combine("runtimes", "win-x64", "native");

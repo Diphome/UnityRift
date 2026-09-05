@@ -1,5 +1,5 @@
 ## UnityRiftCLI
-CLI version of AssetStudioMod.
+CLI version of UnityRift.
 - Supported asset types for export: `Texture2D`, `Texture2DArray`, `Sprite`, `TextAsset`, `MonoBehaviour`, `Font`, `Shader`, `MovieTexture`, `AudioClip`, `VideoClip`, `Mesh`, `Animator`.
 
 ### Usage

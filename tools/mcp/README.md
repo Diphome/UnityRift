@@ -1,4 +1,4 @@
-# AssetStudioCLI MCP server
+# UnityRift MCP server
 
 A small [Model Context Protocol](https://modelcontextprotocol.io) server that
 exposes `UnityRiftCLI` as tools, so an AI agent (e.g. Claude Code) can run
@@ -41,7 +41,7 @@ game; the `Managed` folder is located automatically (or pass `assembly_folder`).
 (`GameAssembly.dll` / `libil2cpp.so`) and `global-metadata.dat` are processed with
 [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) into metadata-only stub
 assemblies (types, fields, signatures, RVAs; no method bodies). The result is
-cached under `%LOCALAPPDATA%\AssetStudioMod\il2cpp`; the first run takes
+cached under `%LOCALAPPDATA%\UnityRift\il2cpp`; the first run takes
 ~10-60 s and a few GB of RAM. `asset_info` / `asset_export` / `asset_dump` accept
 `il2cpp: true` to use those stubs for custom MonoBehaviour fields.
 

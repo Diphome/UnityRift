@@ -25,7 +25,7 @@
 - **Animated model preview** in the GUI — select an Animator, pick a clip, play it with textured per-submesh rendering.
 - **Faster project loading** — parallel asset reads, direct type-tree→JSON streaming, and garbage-count guards.
 
-## AssetStudio Features
+## Core asset features (from AssetStudio)
 
 - Support Unity version:
   - 1.7 - 6000.2
@@ -42,14 +42,14 @@
   - **MonoBehaviour** : json
   - **Animator** : export to FBX file with bound AnimationClip
  
-## Inherited AssetStudioMod features
+## Inherited features
 
 - CLI version (for Windows, Linux, Mac)
 - Support of sprites with alpha mask
 - Support of image export in WebP format
 - Support of Live2D Cubism model export
    - Ported from aelurum's fork of Perfare's [UnityLive2DExtractor](https://github.com/aelurum/UnityLive2DExtractor)
-   - Using the Live2D export in AssetStudio allows you to specify a Unity version and assembly folder if needed
+   - Using the Live2D export in UnityRift allows you to specify a Unity version and assembly folder if needed
 - Support of swizzled Switch textures
     - Ported from nesrak1's [AssetStudio fork](https://github.com/nesrak1/AssetStudio/tree/switch-tex-deswizzle)
 - Detecting bundles with UnityCN encryption
@@ -184,7 +184,7 @@ UnityRiftCLI <asset folder path> -m dump -t material --load-all
 
 Use **File->Load file** or **File->Load folder**.
 
-When AssetStudio loads AssetBundles, it decompresses and reads it directly in memory, which may cause a large amount of memory to be used. You can use **File->Extract file** or **File->Extract folder** to extract AssetBundles to another folder, and then read.
+When UnityRift loads AssetBundles, it decompresses and reads it directly in memory, which may cause a large amount of memory to be used. You can use **File->Extract file** or **File->Extract folder** to extract AssetBundles to another folder, and then read.
 
 ### Extract/Decompress AssetBundles
 
@@ -208,11 +208,11 @@ Export Animator will export bound AnimationClip or use **Ctrl** to select Animat
 
 ### Export MonoBehaviour
 
-When you select an asset of the MonoBehaviour type for the first time, AssetStudio will ask you the directory where the assembly is located, please select the directory where the assembly is located, such as the `Managed` folder.
+When you select an asset of the MonoBehaviour type for the first time, UnityRift will ask you the directory where the assembly is located, please select the directory where the assembly is located, such as the `Managed` folder.
 
 #### For Il2Cpp
 
-AssetStudioMod generates dummy assemblies itself: **File → Load IL2CPP binary**, or just load the game folder (GameAssembly.dll / libil2cpp.so + `global-metadata.dat` are detected automatically). The first run uses [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) and is cached.
+UnityRift generates dummy assemblies itself: **File → Load IL2CPP binary**, or just load the game folder (GameAssembly.dll / libil2cpp.so + `global-metadata.dat` are detected automatically). The first run uses [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) and is cached.
 
 To name functions in Ghidra the same way [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) does:
 
@@ -226,7 +226,7 @@ Scripts work in Ghidra's Jython 2.7 and in Ghidra 11.3+ PyGhidra (Python 3). Add
 ## Build
 
 * Visual Studio 2022 or newer
-* AssetStudioMod is **64-bit only**. 32-bit (x86) builds are no longer supported.
+* UnityRift is **64-bit only**. 32-bit (x86) builds are no longer supported.
 * **AssetStudioFBXNative** uses the [FBX SDK 2020.3.x](https://aps.autodesk.com/developer/overview/fbx-sdk) (x64). Install it before building; the project looks for it in the default location (`C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.10`). To use a different version or path, set the `FBXSDK_ROOT` environment variable, or pass `/p:FbxSdkDir="<path>\"` to MSBuild — no need to edit the project file.
 
 ## Open source libraries used

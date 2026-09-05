@@ -1,4 +1,4 @@
-# AssetStudioMod — Export Guide
+# UnityRift — Export Guide
 
 A plain-language guide to what the export functions produce and when to use them.
 For full CLI flags see the [CLI ReadMe](../AssetStudioCLI/ReadMe.md); this doc is the
@@ -97,7 +97,7 @@ clips are included differs by front-end:
 ## Reading "stripped" games (data that hides its structure)
 
 Some games ship without embedded type trees (recipes). Then `dump` of engine assets and
-generic inspection would normally fail. AssetStudioMod now ships a **type tree database**
+generic inspection would normally fail. UnityRift now ships a **type tree database**
 (`classdata.tpk`, loaded automatically) so those assets read correctly. For a game's
 **custom** MonoBehaviour fields you also need the game's code: pass
 `--assembly-folder <path-to-Managed>` (or `--il2cpp` for IL2CPP games).

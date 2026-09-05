@@ -54,7 +54,7 @@ function resolveCli() {
 }
 
 function defaultOutDir() {
-  return process.env.ASSETSTUDIO_OUT || join(tmpdir(), "assetstudio-mcp-exports");
+  return process.env.ASSETSTUDIO_OUT || join(tmpdir(), "unityrift-mcp-exports");
 }
 
 // Build the [command, args] pair, handling the .dll (run via dotnet) case.
@@ -687,7 +687,7 @@ async function handle(msg) {
       reply(id, {
         protocolVersion: params?.protocolVersion || "2025-06-18",
         capabilities: { tools: {} },
-        serverInfo: { name: "assetstudio-cli", version: "0.4.0" },
+        serverInfo: { name: "unityrift-cli", version: "0.4.0" },
       });
       return;
     case "notifications/initialized":

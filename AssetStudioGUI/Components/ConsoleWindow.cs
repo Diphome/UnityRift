@@ -38,7 +38,7 @@ namespace AssetStudioGUI
                 case CtrlSignalType.CTRL_BREAK_EVENT:
                     return true;
                 default:
-                    Logger.Verbose("Closing AssetStudio");
+                    Logger.Verbose("Closing UnityRift");
                     return false;
             }
         }
