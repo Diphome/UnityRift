@@ -41,28 +41,47 @@ namespace AssetStudioCLI
                         roots.Add(rootNode.gameObject);
                 }
 
-            // ---- Find FX/light/camera components on any GameObject ----
+            // ---- Find FX/light/camera components and MonoBehaviours on any GameObject ----
             var fx = new List<(GameObject go, AssetStudio.Object comp, ClassIDType type)>();
+            var mbByGo = new List<(GameObject go, List<MonoBehaviour> mbs)>();
+            var allMbs = new List<MonoBehaviour>();
             foreach (var go in allGameObjects)
             {
                 if (go.m_Components == null) continue;
+                List<MonoBehaviour> goMbs = null;
                 foreach (var cp in go.m_Components)
                 {
                     if (!cp.TryGet<AssetStudio.Object>(out var comp, go.assetsFile))
                         continue;
                     if (comp.type == ClassIDType.ParticleSystem || comp.type == ClassIDType.Light || comp.type == ClassIDType.Camera)
                         fx.Add((go, comp, comp.type));
+                    else if (comp is MonoBehaviour mb)
+                    {
+                        (goMbs ?? (goMbs = new List<MonoBehaviour>())).Add(mb);
+                        allMbs.Add(mb);
+                    }
                 }
+                if (goMbs != null)
+                    mbByGo.Add((go, goMbs));
             }
 
-            if (roots.Count == 0 && fx.Count == 0)
+            if (roots.Count == 0 && fx.Count == 0 && mbByGo.Count == 0)
             {
                 Logger.Warning("No 3D objects, particles, lights or cameras found. Point at a scene/prefab bundle or the game's *_Data folder.");
                 return;
             }
 
-            Logger.Info($"Exporting {roots.Count} model root(s) + {fx.Count} FX/light/camera node(s) to a Godot scene...");
+            Logger.Info($"Exporting {roots.Count} model root(s) + {fx.Count} FX/light/camera node(s) + scripts on {mbByGo.Count} object(s) to a Godot scene...");
             if (roots.Count > 0) Directory.CreateDirectory(modelsDir);
+
+            // Generate GDScript stubs for all MonoBehaviour classes; map class key -> stub file base name.
+            var scriptsDir = Path.Combine(outRoot, "scripts");
+            Dictionary<string, string> scriptMap = null;
+            if (allMbs.Count > 0)
+            {
+                EnsureScriptAssembliesLoaded();
+                scriptMap = BuildScriptStubs(allMbs, scriptsDir, overwrite);
+            }
 
             var gltfSettings = new Gltf.Settings { Format = Gltf.Format.Glb, ExportAnimations = true, ScaleFactor = 1.0f };
             var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -137,8 +156,52 @@ namespace AssetStudioCLI
                 fxCount++;
             }
 
+            // ---- Script holders: one Node3D per MonoBehaviour GameObject, a child Node per script ----
+            var scriptExtId = new Dictionary<string, string>(StringComparer.Ordinal); // file base -> ext id
+            var scriptedObjects = 0;
+            if (scriptMap != null && scriptMap.Count > 0)
+            {
+                foreach (var (go, mbs) in mbByGo)
+                {
+                    // Resolve this GO's MonoBehaviour classes to stub files.
+                    var attached = new List<(string cls, string file)>();
+                    foreach (var mb in mbs)
+                    {
+                        string cn = null, ns = null;
+                        if (mb.m_Script.TryGet(out var ms, mb.assetsFile)) { cn = ms.m_ClassName; ns = ms.m_Namespace; }
+                        if (string.IsNullOrEmpty(cn)) cn = string.IsNullOrEmpty(mb.m_Name) ? "UnityScript" : mb.m_Name;
+                        var key = (string.IsNullOrEmpty(ns) ? "" : ns + ".") + cn;
+                        if (scriptMap.TryGetValue(key, out var file))
+                            attached.Add((cn, file));
+                    }
+                    if (attached.Count == 0)
+                        continue;
+                    if (!TryWorldTransform(go, out var pos, out var quat, out var scale))
+                        continue;
+
+                    var holder = UniqueSceneName((string.IsNullOrEmpty(go.m_Name) ? "Object" : SanitizeNode(go.m_Name)) + "_Scripts", nodeNames);
+                    nodes.Append("[node name=\"").Append(holder).Append("\" type=\"Node3D\" parent=\".\"]\n");
+                    nodes.Append(TransformLine(pos, quat, scale));
+                    var childNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var (cls, file) in attached)
+                    {
+                        if (!scriptExtId.TryGetValue(file, out var sid))
+                        {
+                            sid = "s" + (scriptExtId.Count + 1);
+                            scriptExtId[file] = sid;
+                            ext.Append("[ext_resource type=\"Script\" path=\"res://scripts/").Append(file).Append(".gd\" id=\"").Append(sid).Append("\"]\n");
+                        }
+                        var childName = UniqueSceneName(SanitizeNode(cls), childNames);
+                        nodes.Append("[node name=\"").Append(childName).Append("\" type=\"Node\" parent=\"").Append(holder).Append("\"]\n");
+                        nodes.Append("script = ExtResource(\"").Append(sid).Append("\")\n");
+                    }
+                    scriptedObjects++;
+                }
+            }
+
+            var extCount = instances.Count + scriptExtId.Count;
             var sb = new StringBuilder();
-            sb.Append("[gd_scene load_steps=").Append(instances.Count + subCount + 1).Append(" format=3]\n\n");
+            sb.Append("[gd_scene load_steps=").Append(extCount + subCount + 1).Append(" format=3]\n\n");
             sb.Append("; Generated by Reunity (AssetStudioMod). Unity scene -> Godot 4.\n");
             sb.Append("; Mesh roots are instanced glTF; particles/lights/cameras are native nodes at their\n");
             sb.Append("; world transform (converted to Godot's X-negated glTF space).\n\n");
@@ -157,8 +220,8 @@ namespace AssetStudioCLI
                     "run/main_scene=\"res://scene.tscn\"\nconfig/features=PackedStringArray(\"4.4\")\n\n" +
                     "[rendering]\nrenderer/rendering_method=\"gl_compatibility\"\n");
 
-            Logger.Info($"Exported {exportedModels.ToString().Color(Ansi.BrightGreen)} model(s) + {fxCount.ToString().Color(Ansi.BrightGreen)} FX/light/camera node(s); wrote \"{scenePath.Color(Ansi.BrightCyan)}\".");
-            Logger.Info("Open the output folder in Godot 4; it imports the .glb files on open, then run scene.tscn.");
+            Logger.Info($"Exported {exportedModels.ToString().Color(Ansi.BrightGreen)} model(s) + {fxCount.ToString().Color(Ansi.BrightGreen)} FX/light/camera node(s) + scripts on {scriptedObjects.ToString().Color(Ansi.BrightGreen)} object(s); wrote \"{scenePath.Color(Ansi.BrightCyan)}\".");
+            Logger.Info("Open the output folder in Godot 4; it imports the .glb files on open, then run scene.tscn. MonoBehaviour stubs are under 'scripts', attached to <Object>_Scripts holder nodes.");
         }
 
         // ---- transform ----

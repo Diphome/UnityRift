@@ -865,6 +865,7 @@ namespace AssetStudioCLI.Options
                             ClassIDType.ParticleSystem,
                             ClassIDType.Light,
                             ClassIDType.Camera,
+                            ClassIDType.MonoBehaviour,
                         };
                         break;
                     case "animator":
