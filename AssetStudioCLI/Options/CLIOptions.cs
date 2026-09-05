@@ -158,6 +158,7 @@ namespace AssetStudioCLI.Options
         public static Option<List<string>> o_il2cppLookup;
         public static Option<List<string>> o_il2cppStrings;
         public static Option<bool> f_il2cppDummyDll;
+        public static Option<bool> f_godotAttachPlugin;
 
         static CLIOptions()
         {
@@ -655,6 +656,16 @@ namespace AssetStudioCLI.Options
                 optionExample: "Example: \"-m il2cpp --il2cpp-dummy-dll\"\n",
                 optionHelpGroup: HelpGroups.Il2Cpp
             );
+            f_godotAttachPlugin = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--godot-attach-plugin",
+                optionDescription: "(Flag) For \"-m godotscene\": also write a Godot editor plugin that attaches the\n" +
+                    "MonoBehaviour script stubs onto the imported glTF nodes automatically when scene.tscn is opened\n" +
+                    "(instead of running attach_scripts.gd by hand).\n",
+                optionExample: "Example: \"-m godotscene --godot-attach-plugin\"\n",
+                optionHelpGroup: HelpGroups.Advanced
+            );
             #endregion
 
             o_assemblyPath = new GroupedOption<string>
@@ -948,6 +959,16 @@ namespace AssetStudioCLI.Options
                             return;
                         }
                         f_il2cppDummyDll.Value = true;
+                        flagIndexes.Add(i);
+                        break;
+                    case "--godot-attach-plugin":
+                        if (o_workMode.Value != WorkMode.GodotScene)
+                        {
+                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is only for \"-m godotscene\".\n");
+                            ShowOptionDescription(o_workMode);
+                            return;
+                        }
+                        f_godotAttachPlugin.Value = true;
                         flagIndexes.Add(i);
                         break;
                     case "--dotnet-il":

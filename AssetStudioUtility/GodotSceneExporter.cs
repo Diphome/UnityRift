@@ -29,7 +29,8 @@ namespace AssetStudio
         }
 
         public static Result Build(IEnumerable<GameObject> allGameObjects, AssemblyLoader assemblyLoader,
-            string outRoot, ImageFormat imageFormat, bool overwrite, Action<string> log = null)
+            string outRoot, ImageFormat imageFormat, bool overwrite, Action<string> log = null,
+            bool autoAttachPlugin = false)
         {
             log = log ?? (_ => { });
             var res = new Result();
@@ -212,19 +213,33 @@ namespace AssetStudio
             res.ScenePath = Path.Combine(outRoot, "scene.tscn");
             File.WriteAllText(res.ScenePath, sb.ToString());
 
+            var usePlugin = autoAttachPlugin && manifest.Count > 0;
             var projectFile = Path.Combine(outRoot, "project.godot");
             if (!File.Exists(projectFile))
                 File.WriteAllText(projectFile,
                     "config_version=5\n\n[application]\nconfig/name=\"Reunity Imported Scene\"\n" +
                     "run/main_scene=\"res://scene.tscn\"\nconfig/features=PackedStringArray(\"4.4\")\n\n" +
+                    (usePlugin ? "[editor_plugins]\nenabled=PackedStringArray(\"res://addons/reunity_attach/plugin.cfg\")\n\n" : "") +
                     "[rendering]\nrenderer/rendering_method=\"gl_compatibility\"\n");
 
-            // Manifest + editor tool to attach the stubs onto the real imported glTF nodes.
+            // Manifest + editor tooling to attach the stubs onto the real imported glTF nodes.
             if (manifest.Count > 0)
             {
                 File.WriteAllText(Path.Combine(outRoot, "scripts_manifest.json"), BuildManifestJson(manifest));
-                File.WriteAllText(Path.Combine(outRoot, "attach_scripts.gd"), AttachScriptTool);
-                log($"Wrote scripts_manifest.json ({manifest.Count} object(s)) + attach_scripts.gd. In Godot: open scene.tscn, open attach_scripts.gd in the Script editor and File > Run to attach the stubs to the imported nodes.");
+                File.WriteAllText(Path.Combine(outRoot, "reunity_attach_core.gd"), AttachCoreScript);
+                File.WriteAllText(Path.Combine(outRoot, "attach_scripts.gd"), AttachEditorScript);
+                if (usePlugin)
+                {
+                    var addonDir = Path.Combine(outRoot, "addons", "reunity_attach");
+                    Directory.CreateDirectory(addonDir);
+                    File.WriteAllText(Path.Combine(addonDir, "plugin.cfg"), AttachPluginCfg);
+                    File.WriteAllText(Path.Combine(addonDir, "plugin.gd"), AttachPluginScript);
+                    log($"Wrote scripts_manifest.json ({manifest.Count} object(s)) + auto-attach editor plugin. Opening scene.tscn in Godot attaches the stubs to the imported nodes automatically.");
+                }
+                else
+                {
+                    log($"Wrote scripts_manifest.json ({manifest.Count} object(s)) + attach_scripts.gd. In Godot: open scene.tscn, open attach_scripts.gd in the Script editor and File > Run to attach the stubs. (Use --godot-attach-plugin to run it automatically on open.)");
+                }
             }
 
             return res;
@@ -278,29 +293,26 @@ namespace AssetStudio
             return "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "").Replace("\t", "\\t") + "\"";
         }
 
-        // Godot EditorScript: run it (Script editor > File > Run) with scene.tscn open to attach the stubs
-        // onto the real imported glTF nodes, matching by the manifest's name path (handles Godot's " (N)"
-        // dedup and an extra wrapper level via a recursive fallback).
-        private const string AttachScriptTool =
+        // Shared attach logic (loaded by both the EditorScript and the auto-attach plugin). Walks each
+        // manifest name-path against the real imported tree (handling Godot's " (N)" dedup and the extra
+        // root wrapper via a recursive fallback), and when a path dead-ends in a Skeleton3D it creates a
+        // BoneAttachment3D for the deepest matching bone (Unity objects parented to bones).
+        private const string AttachCoreScript =
 @"@tool
-extends EditorScript
+extends RefCounted
 
-# Attaches Reunity MonoBehaviour stubs onto the imported glTF nodes described in scripts_manifest.json.
-# Open scene.tscn, then run this script (File > Run) in the Godot Script editor.
+var _root
 
-func _run():
-    var root = get_scene()
+func attach(root):
+    _root = root
     if root == null:
-        push_error(""Open scene.tscn first, then run this script."")
-        return
+        return [0, 0]
     var f = FileAccess.open(""res://scripts_manifest.json"", FileAccess.READ)
     if f == null:
-        push_error(""scripts_manifest.json not found next to the project."")
-        return
+        return [0, 0]
     var data = JSON.parse_string(f.get_as_text())
     if typeof(data) != TYPE_ARRAY:
-        push_error(""Bad manifest."")
-        return
+        return [0, 0]
     var attached := 0
     var missing := 0
     for entry in data:
@@ -319,36 +331,70 @@ func _run():
             if scr == null:
                 continue
             if i == 0:
-                node.set_script(scr)
-                node.owner = root
-            else:
+                if node.get_script() != scr:
+                    node.set_script(scr)
+                    node.owner = root
+            elif node.get_node_or_null(String(scripts[i])) == null:
                 var child = Node.new()
                 child.name = String(scripts[i])
                 node.add_child(child)
                 child.owner = root
                 child.set_script(scr)
             attached += 1
-    print(""Reunity: attached %d script(s); %d node(s) not found. Save the scene to keep them."" % [attached, missing])
+    print(""Reunity attach: %d ok, %d not found."" % [attached, missing])
+    return [attached, missing]
 
-func _walk(inst: Node, path: Array) -> Node:
-    var node := inst
+func _walk(inst, path):
+    var node = inst
+    var idx = 0
     for raw in path:
-        var name := _norm(String(raw))
-        var next := _child(node, name)
+        var nm = _norm(String(raw))
+        var next = _child(node, nm)
         if next == null:
-            next = _find_rec(node, name)
+            next = _find_rec(node, nm)
         if next == null:
-            return null
+            return _bone_attach(node, path, idx)
         node = next
+        idx += 1
     return node
 
-func _child(parent: Node, name: String) -> Node:
+func _bone_attach(from, path, idx):
+    var skel = _find_skeleton(from)
+    if skel == null:
+        return null
+    var bone := """"
+    for j in range(idx, path.size()):
+        for cand in [String(path[j]), _norm(String(path[j]))]:
+            if skel.find_bone(cand) >= 0:
+                bone = cand
+    if bone == """":
+        return null
+    for c in skel.get_children():
+        if c is BoneAttachment3D and c.bone_name == bone:
+            return c
+    var ba = BoneAttachment3D.new()
+    ba.name = ""Attach_"" + bone
+    ba.bone_name = bone
+    skel.add_child(ba)
+    ba.owner = _root
+    return ba
+
+func _find_skeleton(n):
+    if n is Skeleton3D:
+        return n
+    for c in n.get_children():
+        var r = _find_skeleton(c)
+        if r != null:
+            return r
+    return null
+
+func _child(parent, name):
     for c in parent.get_children():
         if _norm(c.name) == name or _base(_norm(c.name)) == name:
             return c
     return null
 
-func _find_rec(parent: Node, name: String) -> Node:
+func _find_rec(parent, name):
     for c in parent.get_children():
         if _norm(c.name) == name or _base(_norm(c.name)) == name:
             return c
@@ -358,17 +404,71 @@ func _find_rec(parent: Node, name: String) -> Node:
             return r
     return null
 
-func _base(n: String) -> String:
-    # strip Godot's dedup suffix like ' (1)'
+func _base(n):
     var i = n.rfind("" ("")
     if i > 0 and n.ends_with("")""):
         return n.substr(0, i)
     return n
 
-func _norm(n: String) -> String:
+func _norm(n):
     for ch in [""."", "":"", ""@"", ""/"", ""%"", '""']:
         n = n.replace(ch, ""_"")
     return n
+";
+
+        // EditorScript: open scene.tscn, then File > Run in the Script editor.
+        private const string AttachEditorScript =
+@"@tool
+extends EditorScript
+
+# Attaches Reunity MonoBehaviour stubs onto the imported glTF nodes. Open scene.tscn, then File > Run.
+func _run():
+    var root = get_scene()
+    if root == null:
+        push_error(""Open scene.tscn first, then run this script."")
+        return
+    var core = preload(""res://reunity_attach_core.gd"").new()
+    core.attach(root)
+    print(""Reunity: done. Save the scene to keep the attached scripts."")
+";
+
+        private const string AttachPluginCfg =
+@"[plugin]
+name=""Reunity Attach""
+description=""Attaches Reunity MonoBehaviour stubs onto imported glTF nodes when scene.tscn is opened.""
+author=""Reunity""
+version=""1.0""
+script=""plugin.gd""
+";
+
+        // EditorPlugin: runs the attach automatically when a scene is opened in the editor (once per scene),
+        // and also adds a Project > Tools menu item to run it on demand.
+        private const string AttachPluginScript =
+@"@tool
+extends EditorPlugin
+
+var _core = preload(""res://reunity_attach_core.gd"").new()
+
+func _enter_tree():
+    scene_changed.connect(_on_scene_changed)
+    add_tool_menu_item(""Reunity: Attach scripts"", _run_now)
+
+func _exit_tree():
+    if scene_changed.is_connected(_on_scene_changed):
+        scene_changed.disconnect(_on_scene_changed)
+    remove_tool_menu_item(""Reunity: Attach scripts"")
+
+func _on_scene_changed(root):
+    if root == null:
+        return
+    if not root.has_meta(""reunity_attached""):
+        _core.attach(root)
+        root.set_meta(""reunity_attached"", true)
+
+func _run_now():
+    var root = get_editor_interface().get_edited_scene_root()
+    if root != null:
+        _core.attach(root)
 ";
 
         // ---- MonoBehaviour stubs (shared) ----

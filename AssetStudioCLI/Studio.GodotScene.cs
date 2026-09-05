@@ -22,7 +22,7 @@ namespace AssetStudioCLI
 
             var r = GodotSceneExporter.Build(allGameObjects, assemblyLoader,
                 CLIOptions.o_outputFolder.Value, ImageFormat.Png, CLIOptions.f_overwriteExisting.Value,
-                msg => Logger.Info(msg));
+                msg => Logger.Info(msg), CLIOptions.f_godotAttachPlugin.Value);
 
             if (r.ScenePath == null)
                 return;

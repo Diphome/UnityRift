@@ -574,6 +574,12 @@ const tools = [
       properties: {
         input_path: { type: "string", description: "Scene/level file, prefab bundle, *_Data folder, or asset file." },
         output_path: { type: "string", description: `Output Godot project folder. Default: ${defaultOutDir()}` },
+        attach_plugin: {
+          type: "boolean",
+          description:
+            "Also write a Godot editor plugin that attaches the MonoBehaviour script stubs onto the imported " +
+            "glTF nodes automatically when scene.tscn is opened (instead of running attach_scripts.gd by hand).",
+        },
         overwrite: { type: "boolean", description: "Re-export existing .glb files." },
         unity_version: { type: "string" },
         log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
@@ -584,6 +590,7 @@ const tools = [
     handler: async (a) => {
       const out = a.output_path || defaultOutDir();
       const args = [a.input_path, "-m", "godotscene", "-o", out];
+      if (a.attach_plugin) args.push("--godot-attach-plugin");
       if (a.overwrite) args.push("-r");
       if (a.unity_version) args.push("--unity-version", a.unity_version);
       if (a.log_level) args.push("--log-level", a.log_level);
