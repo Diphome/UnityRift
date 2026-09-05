@@ -37,21 +37,10 @@ namespace AssetStudioGUI
 
         private void exportGodotSceneMenuItem_Click(object sender, EventArgs e)
         {
-            // Gather mesh roots from the Scene Hierarchy tree (same rule as "Export all objects (split)").
-            var roots = new List<GameObject>();
-            foreach (TreeNode fileNode in sceneTreeView.Nodes)
-                foreach (TreeNode child in fileNode.Nodes)
-                    if (child is GameObjectTreeNode gnode)
-                    {
-                        var gos = new List<GameObject>();
-                        GodotCollectNode(gnode, gos);
-                        if (gos.Any(x => x.m_SkinnedMeshRenderer != null || x.m_MeshFilter != null))
-                            roots.Add(gnode.gameObject);
-                    }
-
-            if (roots.Count == 0)
+            var allGameObjects = assetsManager.AssetsFileList.SelectMany(f => f.Objects).OfType<GameObject>().ToList();
+            if (allGameObjects.Count == 0)
             {
-                StatusStripUpdate("No 3D objects found in the Scene Hierarchy to export.");
+                StatusStripUpdate("No GameObjects loaded to export as a Godot scene.");
                 return;
             }
 
@@ -62,76 +51,31 @@ namespace AssetStudioGUI
             var outRoot = dialog.Folder;
 
             timer.Stop();
-            StatusStripUpdate($"Exporting {roots.Count} model root(s) to a Godot 4 scene...");
+            StatusStripUpdate("Exporting Godot 4 scene (meshes + particles/lights/cameras + scripts)...");
             Task.Run(() =>
             {
-                int n = 0;
-                try { n = ExportGodotSceneCore(outRoot, roots); }
-                catch (Exception ex) { Logger.Error($"Godot scene export failed: {ex.Message}"); }
-                StatusStripUpdate($"Godot scene export done: {n} model(s) -> {outRoot} (open in Godot 4, run scene.tscn)");
-            });
-        }
-
-        private static void GodotCollectNode(GameObjectTreeNode node, List<GameObject> gameObjects)
-        {
-            gameObjects.Add(node.gameObject);
-            foreach (TreeNode child in node.Nodes)
-                if (child is GameObjectTreeNode g)
-                    GodotCollectNode(g, gameObjects);
-        }
-
-        private int ExportGodotSceneCore(string outRoot, List<GameObject> roots)
-        {
-            var modelsDir = Path.Combine(outRoot, "models");
-            Directory.CreateDirectory(modelsDir);
-            var settings = new Gltf.Settings { Format = Gltf.Format.Glb, ExportAnimations = true, ScaleFactor = 1.0f };
-            var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var instances = new List<(string node, string res)>();
-            int exported = 0;
-
-            foreach (var go in roots)
-            {
-                var name = UniqueGodotName(string.IsNullOrEmpty(go.m_Name) ? "Object" : GodotFixName(go.m_Name), "OBJ:", used);
-                var glbPath = Path.Combine(modelsDir, name + ".glb");
                 try
                 {
-                    var convert = new ModelConverter(go, ImageFormat.Png);
-                    ModelExporter.ExportGltf(glbPath, convert, settings);
-                    instances.Add((name, "res://models/" + name + ".glb"));
-                    exported++;
+                    // Best-effort: load managed assemblies so custom MonoBehaviour fields resolve.
+                    if (!assemblyLoader.Loaded)
+                    {
+                        var paths = assetsManager.AssetsFileList.Select(f => f.fullName).Where(p => !string.IsNullOrEmpty(p)).ToList();
+                        var managed = AssemblyLoader.FindManagedFolder(paths);
+                        if (managed != null) { assemblyLoader.Load(managed); assemblyLoader.Loaded = true; }
+                    }
+
+                    var r = GodotSceneExporter.Build(allGameObjects, assemblyLoader, outRoot,
+                        ImageFormat.Png, true, msg => Logger.Info(msg));
+                    StatusStripUpdate(r.ScenePath == null
+                        ? "Nothing to export to a Godot scene."
+                        : $"Godot scene done: {r.Models} model(s), {r.FxNodes} FX node(s), scripts on {r.ScriptedObjects} object(s) -> {outRoot} (open in Godot 4, run scene.tscn)");
                 }
                 catch (Exception ex)
                 {
-                    Logger.Warning($"Failed to export \"{go.m_Name}\" to glTF: {ex.Message}");
+                    Logger.Error($"Godot scene export failed: {ex.Message}");
+                    StatusStripUpdate("Godot scene export failed (see log).");
                 }
-            }
-            if (instances.Count == 0)
-                return 0;
-
-            var ext = new StringBuilder();
-            var nodes = new StringBuilder();
-            for (var i = 0; i < instances.Count; i++)
-            {
-                var id = $"m{i + 1}";
-                ext.Append("[ext_resource type=\"PackedScene\" path=\"").Append(instances[i].res).Append("\" id=\"").Append(id).Append("\"]\n");
-                nodes.Append("[node name=\"").Append(instances[i].node).Append("\" parent=\".\" instance=ExtResource(\"").Append(id).Append("\")]\n");
-            }
-            var sb = new StringBuilder();
-            sb.Append("[gd_scene load_steps=").Append(instances.Count + 1).Append(" format=3]\n\n");
-            sb.Append("; Generated by Reunity (AssetStudioMod). Unity scene -> Godot 4.\n\n");
-            sb.Append(ext).Append('\n');
-            sb.Append("[node name=\"Scene\" type=\"Node3D\"]\n\n");
-            sb.Append(nodes);
-            File.WriteAllText(Path.Combine(outRoot, "scene.tscn"), sb.ToString());
-
-            var projectFile = Path.Combine(outRoot, "project.godot");
-            if (!File.Exists(projectFile))
-                File.WriteAllText(projectFile,
-                    "config_version=5\n\n[application]\nconfig/name=\"Reunity Imported Scene\"\n" +
-                    "run/main_scene=\"res://scene.tscn\"\nconfig/features=PackedStringArray(\"4.4\")\n\n" +
-                    "[rendering]\nrenderer/rendering_method=\"gl_compatibility\"\n");
-
-            return exported;
+            });
         }
 
         private void exportGodotMenuItem_Click(object sender, EventArgs e)
