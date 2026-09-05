@@ -341,3 +341,6 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+# Private engineering notes - not for the public repo
+docs/PROJECT_NOTES.md

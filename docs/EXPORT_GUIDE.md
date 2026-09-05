@@ -100,7 +100,7 @@ Some games ship without embedded type trees (recipes). Then `dump` of engine ass
 generic inspection would normally fail. AssetStudioMod now ships a **type tree database**
 (`classdata.tpk`, loaded automatically) so those assets read correctly. For a game's
 **custom** MonoBehaviour fields you also need the game's code: pass
-`--assembly-folder <path-to-Managed>`. See `docs/PROJECT_NOTES.md` for details.
+`--assembly-folder <path-to-Managed>` (or `--il2cpp` for IL2CPP games).
 
 ---
 

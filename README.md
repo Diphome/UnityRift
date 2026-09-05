@@ -25,8 +25,6 @@
 - **Animated model preview** in the GUI — select an Animator, pick a clip, play it with textured per-submesh rendering.
 - **Faster project loading** — parallel asset reads, direct type-tree→JSON streaming, and garbage-count guards.
 
-See [`docs/PROJECT_NOTES.md`](docs/PROJECT_NOTES.md) for the full engineering log and the licensing inventory.
-
 ## AssetStudio Features
 
 - Support Unity version:
