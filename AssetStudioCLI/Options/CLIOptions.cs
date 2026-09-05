@@ -34,6 +34,7 @@ namespace AssetStudioCLI.Options
         Il2Cpp,
         Godot,
         GodotScene,
+        GodotScripts,
     }
 
     internal enum AssetGroupOption
@@ -235,7 +236,8 @@ namespace AssetStudioCLI.Options
                     "DotNet - Browse the game's .NET assemblies (list types / dump C#-like class stubs)\n" +
                     "Il2Cpp - Generate Il2CppDumper-compatible Ghidra helpers (script.json, il2cpp.h) from GameAssembly/libil2cpp\n" +
                     "Godot - Convert materials to Godot 4 scaffolds (.gdshader + .tres) with their textures\n" +
-                    "GodotScene - Export the scene as glTF model(s) + a Godot 4 scene (.tscn) that instances them\n",
+                    "GodotScene - Export the scene as glTF model(s) + a Godot 4 scene (.tscn) that instances them\n" +
+                    "GodotScripts - Generate Godot GDScript stubs from MonoBehaviours (class + serialized fields; Mono & IL2CPP)\n",
                 optionExample: "Example: \"-m info\"\n",
                 optionHelpGroup: HelpGroups.General
             );
@@ -839,6 +841,14 @@ namespace AssetStudioCLI.Options
                             ClassIDType.ParticleSystem,
                             ClassIDType.Texture2D,
                             ClassIDType.Shader,
+                        };
+                        break;
+                    case "godotscripts":
+                    case "godot-scripts":
+                        o_workMode.Value = WorkMode.GodotScripts;
+                        o_exportAssetTypes.Value = new List<ClassIDType>
+                        {
+                            ClassIDType.MonoBehaviour,
                         };
                         break;
                     case "godotscene":

@@ -76,6 +76,9 @@ namespace AssetStudioCLI
                         case WorkMode.GodotScene:
                             Studio.ExportGodotScene();
                             break;
+                        case WorkMode.GodotScripts:
+                            Studio.ExportGodotScripts();
+                            break;
                         default:
                             Studio.ExportAssets();
                             break;

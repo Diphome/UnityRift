@@ -529,6 +529,40 @@ const tools = [
     },
   },
   {
+    name: "godot_scripts_export",
+    description:
+      "Generate Godot 4 GDScript stubs from a game's MonoBehaviours (CLI '-m godotscripts'): one .gd per " +
+      "script class with its serialized fields as @export vars (defaults captured from an instance) and " +
+      "_ready()/_process() TODOs. Works for Mono (managed assemblies auto-detected, or assembly_folder) and " +
+      "IL2CPP (il2cpp: true generates Cpp2IL dummy assemblies). The Unity logic is NOT translated.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder, *_Data folder, a bundle, or an asset file with MonoBehaviours." },
+        output_path: { type: "string", description: `Output folder (stubs go to <output>/scripts). Default: ${defaultOutDir()}` },
+        assembly_folder: { type: "string", description: "Path to the Managed folder (Mono). Auto-detected if omitted." },
+        ...il2cppProp,
+        overwrite: { type: "boolean", description: "Overwrite existing .gd stubs." },
+        unity_version: { type: "string" },
+        log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "godotscripts", "-o", out];
+      if (a.assembly_folder) args.push("--assembly-folder", a.assembly_folder);
+      if (a.il2cpp) args.push("--il2cpp");
+      if (a.overwrite) args.push("-r");
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      if (a.log_level) args.push("--log-level", a.log_level);
+      const r = await runCli(args, a.timeout_sec || DEFAULT_TIMEOUT);
+      if (r.ok) r.output += `\n\n[stubs: ${out}/scripts]`;
+      return resultText(r);
+    },
+  },
+  {
     name: "godot_scene_export",
     description:
       "Export a Unity scene/prefab as a Godot 4 project (CLI '-m godotscene'): each mesh root is exported " +

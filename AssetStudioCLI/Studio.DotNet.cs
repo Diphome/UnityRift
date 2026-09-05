@@ -93,7 +93,9 @@ namespace AssetStudioCLI
         {
             if (!string.IsNullOrEmpty(CLIOptions.o_assemblyPath.Value))
                 return CLIOptions.o_assemblyPath.Value;
-            var managed = AssemblyLoader.FindManagedFolder(CLIOptions.inputPathList);
+            // Use the snapshot: AssetsManager clears CLIOptions.inputPathList during loading, so asset
+            // modes (e.g. -m godotscripts) would otherwise search an empty list.
+            var managed = AssemblyLoader.FindManagedFolder(InputPaths);
             if (managed != null)
                 return managed;
             var il2cpp = ResolveIl2CppAssemblyFolder(CLIOptions.o_unityVersion.Value?.FullVersion);
