@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/unityrift.png" width="140" alt="UnityRift"></p>
+
 # UnityRift
 
 **UnityRift** is a toolkit for **reverse-engineering and porting Unity games** — with a full **Unity → Godot 4 pipeline** at its center: export whole scenes (meshes, materials, particles, lights, cameras) and MonoBehaviour script stubs straight into a ready-to-open Godot project, recover shaders and IL2CPP/Mono code, and drive it all from the GUI, the CLI, or an MCP server for AI agents.
