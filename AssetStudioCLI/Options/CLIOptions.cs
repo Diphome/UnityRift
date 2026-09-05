@@ -854,14 +854,17 @@ namespace AssetStudioCLI.Options
                     case "godotscene":
                     case "godot-scene":
                         o_workMode.Value = WorkMode.GodotScene;
-                        // Same set as splitObjects (Animator pulls in Material/MeshFilter/MeshRenderer/
-                        // SkinnedMeshRenderer; GameObject/Transform are always loaded), so ModelConverter
-                        // can build each root's glTF.
+                        // Animator pulls in Material/MeshFilter/MeshRenderer/SkinnedMeshRenderer;
+                        // GameObject/Transform are always loaded. ParticleSystem/Light/Camera are added so
+                        // they can be placed as native Godot nodes in the scene tree.
                         o_exportAssetTypes.Value = new List<ClassIDType>
                         {
                             ClassIDType.Animator,
                             ClassIDType.Mesh,
                             ClassIDType.Texture2D,
+                            ClassIDType.ParticleSystem,
+                            ClassIDType.Light,
+                            ClassIDType.Camera,
                         };
                         break;
                     case "animator":
