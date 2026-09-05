@@ -158,6 +158,7 @@ namespace AssetStudioGUI
             ApplyColorTheme(out isDarkMode);
             InitDotNetTab();
             InitRecentProjectsMenu();
+            InitGodotExportMenu();
 
             var appAssembly = typeof(Program).Assembly.GetName();
             guiTitle = $"{appAssembly.Name} v{appAssembly.Version}";
