@@ -83,6 +83,8 @@ namespace AssetStudio
             var gltfSettings = new Gltf.Settings { Format = Gltf.Format.Glb, ExportAnimations = true, ScaleFactor = 1.0f };
             var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var instances = new List<(string node, string res)>();
+            var meshRootSet = new HashSet<GameObject>(roots);
+            var rootInstanceName = new Dictionary<GameObject, string>();
             if (roots.Count > 0) Directory.CreateDirectory(modelsDir);
             foreach (var go in roots)
             {
@@ -93,6 +95,7 @@ namespace AssetStudio
                     if (overwrite || !File.Exists(glbPath))
                         ModelExporter.ExportGltf(glbPath, new ModelConverter(go, imageFormat), gltfSettings);
                     instances.Add((name, "res://models/" + name + ".glb"));
+                    rootInstanceName[go] = name;
                     res.Models++;
                 }
                 catch (Exception ex) { log($"Failed to export \"{go.m_Name}\" to glTF: {ex.Message}"); }
@@ -112,8 +115,9 @@ namespace AssetStudio
             for (var i = 0; i < instances.Count; i++)
             {
                 var id = "m" + (i + 1);
+                nodeNames.Add(instances[i].node); // already unique among roots; keep the name stable for the manifest
                 ext.Append("[ext_resource type=\"PackedScene\" path=\"").Append(instances[i].res).Append("\" id=\"").Append(id).Append("\"]\n");
-                nodes.Append("[node name=\"").Append(Unique(instances[i].node, nodeNames)).Append("\" parent=\".\" instance=ExtResource(\"").Append(id).Append("\")]\n");
+                nodes.Append("[node name=\"").Append(instances[i].node).Append("\" parent=\".\" instance=ExtResource(\"").Append(id).Append("\")]\n");
             }
 
             for (var i = 0; i < fx.Count; i++)
@@ -142,29 +146,42 @@ namespace AssetStudio
                 res.FxNodes++;
             }
 
-            // ---- script holders ----
+            // ---- scripts ----
+            // GameObjects living inside an exported glTF root go into a manifest so the shipped Godot
+            // EditorScript can attach the stub onto the real imported node (reliable, done in-editor where
+            // the true tree exists). GameObjects with no mesh ancestor get a <Object>_Scripts holder node.
             var scriptExtId = new Dictionary<string, string>(StringComparer.Ordinal);
+            var manifest = new List<(string inst, List<string> path, List<string> files)>();
             if (scriptMap.Count > 0)
             {
                 foreach (var (go, mbs) in scripted)
                 {
-                    var attached = new List<(string cls, string file)>();
+                    var files = new List<string>();
                     foreach (var mb in mbs)
                     {
                         string cn = null, ns = null;
                         if (mb.m_Script.TryGet(out var ms, mb.assetsFile)) { cn = ms.m_ClassName; ns = ms.m_Namespace; }
                         if (string.IsNullOrEmpty(cn)) cn = string.IsNullOrEmpty(mb.m_Name) ? "UnityScript" : mb.m_Name;
                         var key = (string.IsNullOrEmpty(ns) ? "" : ns + ".") + cn;
-                        if (scriptMap.TryGetValue(key, out var file)) attached.Add((cn, file));
+                        if (scriptMap.TryGetValue(key, out var file) && !files.Contains(file)) files.Add(file);
                     }
-                    if (attached.Count == 0) continue;
-                    if (!TryWorldTransform(go, out var pos, out var quat, out var scale)) continue;
+                    if (files.Count == 0) continue;
 
+                    // Under a glTF mesh root? -> manifest entry for the editor tool.
+                    if (TryFindRootPath(go, meshRootSet, rootInstanceName, out var inst, out var path))
+                    {
+                        manifest.Add((inst, path, files));
+                        res.ScriptedObjects++;
+                        continue;
+                    }
+
+                    // Otherwise a standalone holder node at world transform.
+                    if (!TryWorldTransform(go, out var pos, out var quat, out var scale)) continue;
                     var holder = Unique((string.IsNullOrEmpty(go.m_Name) ? "Object" : SanitizeNode(go.m_Name)) + "_Scripts", nodeNames);
                     nodes.Append("[node name=\"").Append(holder).Append("\" type=\"Node3D\" parent=\".\"]\n");
                     nodes.Append(TransformLine(pos, quat, scale));
                     var childNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                    foreach (var (cls, file) in attached)
+                    foreach (var file in files)
                     {
                         if (!scriptExtId.TryGetValue(file, out var sid))
                         {
@@ -172,7 +189,7 @@ namespace AssetStudio
                             scriptExtId[file] = sid;
                             ext.Append("[ext_resource type=\"Script\" path=\"res://scripts/").Append(file).Append(".gd\" id=\"").Append(sid).Append("\"]\n");
                         }
-                        var childName = Unique(SanitizeNode(cls), childNames);
+                        var childName = Unique(SanitizeNode(file), childNames);
                         nodes.Append("[node name=\"").Append(childName).Append("\" type=\"Node\" parent=\"").Append(holder).Append("\"]\n");
                         nodes.Append("script = ExtResource(\"").Append(sid).Append("\")\n");
                     }
@@ -184,8 +201,9 @@ namespace AssetStudio
             var sb = new StringBuilder();
             sb.Append("[gd_scene load_steps=").Append(extCount + subCount + 1).Append(" format=3]\n\n");
             sb.Append("; Generated by Reunity (AssetStudioMod). Unity scene -> Godot 4.\n");
-            sb.Append("; Mesh roots = instanced glTF; particles/lights/cameras = native nodes; MonoBehaviours\n");
-            sb.Append("; = script stubs on <Object>_Scripts holders. Transforms use Godot's X-negated space.\n\n");
+            sb.Append("; Mesh roots = instanced glTF; particles/lights/cameras = native nodes. MonoBehaviours\n");
+            sb.Append("; inside meshes are listed in scripts_manifest.json (run attach_scripts.gd to bind them\n");
+            sb.Append("; onto the imported nodes); the rest get <Object>_Scripts holders. X-negated space.\n\n");
             sb.Append(ext);
             if (subs.Length > 0) sb.Append('\n').Append(subs);
             sb.Append("\n[node name=\"Scene\" type=\"Node3D\"]\n\n");
@@ -201,8 +219,157 @@ namespace AssetStudio
                     "run/main_scene=\"res://scene.tscn\"\nconfig/features=PackedStringArray(\"4.4\")\n\n" +
                     "[rendering]\nrenderer/rendering_method=\"gl_compatibility\"\n");
 
+            // Manifest + editor tool to attach the stubs onto the real imported glTF nodes.
+            if (manifest.Count > 0)
+            {
+                File.WriteAllText(Path.Combine(outRoot, "scripts_manifest.json"), BuildManifestJson(manifest));
+                File.WriteAllText(Path.Combine(outRoot, "attach_scripts.gd"), AttachScriptTool);
+                log($"Wrote scripts_manifest.json ({manifest.Count} object(s)) + attach_scripts.gd. In Godot: open scene.tscn, open attach_scripts.gd in the Script editor and File > Run to attach the stubs to the imported nodes.");
+            }
+
             return res;
         }
+
+        private static bool TryFindRootPath(GameObject go, HashSet<GameObject> meshRoots,
+            Dictionary<GameObject, string> rootInstanceName, out string instance, out List<string> path)
+        {
+            instance = null; path = null;
+            var chain = new List<string>();
+            var cur = go; var guard = 0;
+            while (cur != null && guard++ < 4096)
+            {
+                chain.Add(string.IsNullOrEmpty(cur.m_Name) ? "Object" : cur.m_Name);
+                if (meshRoots.Contains(cur))
+                {
+                    if (!rootInstanceName.TryGetValue(cur, out instance)) return false;
+                    chain.Reverse();
+                    path = chain;
+                    return true;
+                }
+                var t = cur.m_Transform;
+                if (t == null || t.m_Father == null || !t.m_Father.TryGet(out var father, cur.assetsFile)) break;
+                if (!father.m_GameObject.TryGet(out cur, father.assetsFile)) break;
+            }
+            return false;
+        }
+
+        private static string BuildManifestJson(List<(string inst, List<string> path, List<string> files)> manifest)
+        {
+            var sb = new StringBuilder();
+            sb.Append("[\n");
+            for (var i = 0; i < manifest.Count; i++)
+            {
+                var m = manifest[i];
+                sb.Append("  {\"instance\": ").Append(JStr(m.inst)).Append(", \"path\": [");
+                for (var j = 0; j < m.path.Count; j++) { if (j > 0) sb.Append(", "); sb.Append(JStr(m.path[j])); }
+                sb.Append("], \"scripts\": [");
+                for (var j = 0; j < m.files.Count; j++) { if (j > 0) sb.Append(", "); sb.Append(JStr(m.files[j])); }
+                sb.Append("]}");
+                if (i < manifest.Count - 1) sb.Append(',');
+                sb.Append('\n');
+            }
+            sb.Append("]\n");
+            return sb.ToString();
+        }
+
+        private static string JStr(string s)
+        {
+            if (s == null) return "\"\"";
+            return "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "").Replace("\t", "\\t") + "\"";
+        }
+
+        // Godot EditorScript: run it (Script editor > File > Run) with scene.tscn open to attach the stubs
+        // onto the real imported glTF nodes, matching by the manifest's name path (handles Godot's " (N)"
+        // dedup and an extra wrapper level via a recursive fallback).
+        private const string AttachScriptTool =
+@"@tool
+extends EditorScript
+
+# Attaches Reunity MonoBehaviour stubs onto the imported glTF nodes described in scripts_manifest.json.
+# Open scene.tscn, then run this script (File > Run) in the Godot Script editor.
+
+func _run():
+    var root = get_scene()
+    if root == null:
+        push_error(""Open scene.tscn first, then run this script."")
+        return
+    var f = FileAccess.open(""res://scripts_manifest.json"", FileAccess.READ)
+    if f == null:
+        push_error(""scripts_manifest.json not found next to the project."")
+        return
+    var data = JSON.parse_string(f.get_as_text())
+    if typeof(data) != TYPE_ARRAY:
+        push_error(""Bad manifest."")
+        return
+    var attached := 0
+    var missing := 0
+    for entry in data:
+        var inst = root.get_node_or_null(NodePath(entry[""instance""]))
+        if inst == null:
+            missing += 1
+            continue
+        var node = _walk(inst, entry[""path""])
+        if node == null:
+            missing += 1
+            continue
+        root.set_editable_instance(inst, true)
+        var scripts: Array = entry[""scripts""]
+        for i in scripts.size():
+            var scr = load(""res://scripts/%s.gd"" % scripts[i])
+            if scr == null:
+                continue
+            if i == 0:
+                node.set_script(scr)
+                node.owner = root
+            else:
+                var child = Node.new()
+                child.name = String(scripts[i])
+                node.add_child(child)
+                child.owner = root
+                child.set_script(scr)
+            attached += 1
+    print(""Reunity: attached %d script(s); %d node(s) not found. Save the scene to keep them."" % [attached, missing])
+
+func _walk(inst: Node, path: Array) -> Node:
+    var node := inst
+    for raw in path:
+        var name := _norm(String(raw))
+        var next := _child(node, name)
+        if next == null:
+            next = _find_rec(node, name)
+        if next == null:
+            return null
+        node = next
+    return node
+
+func _child(parent: Node, name: String) -> Node:
+    for c in parent.get_children():
+        if _norm(c.name) == name or _base(_norm(c.name)) == name:
+            return c
+    return null
+
+func _find_rec(parent: Node, name: String) -> Node:
+    for c in parent.get_children():
+        if _norm(c.name) == name or _base(_norm(c.name)) == name:
+            return c
+    for c in parent.get_children():
+        var r = _find_rec(c, name)
+        if r != null:
+            return r
+    return null
+
+func _base(n: String) -> String:
+    # strip Godot's dedup suffix like ' (1)'
+    var i = n.rfind("" ("")
+    if i > 0 and n.ends_with("")""):
+        return n.substr(0, i)
+    return n
+
+func _norm(n: String) -> String:
+    for ch in [""."", "":"", ""@"", ""/"", ""%"", '""']:
+        n = n.replace(ch, ""_"")
+    return n
+";
 
         // ---- MonoBehaviour stubs (shared) ----
         public static Dictionary<string, string> BuildScriptStubs(IEnumerable<MonoBehaviour> mbs, string scriptsDir,
