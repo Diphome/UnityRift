@@ -60,7 +60,7 @@ namespace AssetStudio
             var full = string.IsNullOrEmpty(unityNamespace) ? unityClass : unityNamespace + "." + unityClass;
 
             var sb = new StringBuilder();
-            sb.Append("# Reunity (AssetStudioMod) stub for Unity MonoBehaviour ").Append(full);
+            sb.Append("# UnityRift stub for Unity MonoBehaviour ").Append(full);
             if (!string.IsNullOrEmpty(assembly)) sb.Append(" [").Append(assembly).Append(']');
             sb.Append('\n');
             sb.Append("# Serialized field defaults captured from an asset instance. The Unity logic is NOT\n");

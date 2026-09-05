@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // AssetStudioCLI MCP server (zero-dependency, stdio transport).
 //
-// Exposes AssetStudioModCLI as MCP tools so an agent can run exports, inspect
+// Exposes UnityRiftCLI as MCP tools so an agent can run exports, inspect
 // asset listings, and read the CLI's own log output. Communicates over
 // newline-delimited JSON-RPC 2.0 on stdin/stdout (MCP stdio transport).
 //
 // Config via environment variables:
-//   ASSETSTUDIO_CLI       Path to AssetStudioModCLI.exe or .dll. If it ends in
+//   ASSETSTUDIO_CLI       Path to UnityRiftCLI.exe or .dll. If it ends in
 //                         .dll it is launched via `dotnet`. If unset, the first
 //                         existing build output under AssetStudioCLI/bin is used.
 //   ASSETSTUDIO_OUT       Default output folder for exports. If unset, a folder
@@ -34,6 +34,12 @@ const MAX_OUTPUT_CHARS = 60000;
 function resolveCli() {
   if (process.env.ASSETSTUDIO_CLI) return process.env.ASSETSTUDIO_CLI;
   const candidates = [
+    "AssetStudioCLI/bin/Release/net9.0/UnityRiftCLI.exe",
+    "AssetStudioCLI/bin/Release/net8.0/UnityRiftCLI.exe",
+    "AssetStudioCLI/bin/Release/net472/UnityRiftCLI.exe",
+    "AssetStudioCLI/bin/Release/net9.0/UnityRiftCLI.dll",
+    "AssetStudioCLI/bin/Release/net8.0/UnityRiftCLI.dll",
+    // Fallback to the pre-rebrand executable name.
     "AssetStudioCLI/bin/Release/net9.0/AssetStudioModCLI.exe",
     "AssetStudioCLI/bin/Release/net8.0/AssetStudioModCLI.exe",
     "AssetStudioCLI/bin/Release/net472/AssetStudioModCLI.exe",
@@ -56,7 +62,7 @@ function cliCommand(cliArgs) {
   const cli = resolveCli();
   if (!cli) {
     throw new Error(
-      "AssetStudioModCLI not found. Build the CLI first (e.g. dotnet build " +
+      "UnityRiftCLI not found. Build the CLI first (e.g. dotnet build " +
         "AssetStudioCLI -c Release -f net9.0) or set ASSETSTUDIO_CLI to its path."
     );
   }
@@ -195,7 +201,7 @@ const filterProps = {
 const tools = [
   {
     name: "asset_help",
-    description: "Show the full AssetStudioModCLI help / option reference.",
+    description: "Show the full UnityRiftCLI help / option reference.",
     inputSchema: { type: "object", properties: {} },
     handler: async () => resultText(await runCli(["--help"], 30)),
   },
@@ -229,7 +235,7 @@ const tools = [
   {
     name: "asset_export",
     description:
-      "Convert and export assets with AssetStudioModCLI. Covers export/exportRaw/dump/live2d/" +
+      "Convert and export assets with UnityRiftCLI. Covers export/exportRaw/dump/live2d/" +
       "splitObjects/animator modes. Returns the CLI log; use list_output afterwards to see files.",
     inputSchema: {
       type: "object",
@@ -479,7 +485,7 @@ const tools = [
   {
     name: "asset_run",
     description:
-      "Run AssetStudioModCLI with a verbatim argument list. Escape hatch for anything the typed " +
+      "Run UnityRiftCLI with a verbatim argument list. Escape hatch for anything the typed " +
       "tools don't cover. Args are passed directly to the CLI (no shell).",
     inputSchema: {
       type: "object",

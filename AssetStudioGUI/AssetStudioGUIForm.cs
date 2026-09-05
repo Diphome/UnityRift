@@ -161,7 +161,7 @@ namespace AssetStudioGUI
             InitGodotExportMenu();
 
             var appAssembly = typeof(Program).Assembly.GetName();
-            guiTitle = $"{appAssembly.Name} v{appAssembly.Version}";
+            guiTitle = $"UnityRift v{appAssembly.Version}";
             Text = guiTitle;
 
             delayTimer = new System.Timers.Timer(800);

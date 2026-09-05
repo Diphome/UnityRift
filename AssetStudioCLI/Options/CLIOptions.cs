@@ -1666,7 +1666,7 @@ namespace AssetStudioCLI.Options
             else
             {
                 var arch = Environment.Is64BitProcess ? "x64" : "x32";
-                Console.WriteLine($"# {appAssembly.Name} [{arch}]\n# Based on AssetStudioMod v{appAssembly.Version}\n");
+                Console.WriteLine($"# UnityRift v{appAssembly.Version} [{arch}]\n# github.com/Diphome/UnityRift - originally forked from AssetStudioMod, now a distinct project\n");
                 Console.WriteLine($"{usage}\n\n{helpMessage}");
             }
         }

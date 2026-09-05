@@ -1,10 +1,12 @@
-# Reunity
+# UnityRift
 
-**Reunity** is a fork of aelurum's [AssetStudioMod](https://github.com/aelurum/AssetStudio) (itself a fork of Perfare's [AssetStudio](https://github.com/Perfare/AssetStudio)), extended toward **reverse-engineering and reconstruction** of Unity games: IL2CPP support, a .NET class explorer, Ghidra helpers, a type-tree database for stripped builds, glTF export, and an MCP server for agent-driven tooling.
+**UnityRift** is a toolkit for **reverse-engineering and porting Unity games** — with a full **Unity → Godot 4 pipeline** at its center: export whole scenes (meshes, materials, particles, lights, cameras) and MonoBehaviour script stubs straight into a ready-to-open Godot project, recover shaders and IL2CPP/Mono code, and drive it all from the GUI, the CLI, or an MCP server for AI agents.
 
-**Neither the repository, nor the tool, nor its authors are affiliated with, sponsored, or authorized by Unity Technologies or its affiliates.** Reunity extracts and inspects assets for interoperability, research, and preservation; respect the rights and terms of any content you process.
+> **Origins.** UnityRift began as a fork of aelurum's [AssetStudioMod](https://github.com/aelurum/AssetStudio) (itself a fork of Perfare's [AssetStudio](https://github.com/Perfare/AssetStudio)) — huge thanks to both. It has since grown into a **distinct project** with its own direction (the Godot pipeline, IL2CPP/Ghidra tooling, a .NET class explorer, an MCP server, and many core fixes) that no longer resembles a simple fork. The original asset-extraction features are still here and credited below.
 
-## What Reunity adds (on top of AssetStudioMod)
+**Neither the repository, nor the tool, nor its authors are affiliated with, sponsored, or authorized by Unity Technologies or its affiliates.** UnityRift extracts and inspects assets for interoperability, research, and preservation; respect the rights and terms of any content you process.
+
+## What UnityRift adds
 
 - **IL2CPP support** via [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL): `GameAssembly.dll` / `libil2cpp.so` + `global-metadata.dat` are detected automatically, dummy assemblies are generated and cached, and they feed the .NET explorer and MonoBehaviour field parsing.
 - **.NET class explorer** — browse the game's managed assemblies as C#-like stubs (with optional IL). GUI tab **".NET Classes"**, CLI `-m dotnet`, MCP `dotnet_list` / `dotnet_type`.
@@ -56,124 +58,124 @@ See [`docs/PROJECT_NOTES.md`](docs/PROJECT_NOTES.md) for the full engineering lo
 
 ## Requirements
 
-- AssetStudioMod.net472
+- UnityRift.net472
    - GUI/CLI - [.NET Framework 4.7.2](https://dotnet.microsoft.com/download/dotnet-framework/net472)
-- AssetStudioMod.net8
+- UnityRift.net8
    - GUI/CLI (Windows) - [.NET Desktop Runtime 8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
    - CLI (Linux/Mac) - [.NET Runtime 8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
-- AssetStudioMod.net9
+- UnityRift.net9
    - GUI/CLI (Windows) - [.NET Desktop Runtime 9.0](https://dotnet.microsoft.com/download/dotnet/9.0)
    - CLI (Linux/Mac) - [.NET Runtime 9.0](https://dotnet.microsoft.com/download/dotnet/9.0)
 
 ## CLI Usage
 
-You can read CLI readme [here](https://github.com/aelurum/AssetStudio/blob/AssetStudioMod/AssetStudioCLI/ReadMe.md).
+You can read the CLI readme [here](AssetStudioCLI/ReadMe.md).
 
 ### Run
 
-- Command-line: `AssetStudioModCLI <asset folder path>`
-- Command-line for Portable versions (.NET 6+): `dotnet AssetStudioModCLI.dll <asset folder path>`
+- Command-line: `UnityRiftCLI <asset folder path>`
+- Command-line for Portable versions (.NET 6+): `dotnet UnityRiftCLI.dll <asset folder path>`
 
 ### Basic Samples
 
 - Show a list with a number of assets of each type available for export
 ```
-AssetStudioModCLI <asset folder path> -m info
+UnityRiftCLI <asset folder path> -m info
 ```
 - Export assets of all supported for export types
 ```
-AssetStudioModCLI <asset folder path>
+UnityRiftCLI <asset folder path>
 ```
 - Export assets of specific types
 ```
-AssetStudioModCLI <asset folder path> -t tex2d
+UnityRiftCLI <asset folder path> -t tex2d
 ```
 ```
-AssetStudioModCLI <asset folder path> -t tex2d,sprite,audio
+UnityRiftCLI <asset folder path> -t tex2d,sprite,audio
 ```
 - Export assets grouped by type
 ```
-AssetStudioModCLI <asset folder path> -g type
+UnityRiftCLI <asset folder path> -g type
 ```
 - Export assets to a specified output folder
 ```
-AssetStudioModCLI <asset folder path> -o <output folder path>
+UnityRiftCLI <asset folder path> -o <output folder path>
 ```
 - Dump assets to a specified output folder
 ```
-AssetStudioModCLI <asset folder path> -m dump -o <output folder path>
+UnityRiftCLI <asset folder path> -m dump -o <output folder path>
 ```
 - Export Live2D Cubism models
 ```
-AssetStudioModCLI <asset folder path> -m live2d
+UnityRiftCLI <asset folder path> -m live2d
 ```
 > When running in live2d mode, the only filter option supported is `--filter-by-name`.
 - Export all FBX objects (similar to "Export all objects (split)" option in the GUI)
 ```
-AssetStudioModCLI <asset folder path> -m splitObjects
+UnityRiftCLI <asset folder path> -m splitObjects
 ```
 > When running in splitObjects mode, the only filter option supported is `--filter-by-name`.
 - Export Animator assets
 ```
-AssetStudioModCLI <asset folder path> -m animator
+UnityRiftCLI <asset folder path> -m animator
 ```
 - Generate Il2CppDumper-compatible Ghidra helpers from an IL2CPP game (script.json, il2cpp.h, ghidra.py)
 ```
-AssetStudioModCLI <game folder> -m il2cpp -o <output folder>
+UnityRiftCLI <game folder> -m il2cpp -o <output folder>
 ```
 Look up a method/address while decompiling:
 ```
-AssetStudioModCLI <game folder> -m il2cpp --il2cpp-lookup PlayerController$$Update
-AssetStudioModCLI <game folder> -m il2cpp --il2cpp-lookup 0x1A2B3C
+UnityRiftCLI <game folder> -m il2cpp --il2cpp-lookup PlayerController$$Update
+UnityRiftCLI <game folder> -m il2cpp --il2cpp-lookup 0x1A2B3C
 ```
 
 ### Advanced Samples
 - Export image assets converted to webp format to a specified output folder
 ```
-AssetStudioModCLI <asset folder path> -o <output folder path> -t sprite,tex2d --image-format webp
+UnityRiftCLI <asset folder path> -o <output folder path> -t sprite,tex2d --image-format webp
 ```
 - Show the number of audio assets that have "voice" in their names
 ```
-AssetStudioModCLI <asset folder path> -m info -t audio --filter-by-name voice
+UnityRiftCLI <asset folder path> -m info -t audio --filter-by-name voice
 ```
 - Export audio assets that have "voice" in their names
 ```
-AssetStudioModCLI <asset folder path> -t audio --filter-by-name voice
+UnityRiftCLI <asset folder path> -t audio --filter-by-name voice
 ```
 - Export audio assets that have "music" or "voice" in their names
 ```
-AssetStudioModCLI <asset folder path> -t audio --filter-by-name music,voice
+UnityRiftCLI <asset folder path> -t audio --filter-by-name music,voice
 ```
 ```
-AssetStudioModCLI <asset folder path> -t audio --filter-by-name music --filter-by-name voice
+UnityRiftCLI <asset folder path> -t audio --filter-by-name music --filter-by-name voice
 ```
 - Export audio assets that have "char" in their names **or** containers
 ```
-AssetStudioModCLI <asset folder path> -t audio --filter-by-text char
+UnityRiftCLI <asset folder path> -t audio --filter-by-text char
 ```
 - Export audio assets that have "voice" in their names **and** "char" in their containers
 ```
-AssetStudioModCLI <asset folder path> -t audio --filter-by-name voice --filter-by-container char
+UnityRiftCLI <asset folder path> -t audio --filter-by-name voice --filter-by-container char
 ```
 - Export FBX objects that have "model" or "scene" in their names and set the scale factor to 10
 ```
-AssetStudioModCLI <asset folder path> -m splitObjects --filter-by-name model,scene --fbx-scale-factor 10
+UnityRiftCLI <asset folder path> -m splitObjects --filter-by-name model,scene --fbx-scale-factor 10
 ```
 - Export MonoBehaviour assets that require an assembly folder to read and create a log file
 ```
-AssetStudioModCLI <asset folder path> -t monobehaviour --assembly-folder <assembly folder path> --log-output both
+UnityRiftCLI <asset folder path> -t monobehaviour --assembly-folder <assembly folder path> --log-output both
 ```
 - Export assets that require to specify a Unity version
 ```
-AssetStudioModCLI <asset folder path> --unity-version 2017.4.39f1
+UnityRiftCLI <asset folder path> --unity-version 2017.4.39f1
 ```
 - Load assets of all types and show them (similar to "Display all assets" option in the GUI)
 ```
-AssetStudioModCLI <asset folder path> -m info --load-all
+UnityRiftCLI <asset folder path> -m info --load-all
 ```
 - Load assets of all types and dump Material assets
 ```
-AssetStudioModCLI <asset folder path> -m dump -t material --load-all
+UnityRiftCLI <asset folder path> -m dump -t material --load-all
 ```
 
 ## GUI Usage
@@ -214,7 +216,7 @@ AssetStudioMod generates dummy assemblies itself: **File → Load IL2CPP binary*
 
 To name functions in Ghidra the same way [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) does:
 
-1. CLI: `AssetStudioModCLI <game folder> -m il2cpp -o <out>` (or GUI **.NET Classes → Export → Export Ghidra / Il2CppDumper package**).
+1. CLI: `UnityRiftCLI <game folder> -m il2cpp -o <out>` (or GUI **.NET Classes → Export → Export Ghidra / Il2CppDumper package**).
 2. Import `GameAssembly.dll` / `libil2cpp.so` into Ghidra and let auto-analysis finish.
 3. **File → Parse C Source...** and add `<out>/il2cpp/il2cpp_ghidra.h`.
 4. **Window → Script Manager** → add `<out>/il2cpp/ghidra` as a script directory, run `ghidra.py` (names) or `ghidra_with_struct.py` (names + types), and pick `script.json`.

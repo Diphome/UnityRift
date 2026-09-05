@@ -108,17 +108,17 @@ generic inspection would normally fail. AssetStudioMod now ships a **type tree d
 
 ```bash
 # What's in here?
-AssetStudioModCLI <folder> -m info
+UnityRiftCLI <folder> -m info
 
 # All textures + sprites as PNG
-AssetStudioModCLI <folder> -t tex2d,sprite --image-format png -o out
+UnityRiftCLI <folder> -t tex2d,sprite --image-format png -o out
 
 # Just the audio, as WAV
-AssetStudioModCLI <folder> -t audio -o out
+UnityRiftCLI <folder> -t audio -o out
 
 # Datamine: dump every MonoBehaviour to JSON (with the game's scripts)
-AssetStudioModCLI <folder> -m dump -t monoBehaviour --assembly-folder <Managed> -o out
+UnityRiftCLI <folder> -m dump -t monoBehaviour --assembly-folder <Managed> -o out
 
 # Characters with animations, as GLB
-AssetStudioModCLI <folder> -m animator --model-format glb -o out
+UnityRiftCLI <folder> -m animator --model-format glb -o out
 ```

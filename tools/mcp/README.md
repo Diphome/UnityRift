@@ -1,7 +1,7 @@
 # AssetStudioCLI MCP server
 
 A small [Model Context Protocol](https://modelcontextprotocol.io) server that
-exposes `AssetStudioModCLI` as tools, so an AI agent (e.g. Claude Code) can run
+exposes `UnityRiftCLI` as tools, so an AI agent (e.g. Claude Code) can run
 exports, inspect asset listings, and read the CLI's log output directly.
 
 It is a single zero-dependency Node script (`assetstudio-mcp.mjs`) speaking the
@@ -10,7 +10,7 @@ MCP **stdio** transport (newline-delimited JSON-RPC 2.0). No `npm install` neede
 ## Requirements
 
 - Node.js 18+ (developed against Node 24).
-- A built `AssetStudioModCLI` (e.g. `AssetStudioCLI/bin/Release/net9.0/AssetStudioModCLI.exe`).
+- A built `UnityRiftCLI` (e.g. `AssetStudioCLI/bin/Release/net9.0/UnityRiftCLI.exe`).
   Build it with `dotnet build AssetStudioCLI -c Release -f net9.0`.
 
 ## Tools
@@ -57,7 +57,7 @@ time, and the combined stdout+stderr (ANSI stripped) — i.e. the CLI's own log.
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `ASSETSTUDIO_CLI` | first existing `AssetStudioCLI/bin/Release/{net9.0,net8.0,net472}/AssetStudioModCLI.{exe,dll}` | Path to the CLI. A `.dll` is launched via `dotnet`. |
+| `ASSETSTUDIO_CLI` | first existing `AssetStudioCLI/bin/Release/{net9.0,net8.0,net472}/UnityRiftCLI.{exe,dll}` | Path to the CLI. A `.dll` is launched via `dotnet`. |
 | `ASSETSTUDIO_OUT` | `<os-temp>/assetstudio-mcp-exports` | Default export output folder. |
 | `ASSETSTUDIO_TIMEOUT` | `300` | Default per-command timeout (seconds). |
 
