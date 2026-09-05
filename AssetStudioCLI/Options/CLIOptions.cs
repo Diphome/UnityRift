@@ -33,6 +33,7 @@ namespace AssetStudioCLI.Options
         DotNet,
         Il2Cpp,
         Godot,
+        GodotScene,
     }
 
     internal enum AssetGroupOption
@@ -233,7 +234,8 @@ namespace AssetStudioCLI.Options
                     "Animator - Export Animator assets (fbx)\n" +
                     "DotNet - Browse the game's .NET assemblies (list types / dump C#-like class stubs)\n" +
                     "Il2Cpp - Generate Il2CppDumper-compatible Ghidra helpers (script.json, il2cpp.h) from GameAssembly/libil2cpp\n" +
-                    "Godot - Convert materials to Godot 4 scaffolds (.gdshader + .tres) with their textures\n",
+                    "Godot - Convert materials to Godot 4 scaffolds (.gdshader + .tres) with their textures\n" +
+                    "GodotScene - Export the scene as glTF model(s) + a Godot 4 scene (.tscn) that instances them\n",
                 optionExample: "Example: \"-m info\"\n",
                 optionHelpGroup: HelpGroups.General
             );
@@ -837,6 +839,19 @@ namespace AssetStudioCLI.Options
                             ClassIDType.ParticleSystem,
                             ClassIDType.Texture2D,
                             ClassIDType.Shader,
+                        };
+                        break;
+                    case "godotscene":
+                    case "godot-scene":
+                        o_workMode.Value = WorkMode.GodotScene;
+                        // Same set as splitObjects (Animator pulls in Material/MeshFilter/MeshRenderer/
+                        // SkinnedMeshRenderer; GameObject/Transform are always loaded), so ModelConverter
+                        // can build each root's glTF.
+                        o_exportAssetTypes.Value = new List<ClassIDType>
+                        {
+                            ClassIDType.Animator,
+                            ClassIDType.Mesh,
+                            ClassIDType.Texture2D,
                         };
                         break;
                     case "animator":

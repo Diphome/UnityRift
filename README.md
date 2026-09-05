@@ -15,6 +15,7 @@
    - Materials → `.gdshader` (spatial) with `render_mode` (blend/cull/depth), uniforms and defaults mapped from the material's properties and render states, a best-effort `fragment()` body, and the original shader as a reference block to hand-port; plus a `.tres` ShaderMaterial and the referenced textures (PNG).
    - ParticleSystems → `.tscn` (GPUParticles3D + ParticleProcessMaterial): emission shape, lifetime, velocity/size/rotation/gravity, start color and amount are mapped (curve/gradient fields approximated by their scalar).
    - Also on the MCP as `godot_export`.
+- **Godot 4 scene export** (`-m godotscene`) — turns a Unity scene/prefab into a ready-to-open Godot 4 project: each mesh root is exported as glTF (correct orientation, materials, skinning, animations) and a `scene.tscn` instances them under a `Node3D`, with a generated `project.godot`. Point it at a `levelN` file, a prefab bundle, or the game's `*_Data` folder; open the output in Godot 4 and run `scene.tscn`. Also on the MCP as `godot_scene_export`. (Validated against Godot 4.7.)
 - **MCP server** (`tools/mcp/assetstudio-mcp.mjs`) — exposes the CLI as tools so an agent can drive info/export/dump, the .NET explorer, and the IL2CPP/Ghidra workflow.
 - **Animated model preview** in the GUI — select an Animator, pick a clip, play it with textured per-submesh rendering.
 - **Faster project loading** — parallel asset reads, direct type-tree→JSON streaming, and garbage-count guards.

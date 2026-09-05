@@ -385,7 +385,9 @@ namespace AssetStudioCLI
                 }
             }
 
-            if (CLIOptions.o_workMode.Value == WorkMode.SplitObjects || CLIOptions.o_groupAssetsBy.Value == AssetGroupOption.SceneHierarchy)
+            if (CLIOptions.o_workMode.Value == WorkMode.SplitObjects
+                || CLIOptions.o_workMode.Value == WorkMode.GodotScene
+                || CLIOptions.o_groupAssetsBy.Value == AssetGroupOption.SceneHierarchy)
             {
                 BuildTreeStructure(objectAssetItemDic);
             }

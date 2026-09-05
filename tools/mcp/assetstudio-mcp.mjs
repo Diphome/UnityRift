@@ -529,6 +529,36 @@ const tools = [
     },
   },
   {
+    name: "godot_scene_export",
+    description:
+      "Export a Unity scene/prefab as a Godot 4 project (CLI '-m godotscene'): each mesh root is exported " +
+      "as glTF (correct orientation, materials, skinning, animations) and a scene.tscn instances them all " +
+      "under a Node3D, with a project.godot so the output folder opens directly in Godot 4. Point input_path " +
+      "at a scene file (levelN), a prefab bundle, or the game's *_Data folder.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Scene/level file, prefab bundle, *_Data folder, or asset file." },
+        output_path: { type: "string", description: `Output Godot project folder. Default: ${defaultOutDir()}` },
+        overwrite: { type: "boolean", description: "Re-export existing .glb files." },
+        unity_version: { type: "string" },
+        log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "godotscene", "-o", out];
+      if (a.overwrite) args.push("-r");
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      if (a.log_level) args.push("--log-level", a.log_level);
+      const r = await runCli(args, a.timeout_sec || DEFAULT_TIMEOUT);
+      if (r.ok) r.output += `\n\n[Godot project: ${out} (open in Godot 4, run scene.tscn)]`;
+      return resultText(r);
+    },
+  },
+  {
     name: "list_output",
     description:
       "List files under an export/output folder (recursive) with sizes, so you can verify what an " +
