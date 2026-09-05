@@ -117,6 +117,8 @@ namespace AssetStudioGUI
                     var tres = result.Tres.Replace("res://" + result.ShaderName + ".gdshader", "res://" + baseName + ".gdshader");
                     File.WriteAllText(Path.Combine(outRoot, baseName + ".gdshader"), result.GdShader);
                     File.WriteAllText(Path.Combine(outRoot, baseName + ".tres"), tres);
+                    if (!string.IsNullOrEmpty(result.ShaderReference))
+                        File.WriteAllText(Path.Combine(outRoot, baseName + ".shaderref.txt"), result.ShaderReference);
                     exportedMaterials++;
                 }
                 catch (Exception ex)

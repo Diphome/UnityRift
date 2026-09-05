@@ -97,6 +97,8 @@ namespace AssetStudioCLI
                     var tres = result.Tres.Replace("res://" + result.ShaderName + ".gdshader", "res://" + baseName + ".gdshader");
                     File.WriteAllText(gdPath, result.GdShader);
                     File.WriteAllText(tresPath, tres);
+                    if (!string.IsNullOrEmpty(result.ShaderReference))
+                        File.WriteAllText(Path.Combine(outRoot, baseName + ".shaderref.txt"), result.ShaderReference);
                     exportedMaterials++;
                 }
                 catch (Exception ex)

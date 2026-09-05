@@ -21,6 +21,7 @@ namespace AssetStudio
             public string ShaderName;      // sanitized base name (no extension)
             public string GdShader;        // .gdshader text
             public string Tres;            // .tres text
+            public string ShaderReference; // original Unity shader dump (ShaderLab + GLSL/SPIR-V asm), or null
         }
 
         // Unity UnityEngine.Rendering.BlendMode
@@ -127,26 +128,30 @@ namespace AssetStudio
             gd.Append('\n');
             gd.Append(BuildFragment(uniformNames, texEnvs, colors, floats, transparent));
 
-            // Reference block: the extracted GPU program(s), when available.
-            gd.Append("\n/* ---- Unity shader reference (port the logic above) ----\n");
+            // Reference: the extracted GPU program(s) go to a separate sidecar file (kept out of the
+            // .gdshader so the shader stays clean and the reference stays portable). For SPIR-V builds
+            // this sidecar carries the SPIR-V assembly; for GL builds, the GLSL; for DX builds, a note.
+            string shaderReference = null;
             if (shader != null)
             {
                 string dump;
                 try { dump = shader.Convert(); }
                 catch (Exception e) { dump = "// shader convert failed: " + e.Message; }
-                gd.Append(Clip(dump, 200000));
+                shaderReference =
+                    $"// Original Unity shader \"{unityShaderName}\" (ShaderLab + GPU programs).\n" +
+                    "// Port the logic into the fragment() of " + name + ".gdshader.\n\n" + dump;
+                gd.Append("\n// Original shader body: see \"").Append(name).Append(".shaderref.txt\" (ShaderLab + GLSL/SPIR-V).\n");
             }
             else
             {
-                gd.Append("// Shader asset not available (stripped or in another bundle).\n");
-                gd.Append("// Only the material's properties/render states were recovered.\n");
+                gd.Append("\n// Shader asset not available (stripped or in another bundle);\n");
+                gd.Append("// only the material's properties/render states were recovered.\n");
             }
-            gd.Append("\n*/\n");
 
             // ================= .tres =================
             var tres = BuildTres(name, mat, uniformNames, texEnvs, colors, floats, ints, texEnvResPaths, colorIsColor);
 
-            return new Result { ShaderName = name, GdShader = gd.ToString(), Tres = tres };
+            return new Result { ShaderName = name, GdShader = gd.ToString(), Tres = tres, ShaderReference = shaderReference };
         }
 
         private static string BuildTres(string name, Material mat,
@@ -361,12 +366,5 @@ namespace AssetStudio
             return sb.ToString();
         }
 
-        private static string Clip(string s, int max)
-        {
-            if (string.IsNullOrEmpty(s)) return "";
-            // Neutralize accidental comment terminators inside the reference block.
-            s = s.Replace("*/", "* /");
-            return s.Length <= max ? s : s.Substring(0, max) + "\n// ... (truncated)";
-        }
     }
 }
