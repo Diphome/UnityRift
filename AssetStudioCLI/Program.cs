@@ -70,6 +70,9 @@ namespace AssetStudioCLI
                         case WorkMode.Animator:
                             Studio.ExportAnimator();
                             break;
+                        case WorkMode.Godot:
+                            Studio.ExportGodotMaterials();
+                            break;
                         default:
                             Studio.ExportAssets();
                             break;

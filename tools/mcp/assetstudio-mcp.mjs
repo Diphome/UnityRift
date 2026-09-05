@@ -492,6 +492,43 @@ const tools = [
     handler: async (a) => resultText(await runCli(a.args, a.timeout_sec || DEFAULT_TIMEOUT)),
   },
   {
+    name: "godot_export",
+    description:
+      "Convert a game's Unity materials to Godot 4 scaffolds (CLI '-m godot'): for each Material it " +
+      "writes a .gdshader (shader_type spatial, with render_mode + uniforms + defaults mapped from the " +
+      "Unity render states and properties, a best-effort fragment() body, and the original shader as a " +
+      "reference block) plus a .tres ShaderMaterial binding the saved values, and exports referenced " +
+      "textures to a 'textures' subfolder. Drop the output folder into a Godot project.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Path to an asset file or folder that contains materials." },
+        output_path: { type: "string", description: `Output folder. Default: ${defaultOutDir()}` },
+        overwrite: { type: "boolean", description: "Overwrite existing files." },
+        unity_version: { type: "string" },
+        ...typeTreeDbProp,
+        ...il2cppProp,
+        ...filterProps,
+        log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "godot", "-o", out];
+      if (a.overwrite) args.push("-r");
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      if (a.typetree_db) args.push("--typetree-db", a.typetree_db);
+      if (a.il2cpp) args.push("--il2cpp");
+      if (a.log_level) args.push("--log-level", a.log_level);
+      pushFilters(args, a);
+      const r = await runCli(args, a.timeout_sec || DEFAULT_TIMEOUT);
+      if (r.ok) r.output += `\n\n[output folder: ${out}]`;
+      return resultText(r);
+    },
+  },
+  {
     name: "list_output",
     description:
       "List files under an export/output folder (recursive) with sizes, so you can verify what an " +

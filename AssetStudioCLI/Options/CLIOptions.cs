@@ -32,6 +32,7 @@ namespace AssetStudioCLI.Options
         Animator,
         DotNet,
         Il2Cpp,
+        Godot,
     }
 
     internal enum AssetGroupOption
@@ -221,7 +222,7 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: WorkMode.Export,
                 optionName: "-m, --mode <value>",
                 optionDescription: "Specify working mode\n" +
-                    "<Value: extract | export(default) | exportRaw | dump | info | live2d |\nsplitObjects | animator | dotnet | il2cpp>\n" +
+                    "<Value: extract | export(default) | exportRaw | dump | info | live2d |\nsplitObjects | animator | dotnet | il2cpp | godot>\n" +
                     "Extract - Extract(Decompress) asset bundles\n" +
                     "Export - Convert and export assets\n" +
                     "ExportRaw - Export raw assets\n" +
@@ -231,7 +232,8 @@ namespace AssetStudioCLI.Options
                     "SplitObjects - Export all model objects (split) (fbx)\n" +
                     "Animator - Export Animator assets (fbx)\n" +
                     "DotNet - Browse the game's .NET assemblies (list types / dump C#-like class stubs)\n" +
-                    "Il2Cpp - Generate Il2CppDumper-compatible Ghidra helpers (script.json, il2cpp.h) from GameAssembly/libil2cpp\n",
+                    "Il2Cpp - Generate Il2CppDumper-compatible Ghidra helpers (script.json, il2cpp.h) from GameAssembly/libil2cpp\n" +
+                    "Godot - Convert materials to Godot 4 scaffolds (.gdshader + .tres) with their textures\n",
                 optionExample: "Example: \"-m info\"\n",
                 optionHelpGroup: HelpGroups.General
             );
@@ -823,6 +825,13 @@ namespace AssetStudioCLI.Options
                         break;
                     case "il2cpp":
                         o_workMode.Value = WorkMode.Il2Cpp;
+                        break;
+                    case "godot":
+                        o_workMode.Value = WorkMode.Godot;
+                        o_exportAssetTypes.Value = new List<ClassIDType>
+                        {
+                            ClassIDType.Material,
+                        };
                         break;
                     case "animator":
                     case "splitobjects":

@@ -11,6 +11,7 @@
 - **Ghidra / Il2CppDumper package** (`-m il2cpp`) — generates `script.json`, `il2cpp.h`, `il2cpp_ghidra.h` and bundled `ghidra.py` / `ghidra_with_struct.py` scripts (patched for Ghidra Jython 2.7 **and** 11.3+ PyGhidra) so functions get named the same way [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) does. Plus `--il2cpp-lookup`, `--il2cpp-strings`, and `--il2cpp-dummy-dll` (export the dummy .NET assemblies to `<out>/DummyDll` for dnSpy / ILSpy / dotPeek).
 - **Type-tree database (TPK)** — decode type-tree-stripped builds via a bundled `classdata.tpk` (`--typetree-db`, auto-loaded when present).
 - **glTF 2.0 export** (`.glb` / `.gltf`) as an FBX-free alternative (meshes, skinning, materials + embedded textures, node animations).
+- **Godot 4 material export** (`-m godot`) — converts Unity materials to Godot scaffolds: a `.gdshader` (spatial) with `render_mode` (blend/cull/depth), uniforms and defaults mapped from the material's properties and render states, a best-effort `fragment()` body, and the original shader as a reference block to hand-port; plus a `.tres` ShaderMaterial and the referenced textures. Also on the MCP as `godot_export`.
 - **MCP server** (`tools/mcp/assetstudio-mcp.mjs`) — exposes the CLI as tools so an agent can drive info/export/dump, the .NET explorer, and the IL2CPP/Ghidra workflow.
 - **Animated model preview** in the GUI — select an Animator, pick a clip, play it with textured per-submesh rendering.
 - **Faster project loading** — parallel asset reads, direct type-tree→JSON streaming, and garbage-count guards.
