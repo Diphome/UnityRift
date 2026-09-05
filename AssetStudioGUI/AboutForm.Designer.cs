@@ -117,8 +117,8 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(347, 46);
             this.label2.TabIndex = 0;
-            this.label2.Text = "AssetStudio is a tool for exploring, extracting, and exporting assets and asset b" +
-    "undles.";
+            this.label2.Text = "UnityRift is a toolkit for reverse-engineering and porting Unity games, including" +
+    " a Unity → Godot 4 pipeline.";
             this.label2.UseCompatibleTextRendering = true;
             // 
             // textBox2
@@ -292,7 +292,7 @@
             this.productNamelabel.Name = "productNamelabel";
             this.productNamelabel.Size = new System.Drawing.Size(103, 13);
             this.productNamelabel.TabIndex = 1;
-            this.productNamelabel.Text = "AssetStudioModGUI";
+            this.productNamelabel.Text = "UnityRift";
             // 
             // label7
             // 
@@ -334,7 +334,7 @@
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(108, 13);
             this.label8.TabIndex = 5;
-            this.label8.Text = "AssetStudio v0.16.47";
+            this.label8.Text = "AssetStudioMod (Perfare, aelurum)";
             // 
             // checkUpdatesLinkLabel
             // 
