@@ -1204,12 +1204,21 @@ namespace AssetStudio
             //IndexBuffer
             if (m_CompressedMesh.m_Triangles.m_NumItems > 0)
             {
-                m_IndexBuffer = Array.ConvertAll(m_CompressedMesh.m_Triangles.UnpackInts(), x => (uint)x);
-                // Compressed meshes store triangles unpacked (one entry per index), regardless of
-                // m_IndexFormat. SubMesh.firstByte is still expressed in 16-bit index units, so force the
-                // 16-bit path in GetTriangles (firstByte/2). Without this, a compressed mesh with
-                // m_IndexFormat != 0 would get an extra /2 and read wrong indices for later submeshes.
-                m_Use16BitIndices = true;
+                var triangles = m_CompressedMesh.m_Triangles.UnpackInts();
+                if (m_Use16BitIndices)
+                {
+                    m_IndexBuffer = Array.ConvertAll(triangles, x => (uint)x);
+                }
+                else
+                {
+                    // 32-bit index format (m_IndexFormat != 0): the compressed triangle stream is not packed
+                    // as 32-bit values - each index is stored as two consecutive 16-bit entries (low, high).
+                    // Recombine them; otherwise indices > 65535 are lost (capped at 0xFFFF) and the index
+                    // count is doubled, corrupting the IndexBuffer for high-vertex-count meshes.
+                    m_IndexBuffer = new uint[triangles.Length / 2];
+                    for (var i = 0; i < m_IndexBuffer.Length; i++)
+                        m_IndexBuffer[i] = (uint)(ushort)triangles[i * 2] | ((uint)(ushort)triangles[i * 2 + 1] << 16);
+                }
             }
             //Color
             if (m_CompressedMesh.m_Colors?.m_NumItems > 0)
