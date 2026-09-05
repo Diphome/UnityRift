@@ -55,6 +55,7 @@ namespace AssetStudioCLI.Options
     {
         None,
         XML,
+        JSON,
     }
 
     internal enum AudioFormat
@@ -552,9 +553,9 @@ namespace AssetStudioCLI.Options
                 optionDefaultValue: ExportListType.None,
                 optionName: "--export-asset-list <value>",
                 optionDescription: "Specify the format in which you want to export asset list\n" +
-                    "<Value: none(default) | xml>\n" +
+                    "<Value: none(default) | xml | json>\n" +
                     "None - Do not export asset list\n",
-                optionExample: "Example: \"--export-asset-list xml\"\n",
+                optionExample: "Example: \"--export-asset-list xml\" or \"--export-asset-list json\"\n",
                 optionHelpGroup: HelpGroups.Advanced
             );
             #region Init .NET Options
@@ -1390,6 +1391,9 @@ namespace AssetStudioCLI.Options
                             {
                                 case "xml":
                                     o_exportAssetList.Value = ExportListType.XML;
+                                    break;
+                                case "json":
+                                    o_exportAssetList.Value = ExportListType.JSON;
                                     break;
                                 case "none":
                                     o_exportAssetList.Value = ExportListType.None;

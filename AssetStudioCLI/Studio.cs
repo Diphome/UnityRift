@@ -850,6 +850,28 @@ namespace AssetStudioCLI
                     doc.Save(filename);
 
                    break;
+                case ExportListType.JSON:
+                    var jsonPath = Path.Combine(savePath, "assets.json");
+                    var items = parsedAssetsList.Select(asset => new
+                    {
+                        Name = asset.Text,
+                        Container = asset.Container,
+                        TypeId = (int)asset.Type,
+                        Type = asset.TypeString,
+                        PathID = asset.m_PathID,
+                        Source = asset.SourceFile.fullName,
+                        TreeNode = asset.Node != null ? asset.Node.FullPath : "",
+                        Size = asset.FullSize
+                    });
+                    var payload = new
+                    {
+                        filename = jsonPath,
+                        createdAt = DateTime.UtcNow.ToString("s"),
+                        count = parsedAssetsList.Count,
+                        assets = items
+                    };
+                    File.WriteAllText(jsonPath, Newtonsoft.Json.JsonConvert.SerializeObject(payload, Newtonsoft.Json.Formatting.Indented));
+                    break;
             }
             Logger.Info($"Finished exporting asset list with {parsedAssetsList.Count} items.");
         }
