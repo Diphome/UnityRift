@@ -3,6 +3,7 @@ using AssetStudioCLI.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using static AssetStudioCLI.Exporter;
 using Ansi = AssetStudio.ColorConsole;
 
@@ -25,13 +26,14 @@ namespace AssetStudioCLI
                 if (item.Asset is Material mat)
                     materials.Add(mat);
 
-            if (materials.Count == 0)
+            var particleCount = parsedAssetsList.Count(x => x.Type == ClassIDType.ParticleSystem);
+            if (materials.Count == 0 && particleCount == 0)
             {
-                Logger.Warning("No Material assets found. Materials often live in a scene/asset bundle; try pointing at the game's *_Data folder or a bundle that contains them.");
+                Logger.Warning("No Material or ParticleSystem assets found. They often live in a scene/asset bundle; try pointing at the game's *_Data folder or a bundle that contains them.");
                 return;
             }
 
-            Logger.Info($"Converting {materials.Count} material(s) to Godot 4 scaffolds...");
+            Logger.Info($"Converting {materials.Count} material(s) and {particleCount} particle system(s) to Godot 4 scaffolds...");
             Directory.CreateDirectory(outRoot);
 
             var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -50,7 +52,10 @@ namespace AssetStudioCLI
                     {
                         foreach (var te in texEnvs)
                         {
-                            if (!te.Value.m_Texture.TryGet(out var tex) || !(tex is Texture2D t2d))
+                            // Material may have been parsed from the type-tree JSON path, where nested
+                            // PPtrs have no assetsFile set; pass the material's own file so FileID-relative
+                            // resolution works.
+                            if (!te.Value.m_Texture.TryGet(out var tex, mat.assetsFile) || !(tex is Texture2D t2d))
                                 continue;
                             if (!texCache.TryGetValue(t2d.m_PathID, out var res))
                             {
@@ -76,7 +81,7 @@ namespace AssetStudioCLI
                     }
 
                     Shader shader = null;
-                    mat.m_Shader.TryGet(out shader);
+                    mat.m_Shader.TryGet(out shader, mat.assetsFile);
 
                     var result = GodotMaterialExporter.Export(mat, shader, texResPaths);
                     var baseName = UniqueMaterialName(result.ShaderName, usedNames);
@@ -100,8 +105,41 @@ namespace AssetStudioCLI
                 }
             }
 
-            Logger.Info($"Exported {exportedMaterials.ToString().Color(Ansi.BrightGreen)} Godot material(s) and {exportedTextures} texture(s) to \"{outRoot.Color(Ansi.BrightCyan)}\".");
-            Logger.Info("Drop the output folder into your Godot project (keep the 'textures' subfolder next to the .tres files). The .gdshader carries the mapped render_mode/uniforms; port the pixel logic from the reference block at the bottom.");
+            // ---- ParticleSystems -> Godot GPUParticles3D scenes ----
+            var exportedParticles = 0;
+            var particleDir = Path.Combine(outRoot, "particles");
+            var particleNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in parsedAssetsList)
+            {
+                if (item.Type != ClassIDType.ParticleSystem)
+                    continue;
+                try
+                {
+                    var dict = item.Asset.ToType();
+                    if (dict == null)
+                    {
+                        Logger.Debug($"ParticleSystem \"{item.Text}\" has no readable type tree; skipped.");
+                        continue;
+                    }
+                    var pr = GodotParticleExporter.Export(dict, item.Text);
+                    if (!pr.Ok)
+                        continue;
+                    var baseName = UniqueMaterialName(pr.Name, particleNames);
+                    var path = Path.Combine(particleDir, baseName + ".tscn");
+                    if (!overwrite && File.Exists(path))
+                        continue;
+                    Directory.CreateDirectory(particleDir);
+                    File.WriteAllText(path, pr.Tscn);
+                    exportedParticles++;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning($"Failed to convert ParticleSystem \"{item.Text}\": {ex.Message}");
+                }
+            }
+
+            Logger.Info($"Exported {exportedMaterials.ToString().Color(Ansi.BrightGreen)} Godot material(s), {exportedParticles.ToString().Color(Ansi.BrightGreen)} particle scene(s) and {exportedTextures} texture(s) to \"{outRoot.Color(Ansi.BrightCyan)}\".");
+            Logger.Info("Drop the output folder into your Godot project (keep 'textures'/'particles' subfolders). Materials: .gdshader carries render_mode/uniforms (port the pixel logic from the reference block). Particles: .tscn holds a GPUParticles3D + ParticleProcessMaterial (curve/gradient fields are approximated).");
         }
 
         private static string UniqueMaterialName(string baseName, HashSet<string> used)

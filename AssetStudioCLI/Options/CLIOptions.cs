@@ -828,9 +828,15 @@ namespace AssetStudioCLI.Options
                         break;
                     case "godot":
                         o_workMode.Value = WorkMode.Godot;
+                        // Material/ParticleSystem are what we convert; Texture2D/Shader must also be
+                        // loaded so the materials' texture/shader PPtrs resolve. The export loops
+                        // filter by type, so only materials + particle scenes are written.
                         o_exportAssetTypes.Value = new List<ClassIDType>
                         {
                             ClassIDType.Material,
+                            ClassIDType.ParticleSystem,
+                            ClassIDType.Texture2D,
+                            ClassIDType.Shader,
                         };
                         break;
                     case "animator":
