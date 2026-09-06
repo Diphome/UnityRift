@@ -2,13 +2,13 @@
 cmake_minimum_required (VERSION 3.8)
 
 # Set the project name
-project("AssetStudioFBXNative")
+project("UnityRiftFBXNative")
 
 # Set the C++ standard to C++ 14
 set(CMAKE_CXX_STANDARD 14)
 
 # Generate the shared library from the library sources
-add_library(AssetStudioFBXNative SHARED
+add_library(UnityRiftFBXNative SHARED
     asfbx_skin_context.cpp
     asfbx_morph_context.cpp
     api.cpp
@@ -17,6 +17,6 @@ add_library(AssetStudioFBXNative SHARED
     asfbx_anim_context.cpp)
 
 # Add the given directories to those the compiler uses to search for include files
-target_include_directories(AssetStudioFBXNative PRIVATE .)
+target_include_directories(UnityRiftFBXNative PRIVATE .)
 
-target_link_libraries(AssetStudioFBXNative PRIVATE fbxsdk xml2)
+target_link_libraries(UnityRiftFBXNative PRIVATE fbxsdk xml2)

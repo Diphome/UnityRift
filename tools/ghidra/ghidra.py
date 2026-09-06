@@ -3,7 +3,7 @@
 # @menupath Tools.IL2CPP.ApplyNames
 # Based on Il2CppDumper ghidra.py (https://github.com/Perfare/Il2CppDumper), MIT License, Copyright (c) 2016 Perfare.
 # Adapted for both Ghidra Jython 2.7 and Ghidra 11.3+ PyGhidra (Python 3).
-# Consumes the script.json produced by AssetStudioMod '-m il2cpp'.
+# Consumes the script.json produced by UnityRift '-m il2cpp'.
 from __future__ import print_function
 
 import json
@@ -63,7 +63,7 @@ def make_function(start):
 	if func is None:
 		createFunction(start, None)
 
-f = askFile("script.json from Il2CppDumper / AssetStudioMod", "Open")
+f = askFile("script.json from Il2CppDumper / UnityRift", "Open")
 if f is None:
 	print("Cancelled.")
 else:

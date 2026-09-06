@@ -21,7 +21,7 @@
    - Also on the MCP as `godot_export`.
 - **Godot 4 scene export** (`-m godotscene`) — turns a Unity scene/prefab into a ready-to-open Godot 4 project: each mesh root is exported as glTF (correct orientation, materials, skinning, animations) and a `scene.tscn` instances them under a `Node3D`, plus native Godot nodes for **ParticleSystems** (GPUParticles3D), **Lights** (Directional/Omni/Spot Light3D) and **Cameras** (Camera3D) placed at their world transform, and **MonoBehaviour script stubs**: objects inside a mesh are listed in `scripts_manifest.json` with a shipped `attach_scripts.gd` EditorScript that binds each stub onto the real imported glTF node (run it in Godot with the scene open); objects with no mesh get `<Object>_Scripts` holder nodes (objects parented to bones are handled via `BoneAttachment3D`). Add `--godot-attach-plugin` to instead ship an editor plugin that attaches the stubs automatically when the scene is opened. Generated with a `project.godot`. Point it at a `levelN` file, a prefab bundle, or the game's `*_Data` folder; open the output in Godot 4 and run `scene.tscn`. Also on the MCP as `godot_scene_export`. (Validated against Godot 4.7.)
 - **Godot 4 script stubs** (`-m godotscripts`) — one GDScript stub per MonoBehaviour class, with its serialized fields as `@export` vars (defaults captured from an instance), object references noted for manual wiring, and `_ready()`/`_process()` TODOs. Works for **Mono** (managed assemblies auto-detected) and **IL2CPP** (`--il2cpp`, Cpp2IL dummy assemblies). The Unity logic is not translated — this is scaffolding to port by hand. Also on the MCP as `godot_scripts_export`. (Stubs validated against Godot 4.7.)
-- **MCP server** (`tools/mcp/assetstudio-mcp.mjs`) — exposes the CLI as tools so an agent can drive info/export/dump, the .NET explorer, and the IL2CPP/Ghidra workflow.
+- **MCP server** (`tools/mcp/unityrift-mcp.mjs`) — exposes the CLI as tools so an agent can drive info/export/dump, the .NET explorer, and the IL2CPP/Ghidra workflow.
 - **Animated model preview** in the GUI — select an Animator, pick a clip, play it with textured per-submesh rendering.
 - **Faster project loading** — parallel asset reads, direct type-tree→JSON streaming, and garbage-count guards.
 
@@ -227,7 +227,7 @@ Scripts work in Ghidra's Jython 2.7 and in Ghidra 11.3+ PyGhidra (Python 3). Add
 
 * Visual Studio 2022 or newer
 * UnityRift is **64-bit only**. 32-bit (x86) builds are no longer supported.
-* **AssetStudioFBXNative** uses the [FBX SDK 2020.3.x](https://aps.autodesk.com/developer/overview/fbx-sdk) (x64). Install it before building; the project looks for it in the default location (`C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.10`). To use a different version or path, set the `FBXSDK_ROOT` environment variable, or pass `/p:FbxSdkDir="<path>\"` to MSBuild — no need to edit the project file.
+* **UnityRiftFBXNative** uses the [FBX SDK 2020.3.x](https://aps.autodesk.com/developer/overview/fbx-sdk) (x64). Install it before building; the project looks for it in the default location (`C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.10`). To use a different version or path, set the `FBXSDK_ROOT` environment variable, or pass `/p:FbxSdkDir="<path>\"` to MSBuild — no need to edit the project file.
 
 ## Open source libraries used
 

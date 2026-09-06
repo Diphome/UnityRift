@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Based on Il2CppDumper il2cpp_header_to_ghidra.py (https://github.com/Perfare/Il2CppDumper), MIT License, Copyright (c) 2016 Perfare.
-# Standalone helper: AssetStudioMod already writes il2cpp_ghidra.h next to il2cpp.h, so this is only needed
+# Standalone helper: UnityRift already writes il2cpp_ghidra.h next to il2cpp.h, so this is only needed
 # if you want to re-run the transform yourself.
 from __future__ import print_function
 import os

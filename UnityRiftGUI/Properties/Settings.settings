@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AssetStudioGUI.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="UnityRiftGUI.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="displayAll" Type="System.Boolean" Scope="User">
@@ -26,7 +26,7 @@
     <Setting Name="convertAudio" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="convertType" Type="AssetStudio.ImageFormat" Scope="User">
+    <Setting Name="convertType" Type="UnityRift.ImageFormat" Scope="User">
       <Value Profile="(Default)">Png</Value>
     </Setting>
     <Setting Name="restoreExtensionName" Type="System.Boolean" Scope="User">
@@ -62,7 +62,7 @@
     <Setting Name="useTypetreeLoading" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="guiColorTheme" Type="AssetStudioGUI.GuiColorTheme" Scope="User">
+    <Setting Name="guiColorTheme" Type="UnityRiftGUI.GuiColorTheme" Scope="User">
       <Value Profile="(Default)">Light</Value>
     </Setting>
     <Setting Name="l2dModelGroupOption" Type="CubismLive2DExtractor.Live2DModelGroupOption" Scope="User">

@@ -3,7 +3,7 @@
 # @menupath Tools.IL2CPP.ApplyNamesAndTypes
 # Based on Il2CppDumper ghidra_with_struct.py (https://github.com/Perfare/Il2CppDumper), MIT License, Copyright (c) 2016 Perfare.
 # Adapted for both Ghidra Jython 2.7 and Ghidra 11.3+ PyGhidra (Python 3).
-# Consumes script.json + il2cpp_ghidra.h produced by AssetStudioMod '-m il2cpp'.
+# Consumes script.json + il2cpp_ghidra.h produced by UnityRift '-m il2cpp'.
 from __future__ import print_function
 
 import json
@@ -122,7 +122,7 @@ def set_sig(addr, name, sig):
 		except Exception:
 			print("Warning: unable to set Signature. ApplyFunctionSignatureCmd() Failed.")
 
-f = askFile("script.json from Il2CppDumper / AssetStudioMod", "Open")
+f = askFile("script.json from Il2CppDumper / UnityRift", "Open")
 if f is None:
 	print("Cancelled.")
 else:

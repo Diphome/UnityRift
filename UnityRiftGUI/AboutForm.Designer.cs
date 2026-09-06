@@ -395,7 +395,7 @@
             this.productTitleLabel.Name = "productTitleLabel";
             this.productTitleLabel.Size = new System.Drawing.Size(384, 30);
             this.productTitleLabel.TabIndex = 1;
-            this.productTitleLabel.Text = "AssetStudioModGUI";
+            this.productTitleLabel.Text = "UnityRift";
             this.productTitleLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // CloseButton

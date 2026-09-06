@@ -67,7 +67,7 @@
     <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="AssetStudioFBXNative.rc">
+    <ResourceCompile Include="UnityRiftFBXNative.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
   </ItemGroup>

@@ -1,4 +1,4 @@
-name: AssetStudioBuild
+name: UnityRiftBuild
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: microsoft/setup-msbuild@v1.1
-      
+
       - name: Download FBX SDK
         run: |
           md fbx
@@ -28,30 +28,30 @@ jobs:
 
       - name: Nuget Restore
         run: nuget restore
-      
+
       - name: Build .Net472
         run: msbuild /p:Configuration=Release /p:TargetFramework=net472 /verbosity:minimal
 
-      - name: Build .Net5
-        run: msbuild /t:AssetStudioGUI:publish /p:Configuration=Release /p:TargetFramework=net5.0-windows /p:SelfContained=false /verbosity:minimal
+      - name: Build .Net8
+        run: msbuild /t:UnityRiftGUI:publish /p:Configuration=Release /p:TargetFramework=net8.0-windows /p:SelfContained=false /verbosity:minimal
 
-      - name: Build .Net6
-        run: msbuild /t:AssetStudioGUI:publish /p:Configuration=Release /p:TargetFramework=net6.0-windows /p:SelfContained=false /verbosity:minimal
+      - name: Build .Net9
+        run: msbuild /t:UnityRiftGUI:publish /p:Configuration=Release /p:TargetFramework=net9.0-windows /p:SelfContained=false /verbosity:minimal
 
       - name: Upload .Net472 Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: AssetStudio.net472
-          path: AssetStudioGUI/bin/Release/net472
+          name: UnityRift.net472
+          path: UnityRiftGUI/bin/Release/net472
 
-      - name: Upload .Net5 Artifact
+      - name: Upload .Net8 Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: AssetStudio.net5
-          path: AssetStudioGUI/bin/Release/net5.0-windows/publish
+          name: UnityRift.net8
+          path: UnityRiftGUI/bin/Release/net8.0-windows/publish
 
-      - name: Upload .Net6 Artifact
+      - name: Upload .Net9 Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: AssetStudio.net6
-          path: AssetStudioGUI/bin/Release/net6.0-windows/publish
+          name: UnityRift.net9
+          path: UnityRiftGUI/bin/Release/net9.0-windows/publish

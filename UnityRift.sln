@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Texture2DDecoderWrapper", "
 		{29356642-C46E-4144-83D8-22DC09D0D7FD} = {29356642-C46E-4144-83D8-22DC09D0D7FD}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AssetStudioFBXNative", "AssetStudioFBXNative\AssetStudioFBXNative.vcxproj", "{11EA25A3-ED68-40EE-A9D0-7FDE3B583027}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnityRiftFBXNative", "UnityRiftFBXNative\UnityRiftFBXNative.vcxproj", "{11EA25A3-ED68-40EE-A9D0-7FDE3B583027}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Texture2DDecoderNative", "Texture2DDecoderNative\Texture2DDecoderNative.vcxproj", "{29356642-C46E-4144-83D8-22DC09D0D7FD}"
 EndProject

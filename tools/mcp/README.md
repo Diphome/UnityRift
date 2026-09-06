@@ -4,7 +4,7 @@ A small [Model Context Protocol](https://modelcontextprotocol.io) server that
 exposes `UnityRiftCLI` as tools, so an AI agent (e.g. Claude Code) can run
 exports, inspect asset listings, and read the CLI's log output directly.
 
-It is a single zero-dependency Node script (`assetstudio-mcp.mjs`) speaking the
+It is a single zero-dependency Node script (`unityrift-mcp.mjs`) speaking the
 MCP **stdio** transport (newline-delimited JSON-RPC 2.0). No `npm install` needed.
 
 ## Requirements
@@ -57,9 +57,9 @@ time, and the combined stdout+stderr (ANSI stripped) — i.e. the CLI's own log.
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `ASSETSTUDIO_CLI` | first existing `UnityRiftCLI/bin/Release/{net9.0,net8.0,net472}/UnityRiftCLI.{exe,dll}` | Path to the CLI. A `.dll` is launched via `dotnet`. |
-| `ASSETSTUDIO_OUT` | `<os-temp>/assetstudio-mcp-exports` | Default export output folder. |
-| `ASSETSTUDIO_TIMEOUT` | `300` | Default per-command timeout (seconds). |
+| `UNITYRIFT_CLI` | first existing `UnityRiftCLI/bin/Release/{net9.0,net8.0,net472}/UnityRiftCLI.{exe,dll}` | Path to the CLI. A `.dll` is launched via `dotnet`. |
+| `UNITYRIFT_OUT` | `<os-temp>/unityrift-mcp-exports` | Default export output folder. |
+| `UNITYRIFT_TIMEOUT` | `300` | Default per-command timeout (seconds). |
 
 ## Registration
 
@@ -71,7 +71,7 @@ before the tools become callable — servers are discovered at startup.
 To use it from another MCP client, point the client at:
 
 ```
-node tools/mcp/assetstudio-mcp.mjs
+node tools/mcp/unityrift-mcp.mjs
 ```
 
 ## Notes

@@ -83,7 +83,7 @@
     <Target Name="CopyExtraFilesPortable" AfterTargets="AfterBuild" Condition=" '$(RuntimeIdentifier)' == '' OR '$(TargetFramework)' == 'net472' ">
         <Message Text="Copying extra files for $(TargetFramework)... " Importance="high" />
         <Copy SourceFiles="$(SolutionDir)Texture2DDecoderNative\bin\x64\$(Configuration)\Texture2DDecoderNative.dll" DestinationFolder="$(TargetDir)runtimes\win-x64\native" ContinueOnError="false" />
-        <Copy SourceFiles="$(SolutionDir)AssetStudioFBXNative\bin\x64\$(Configuration)\AssetStudioFBXNative.dll" DestinationFolder="$(TargetDir)runtimes\win-x64\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(SolutionDir)UnityRiftFBXNative\bin\x64\$(Configuration)\UnityRiftFBXNative.dll" DestinationFolder="$(TargetDir)runtimes\win-x64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\x64\fmod.dll" DestinationFolder="$(TargetDir)runtimes\win-x64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\x64\ooz.dll" DestinationFolder="$(TargetDir)runtimes\win-x64\native" ContinueOnError="false" />
     </Target>
@@ -92,7 +92,7 @@
     The dll is cross-platform while the executable isn't -->
     <Target Name="PublishExtraFilesPortable" AfterTargets="Publish" Condition=" '$(RuntimeIdentifier)' == '' ">
         <Message Text="Publishing extra files for Portable build ($(TargetFramework))... " Importance="high" />
-        <Copy SourceFiles="$(TargetDir)runtimes\win-x64\native\AssetStudioFBXNative.dll" DestinationFolder="$(PublishDir)runtimes\win-x64\native" ContinueOnError="false" />
+        <Copy SourceFiles="$(TargetDir)runtimes\win-x64\native\UnityRiftFBXNative.dll" DestinationFolder="$(PublishDir)runtimes\win-x64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)runtimes\win-x64\native\Texture2DDecoderNative.dll" DestinationFolder="$(PublishDir)runtimes\win-x64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)runtimes\win-x64\native\fmod.dll" DestinationFolder="$(PublishDir)runtimes\win-x64\native" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)runtimes\win-x64\native\ooz.dll" DestinationFolder="$(PublishDir)runtimes\win-x64\native" ContinueOnError="false" />
@@ -107,14 +107,14 @@
     <Target Name="CopyExtraFilesWin64" AfterTargets="AfterBuild" Condition=" '$(RuntimeIdentifier)' == 'win-x64' AND '$(TargetFramework)' != 'net472' ">
         <Message Text="Copying extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
         <Copy SourceFiles="$(SolutionDir)Texture2DDecoderNative\bin\x64\$(Configuration)\Texture2DDecoderNative.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
-        <Copy SourceFiles="$(SolutionDir)AssetStudioFBXNative\bin\x64\$(Configuration)\AssetStudioFBXNative.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
+        <Copy SourceFiles="$(SolutionDir)UnityRiftFBXNative\bin\x64\$(Configuration)\UnityRiftFBXNative.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\x64\fmod.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(ProjectDir)Libraries\x64\ooz.dll" DestinationFolder="$(TargetDir)" ContinueOnError="false" />
     </Target>
     
     <Target Name="PublishExtraFilesWin" AfterTargets="Publish" Condition=" $(RuntimeIdentifier.Contains('win')) AND '$(TargetFramework)' != 'net472' ">
         <Message Text="Publishing extra files for $(RuntimeIdentifier)($(TargetFramework))... " Importance="high" />
-        <Copy SourceFiles="$(TargetDir)\AssetStudioFBXNative.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
+        <Copy SourceFiles="$(TargetDir)\UnityRiftFBXNative.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)\Texture2DDecoderNative.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)\fmod.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />
         <Copy SourceFiles="$(TargetDir)\ooz.dll" DestinationFolder="$(PublishDir)" ContinueOnError="false" />

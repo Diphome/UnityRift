@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "assetstudio": {
+    "unityrift": {
       "command": "node",
-      "args": ["tools/mcp/assetstudio-mcp.mjs"]
+      "args": ["tools/mcp/unityrift-mcp.mjs"]
     }
   }
 }

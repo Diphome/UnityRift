@@ -18,7 +18,7 @@ namespace UnityRiftCLI
         public static void ExportIl2CppGhidraPackage()
         {
 #if NETFRAMEWORK
-            Logger.Error("IL2CPP support requires the .NET 8+ build of AssetStudioModCLI.");
+            Logger.Error("IL2CPP support requires the .NET 8+ build of UnityRiftCLI.");
 #else
             var game = Il2CppAssemblyProvider.Find(CLIOptions.inputPathList);
             if (game == null)

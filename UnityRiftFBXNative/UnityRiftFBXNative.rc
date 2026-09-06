@@ -67,12 +67,12 @@ BEGIN
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "FileDescription", "AssetStudioFBXNative"
+            VALUE "FileDescription", "UnityRiftFBXNative"
             VALUE "FileVersion", "1.0.0.1"
-            VALUE "InternalName", "AssetStudioFBXNative.dll"
+            VALUE "InternalName", "UnityRiftFBXNative.dll"
             VALUE "LegalCopyright", "Copyright (C) Perfare 2018-2020; Copyright (C) hozuki 2020"
-            VALUE "OriginalFilename", "AssetStudioFBXNative.dll"
-            VALUE "ProductName", "AssetStudioFBXNative"
+            VALUE "OriginalFilename", "UnityRiftFBXNative.dll"
+            VALUE "ProductName", "UnityRiftFBXNative"
             VALUE "ProductVersion", "1.0.0.1"
         END
     END

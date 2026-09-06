@@ -6,12 +6,12 @@
 // newline-delimited JSON-RPC 2.0 on stdin/stdout (MCP stdio transport).
 //
 // Config via environment variables:
-//   ASSETSTUDIO_CLI       Path to UnityRiftCLI.exe or .dll. If it ends in
+//   UNITYRIFT_CLI       Path to UnityRiftCLI.exe or .dll. If it ends in
 //                         .dll it is launched via `dotnet`. If unset, the first
 //                         existing build output under UnityRiftCLI/bin is used.
-//   ASSETSTUDIO_OUT       Default output folder for exports. If unset, a folder
+//   UNITYRIFT_OUT       Default output folder for exports. If unset, a folder
 //                         under the OS temp dir is used.
-//   ASSETSTUDIO_TIMEOUT   Default per-command timeout in seconds (default 300).
+//   UNITYRIFT_TIMEOUT   Default per-command timeout in seconds (default 300).
 //
 // Nothing but protocol JSON is ever written to stdout; diagnostics go to stderr.
 
@@ -24,7 +24,7 @@ import { tmpdir } from "node:os";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, "..", "..");
 
-const DEFAULT_TIMEOUT = Number(process.env.ASSETSTUDIO_TIMEOUT) || 300;
+const DEFAULT_TIMEOUT = Number(process.env.UNITYRIFT_TIMEOUT) || 300;
 const MAX_OUTPUT_CHARS = 60000;
 
 // ---------------------------------------------------------------------------
@@ -32,19 +32,13 @@ const MAX_OUTPUT_CHARS = 60000;
 // ---------------------------------------------------------------------------
 
 function resolveCli() {
-  if (process.env.ASSETSTUDIO_CLI) return process.env.ASSETSTUDIO_CLI;
+  if (process.env.UNITYRIFT_CLI) return process.env.UNITYRIFT_CLI;
   const candidates = [
     "UnityRiftCLI/bin/Release/net9.0/UnityRiftCLI.exe",
     "UnityRiftCLI/bin/Release/net8.0/UnityRiftCLI.exe",
     "UnityRiftCLI/bin/Release/net472/UnityRiftCLI.exe",
     "UnityRiftCLI/bin/Release/net9.0/UnityRiftCLI.dll",
     "UnityRiftCLI/bin/Release/net8.0/UnityRiftCLI.dll",
-    // Fallback to the pre-rebrand executable name.
-    "UnityRiftCLI/bin/Release/net9.0/AssetStudioModCLI.exe",
-    "UnityRiftCLI/bin/Release/net8.0/AssetStudioModCLI.exe",
-    "UnityRiftCLI/bin/Release/net472/AssetStudioModCLI.exe",
-    "UnityRiftCLI/bin/Release/net9.0/AssetStudioModCLI.dll",
-    "UnityRiftCLI/bin/Release/net8.0/AssetStudioModCLI.dll",
   ];
   for (const c of candidates) {
     const p = join(repoRoot, ...c.split("/"));
@@ -54,7 +48,7 @@ function resolveCli() {
 }
 
 function defaultOutDir() {
-  return process.env.ASSETSTUDIO_OUT || join(tmpdir(), "unityrift-mcp-exports");
+  return process.env.UNITYRIFT_OUT || join(tmpdir(), "unityrift-mcp-exports");
 }
 
 // Build the [command, args] pair, handling the .dll (run via dotnet) case.
@@ -63,7 +57,7 @@ function cliCommand(cliArgs) {
   if (!cli) {
     throw new Error(
       "UnityRiftCLI not found. Build the CLI first (e.g. dotnet build " +
-        "UnityRiftCLI -c Release -f net9.0) or set ASSETSTUDIO_CLI to its path."
+        "UnityRiftCLI -c Release -f net9.0) or set UNITYRIFT_CLI to its path."
     );
   }
   if (cli.toLowerCase().endsWith(".dll")) return ["dotnet", [cli, ...cliArgs]];
@@ -743,5 +737,5 @@ process.stdin.on("data", (chunk) => {
 process.stdin.on("end", () => process.exit(0));
 
 process.stderr.write(
-  `assetstudio-cli MCP server ready. CLI=${resolveCli() || "NOT FOUND"} out=${defaultOutDir()}\n`
+  `unityrift MCP server ready. CLI=${resolveCli() || "NOT FOUND"} out=${defaultOutDir()}\n`
 );

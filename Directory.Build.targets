@@ -1,7 +1,7 @@
 <Project>
 
   <!--
-    AssetStudioMod ships 64-bit only. Some NuGet packages (Kyaru.Texture2DDecoder.*) carry
+    UnityRift ships 64-bit only. Some NuGet packages (Kyaru.Texture2DDecoder.*) carry
     32-bit native assets under runtimes/<rid>-x86/, which would otherwise be copied into the
     build and publish output even though nothing can load them. Drop them from both.
   -->

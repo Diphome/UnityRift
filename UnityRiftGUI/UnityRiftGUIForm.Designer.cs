@@ -1680,7 +1680,7 @@
             this.MinimumSize = new System.Drawing.Size(620, 400);
             this.Name = "UnityRiftGUIForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "AssetStudioModGUI";
+            this.Text = "UnityRift";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.UnityRiftGUIForm_FormClosing);
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.UnityRiftGUIForm_DragDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.UnityRiftGUIForm_DragEnter);
