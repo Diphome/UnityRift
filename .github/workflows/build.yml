@@ -48,6 +48,9 @@ jobs:
       - name: Build .Net9
         run: msbuild /t:UnityRiftGUI:publish /p:Configuration=Release /p:TargetFramework=net9.0-windows /p:SelfContained=false /verbosity:minimal
 
+      - name: Publish CLI (portable, .Net8)
+        run: msbuild /t:UnityRiftCLI:publish /p:Configuration=Release /p:TargetFramework=net8.0 /p:SelfContained=false /verbosity:minimal
+
       - name: Upload .Net472 Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -65,3 +68,9 @@ jobs:
         with:
           name: UnityRift.net9
           path: UnityRiftGUI/bin/Release/net9.0-windows/publish
+
+      - name: Upload CLI Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: UnityRift.cli
+          path: UnityRiftCLI/bin/Release/net8.0/publish
