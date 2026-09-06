@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -47,8 +48,9 @@ namespace UnityRift
         /// </summary>
         public static Il2CppGame Find(IEnumerable<string> assetPaths)
         {
+            var paths = assetPaths as IList<string> ?? assetPaths?.ToList() ?? new List<string>();
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var p in assetPaths)
+            foreach (var p in paths)
             {
                 if (string.IsNullOrEmpty(p))
                     continue;
@@ -72,7 +74,8 @@ namespace UnityRift
                     dir = Path.GetDirectoryName(dir);
                 }
             }
-            return null;
+            // Nothing on disk: the IL2CPP files may live inside an APK/zip referenced by these paths.
+            return FindInArchives(paths);
         }
 
         /// <summary>Builds an <see cref="Il2CppGame"/> from an explicitly chosen binary, locating the metadata next to it.</summary>
@@ -111,6 +114,149 @@ namespace UnityRift
                 return null;
             FillPlayerAndData(game, dir);
             return game;
+        }
+
+        private static readonly string[] ArchiveExtensions = { ".apk", ".xapk", ".apks", ".aab", ".zip", ".obb" };
+
+        /// <summary>
+        /// Scans APK/zip archives referenced by the given paths for an IL2CPP binary + global-metadata.dat,
+        /// extracts them to the cache and returns a game pointing at the extracted files. This covers the
+        /// common case of opening an Android <c>.apk</c> directly: <c>libil2cpp.so</c> and
+        /// <c>global-metadata.dat</c> live inside the zip, so the on-disk <see cref="Probe"/> never sees
+        /// them. The loaded asset paths carry the archive as a path segment
+        /// (e.g. <c>…\game.apk\assets\bin\Data\level0</c>), and the CLI passes the archive directly.
+        /// </summary>
+        private static Il2CppGame FindInArchives(IEnumerable<string> assetPaths)
+        {
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var p in assetPaths)
+            {
+                if (string.IsNullOrEmpty(p))
+                    continue;
+                foreach (var archive in ArchiveAncestors(p))
+                {
+                    if (!seen.Add(archive))
+                        continue;
+                    var game = FromArchive(archive);
+                    if (game != null)
+                        return game;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>Yields the path components that exist on disk as an archive file, from the full path up to the root.</summary>
+        private static IEnumerable<string> ArchiveAncestors(string path)
+        {
+            string cur;
+            try { cur = Path.GetFullPath(path); }
+            catch { yield break; }
+            var depth = 0;
+            while (!string.IsNullOrEmpty(cur) && depth++ < 16)
+            {
+                if (LooksLikeArchive(cur))
+                    yield return cur;
+                var parent = Path.GetDirectoryName(cur);
+                if (string.IsNullOrEmpty(parent) || string.Equals(parent, cur, StringComparison.OrdinalIgnoreCase))
+                    break;
+                cur = parent;
+            }
+        }
+
+        private static bool LooksLikeArchive(string path)
+        {
+            try
+            {
+                if (!File.Exists(path))
+                    return false;
+                if (ArchiveExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase))
+                    return true;
+                // Fall back to the ZIP magic ("PK\x03\x04") so extension-less archives are still handled.
+                using (var fs = File.OpenRead(path))
+                    return fs.Length > 4 && fs.ReadByte() == 'P' && fs.ReadByte() == 'K' && fs.ReadByte() == 3 && fs.ReadByte() == 4;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Builds a game from an IL2CPP binary + <c>global-metadata.dat</c> found inside an APK/zip,
+        /// extracting both to the cache. For multi-ABI APKs the 64-bit ARM binary is preferred.
+        /// Returns null when the archive is not an IL2CPP build.
+        /// </summary>
+        public static Il2CppGame FromArchive(string archivePath)
+        {
+            try
+            {
+                using (var fs = File.OpenRead(archivePath))
+                using (var zip = new ZipArchive(fs, ZipArchiveMode.Read))
+                {
+                    var meta = zip.Entries.FirstOrDefault(e =>
+                                   e.FullName.Replace('\\', '/').EndsWith("Managed/Metadata/global-metadata.dat", StringComparison.OrdinalIgnoreCase))
+                               ?? zip.Entries.FirstOrDefault(e => string.Equals(e.Name, "global-metadata.dat", StringComparison.OrdinalIgnoreCase));
+                    if (meta == null)
+                        return null;
+
+                    var binEntry = zip.Entries
+                                       .Where(e => string.Equals(e.Name, "libil2cpp.so", StringComparison.OrdinalIgnoreCase))
+                                       .OrderBy(AbiRank)
+                                       .FirstOrDefault()
+                                   ?? zip.Entries.FirstOrDefault(e => BinaryNames.Contains(e.Name, StringComparer.OrdinalIgnoreCase));
+                    if (binEntry == null)
+                        return null;
+
+                    var dest = ArchiveExtractFolder(archivePath);
+                    Directory.CreateDirectory(dest);
+                    var binPath = Path.Combine(dest, binEntry.Name);
+                    var mdPath = Path.Combine(dest, "global-metadata.dat");
+                    ExtractEntry(binEntry, binPath);
+                    ExtractEntry(meta, mdPath);
+                    return new Il2CppGame { BinaryPath = binPath, MetadataPath = mdPath };
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>Ranks an Android native-library entry by ABI so the 64-bit ARM build wins.</summary>
+        private static int AbiRank(ZipArchiveEntry e)
+        {
+            var abi = Path.GetFileName(Path.GetDirectoryName(e.FullName.Replace('\\', '/')) ?? "");
+            switch (abi.ToLowerInvariant())
+            {
+                case "arm64-v8a": return 0;
+                case "armeabi-v7a": return 1;
+                case "x86_64": return 2;
+                case "x86": return 3;
+                default: return 4;
+            }
+        }
+
+        /// <summary>Deterministic cache folder for an archive's extracted IL2CPP files (keyed by path/size/mtime).</summary>
+        private static string ArchiveExtractFolder(string archivePath)
+        {
+            var fi = new FileInfo(archivePath);
+            var key = $"{fi.FullName}|{fi.Length}|{fi.LastWriteTimeUtc.Ticks}";
+            string hash;
+            using (var sha = SHA1.Create())
+                hash = BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(key))).Replace("-", "").Substring(0, 16).ToLowerInvariant();
+            var name = Path.GetFileNameWithoutExtension(archivePath);
+            foreach (var c in Path.GetInvalidFileNameChars())
+                name = name.Replace(c, '_');
+            return Path.Combine(CacheRoot, "apk", $"{name}-{hash}");
+        }
+
+        private static void ExtractEntry(ZipArchiveEntry entry, string destPath)
+        {
+            if (File.Exists(destPath) && new FileInfo(destPath).Length == entry.Length)
+                return; // already extracted for this archive
+            using (var src = entry.Open())
+            using (var dst = File.Create(destPath))
+                src.CopyTo(dst);
         }
 
         private static Il2CppGame Probe(string dir)
