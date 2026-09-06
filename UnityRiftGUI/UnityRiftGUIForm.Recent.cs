@@ -12,7 +12,7 @@ namespace UnityRiftGUI
     // "File > Recent projects": remembers what was loaded (a folder, or a set of files)
     // so it can be reopened with one click. Entries are persisted in user settings as
     // lines of '|'-separated paths (newest first). Created in code, no Designer edits.
-    partial class AssetStudioGUIForm
+    partial class UnityRiftGUIForm
     {
         private const int MaxRecentProjects = 10;
         private const char RecentPathSeparator = '|';

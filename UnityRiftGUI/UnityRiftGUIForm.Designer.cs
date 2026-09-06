@@ -1,6 +1,6 @@
 ﻿namespace UnityRiftGUI
 {
-    partial class AssetStudioGUIForm
+    partial class UnityRiftGUIForm
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AssetStudioGUIForm));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UnityRiftGUIForm));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1668,7 +1668,7 @@
             this.tvCollapseAllToolStripMenuItem.Text = "Collapse all";
             this.tvCollapseAllToolStripMenuItem.Click += new System.EventHandler(this.collapseAllToolStripMenuItem1_Click);
             // 
-            // AssetStudioGUIForm
+            // UnityRiftGUIForm
             // 
             this.AllowDrop = true;
             this.ClientSize = new System.Drawing.Size(1264, 681);
@@ -1678,12 +1678,12 @@
             this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip1;
             this.MinimumSize = new System.Drawing.Size(620, 400);
-            this.Name = "AssetStudioGUIForm";
+            this.Name = "UnityRiftGUIForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "AssetStudioModGUI";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AssetStudioGUIForm_FormClosing);
-            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.AssetStudioGUIForm_DragDrop);
-            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.AssetStudioGUIForm_DragEnter);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.UnityRiftGUIForm_FormClosing);
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.UnityRiftGUIForm_DragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.UnityRiftGUIForm_DragEnter);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.AssetStudioForm_KeyDown);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();

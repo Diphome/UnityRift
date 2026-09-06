@@ -16,7 +16,7 @@ namespace UnityRiftGUI
     /// Assembly → namespace → type → members. Selecting a node shows a C#-like stub (or the
     /// IL of a method) in the Preview tab's class text box.
     /// </summary>
-    partial class AssetStudioGUIForm
+    partial class UnityRiftGUIForm
     {
         private TabPage dotnetTabPage;
         private TreeView dotnetTreeView;

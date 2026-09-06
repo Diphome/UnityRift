@@ -33,7 +33,7 @@ using Matrix4 = OpenTK.Mathematics.Matrix4;
 
 namespace UnityRiftGUI
 {
-    partial class AssetStudioGUIForm : Form
+    partial class UnityRiftGUIForm : Form
     {
         private AssetItem lastSelectedItem;
         private AssetItem lastPreviewItem;
@@ -150,7 +150,7 @@ namespace UnityRiftGUI
 
         private string guiTitle;
 
-        public AssetStudioGUIForm()
+        public UnityRiftGUIForm()
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             ConsoleWindow.RunConsole(Properties.Settings.Default.showConsole);
@@ -202,7 +202,7 @@ namespace UnityRiftGUI
             Studio.StatusStripUpdate = StatusStripUpdate;
         }
 
-        private void AssetStudioGUIForm_DragEnter(object sender, DragEventArgs e)
+        private void UnityRiftGUIForm_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -210,7 +210,7 @@ namespace UnityRiftGUI
             }
         }
 
-        private async void AssetStudioGUIForm_DragDrop(object sender, DragEventArgs e)
+        private async void UnityRiftGUIForm_DragDrop(object sender, DragEventArgs e)
         {
             var pathArray = (string[])e.Data?.GetData(DataFormats.FileDrop);
             if (pathArray == null)
@@ -2350,7 +2350,7 @@ namespace UnityRiftGUI
             Properties.Settings.Default.Save();
         }
 
-        private void AssetStudioGUIForm_FormClosing(object sender, FormClosingEventArgs e)
+        private void UnityRiftGUIForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             Logger.Verbose("Closing UnityRift");
         }

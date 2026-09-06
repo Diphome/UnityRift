@@ -15,7 +15,7 @@ namespace UnityRiftGUI
     // everything, or a copy of the assembly files themselves (useful for IL2CPP dummy
     // assemblies that only exist in the cache folder). Reachable from an "Export" button
     // in the tab and from the tree's right-click menu.
-    partial class AssetStudioGUIForm
+    partial class UnityRiftGUIForm
     {
         private Button dotnetExportButton;
         private ContextMenuStrip dotnetExportMenu;
