@@ -1,7 +1,7 @@
 # UnityRift — Export Guide
 
 A plain-language guide to what the export functions produce and when to use them.
-For full CLI flags see the [CLI ReadMe](../AssetStudioCLI/ReadMe.md); this doc is the
+For full CLI flags see the [CLI ReadMe](../UnityRiftCLI/ReadMe.md); this doc is the
 "what does this give me, and why" overview.
 
 There are two things to pick: a **mode** (what kind of job) and, for exports, the

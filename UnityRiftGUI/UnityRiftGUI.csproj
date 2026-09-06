@@ -19,8 +19,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\AssetStudioUtility\AssetStudioUtility.csproj" />
-        <ProjectReference Include="..\AssetStudio\AssetStudio.csproj" />
+        <ProjectReference Include="..\UnityRiftUtility\UnityRiftUtility.csproj" />
+        <ProjectReference Include="..\UnityRift\UnityRift.csproj" />
     </ItemGroup>
     
     <ItemGroup>
@@ -98,9 +98,9 @@
         <Copy SourceFiles="$(TargetDir)runtimes\win-x64\native\ooz.dll" DestinationFolder="$(PublishDir)runtimes\win-x64\native" ContinueOnError="false" />
     </Target>
 
-    <!-- No need to publish net472 build of AssetStudioGUI -->
+    <!-- No need to publish net472 build of UnityRiftGUI -->
     <Target Name="PublishNet472" AfterTargets="Publish" Condition=" '$(TargetFramework)' == 'net472' ">
-        <Message Text="%0a NOTE: Publishing net472 build of AssetStudioGUI was disabled." Importance="high" />
+        <Message Text="%0a NOTE: Publishing net472 build of UnityRiftGUI was disabled." Importance="high" />
         <Message Text=" Instead, use the binaries created after the build.%0a" Importance="high" />
     </Target>
 

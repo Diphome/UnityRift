@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// AssetStudioCLI MCP server (zero-dependency, stdio transport).
+// UnityRiftCLI MCP server (zero-dependency, stdio transport).
 //
 // Exposes UnityRiftCLI as MCP tools so an agent can run exports, inspect
 // asset listings, and read the CLI's own log output. Communicates over
@@ -8,7 +8,7 @@
 // Config via environment variables:
 //   ASSETSTUDIO_CLI       Path to UnityRiftCLI.exe or .dll. If it ends in
 //                         .dll it is launched via `dotnet`. If unset, the first
-//                         existing build output under AssetStudioCLI/bin is used.
+//                         existing build output under UnityRiftCLI/bin is used.
 //   ASSETSTUDIO_OUT       Default output folder for exports. If unset, a folder
 //                         under the OS temp dir is used.
 //   ASSETSTUDIO_TIMEOUT   Default per-command timeout in seconds (default 300).
@@ -34,17 +34,17 @@ const MAX_OUTPUT_CHARS = 60000;
 function resolveCli() {
   if (process.env.ASSETSTUDIO_CLI) return process.env.ASSETSTUDIO_CLI;
   const candidates = [
-    "AssetStudioCLI/bin/Release/net9.0/UnityRiftCLI.exe",
-    "AssetStudioCLI/bin/Release/net8.0/UnityRiftCLI.exe",
-    "AssetStudioCLI/bin/Release/net472/UnityRiftCLI.exe",
-    "AssetStudioCLI/bin/Release/net9.0/UnityRiftCLI.dll",
-    "AssetStudioCLI/bin/Release/net8.0/UnityRiftCLI.dll",
+    "UnityRiftCLI/bin/Release/net9.0/UnityRiftCLI.exe",
+    "UnityRiftCLI/bin/Release/net8.0/UnityRiftCLI.exe",
+    "UnityRiftCLI/bin/Release/net472/UnityRiftCLI.exe",
+    "UnityRiftCLI/bin/Release/net9.0/UnityRiftCLI.dll",
+    "UnityRiftCLI/bin/Release/net8.0/UnityRiftCLI.dll",
     // Fallback to the pre-rebrand executable name.
-    "AssetStudioCLI/bin/Release/net9.0/AssetStudioModCLI.exe",
-    "AssetStudioCLI/bin/Release/net8.0/AssetStudioModCLI.exe",
-    "AssetStudioCLI/bin/Release/net472/AssetStudioModCLI.exe",
-    "AssetStudioCLI/bin/Release/net9.0/AssetStudioModCLI.dll",
-    "AssetStudioCLI/bin/Release/net8.0/AssetStudioModCLI.dll",
+    "UnityRiftCLI/bin/Release/net9.0/AssetStudioModCLI.exe",
+    "UnityRiftCLI/bin/Release/net8.0/AssetStudioModCLI.exe",
+    "UnityRiftCLI/bin/Release/net472/AssetStudioModCLI.exe",
+    "UnityRiftCLI/bin/Release/net9.0/AssetStudioModCLI.dll",
+    "UnityRiftCLI/bin/Release/net8.0/AssetStudioModCLI.dll",
   ];
   for (const c of candidates) {
     const p = join(repoRoot, ...c.split("/"));
@@ -63,7 +63,7 @@ function cliCommand(cliArgs) {
   if (!cli) {
     throw new Error(
       "UnityRiftCLI not found. Build the CLI first (e.g. dotnet build " +
-        "AssetStudioCLI -c Release -f net9.0) or set ASSETSTUDIO_CLI to its path."
+        "UnityRiftCLI -c Release -f net9.0) or set ASSETSTUDIO_CLI to its path."
     );
   }
   if (cli.toLowerCase().endsWith(".dll")) return ["dotnet", [cli, ...cliArgs]];

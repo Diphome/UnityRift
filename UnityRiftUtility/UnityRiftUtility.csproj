@@ -42,9 +42,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\AssetStudio.PInvoke\AssetStudio.PInvoke.csproj" />
-        <ProjectReference Include="..\AssetStudioFBXWrapper\AssetStudioFBXWrapper.csproj" />
-        <ProjectReference Include="..\AssetStudio\AssetStudio.csproj" />
+        <ProjectReference Include="..\UnityRift.PInvoke\UnityRift.PInvoke.csproj" />
+        <ProjectReference Include="..\UnityRiftFBXWrapper\UnityRiftFBXWrapper.csproj" />
+        <ProjectReference Include="..\UnityRift\UnityRift.csproj" />
     </ItemGroup>
     
     <ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">

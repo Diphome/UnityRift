@@ -69,7 +69,7 @@
 
 ## CLI Usage
 
-You can read the CLI readme [here](AssetStudioCLI/ReadMe.md).
+You can read the CLI readme [here](UnityRiftCLI/ReadMe.md).
 
 ### Run
 
