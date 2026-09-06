@@ -78,11 +78,16 @@ namespace UnityRift
             ConvertAnimations();
         }
 
-        public ModelConverter(Animator m_Animator, ImageFormat imageFormat, List<AnimationClip> animationList = null)
+        public ModelConverter(Animator m_Animator, ImageFormat imageFormat, List<AnimationClip> animationList = null, bool skipAnimationsWithoutMesh = false)
         {
             collectAnimationClips = animationList == null;
             this.imageFormat = imageFormat;
             InitWithAnimator(m_Animator);
+            // For preview: an Animator with no renderable mesh can't be shown, so converting its
+            // animation clips is wasted work. (Export keeps the default: a mesh-less animator can
+            // still be exported as a skeleton + animation.)
+            if (skipAnimationsWithoutMesh && MeshList.Count == 0)
+                return;
             if (collectAnimationClips)
             {
                 CollectAnimationClip(m_Animator);
