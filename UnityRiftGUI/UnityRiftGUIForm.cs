@@ -411,7 +411,7 @@ namespace UnityRiftGUI
             FilterAssetList();
         }
 
-        private void AssetStudioForm_KeyDown(object sender, KeyEventArgs e)
+        private void UnityRiftForm_KeyDown(object sender, KeyEventArgs e)
         {
             if (glControl1.Visible)
             {

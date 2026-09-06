@@ -12,7 +12,7 @@ namespace UnityRiftGUI
 {
     // Godot 4 export (materials -> .gdshader/.tres, ParticleSystems -> .tscn), added in code so no
     // Designer edits are needed. Mirrors the CLI "-m godot" mode, reusing the shared exporters in
-    // AssetStudioUtility (GodotMaterialExporter / GodotParticleExporter).
+    // UnityRiftUtility (GodotMaterialExporter / GodotParticleExporter).
     partial class UnityRiftGUIForm
     {
         private void InitGodotExportMenu()

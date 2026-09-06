@@ -1684,7 +1684,7 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.UnityRiftGUIForm_FormClosing);
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.UnityRiftGUIForm_DragDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.UnityRiftGUIForm_DragEnter);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.AssetStudioForm_KeyDown);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.UnityRiftForm_KeyDown);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
