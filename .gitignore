@@ -344,3 +344,6 @@ healthchecksdb
 
 # Private engineering notes - not for the public repo
 docs/PROJECT_NOTES.md
+
+# Claude Code local data (memory, settings) - never publish
+.claude/
