@@ -26,6 +26,16 @@ jobs:
           Start-Process -FilePath "fbxpdb.exe" /S -Wait
           cd ..
 
+      - name: Locate FBX SDK
+        shell: pwsh
+        run: |
+          $base = "C:\Program Files\Autodesk\FBX\FBX SDK"
+          $sdk = Get-ChildItem $base -Directory -ErrorAction Stop |
+                 Sort-Object Name -Descending | Select-Object -First 1
+          if (-not $sdk) { throw "No FBX SDK found under $base" }
+          Write-Host "Using FBX SDK at $($sdk.FullName)"
+          "FBXSDK_ROOT=$($sdk.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: Nuget Restore
         run: nuget restore
 

@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest a new capability or an improvement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the use case, not just the solution.
+      placeholder: "When porting <X> to Godot, I can't ... because ..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like UnityRift to do?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Godot export (scene / materials / scripts)
+        - Asset export (mesh / texture / audio / glTF / FBX)
+        - IL2CPP / Ghidra / .NET explorer
+        - CLI
+        - GUI
+        - MCP server
+        - Other
+      multiple: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

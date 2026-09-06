@@ -1,0 +1,72 @@
+name: Bug report
+description: Something doesn't work as expected (crash, wrong export, missing data…)
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much as you can — it makes a huge difference for reproducing the issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: |
+        1. Loaded <game>_Data with `UnityRiftCLI -m godotscene ...`
+        2. Expected a scene.tscn with the meshes
+        3. Got an empty Node3D / a crash / ...
+    validations:
+      required: true
+  - type: dropdown
+    id: interface
+    attributes:
+      label: Which interface?
+      options:
+        - GUI
+        - CLI
+        - MCP server
+      multiple: true
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command / steps
+      description: The full CLI command line, or the GUI actions in order.
+      render: shell
+  - type: input
+    id: unity-version
+    attributes:
+      label: Unity version of the game
+      placeholder: e.g. 2021.3.16f1 (or "unknown / stripped")
+  - type: dropdown
+    id: scripting-backend
+    attributes:
+      label: Scripting backend
+      options:
+        - "Don't know"
+        - Mono
+        - IL2CPP
+  - type: input
+    id: unityrift-version
+    attributes:
+      label: UnityRift version
+      description: From the About dialog, or `UnityRiftCLI --version`.
+      placeholder: e.g. v0.19.0
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: e.g. Windows 11, Ubuntu 24.04, macOS 14
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack trace
+      description: Run the CLI with `--log-level Verbose` if you can, and paste relevant output.
+      render: shell
+  - type: markdown
+    attributes:
+      value: |
+        > Please do **not** attach copyrighted game files. A minimal sample or a description of the asset is enough.
