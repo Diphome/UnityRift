@@ -3197,7 +3197,12 @@ namespace UnityRiftGUI
                 // (convertType) may be TGA/WebP, which System.Drawing can't decode in
                 // DecodeTexture -> the mesh would render white. PNG is always decodable
                 // and only affects this in-memory preview, not exported files.
-                var imported = new ModelConverter(animator, UnityRift.ImageFormat.Png);
+                var imported = new ModelConverter(animator, UnityRift.ImageFormat.Png, skipAnimationsWithoutMesh: true);
+                if (imported.MeshList.Count == 0)
+                {
+                    StatusStripUpdate("Animator has no previewable mesh.");
+                    return;
+                }
                 animPlayer = new AnimationPlayer(imported);
                 if (animPlayer.Meshes.Count == 0)
                 {
