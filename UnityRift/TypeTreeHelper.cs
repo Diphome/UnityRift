@@ -47,6 +47,29 @@ namespace UnityRift
             return sb.ToString();
         }
 
+        private const char ReplacementChar = '�';
+
+        /// <summary>
+        /// Reads a <c>char</c> type-tree field. A Unity <c>char</c> is a C++ char and is normally
+        /// 1 byte; the code historically read a fixed 2 bytes (<see cref="BitConverter.ToChar(byte[], int)"/>),
+        /// which over-reads and misaligns 1-byte <c>vector&lt;char&gt;</c> fields such as
+        /// <c>Font.m_FontData</c> — drifting past the end of the object. The element's declared
+        /// <paramref name="byteSize"/> is honored instead (2 only when the type tree says so).
+        /// Throws <see cref="EndOfStreamException"/> when too few bytes remain so the tolerant
+        /// callers abort the walk instead of reading garbage. Binary data can land in the UTF-16
+        /// surrogate range; a lone surrogate is not a valid standalone character and would corrupt
+        /// UTF-8 output (dump .txt files, JSON export), so it is mapped to U+FFFD.
+        /// </summary>
+        private static char ReadCharValue(BinaryReader reader, int byteSize)
+        {
+            var size = byteSize == 2 ? 2 : 1;
+            var bytes = reader.ReadBytes(size);
+            if (bytes.Length < size)
+                throw new EndOfStreamException();
+            var code = size == 2 ? (ushort)(bytes[0] | (bytes[1] << 8)) : bytes[0]; // little-endian
+            return code >= 0xD800 && code <= 0xDFFF ? ReplacementChar : (char)code;
+        }
+
         private static void ReadStringValue(StringBuilder sb, List<TypeTreeNode> m_Nodes, BinaryReader reader, ref int i)
         {
             var m_Node = m_Nodes[i];
@@ -65,7 +88,7 @@ namespace UnityRift
                     value = reader.ReadByte();
                     break;
                 case "char":
-                    value = BitConverter.ToChar(reader.ReadBytes(2), 0);
+                    value = ReadCharValue(reader, m_Node.m_ByteSize);
                     break;
                 case "short":
                 case "SInt16":
@@ -264,7 +287,7 @@ namespace UnityRift
                     writer.WriteNumberValue(reader.ReadByte());
                     break;
                 case "char":
-                    writer.WriteStringValue(BitConverter.ToChar(reader.ReadBytes(2), 0).ToString());
+                    writer.WriteStringValue(ReadCharValue(reader, m_Node.m_ByteSize).ToString());
                     break;
                 case "short":
                 case "SInt16":
@@ -454,7 +477,7 @@ namespace UnityRift
                     value = reader.ReadByte();
                     break;
                 case "char":
-                    value = BitConverter.ToChar(reader.ReadBytes(2), 0);
+                    value = ReadCharValue(reader, m_Node.m_ByteSize);
                     break;
                 case "short":
                 case "SInt16":
