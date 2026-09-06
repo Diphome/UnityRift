@@ -98,6 +98,35 @@ namespace CubismLive2DExtractor
             totalSegmentCount++;
         }
 
+        /// <summary>
+        /// Ensures a curve has at least one segment after its initial point. A parameter held
+        /// constant for the whole motion produces a single keyframe, so the segment loop never
+        /// runs and <see cref="SerializableCurve.Segments"/> is left as just [time, value]. That is
+        /// invalid per the motion3.json spec (a curve must contain at least one segment): a Cubism
+        /// parser reads the initial point, advances past it and unconditionally reads a segment type
+        /// beyond the array, crashing with IndexOutOfBounds. Append a flat Linear segment spanning to
+        /// the motion duration so the held value is represented explicitly.
+        /// </summary>
+        private static void EnsureTerminatingSegment(
+            SerializableCurve cubismCurve,
+            float duration,
+            float fps,
+            ref int totalPointCount,
+            ref int totalSegmentCount)
+        {
+            if (cubismCurve.Segments.Count > 2) // already has at least one segment
+                return;
+            var startTime = cubismCurve.Segments[0];
+            var value = cubismCurve.Segments[1];
+            var step = fps > 0f ? 1f / fps : 1f / 30f;
+            var endTime = duration > startTime ? duration : startTime + step;
+            cubismCurve.Segments.Add(0f); // Linear segment ID
+            cubismCurve.Segments.Add(endTime);
+            cubismCurve.Segments.Add(value);
+            totalPointCount += 1;
+            totalSegmentCount++;
+        }
+
         public CubismMotion3Json(CubismUnityClasses.CubismFadeMotionData fadeMotion, HashSet<string> paramNames, HashSet<string> partNames, bool forceBezier)
         {
             Version = 3;
@@ -182,6 +211,7 @@ namespace CubismLive2DExtractor
                     var nextCurve = next ?? new Keyframe<float>();
                     AddSegments(curve, preCurve, nextCurve, Curves[actualCurveCount], forceBezier, ref totalPointCount, ref totalSegmentCount, ref j);
                 }
+                EnsureTerminatingSegment(Curves[actualCurveCount], Meta.Duration, Meta.Fps, ref totalPointCount, ref totalSegmentCount);
                 actualCurveCount++;
                 totalPointCount++;
             }
@@ -237,6 +267,7 @@ namespace CubismLive2DExtractor
                     var nextCurve = next != null ? CreateKeyFrame(next) : new Keyframe<float>();
                     AddSegments(curve, preCurve, nextCurve, Curves[i], forceBezier, ref totalPointCount, ref totalSegmentCount, ref j);
                 }
+                EnsureTerminatingSegment(Curves[i], Meta.Duration, Meta.Fps, ref totalPointCount, ref totalSegmentCount);
                 totalPointCount++;
             }
             Meta.TotalSegmentCount = totalSegmentCount;
