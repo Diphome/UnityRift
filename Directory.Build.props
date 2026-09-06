@@ -1,0 +1,13 @@
+<Project>
+
+  <!--
+    Projects multi-target net472, whose default C# language version is 7.3.
+    Shared code uses newer syntax (e.g. ??=), so raise the language version
+    for every project/TFM. Runtime-level features still require a supported
+    target, but the modern syntax the codebase relies on compiles everywhere.
+  -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+</Project>
