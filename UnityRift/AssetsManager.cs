@@ -165,6 +165,7 @@ namespace UnityRift
                 importFilesHash.Add(Path.GetFileName(file));
             }
 
+            ChooseDecompressionMode(files);
             Progress.Reset();
             var swLoad = System.Diagnostics.Stopwatch.StartNew();
             //use a for loop because list size can change
@@ -200,6 +201,47 @@ namespace UnityRift
         {
             var reader = new FileReader(fullName);
             return LoadFile(reader);
+        }
+
+        // RAM-mode decompression is fastest but keeps every decompressed bundle resident for
+        // the session: measured on a 6.4 GB game it held 23.6 GB, versus 6.9 GB with disk
+        // mode for only ~8% more load time. So unless the user forced disk mode, estimate
+        // the resident cost from the on-disk size and switch to disk mode for this load
+        // when it would take a real share of physical memory. Bundles typically inflate
+        // 3-4x when decompressed; use 4x and allow up to a quarter of physical RAM (RAM mode
+        // only saves ~2 s on a 24 s load, so it is not worth tens of GB).
+        private void ChooseDecompressionMode(string[] files)
+        {
+            var bundleOptions = Options.BundleOptions;
+            bundleOptions.DecompressToDiskAuto = false;
+            if (bundleOptions.DecompressToDisk)
+                return;
+
+            long totalBytes = 0;
+            foreach (var file in files)
+            {
+                try { totalBytes += new FileInfo(file).Length; } catch { /* unreadable: ignore */ }
+            }
+            var physical = TotalPhysicalMemory();
+            if (physical <= 0 || totalBytes <= 0)
+                return;
+
+            const long inflation = 4;
+            var estimated = totalBytes * inflation;
+            if (estimated > physical / 4)
+            {
+                bundleOptions.DecompressToDiskAuto = true;
+                Logger.Info($"Large project ({totalBytes / (1024 * 1024)} MB on disk, ~{estimated / (1024 * 1024 * 1024)} GB if decompressed in RAM, {physical / (1024 * 1024 * 1024)} GB physical): decompressing bundles to disk for this load.");
+            }
+        }
+
+        private static long TotalPhysicalMemory()
+        {
+#if NETCOREAPP3_0_OR_GREATER || NET5_0_OR_GREATER
+            try { return GC.GetGCMemoryInfo().TotalAvailableMemoryBytes; } catch { return 0; }
+#else
+            return 0; // policy disabled on .NET Framework; the manual option still works
+#endif
         }
 
         private bool LoadFile(FileReader reader, bool fromZip = false)
@@ -739,11 +781,19 @@ namespace UnityRift
 
         private void ReadAssetsFile(SerializedFile assetsFile, ref int progress, int progressCount)
         {
+            ReadObjects(assetsFile, assetsFile.m_Objects, allowLazy: true, assetsFile.AddObject, ref progress, progressCount);
+        }
+
+        // Parses the given objects of a file. With allowLazy, heavy types become LazyObject
+        // placeholders (header only); hydration calls back in with allowLazy = false for a
+        // single ObjectInfo. Parsed objects are handed to `sink`.
+        private void ReadObjects(SerializedFile assetsFile, IEnumerable<ObjectInfo> objectInfos, bool allowLazy, Action<Object> sink, ref int progress, int progressCount)
+        {
             JsonConverterHelper.AssetsFile = assetsFile;
             var jsonOptions = LoadJsonOptions;
             var useTypeTreeDb = TypeTreeDb != null && TypeTreeDb.IsLoaded && !IsBuiltInResourceFile(assetsFile.fileName);
             var isBuiltInFile = IsBuiltInResourceFile(assetsFile.fileName);
-            foreach (var objectInfo in assetsFile.m_Objects)
+            foreach (var objectInfo in objectInfos)
             {
                 var objectReader = new ObjectReader(assetsFile.reader, assetsFile, objectInfo);
                 if (filteredAssetTypesList.Count > 0 && !filteredAssetTypesList.Contains(objectReader.type))
@@ -778,7 +828,8 @@ namespace UnityRift
                                 obj = new Animation(objectReader);
                                 break;
                             case ClassIDType.AnimationClip:
-                                obj = objectReader.serializedType?.m_Type != null && LoadViaTypeTree
+                                obj = allowLazy ? Lazy(objectReader, objectInfo)
+                                    : objectReader.serializedType?.m_Type != null && LoadViaTypeTree
                                     ? new AnimationClip(objectReader, TypeTreeHelper.ReadTypeByteArray(objectReader.serializedType.m_Type, objectReader), jsonOptions, objectInfo)
                                     : new AnimationClip(objectReader);
                                 break;
@@ -786,7 +837,7 @@ namespace UnityRift
                                 obj = new Animator(objectReader);
                                 break;
                             case ClassIDType.AnimatorController:
-                                obj = new AnimatorController(objectReader);
+                                obj = allowLazy ? Lazy(objectReader, objectInfo) : new AnimatorController(objectReader);
                                 break;
                             case ClassIDType.AnimatorOverrideController:
                                 obj = new AnimatorOverrideController(objectReader);
@@ -798,13 +849,13 @@ namespace UnityRift
                                 obj = new AudioClip(objectReader);
                                 break;
                             case ClassIDType.Avatar:
-                                obj = new Avatar(objectReader);
+                                obj = allowLazy ? Lazy(objectReader, objectInfo) : new Avatar(objectReader);
                                 break;
                             case ClassIDType.BuildSettings:
                                 obj = new BuildSettings(objectReader);
                                 break;
                             case ClassIDType.Font:
-                                obj = new Font(objectReader);
+                                obj = allowLazy ? Lazy(objectReader, objectInfo) : new Font(objectReader);
                                 break;
                             case ClassIDType.GameObject:
                                 obj = new GameObject(objectReader);
@@ -815,7 +866,7 @@ namespace UnityRift
                                     : new Material(objectReader);
                                 break;
                             case ClassIDType.Mesh:
-                                obj = new Mesh(objectReader);
+                                obj = allowLazy ? Lazy(objectReader, objectInfo) : new Mesh(objectReader);
                                 break;
                             case ClassIDType.MeshFilter:
                                 obj = new MeshFilter(objectReader);
@@ -830,7 +881,7 @@ namespace UnityRift
                                 obj = new MonoScript(objectReader);
                                 break;
                             case ClassIDType.MovieTexture:
-                                obj = new MovieTexture(objectReader);
+                                obj = allowLazy ? Lazy(objectReader, objectInfo) : new MovieTexture(objectReader);
                                 break;
                             case ClassIDType.PlayerSettings:
                                 obj = new PlayerSettings(objectReader);
@@ -843,7 +894,7 @@ namespace UnityRift
                                 break;
                             case ClassIDType.Shader:
                                 if (objectReader.version < 2021)
-                                    obj = new Shader(objectReader);
+                                    obj = allowLazy ? Lazy(objectReader, objectInfo) : new Shader(objectReader);
                                 break;
                             case ClassIDType.SkinnedMeshRenderer:
                                 obj = new SkinnedMeshRenderer(objectReader);
@@ -855,7 +906,7 @@ namespace UnityRift
                                 obj = new SpriteAtlas(objectReader);
                                 break;
                             case ClassIDType.TextAsset:
-                                obj = new TextAsset(objectReader);
+                                obj = allowLazy ? Lazy(objectReader, objectInfo) : new TextAsset(objectReader);
                                 break;
                             case ClassIDType.Texture2D:
                                 obj = objectReader.serializedType?.m_Type != null && LoadViaTypeTree
@@ -882,7 +933,7 @@ namespace UnityRift
                         }
                     if (obj != null)
                     {
-                        assetsFile.AddObject(obj);
+                        sink(obj);
                     }
                 }
                 catch (Exception e)
@@ -916,9 +967,26 @@ namespace UnityRift
                     Logger.Debug($"Slow object read: {objectReader.type} PathID {objectInfo.m_PathID} ({objectInfo.byteSize} bytes) in \"{assetsFile.fileName}\" took {readMs} ms");
                 }
 
-                Progress.Report(Interlocked.Increment(ref progress), progressCount);
+                if (progressCount > 0)
+                    Progress.Report(Interlocked.Increment(ref progress), progressCount);
             }
         }
+
+        private Object Lazy(ObjectReader objectReader, ObjectInfo objectInfo)
+            => new LazyObject(objectReader, objectInfo, Hydrate);
+
+        // Full parse of one object for a LazyObject placeholder (same switch, allowLazy off).
+        private Object Hydrate(SerializedFile assetsFile, ObjectInfo objectInfo)
+        {
+            Object result = null;
+            var progress = 0;
+            ReadObjects(assetsFile, new[] { objectInfo }, allowLazy: false, o => result = o, ref progress, 0);
+            return result;
+        }
+
+        // The stream every object of a file (and every file of a bundle) ultimately reads
+        // from; used as the lock for on-demand hydration.
+        public static Stream SharedStreamOf(Stream stream) => GetRootStream(stream);
 
         // Objects that take at least this long to read are logged at Debug level.
         private const long SlowObjectReadMs = 100;

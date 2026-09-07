@@ -24,6 +24,13 @@
             set => _decompressToDisk = SetOption(nameof(DecompressToDisk), value);
         }
 
+        // Per-load decision made by AssetsManager when the project is too big for RAM-mode
+        // decompression on this machine. Not a user preference: never persisted, reset on
+        // every load, and it never touches DecompressToDisk (the user's explicit choice).
+        public bool DecompressToDiskAuto;
+
+        public bool UseDiskDecompression => _decompressToDisk || DecompressToDiskAuto;
+
         public CustomBundleOptions() { }
 
         public CustomBundleOptions(ImportOptions importOptions)

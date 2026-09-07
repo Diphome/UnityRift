@@ -70,9 +70,17 @@ namespace UnityRift
             {
                 if (sourceFile.ObjectsDic.TryGetValue(m_PathID, out var obj))
                 {
+                    // Placeholder-aware: asking for Object/NamedObject returns the LazyObject
+                    // itself (identity preserved for lookups); asking for a concrete type
+                    // (Mesh, AnimationClip, ...) parses it on demand.
                     if (obj is T variable)
                     {
                         result = variable;
+                        return true;
+                    }
+                    if (obj is LazyObject lazy && lazy.Resolve() is T resolved)
+                    {
+                        result = resolved;
                         return true;
                     }
                 }
@@ -92,6 +100,11 @@ namespace UnityRift
                     if (obj is T2 variable)
                     {
                         result = variable;
+                        return true;
+                    }
+                    if (obj is LazyObject lazy && lazy.Resolve() is T2 resolved)
+                    {
+                        result = resolved;
                         return true;
                     }
                 }

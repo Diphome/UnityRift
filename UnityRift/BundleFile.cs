@@ -183,18 +183,24 @@ namespace UnityRift
         private Stream CreateBlocksStream(string path)
         {
             var uncompressedSizeSum = m_BlocksInfo.Sum(x => x.uncompressedSize);
-            if (uncompressedSizeSum < int.MaxValue && !_bundleOptions.DecompressToDisk) 
+            if (uncompressedSizeSum < int.MaxValue && !_bundleOptions.UseDiskDecompression)
                 return new MemoryStream((int)uncompressedSizeSum);
 
-            if (!Directory.Exists(Path.GetDirectoryName(path)))
+            // Decompressed blocks go to a dedicated temp folder, never next to the source
+            // files: a game under Program Files is read-only for most users, and leaving
+            // .temp files beside an install is bad manners. DeleteOnClose cleans them up.
+            var tempDir = Path.Combine(Path.GetTempPath(), "UnityRift");
+            try
             {
-                var tempDir = Path.Combine(Directory.GetCurrentDirectory(), "Studio_temp");
                 Directory.CreateDirectory(tempDir);
-                var filename = Path.GetFileName(path);
-                var hash = path.GetHashCode();
-                path = Path.Combine(tempDir, $"{filename}_{hash:X}");
             }
-            return new TempFileStream(path + ".temp", FileMode.Create);
+            catch
+            {
+                tempDir = Path.Combine(Directory.GetCurrentDirectory(), "Studio_temp");
+                Directory.CreateDirectory(tempDir);
+            }
+            var tempName = $"{Path.GetFileName(path)}_{path.GetHashCode():X}_{Guid.NewGuid():N}.temp";
+            return new TempFileStream(Path.Combine(tempDir, tempName), FileMode.Create);
         }
 
         private Stream ReadBlocksAndDirectory(FileReader reader)

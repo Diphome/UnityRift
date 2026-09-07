@@ -25,7 +25,15 @@ namespace UnityRift
         public uint byteSize;
         [JsonIgnore]
         public string Name;
+        // Set on an object that was hydrated from a LazyObject placeholder: the placeholder
+        // is the identity the object lists / dictionaries were built with.
+        [JsonIgnore]
+        public Object LazySource;
         private static readonly JsonSerializerOptions jsonOptions;
+
+        // Returns the fully parsed object. Plain objects are already complete; a LazyObject
+        // placeholder parses its payload on first call.
+        public virtual Object Resolve() => this;
 
         static Object()
         {
