@@ -38,6 +38,12 @@ namespace UnityRiftGUI
         private AssetItem lastSelectedItem;
         private AssetItem lastPreviewItem;
         private DirectBitmap imageTexture;
+        private System.Drawing.Bitmap videoThumb; // OS-generated poster frame, fallback when playback is unavailable
+        private Microsoft.Web.WebView2.WinForms.WebView2 videoView; // in-preview VideoClip player
+        private bool videoViewReady;
+        private int videoPreviewToken; // bumped on every (re)selection to cancel stale async playback
+        private string lastVideoTempPath; // temp file backing the currently loaded clip
+        private const string VideoHost = "unityrift-clip.local"; // virtual host mapped to the temp folder
         private string tempClipboard;
         private bool isDarkMode;
 
@@ -981,6 +987,7 @@ namespace UnityRiftGUI
             StatusStripUpdate("");
 
             FMODreset();
+            ResetVideoPreview();
 
             lastSelectedItem = (AssetItem)e.Item;
 
@@ -1378,7 +1385,7 @@ namespace UnityRiftGUI
             }
         }
 
-        private void PreviewVideoClip(AssetItem assetItem, VideoClip m_VideoClip)
+        private async void PreviewVideoClip(AssetItem assetItem, VideoClip m_VideoClip)
         {
             var sb = new StringBuilder();
             sb.AppendLine($"Width: {m_VideoClip.Width}");
@@ -1387,7 +1394,178 @@ namespace UnityRiftGUI
             sb.AppendLine($"Split alpha: {m_VideoClip.m_HasSplitAlpha}");
             assetItem.InfoText = sb.ToString();
 
-            StatusStripUpdate("Only supported export.");
+            if (m_VideoClip?.m_VideoData == null || m_VideoClip.m_VideoData.Size <= 0)
+            {
+                StatusStripUpdate("No embedded video data. Only supported export.");
+                return;
+            }
+
+            // Play the clip in an embedded WebView2 (Chromium plays mp4/H.264 and webm/VP8/VP9).
+            // The player needs a real file, so dump the bytes to a temp file kept alive while it
+            // plays, mapped behind a virtual host so the <video> tag can load it.
+            var token = ++videoPreviewToken;
+            string path;
+            try
+            {
+                path = WriteVideoTemp(m_VideoClip);
+            }
+            catch (Exception ex)
+            {
+                StatusStripUpdate("Video preview failed to unpack: " + ex.Message);
+                return;
+            }
+
+            try
+            {
+                await EnsureVideoViewAsync();
+                if (token != videoPreviewToken)
+                    return; // a different asset was selected while WebView2 was initializing
+
+                videoView.CoreWebView2.SetVirtualHostNameToFolderMapping(
+                    VideoHost, Path.GetDirectoryName(path),
+                    Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow);
+
+                var src = $"https://{VideoHost}/{Uri.EscapeDataString(Path.GetFileName(path))}";
+                var html =
+                    "<!DOCTYPE html><html><body style=\"margin:0;height:100vh;background:#111;" +
+                    "display:flex;align-items:center;justify-content:center\">" +
+                    $"<video src=\"{src}\" controls autoplay loop playsinline " +
+                    "style=\"max-width:100%;max-height:100%\"></video></body></html>";
+                videoView.NavigateToString(html);
+                ShowVideoView();
+                StatusStripUpdate("Playing video preview. Use the controls to pause, seek or mute.");
+            }
+            catch (Exception ex)
+            {
+                // WebView2 runtime missing or failed: fall back to a static poster frame.
+                var thumb = TryMakeVideoThumbnail(m_VideoClip);
+                if (thumb != null)
+                {
+                    ShowVideoThumb(thumb);
+                    StatusStripUpdate("Playback unavailable (" + ex.Message + "). Showing poster frame; export to play.");
+                }
+                else
+                {
+                    StatusStripUpdate("Video preview unavailable: " + ex.Message);
+                }
+            }
+        }
+
+        private string WriteVideoTemp(VideoClip m_VideoClip)
+        {
+            var ext = Path.GetExtension(m_VideoClip.m_OriginalPath);
+            if (string.IsNullOrEmpty(ext))
+                ext = ".mp4"; // best-effort default for Unity's external video resource
+            var dir = Path.Combine(Path.GetTempPath(), "UnityRift", "vplay");
+            Directory.CreateDirectory(dir);
+            var path = Path.Combine(dir, "clip_" + Guid.NewGuid().ToString("N") + ext);
+            m_VideoClip.m_VideoData.WriteData(path);
+            lastVideoTempPath = path;
+            return path;
+        }
+
+        private async Task EnsureVideoViewAsync()
+        {
+            if (videoView == null)
+            {
+                videoView = new Microsoft.Web.WebView2.WinForms.WebView2 { Dock = DockStyle.Fill, Visible = false };
+                previewPanel.Controls.Add(videoView);
+            }
+            if (!videoViewReady)
+            {
+                // Keep the browser profile out of the (possibly read-only) install dir, and allow
+                // autoplay so the clip starts without a user gesture.
+                var udf = Path.Combine(Path.GetTempPath(), "UnityRift", "WebView2");
+                Directory.CreateDirectory(udf);
+                var opts = new Microsoft.Web.WebView2.Core.CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required");
+                var env = await Microsoft.Web.WebView2.Core.CoreWebView2Environment.CreateAsync(null, udf, opts);
+                await videoView.EnsureCoreWebView2Async(env);
+                videoViewReady = true;
+            }
+        }
+
+        private void ShowVideoView()
+        {
+            previewPanel.Image = null;
+            videoView.Visible = true;
+            videoView.BringToFront();
+        }
+
+        // Stop playback, hide the player and release the temp file lock. Called on every
+        // reselection, on project reset and on close.
+        private void ResetVideoPreview()
+        {
+            videoPreviewToken++; // cancel any in-flight async playback
+            if (videoView != null)
+            {
+                try
+                {
+                    if (videoViewReady && videoView.CoreWebView2 != null)
+                        videoView.CoreWebView2.Navigate("about:blank"); // releases the file lock
+                }
+                catch { /* best effort */ }
+                videoView.Visible = false;
+            }
+            DisposeVideoThumb();
+            if (lastVideoTempPath != null)
+            {
+                try { if (File.Exists(lastVideoTempPath)) File.Delete(lastVideoTempPath); } catch { /* still locked; OS cleans %TEMP% */ }
+                lastVideoTempPath = null;
+            }
+        }
+
+        private System.Drawing.Bitmap TryMakeVideoThumbnail(VideoClip m_VideoClip)
+        {
+            if (m_VideoClip?.m_VideoData == null || m_VideoClip.m_VideoData.Size <= 0)
+                return null;
+
+            var ext = Path.GetExtension(m_VideoClip.m_OriginalPath);
+            if (string.IsNullOrEmpty(ext))
+                ext = ".mp4"; // best-effort default for Unity's external video resource
+            var dir = Path.Combine(Path.GetTempPath(), "UnityRift", "vpreview");
+            var tempPath = Path.Combine(dir, "preview_" + Guid.NewGuid().ToString("N") + ext);
+            try
+            {
+                Directory.CreateDirectory(dir);
+                m_VideoClip.m_VideoData.WriteData(tempPath);
+
+                using (var shellFile = Microsoft.WindowsAPICodePack.Shell.ShellObject.FromParsingName(tempPath))
+                {
+                    // ThumbnailOnly so we never get a generic file-type icon back; if the shell
+                    // has no frame for us it throws and we fall through to null.
+                    shellFile.Thumbnail.FormatOption = Microsoft.WindowsAPICodePack.Shell.ShellThumbnailFormatOption.ThumbnailOnly;
+                    shellFile.Thumbnail.AllowBiggerSize = true;
+                    return shellFile.Thumbnail.ExtraLargeBitmap;
+                }
+            }
+            catch
+            {
+                return null;
+            }
+            finally
+            {
+                try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { /* best effort */ }
+            }
+        }
+
+        private void ShowVideoThumb(System.Drawing.Bitmap bmp)
+        {
+            DisposeVideoThumb();
+            videoThumb = bmp;
+            previewPanel.Image = videoThumb;
+            previewPanel.SizeMode = (bmp.Width > previewPanel.Width || bmp.Height > previewPanel.Height)
+                ? PictureBoxSizeMode.Zoom
+                : PictureBoxSizeMode.CenterImage;
+        }
+
+        private void DisposeVideoThumb()
+        {
+            if (videoThumb == null)
+                return;
+            if (previewPanel.Image == videoThumb)
+                previewPanel.Image = null;
+            videoThumb.Dispose();
+            videoThumb = null;
         }
 
         private void PreviewShader(Shader m_Shader)
@@ -1869,6 +2047,7 @@ namespace UnityRiftGUI
             previewPanel.SizeMode = PictureBoxSizeMode.CenterImage;
             imageTexture?.Dispose();
             imageTexture = null;
+            ResetVideoPreview();
             ClearNoPreviewCache();
             assetInfoLabel.Visible = false;
             assetInfoLabel.Text = null;
@@ -2572,6 +2751,9 @@ namespace UnityRiftGUI
             // Release the long-lived GDI objects we own (the OS would reclaim them at exit,
             // but be explicit so handle-leak tooling stays quiet).
             ClearNoPreviewCache();
+            ResetVideoPreview();
+            videoView?.Dispose();
+            imageTexture?.Dispose();
             previewPlaceholder?.Dispose();
             dotnetPlaceholder?.Dispose();
             foreach (var d in new IDisposable[] { brRowEven, brRowOdd, brRowSelected, brRowHover,
