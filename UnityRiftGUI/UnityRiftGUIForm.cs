@@ -211,6 +211,7 @@ namespace UnityRiftGUI
             InitDotNetTab();
             InitRecentProjectsMenu();
             InitGodotExportMenu();
+            InitSpineMenu();
             WrapTreeSearch();
             WrapListSearch();
             ApplyUiFonts();

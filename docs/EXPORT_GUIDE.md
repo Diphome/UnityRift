@@ -22,6 +22,7 @@ they are `-m <mode>` and `-t <types>`.
 | `live2d` | Exports **Live2D Cubism** models (model, textures, motions, physics). | 2D "VTuber"-style animated characters. |
 | `splitObjects` | Exports **each 3D model object separately** (FBX/glTF/GLB). | Pull individual props/characters out of a scene. |
 | `animator` | Exports **Animator assets as rigged models** with their AnimationClips. | Characters/objects **with their animations**. |
+| `spine` | Detects **Spine (esotericsoftware)** models and writes the raw Spine files — skeleton (`.json`/`.skel`) + atlas (`.atlas`) + texture pages (`.png`) — into a per-model folder. | 2D skeletal characters made in Spine; re-import the folder into the Spine editor. |
 
 ---
 
