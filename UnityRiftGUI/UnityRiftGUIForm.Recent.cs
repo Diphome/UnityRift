@@ -142,6 +142,7 @@ namespace UnityRiftGUI
             if (pathList.Count == 0)
                 return;
 
+            BeginBusy("Loading files…");
             ResetForm();
             Logger.Info($"Reopening recent project: {DescribeProject(paths)}");
             await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, pathList));

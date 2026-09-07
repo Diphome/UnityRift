@@ -12,8 +12,9 @@ namespace UnityRiftGUI
         public TypeTreeItem(int typeID, TypeTree m_Type)
         {
             this.m_Type = m_Type;
-            Text = m_Type.m_Nodes[0].m_Type + " " + m_Type.m_Nodes[0].m_Name;
-            SubItems.Add(typeID.ToString());
+            // Columns: ID | Name | Unity version (version is appended by the form).
+            Text = typeID.ToString();
+            SubItems.Add(m_Type.m_Nodes[0].m_Type);
         }
 
         public override string ToString()

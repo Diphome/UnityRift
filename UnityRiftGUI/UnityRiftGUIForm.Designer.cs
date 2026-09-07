@@ -100,35 +100,33 @@
             this.toolStripMenuItem15 = new System.Windows.Forms.ToolStripMenuItem();
             this.writeLogToFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportClassStructuresMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.colorThemeToolStripMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.colorThemeAutoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.colorThemeLightToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.colorThemeDarkToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabControl1 = new UnityRiftGUI.DarkTabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.sceneExactSearchCheckBox = new System.Windows.Forms.CheckBox();
             this.sceneTreeView = new UnityRiftGUI.GOHierarchy();
             this.treeSearch = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.assetListView = new System.Windows.Forms.ListView();
+            this.assetListView = new UnityRiftGUI.BufferedListView();
             this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderContainer = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderType = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderPathID = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderSize = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panel1 = new System.Windows.Forms.Panel();
-            this.listSearch = new System.Windows.Forms.RichTextBox();
+            this.listSearch = new System.Windows.Forms.TextBox();
             this.listSearchHistory = new System.Windows.Forms.ComboBox();
             this.listSearchFilterMode = new System.Windows.Forms.ComboBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.classesListView = new System.Windows.Forms.ListView();
+            this.classesListView = new UnityRiftGUI.BufferedListView();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.progressbarPanel = new System.Windows.Forms.Panel();
-            this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.tabControl2 = new System.Windows.Forms.TabControl();
+            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.tabControl2 = new UnityRiftGUI.DarkTabControl();
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.previewPanel = new System.Windows.Forms.PictureBox();
             this.assetInfoLabel = new System.Windows.Forms.Label();
@@ -189,7 +187,6 @@
             this.tabPage2.SuspendLayout();
             this.panel1.SuspendLayout();
             this.tabPage3.SuspendLayout();
-            this.progressbarPanel.SuspendLayout();
             this.tabControl2.SuspendLayout();
             this.tabPage4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.previewPanel)).BeginInit();
@@ -214,7 +211,6 @@
             this.exportToolStripMenuItem,
             this.filterTypeToolStripMenuItem,
             this.debugMenuItem,
-            this.aboutToolStripMenuItem,
             this.colorThemeToolStripMenu});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -816,14 +812,7 @@
             this.exportClassStructuresMenuItem.Size = new System.Drawing.Size(288, 22);
             this.exportClassStructuresMenuItem.Text = "Export class structures";
             this.exportClassStructuresMenuItem.Click += new System.EventHandler(this.exportClassStructuresMenuItem_Click);
-            // 
-            // aboutToolStripMenuItem
-            // 
-            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
-            this.aboutToolStripMenuItem.Text = "About";
-            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
-            // 
+            //
             // colorThemeToolStripMenu
             // 
             this.colorThemeToolStripMenu.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
@@ -867,7 +856,6 @@
             // splitContainer1.Panel1
             // 
             this.splitContainer1.Panel1.Controls.Add(this.tabControl1);
-            this.splitContainer1.Panel1.Controls.Add(this.progressbarPanel);
             this.splitContainer1.Panel1MinSize = 200;
             // 
             // splitContainer1.Panel2
@@ -891,7 +879,7 @@
             this.tabControl1.Padding = new System.Drawing.Point(17, 3);
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(480, 633);
-            this.tabControl1.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
+            this.tabControl1.SizeMode = System.Windows.Forms.TabSizeMode.Normal;
             this.tabControl1.TabIndex = 0;
             this.tabControl1.Selected += new System.Windows.Forms.TabControlEventHandler(this.tabPageSelected);
             // 
@@ -928,6 +916,8 @@
             this.sceneTreeView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.sceneTreeView.CheckBoxes = true;
             this.sceneTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.sceneTreeView.FullRowSelect = true;
+            this.sceneTreeView.ShowLines = false;
             this.sceneTreeView.HideSelection = false;
             this.sceneTreeView.Location = new System.Drawing.Point(0, 20);
             this.sceneTreeView.Name = "sceneTreeView";
@@ -939,16 +929,13 @@
             // treeSearch
             // 
             this.treeSearch.Dock = System.Windows.Forms.DockStyle.Top;
-            this.treeSearch.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.treeSearch.ForeColor = System.Drawing.SystemColors.WindowText;
             this.treeSearch.Location = new System.Drawing.Point(0, 0);
             this.treeSearch.Name = "treeSearch";
             this.treeSearch.Size = new System.Drawing.Size(472, 20);
             this.treeSearch.TabIndex = 1;
-            this.treeSearch.Text = " Search ";
             this.treeSearch.TextChanged += new System.EventHandler(this.treeSearch_TextChanged);
-            this.treeSearch.Enter += new System.EventHandler(this.treeSearch_Enter);
             this.treeSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.treeSearch_KeyDown);
-            this.treeSearch.Leave += new System.EventHandler(this.treeSearch_Leave);
             // 
             // tabPage2
             // 
@@ -991,26 +978,29 @@
             // columnHeaderName
             // 
             this.columnHeaderName.Text = "Name";
-            this.columnHeaderName.Width = 170;
+            this.columnHeaderName.Width = 200;
             // 
             // columnHeaderContainer
             // 
             this.columnHeaderContainer.Text = "Container";
-            this.columnHeaderContainer.Width = 80;
+            this.columnHeaderContainer.Width = 120;
             // 
             // columnHeaderType
             // 
             this.columnHeaderType.Text = "Type";
-            this.columnHeaderType.Width = 90;
+            this.columnHeaderType.Width = 125;
             // 
             // columnHeaderPathID
             // 
-            this.columnHeaderPathID.Text = "PathID";
+            this.columnHeaderPathID.Text = "Path ID";
+            this.columnHeaderPathID.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.columnHeaderPathID.Width = 80;
             // 
             // columnHeaderSize
             // 
             this.columnHeaderSize.Text = "Size";
-            this.columnHeaderSize.Width = 50;
+            this.columnHeaderSize.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.columnHeaderSize.Width = 72;
             // 
             // panel1
             // 
@@ -1030,19 +1020,13 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listSearch.BackColor = System.Drawing.SystemColors.Window;
             this.listSearch.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.listSearch.DetectUrls = false;
-            this.listSearch.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.listSearch.ForeColor = System.Drawing.SystemColors.WindowText;
             this.listSearch.Location = new System.Drawing.Point(3, 3);
-            this.listSearch.Multiline = false;
             this.listSearch.Name = "listSearch";
-            this.listSearch.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
             this.listSearch.Size = new System.Drawing.Size(331, 16);
             this.listSearch.TabIndex = 1;
-            this.listSearch.Text = " Filter ";
             this.listSearch.WordWrap = false;
             this.listSearch.TextChanged += new System.EventHandler(this.ListSearchTextChanged);
-            this.listSearch.Enter += new System.EventHandler(this.listSearch_Enter);
-            this.listSearch.Leave += new System.EventHandler(this.listSearch_Leave);
             // 
             // listSearchHistory
             // 
@@ -1055,8 +1039,6 @@
             this.listSearchHistory.TabIndex = 2;
             this.listSearchHistory.TabStop = false;
             this.listSearchHistory.SelectedIndexChanged += new System.EventHandler(this.listSearchHistory_SelectedIndexChanged);
-            this.listSearchHistory.Enter += new System.EventHandler(this.listSearch_Enter);
-            this.listSearchHistory.Leave += new System.EventHandler(this.listSearch_Leave);
             // 
             // listSearchFilterMode
             // 
@@ -1067,7 +1049,8 @@
             "Include",
             "Exclude",
             "Regex (Name)",
-            "Regex (Container)"});
+            "Regex (Container)",
+            "Include (+ content)"});
             this.listSearchFilterMode.Location = new System.Drawing.Point(351, 0);
             this.listSearchFilterMode.Name = "listSearchFilterMode";
             this.listSearchFilterMode.Size = new System.Drawing.Size(121, 21);
@@ -1087,8 +1070,9 @@
             // classesListView
             // 
             this.classesListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader2,
             this.columnHeader1,
-            this.columnHeader2});
+            this.columnHeader3});
             this.classesListView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.classesListView.FullRowSelect = true;
             this.classesListView.HideSelection = false;
@@ -1101,38 +1085,21 @@
             this.classesListView.View = System.Windows.Forms.View.Details;
             this.classesListView.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.classesListView_ItemSelectionChanged);
             // 
-            // columnHeader1
-            // 
-            this.columnHeader1.DisplayIndex = 1;
-            this.columnHeader1.Text = "Name";
-            this.columnHeader1.Width = 300;
-            // 
             // columnHeader2
             // 
-            this.columnHeader2.DisplayIndex = 0;
             this.columnHeader2.Text = "ID";
-            this.columnHeader2.Width = 70;
+            this.columnHeader2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.columnHeader2.Width = 64;
             // 
-            // progressbarPanel
+            // columnHeader1
             // 
-            this.progressbarPanel.Controls.Add(this.progressBar1);
-            this.progressbarPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.progressbarPanel.Location = new System.Drawing.Point(0, 633);
-            this.progressbarPanel.Name = "progressbarPanel";
-            this.progressbarPanel.Padding = new System.Windows.Forms.Padding(1, 3, 1, 1);
-            this.progressbarPanel.Size = new System.Drawing.Size(480, 22);
-            this.progressbarPanel.TabIndex = 2;
+            this.columnHeader1.Text = "Name";
+            this.columnHeader1.Width = 230;
             // 
-            // progressBar1
+            // columnHeader3
             // 
-            this.progressBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.progressBar1.ForeColor = System.Drawing.SystemColors.MenuHighlight;
-            this.progressBar1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.progressBar1.Location = new System.Drawing.Point(1, 3);
-            this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(478, 18);
-            this.progressBar1.Step = 1;
-            this.progressBar1.TabIndex = 1;
+            this.columnHeader3.Text = "Unity version";
+            this.columnHeader3.Width = 120;
             // 
             // tabControl2
             // 
@@ -1141,7 +1108,9 @@
             this.tabControl2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl2.Location = new System.Drawing.Point(0, 0);
             this.tabControl2.Name = "tabControl2";
+            this.tabControl2.Padding = new System.Drawing.Point(17, 3);
             this.tabControl2.SelectedIndex = 0;
+            this.tabControl2.SizeMode = System.Windows.Forms.TabSizeMode.Normal;
             this.tabControl2.Size = new System.Drawing.Size(776, 633);
             this.tabControl2.TabIndex = 4;
             this.tabControl2.SelectedIndexChanged += new System.EventHandler(this.tabControl2_SelectedIndexChanged);
@@ -1698,7 +1667,6 @@
             this.tabPage2.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.tabPage3.ResumeLayout(false);
-            this.progressbarPanel.ResumeLayout(false);
             this.tabControl2.ResumeLayout(false);
             this.tabPage4.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.previewPanel)).EndInit();
@@ -1725,7 +1693,7 @@
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.TabControl tabControl1;
+        private UnityRiftGUI.DarkTabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.TextBox treeSearch;
@@ -1738,10 +1706,8 @@
         private System.Windows.Forms.ToolStripMenuItem exportAllAssetsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSelectedAssetsMenuItem;
         private System.Windows.Forms.PictureBox previewPanel;
-        private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
-        private System.Windows.Forms.Panel progressbarPanel;
         private System.Windows.Forms.ToolStripMenuItem exportFilteredAssetsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem modelToolStripMenuItem;
         private System.Windows.Forms.Label assetInfoLabel;
@@ -1770,9 +1736,10 @@
         private GOHierarchy sceneTreeView;
         private System.Windows.Forms.ToolStripMenuItem debugMenuItem;
         private System.Windows.Forms.TabPage tabPage3;
-        private System.Windows.Forms.ListView classesListView;
+        private UnityRiftGUI.BufferedListView classesListView;
         private System.Windows.Forms.ColumnHeader columnHeader2;
         private System.Windows.Forms.ColumnHeader columnHeader1;
+        private System.Windows.Forms.ColumnHeader columnHeader3;
         private System.Windows.Forms.TextBox classTextBox;
         private System.Windows.Forms.ToolStripMenuItem exportClassStructuresMenuItem;
         private System.Windows.Forms.Label FMODcopyrightLabel;
@@ -1804,7 +1771,7 @@
         private System.Windows.Forms.ColumnHeader columnHeaderContainer;
         private System.Windows.Forms.ColumnHeader columnHeaderPathID;
         private System.Windows.Forms.ToolStripMenuItem copyToolStripMenuItem;
-        private System.Windows.Forms.TabControl tabControl2;
+        private UnityRiftGUI.DarkTabControl tabControl2;
         private System.Windows.Forms.TabPage tabPage4;
         private System.Windows.Forms.TabPage tabPage5;
         private System.Windows.Forms.TextBox dumpTextBox;
@@ -1821,15 +1788,14 @@
         private System.Windows.Forms.ToolStripSeparator shToolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem shCollapseAllToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem shExpandAllToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ComboBox listSearchFilterMode;
         private System.Windows.Forms.ComboBox listSearchHistory;
-        private System.Windows.Forms.RichTextBox listSearch;
+        private System.Windows.Forms.TextBox listSearch;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
         private System.Windows.Forms.ToolStripMenuItem shShowRelatedAssetsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator shToolStripSeparator1;
-        private System.Windows.Forms.ListView assetListView;
+        private UnityRiftGUI.BufferedListView assetListView;
         private System.Windows.Forms.ToolStripMenuItem showConsoleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem writeLogToFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem buildTreeStructureToolStripMenuItem;

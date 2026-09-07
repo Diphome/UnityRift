@@ -69,6 +69,7 @@ namespace UnityRiftGUI
         Exclude,
         RegexName,
         RegexContainer,
+        IncludeContent,
     }
 
     [Flags]
@@ -396,6 +397,7 @@ namespace UnityRiftGUI
                                 m_GameObject.CubismModel.Container = container;
                             }
                             break;
+                        case LazyObject lazy when lazy.type == ClassIDType.AnimationClip: // clips are placeholders until used
                         case AnimationClip _:
                         case Texture2D _:
                         case MonoBehaviour _:
@@ -420,10 +422,7 @@ namespace UnityRiftGUI
                     exportableAssets.Add(fakeItem);
                 }
             }
-            foreach (var tmp in exportableAssets)
-            {
-                tmp.SetSubItems();
-            }
+            // Column cells are built per row on first display (AssetItem.EnsureSubItems).
             containers.Clear();
             tex2dArrayAssetList.Clear();
 
@@ -464,14 +463,14 @@ namespace UnityRiftGUI
                                 objectAssetItemDic[m_Component].TreeNode = currentNode;
                                 if (m_Component is MeshFilter m_MeshFilter)
                                 {
-                                    if (m_MeshFilter.m_Mesh.TryGet(out var m_Mesh))
+                                    if (m_MeshFilter.m_Mesh.TryGet<Object>(out var m_Mesh)) // identity only: don't parse the mesh to tag its tree node
                                     {
                                         objectAssetItemDic[m_Mesh].TreeNode = currentNode;
                                     }
                                 }
                                 else if (m_Component is SkinnedMeshRenderer m_SkinnedMeshRenderer)
                                 {
-                                    if (m_SkinnedMeshRenderer.m_Mesh.TryGet(out var m_Mesh))
+                                    if (m_SkinnedMeshRenderer.m_Mesh.TryGet<Object>(out var m_Mesh)) // identity only: don't parse the mesh to tag its tree node
                                     {
                                         objectAssetItemDic[m_Mesh].TreeNode = currentNode;
                                     }
@@ -687,6 +686,9 @@ namespace UnityRiftGUI
                     }
 
                     Progress.Report(++i, toExportCount);
+                    // Heavy assets were parsed on demand for this export; drop the payload
+                    // again so "export all" does not regrow to the eager memory footprint.
+                    (asset.RawAsset as LazyObject)?.Release();
                 }
                 Exporter.ClearHash();
 
@@ -1009,6 +1011,41 @@ namespace UnityRiftGUI
                 str = obj.DumpObject();
             }
             return str;
+        }
+
+        // Returns the searchable text content of an asset for the "Include (+ content)"
+        // search mode, lowercased and cached on the AssetItem. Currently covers the
+        // text-bearing types (TextAsset script and MonoBehaviour typetree dump); other
+        // types have no meaningful text body and return null (search falls back to name/
+        // container/PathID). Kept lazy + cached so a content search over many assets only
+        // pays the dump cost once.
+        public static string GetSearchableContent(AssetItem item)
+        {
+            if (item.SearchContentBuilt)
+                return item.SearchContentCache;
+
+            string text = null;
+            try
+            {
+                switch (item.Asset)
+                {
+                    case TextAsset m_TextAsset:
+                        if (m_TextAsset.m_Script != null && m_TextAsset.m_Script.Length > 0)
+                            text = System.Text.Encoding.UTF8.GetString(m_TextAsset.m_Script);
+                        break;
+                    case MonoBehaviour m_MonoBehaviour:
+                        text = DumpAsset(m_MonoBehaviour);
+                        break;
+                }
+            }
+            catch
+            {
+                text = null;
+            }
+
+            item.SearchContentCache = text?.ToLowerInvariant();
+            item.SearchContentBuilt = true;
+            return item.SearchContentCache;
         }
 
         public static JsonDocument DumpAssetToJsonDoc(Object obj)

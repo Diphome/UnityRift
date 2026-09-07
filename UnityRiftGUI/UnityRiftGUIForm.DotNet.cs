@@ -21,11 +21,12 @@ namespace UnityRiftGUI
         private TabPage dotnetTabPage;
         private TreeView dotnetTreeView;
         private TextBox dotnetSearch;
+        private SearchHost dotnetSearchHost;
+        private SearchToggle dotnetIlToggle;
         private CheckBox dotnetShowIL;
         private Label dotnetStatusLabel;
         private ToolStripMenuItem loadAssembliesToolStripMenuItem;
         private ToolStripMenuItem loadIl2CppToolStripMenuItem;
-        private const string DotnetSearchHint = " Search types (Enter) ";
         private const string DotnetLoadingTag = "__loading__";
 
         private void InitDotNetTab()
@@ -43,28 +44,14 @@ namespace UnityRiftGUI
             dotnetTreeView.BeforeExpand += dotnetTreeView_BeforeExpand;
             dotnetTreeView.AfterSelect += dotnetTreeView_AfterSelect;
 
-            var topPanel = new Panel { Dock = DockStyle.Top, Height = 20 };
+            // Same search row as the other tabs: a Dock=Top panel of Height 48 with an 8px
+            // bottom gap, holding the SearchHost. "Show IL" becomes an in-field toggle and
+            // Export stays as a single button on the right.
+            var topPanel = new Panel { Dock = DockStyle.Top, Height = 48, Padding = new Padding(0, 0, 0, 8) };
             dotnetSearch = new TextBox
             {
-                Dock = DockStyle.Fill,
-                ForeColor = SystemColors.GrayText,
-                Text = DotnetSearchHint,
-            };
-            dotnetSearch.Enter += (s, e) =>
-            {
-                if (dotnetSearch.Text == DotnetSearchHint)
-                {
-                    dotnetSearch.Text = "";
-                    dotnetSearch.ForeColor = SystemColors.WindowText;
-                }
-            };
-            dotnetSearch.Leave += (s, e) =>
-            {
-                if (dotnetSearch.Text == "")
-                {
-                    dotnetSearch.Text = DotnetSearchHint;
-                    dotnetSearch.ForeColor = SystemColors.GrayText;
-                }
+                PlaceholderText = "Search types…",
+                Font = new System.Drawing.Font("Segoe UI", 11F),
             };
             dotnetSearch.KeyDown += (s, e) =>
             {
@@ -74,19 +61,15 @@ namespace UnityRiftGUI
                     BuildDotNetTree();
                 }
             };
-            dotnetShowIL = new CheckBox
-            {
-                Dock = DockStyle.Right,
-                AutoSize = true,
-                Text = "Show IL",
-                Cursor = Cursors.Hand,
-                FlatStyle = FlatStyle.Flat,
-                UseVisualStyleBackColor = true,
-                Padding = new Padding(4, 0, 4, 0),
-            };
+            dotnetSearchHost = new SearchHost(dotnetSearch) { Dock = DockStyle.Fill };
+
+            // "Show IL" is kept as hidden state; the in-field "IL" toggle drives it.
+            dotnetShowIL = new CheckBox { Visible = false };
             dotnetShowIL.CheckedChanged += (s, e) => ShowDotNetNode(dotnetTreeView.SelectedNode);
-            topPanel.Controls.Add(dotnetSearch);
-            topPanel.Controls.Add(dotnetShowIL);
+            dotnetIlToggle = dotnetSearchHost.AddToggle("IL", "Show IL disassembly");
+            dotnetIlToggle.CheckedChanged += (s, e) => dotnetShowIL.Checked = dotnetIlToggle.Checked;
+
+            topPanel.Controls.Add(dotnetSearchHost);
             InitDotNetExport(topPanel);
 
             dotnetStatusLabel = new Label
@@ -101,7 +84,8 @@ namespace UnityRiftGUI
 
             dotnetTabPage.Controls.Add(dotnetTreeView);
             dotnetTabPage.Controls.Add(topPanel);
-            dotnetTabPage.Controls.Add(dotnetStatusLabel);
+            // dotnetStatusLabel is kept as a state holder but not shown (the empty-state
+            // overlay conveys the same guidance; the bottom bar is removed).
             tabControl1.TabPages.Add(dotnetTabPage);
 
             loadAssembliesToolStripMenuItem = new ToolStripMenuItem("Load .NET assemblies folder");
@@ -159,32 +143,149 @@ namespace UnityRiftGUI
             }
         }
 
-        /// <summary>Called after files are loaded: looks for a Managed folder (Mono) or an IL2CPP binary next to them.</summary>
-        private async Task TryAutoLoadAssembliesAsync()
+        /// <summary>Finds a Managed folder (Mono) or an IL2CPP binary next to the loaded
+        /// files. Detection only: a filesystem scan, nothing is parsed or loaded.</summary>
+        private async Task<(string managed, Il2CppGame game)> FindProjectAssembliesAsync()
         {
-            if (assemblyLoader.Loaded)
-                return;
             var paths = assetsManager.AssetsFileList.Select(f => f.originalPath ?? f.fullName).Where(p => p != null).Distinct().ToList();
             if (!string.IsNullOrEmpty(openDirectoryBackup))
                 paths.Add(openDirectoryBackup);
             var managed = await Task.Run(() => AssemblyLoader.FindManagedFolder(paths));
             if (managed != null)
-            {
-                Logger.Info($"Found .NET assemblies folder: {managed}");
-                await LoadAssembliesAsync(managed);
+                return (managed, null);
+            return (null, await Task.Run(() => Il2CppAssemblyProvider.Find(paths)));
+        }
+
+        /// <summary>Called after files are loaded: detects assemblies and only logs a hint.
+        /// It never loads automatically — loading (IL2CPP dummy-assembly generation above
+        /// all) can be slow on big projects, so the user starts it explicitly with the
+        /// "Discover assemblies" button on the .NET Classes tab, or from the .NET menu.</summary>
+        private async Task TryAutoLoadAssembliesAsync()
+        {
+            if (assemblyLoader.Loaded)
                 return;
-            }
-            var game = await Task.Run(() => Il2CppAssemblyProvider.Find(paths));
-            if (game == null)
-                return;
-            if (!Il2CppAssemblyProvider.IsSupported)
-            {
+            var (managed, game) = await FindProjectAssembliesAsync();
+            if (managed != null)
+                Logger.Info($"Found .NET assemblies folder: {managed}. Use \"Discover assemblies\" on the .NET Classes tab to load it.");
+            else if (game != null && !Il2CppAssemblyProvider.IsSupported)
                 Logger.Info($"IL2CPP game detected ({game.BinaryPath}) but IL2CPP support needs the .NET 8+ build.");
-                dotnetStatusLabel.Text = "IL2CPP game detected. IL2CPP support requires the .NET 8+ build of UnityRift.";
+            else if (game != null)
+                Logger.Info($"Found IL2CPP binary: {game.BinaryPath}. Use \"Discover assemblies\" on the .NET Classes tab to load it — this can take a while.");
+            UpdateDotNetEmptyState();
+        }
+
+        // --- "Discover assemblies" button on the .NET Classes empty state ---------------
+        private Button dotnetDiscoverButton;
+
+        // One click: find the Managed folder / IL2CPP binary that belongs to the loaded
+        // project and load it. Only offered once a project is actually loaded.
+        private async void DotNetDiscover_Click(object sender, EventArgs e)
+        {
+            if (assemblyLoader.Loaded || assetsManager.AssetsFileList.Count == 0)
                 return;
+            dotnetDiscoverButton.Enabled = false;
+            BeginBusy("Looking for .NET assemblies…");
+            try
+            {
+                var (managed, game) = await FindProjectAssembliesAsync();
+                if (managed != null)
+                {
+                    Logger.Info($"Found .NET assemblies folder: {managed}");
+                    SetBusyText("Loading .NET assemblies…");
+                    await LoadAssembliesAsync(managed);
+                    return;
+                }
+                if (game == null)
+                {
+                    Logger.Warning("No Managed folder or IL2CPP binary was found next to the loaded files. Use the .NET menu to pick one manually.");
+                    return;
+                }
+                if (!Il2CppAssemblyProvider.IsSupported)
+                {
+                    Logger.Warning($"IL2CPP game detected ({game.BinaryPath}) but IL2CPP support needs the .NET 8+ build.");
+                    return;
+                }
+                Logger.Info($"Found IL2CPP binary: {game.BinaryPath}");
+                SetBusyText("Preparing IL2CPP dummy assemblies (this can take a while)…");
+                await LoadIl2CppAsync(game);
             }
-            Logger.Info($"Found IL2CPP binary: {game.BinaryPath}");
-            await LoadIl2CppAsync(game);
+            catch (Exception ex)
+            {
+                Logger.Error("Assembly discovery failed", ex);
+            }
+            finally
+            {
+                EndBusy();
+                if (dotnetDiscoverButton != null)
+                    dotnetDiscoverButton.Enabled = true;
+                UpdateDotNetEmptyState();
+            }
+        }
+
+        // Lives on the tab page itself, not on the empty-state Label: a Label is not a
+        // container control, and a button parented to one does not reliably show.
+        private void UpdateDotNetDiscoverButton(bool loading)
+        {
+            if (dotnetTabPage == null)
+                return;
+            if (dotnetDiscoverButton == null)
+            {
+                dotnetDiscoverButton = new Button
+                {
+                    Text = "Discover assemblies for this project",
+                    AutoSize = true,
+                    AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                    Padding = new Padding(14, 7, 14, 7),
+                    Cursor = Cursors.Hand,
+                    Font = new System.Drawing.Font("Segoe UI", 9.5f),
+                    Visible = false,
+                };
+                dotnetDiscoverButton.Click += DotNetDiscover_Click;
+                dotnetTabPage.Controls.Add(dotnetDiscoverButton);
+                dotnetTabPage.Resize += (s, e) => PositionDotNetDiscoverButton();
+                ThemeDotNetDiscoverButton(isDarkMode);
+            }
+            // Test the empty-state condition itself, not dotnetEmptyLabel.Visible: WinForms
+            // reports *effective* visibility, so the label reads as hidden whenever the .NET
+            // tab is not the selected one — which is exactly when this runs after a load.
+            var show = !loading && !assemblyLoader.Loaded
+                && assetsManager.AssetsFileList.Count > 0
+                && dotnetTreeView.Nodes.Count == 0;
+            dotnetDiscoverButton.Visible = show;
+            if (show)
+            {
+                // The button replaces the empty-state message entirely: it stands on its own,
+                // centered, so the redundant "No .NET assemblies loaded" text is not shown.
+                if (dotnetEmptyLabel != null)
+                    dotnetEmptyLabel.Visible = false;
+                PositionDotNetDiscoverButton();
+                dotnetDiscoverButton.BringToFront();
+            }
+        }
+
+        private void PositionDotNetDiscoverButton()
+        {
+            if (dotnetDiscoverButton == null || dotnetTabPage == null)
+                return;
+            // Centered on the page (no message above it now).
+            dotnetDiscoverButton.Location = new System.Drawing.Point(
+                Math.Max(0, (dotnetTabPage.ClientSize.Width - dotnetDiscoverButton.Width) / 2),
+                Math.Max(0, (dotnetTabPage.ClientSize.Height - dotnetDiscoverButton.Height) / 2));
+        }
+
+        private void ThemeDotNetDiscoverButton(bool dark)
+        {
+            if (dotnetDiscoverButton == null)
+                return;
+            dotnetDiscoverButton.FlatStyle = dark ? FlatStyle.Flat : FlatStyle.Standard;
+            dotnetDiscoverButton.UseVisualStyleBackColor = !dark;
+            dotnetDiscoverButton.BackColor = dark
+                ? System.Drawing.Color.FromArgb(60, 60, 62)
+                : System.Drawing.Color.FromArgb(240, 240, 240);
+            dotnetDiscoverButton.ForeColor = dark
+                ? System.Drawing.Color.FromArgb(225, 225, 225)
+                : System.Drawing.Color.FromArgb(20, 20, 20);
+            dotnetDiscoverButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(90, 90, 94);
         }
 
         private string LoadedUnityVersionString()
@@ -217,6 +318,7 @@ namespace UnityRiftGUI
         private async Task LoadAssembliesAsync(string folder, bool il2cpp = false)
         {
             dotnetStatusLabel.Text = $"Loading assemblies from {folder}...";
+            UpdateDotNetEmptyState("Loading .NET assemblies\u2026");
             await Task.Run(() =>
             {
                 assemblyLoader.Clear();
@@ -235,9 +337,10 @@ namespace UnityRiftGUI
             dotnetShowIL.Enabled = true;
             dotnetShowIL.Text = "Show IL";
             dotnetStatusLabel.Text = "No assemblies loaded. File → Load .NET assemblies, or load a game folder with a Managed directory.";
+            UpdateDotNetEmptyState();
         }
 
-        private string DotNetFilter => dotnetSearch.Text == DotnetSearchHint ? "" : dotnetSearch.Text.Trim();
+        private string DotNetFilter => dotnetSearch.Text.Trim();
 
         private void BuildDotNetTree()
         {
@@ -306,6 +409,13 @@ namespace UnityRiftGUI
             dotnetShowIL.Text = assemblyLoader.IsIl2CppStubs ? "No IL (IL2CPP)" : "Show IL";
             if (assemblyLoader.IsIl2CppStubs)
                 dotnetShowIL.Checked = false;
+            if (dotnetIlToggle != null)
+            {
+                dotnetIlToggle.Visible = !assemblyLoader.IsIl2CppStubs; // no IL to show for IL2CPP stubs
+                if (assemblyLoader.IsIl2CppStubs)
+                    dotnetIlToggle.SetChecked(false);
+            }
+            UpdateDotNetEmptyState();
         }
 
         private static int AssemblyRank(string name)

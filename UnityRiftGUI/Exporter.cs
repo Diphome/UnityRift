@@ -151,6 +151,20 @@ namespace UnityRiftGUI
 
             if (m_Mesh.m_VertexCount <= 0)
                 return false;
+
+            // Honor the "Export 3D models as" option for standalone Mesh assets.
+            // FBX keeps the classic Wavefront OBJ output; glTF/GLB route through the
+            // shared IImported model exporter.
+            if (Studio.ModelFormat == Studio.ModelExportFormat.Gltf || Studio.ModelFormat == Studio.ModelExportFormat.Glb)
+            {
+                var ext = Studio.ModelFormat == Studio.ModelExportFormat.Glb ? ".glb" : ".gltf";
+                if (!TryExportFile(exportPath, item, ext, out var modelPath))
+                    return false;
+                var convert = new ModelConverter(m_Mesh, Properties.Settings.Default.convertType);
+                ExportFbx(convert, modelPath);
+                return true;
+            }
+
             if (!TryExportFile(exportPath, item, ".obj", out var exportFullPath))
                 return false;
 

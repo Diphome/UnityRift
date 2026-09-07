@@ -119,12 +119,14 @@ namespace UnityRiftGUI
 #endif
 
         //asset list selection
-        private List<int> selectedIndicesPrevList = new List<int>();
+        // HashSet: ProcessSelectedItems adds/removes per index, and List.Remove is a linear
+        // scan, which made deselecting after a Ctrl+A over thousands of rows quadratic.
+        private HashSet<int> selectedIndicesPrevList = new HashSet<int>();
         private List<AssetItem> selectedAnimationAssetsList = new List<AssetItem>();
 
         //asset list filter
         private System.Timers.Timer delayTimer;
-        private bool enableFiltering;
+        private bool enableFiltering = true;
 
         //tree search
         private int nextGObject;
@@ -141,12 +143,40 @@ namespace UnityRiftGUI
         private GUILogger logger;
 
         private TaskbarManager taskbar = TaskbarManager.Instance;
-        private System.Drawing.Font progressBarTextFont;
-        private Brush progressBarTextBrush;
-        private StringFormat progressBarTextFormat;
 
         [DllImport("gdi32.dll")]
         private static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
+
+        // --- Dark-theme native helpers ---
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        [DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
+        private static extern int SetWindowTheme(IntPtr hWnd, string pszSubAppName, string pszSubIdList);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        private static extern bool InvalidateRect(IntPtr hWnd, IntPtr rect, bool erase);
+
+        private const int LVM_GETHEADER = 0x1000 + 31;
+
+        // Force a ListView's owner-drawn header to repaint (it caches across theme switches).
+        private void RefreshListHeader(ListView lv)
+        {
+            if (!lv.IsHandleCreated) return;
+            var header = SendMessage(lv.Handle, LVM_GETHEADER, IntPtr.Zero, IntPtr.Zero);
+            if (header != IntPtr.Zero)
+                InvalidateRect(header, IntPtr.Zero, true);
+        }
+
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20; // dark title bar (Win10 20H1+)
+
+        // --- Modern icon toolbar ---
+        private ToolStrip toolStripMain;
+        private MenuRenderer menuRenderer;
+        private ImageList rowSpacer;
 
         private string guiTitle;
 
@@ -156,9 +186,33 @@ namespace UnityRiftGUI
             ConsoleWindow.RunConsole(Properties.Settings.Default.showConsole);
             InitializeComponent();
             ApplyColorTheme(out isDarkMode);
+            previewPanel.Image = PreviewPlaceholder();
+            if (StartupPaths != null && StartupPaths.Length > 0)
+                Shown += async (s, e) => await LoadPathsAsync(StartupPaths.ToList());
+            menuStrip1.Padding = new Padding(0); // remove the strip's dead space (left/top/bottom)
+            statusStrip1.Visible = false; // remove the "Ready to go" bottom bar (progress is in the popup)
+            classesListView.ShowGroups = false; // hide the Unity-version group header (it's in the title bar)
+            // Stretch each list's last column so there's no blank trailing area.
+            classesListView.SizeChanged += (s, e) => FillLastColumn(classesListView);
+            FillLastColumn(classesListView);
+            assetListView.SizeChanged += (s, e) => FillLastColumn(assetListView);
+            FillLastColumn(assetListView);
+            // Taller rows so results breathe (a 1px-wide spacer image sets the row height).
+            rowSpacer = new ImageList { ImageSize = new Size(1, 26), ColorDepth = ColorDepth.Depth32Bit };
+            assetListView.SmallImageList = rowSpacer;
+            classesListView.SmallImageList = rowSpacer;
+            InitToolbar();
             InitDotNetTab();
             InitRecentProjectsMenu();
             InitGodotExportMenu();
+            WrapTreeSearch();
+            WrapListSearch();
+            ApplyUiFonts();
+            // After every tab/control has been created (incl. the runtime .NET Classes tab).
+            WireThemeControls();
+            ApplyTheme(isDarkMode);
+            InitAssetEmptyState();
+            InitStatusCounter();
 
             var appAssembly = typeof(Program).Assembly.GetName();
             guiTitle = $"UnityRift v{appAssembly.Version}";
@@ -182,20 +236,20 @@ namespace UnityRiftGUI
             if (File.Exists(typeTreeDbPath))
                 assetsManager.LoadTypeTreeDatabase(typeTreeDbPath);
             FMODinit();
+#if NET5_0_OR_GREATER
+            // Native watermark cue (replaces the old " Filter " sentinel-text hack).
+            listSearch.PlaceholderText = "Search by name, container or path";
+            // Shown in the Dump text box while nothing is selected.
+            dumpTextBox.PlaceholderText = "Select an asset to view its dump";
+            // Scene Hierarchy object search.
+            treeSearch.PlaceholderText = "Search objects…";
+#endif
             listSearchFilterMode.SelectedIndex = 0;
             FbxInitOptions(Properties.Settings.Default.fbxSettings);
 
             logger = new GUILogger(StatusStripUpdate);
             Logger.Default = logger;
             writeLogToFileToolStripMenuItem.Checked = Properties.Settings.Default.useFileLogger;
-
-            progressBarTextFont = new System.Drawing.Font(FontFamily.GenericSansSerif, 8);
-            progressBarTextBrush = new SolidBrush(SystemColors.ControlText);
-            progressBarTextFormat = new StringFormat
-            {
-                Alignment = StringAlignment.Center,
-                LineAlignment = StringAlignment.Center,
-            };
 
             Progress.Default = new Progress<int>(SetProgressBarValue);
             Progress.SetInstance(index: 1, new Progress<int>(SetProgressBarStringValue));
@@ -215,12 +269,21 @@ namespace UnityRiftGUI
             var pathArray = (string[])e.Data?.GetData(DataFormats.FileDrop);
             if (pathArray == null)
                 return;
+            await LoadPathsAsync(pathArray.ToList());
+        }
 
-            var pathList = pathArray.ToList();
+        // Paths given on the command line (Explorer "Open with", shortcuts, scripted runs);
+        // loaded once the window is shown, exactly like a drag-and-drop of the same paths.
+        public static string[] StartupPaths;
+
+        // Shared load path for drag-and-drop and command-line arguments.
+        private async Task LoadPathsAsync(List<string> pathList)
+        {
             assetsManager.LoadOptionFiles(pathList);
             if (pathList.Count == 0)
                 return;
 
+            BeginBusy("Loading files…");
             ResetForm();
             for (var i = 0; i < pathList.Count; i++)
             {
@@ -249,6 +312,7 @@ namespace UnityRiftGUI
                 assetsManager.LoadOptionFiles(pathList);
                 if (pathList.Count == 0)
                     return;
+                BeginBusy("Loading files…");
                 ResetForm();
                 var loadedPaths = pathList.ToArray();
                 await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, pathList));
@@ -263,6 +327,7 @@ namespace UnityRiftGUI
             openFolderDialog.InitialFolder = openDirectoryBackup;
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
+                BeginBusy("Loading files…");
                 ResetForm();
                 await Task.Run(() => assetsManager.LoadFilesAndFolders(out openDirectoryBackup, openFolderDialog.Folder));
                 AddRecentProject(new[] { openFolderDialog.Folder });
@@ -308,73 +373,150 @@ namespace UnityRiftGUI
             if (assetsManager.AssetsFileList.Count == 0)
             {
                 Logger.Info("No Unity file can be loaded.");
+                EndBusy();
                 return;
             }
 
-            var (productName, treeNodeCollection) = await Task.Run(BuildAssetData);
-            var typeMap = await Task.Run(BuildClassStructure);
-            productName = string.IsNullOrEmpty(productName) ? "no productName" : productName;
-            if (isDarkMode)
+            try
+            {
+                SetBusyText("Building the asset list…");
+                var (productName, treeNodeCollection) = await Task.Run(BuildAssetData);
+                SetBusyText("Reading class structures…");
+                var typeMap = await Task.Run(BuildClassStructure);
+                productName = string.IsNullOrEmpty(productName) ? "no productName" : productName;
                 Progress.Reset();
 
-            var serializedFile = assetsManager.AssetsFileList[0];
-            var tuanjieString = serializedFile.version.IsTuanjie ? " - Tuanjie Engine" : "";
-            Text = $"{guiTitle} - {productName} - {serializedFile.version} - {serializedFile.targetPlatformString}{tuanjieString}";
+                var serializedFile = assetsManager.AssetsFileList[0];
+                var tuanjieString = serializedFile.version.IsTuanjie ? " - Tuanjie Engine" : "";
+                Text = $"{guiTitle} - {productName} - {serializedFile.version} - {serializedFile.targetPlatformString}{tuanjieString}";
 
-            assetListView.VirtualListSize = visibleAssets.Count;
+                // Everything below fills the views and so must run on the UI thread, which
+                // blocks the message pump. Each step names itself and repaints the popup
+                // before it starts, so the window never sits there looking hung.
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                SetBusyText($"Populating the asset list ({visibleAssets.Count:N0} assets)…");
+                assetListView.BeginUpdate();
+                assetListView.VirtualListSize = visibleAssets.Count;
+                FillLastColumn(assetListView);
+                assetListView.EndUpdate();
+                UpdateAssetEmptyState();
+                UpdateAssetCounts();
+                Logger.Debug($"Asset list populated in {sw.ElapsedMilliseconds} ms");
 
-            sceneTreeView.BeginUpdate();
-            sceneTreeView.Nodes.AddRange(treeNodeCollection.ToArray());
-            sceneTreeView.EndUpdate();
-            treeNodeCollection.Clear();
+                sw.Restart();
+                PopulateSceneTree(treeNodeCollection);
+                Logger.Debug($"Scene hierarchy populated in {sw.ElapsedMilliseconds} ms");
 
-            classesListView.BeginUpdate();
-            foreach (var version in typeMap)
-            {
-                var versionGroup = new ListViewGroup(version.Key.FullVersion);
-                classesListView.Groups.Add(versionGroup);
-
-                foreach (var uclass in version.Value)
+                sw.Restart();
+                SetBusyText("Populating asset classes…");
+                classesListView.BeginUpdate();
+                var versionIndex = 0;
+                foreach (var version in typeMap)
                 {
-                    uclass.Value.Group = versionGroup;
-                    classesListView.Items.Add(uclass.Value);
+                    var versionGroup = new ListViewGroup(version.Key.FullVersion);
+                    classesListView.Groups.Add(versionGroup);
+
+                    // AddRange in one call per version: adding thousands of rows one at a
+                    // time is markedly slower, even inside Begin/EndUpdate.
+                    var classItems = new ListViewItem[version.Value.Count];
+                    var n = 0;
+                    foreach (var uclass in version.Value)
+                    {
+                        uclass.Value.Group = versionGroup;
+                        uclass.Value.SubItems.Add(version.Key.FullVersion);
+                        classItems[n++] = uclass.Value;
+                    }
+                    classesListView.Items.AddRange(classItems);
+                    SetBusyProgress($"Populating asset classes… {++versionIndex} / {typeMap.Count}", versionIndex, typeMap.Count);
                 }
-            }
-            typeMap.Clear();
-            classesListView.EndUpdate();
+                typeMap.Clear();
+                classesListView.EndUpdate();
+                UpdateClassesEmptyState();
+                Logger.Debug($"Asset classes populated in {sw.ElapsedMilliseconds} ms");
 
-            var types = new SortedSet<string>();
-            types.UnionWith(exportableAssets.Select(x => x.TypeString));
-            if (Studio.l2dModelDict.Count > 0)
-            {
-                types.Add("MonoBehaviour (Live2D Model)");
-            }
-            foreach (var typeString in types)
-            {
-                var typeItem = new ToolStripMenuItem
+                sw.Restart();
+                SetBusyText("Building the type filter…");
+                var types = new SortedSet<string>();
+                types.UnionWith(exportableAssets.Select(x => x.TypeString));
+                if (Studio.l2dModelDict.Count > 0)
                 {
-                    CheckOnClick = true,
-                    Name = typeString,
-                    Size = new Size(180, 22),
-                    Text = typeString
-                };
-                typeItem.Click += typeToolStripMenuItem_Click;
-                filterTypeToolStripMenuItem.DropDownItems.Add(typeItem);
+                    types.Add("MonoBehaviour (Live2D Model)");
+                }
+                foreach (var typeString in types)
+                {
+                    var typeItem = new ToolStripMenuItem
+                    {
+                        CheckOnClick = true,
+                        Name = typeString,
+                        Size = new Size(180, 22),
+                        Text = typeString
+                    };
+                    typeItem.Click += typeToolStripMenuItem_Click;
+                    filterTypeToolStripMenuItem.DropDownItems.Add(typeItem);
+                }
+                allToolStripMenuItem.Checked = true;
+                Logger.Debug($"Type filter built in {sw.ElapsedMilliseconds} ms");
+
+                var log = $"Finished loading {assetsManager.AssetsFileList.Count} file(s) with {assetListView.Items.Count} exportable assets";
+                var unityVer = assetsManager.AssetsFileList[0].version;
+                // One plain pass over the object tables instead of three LINQ passes with
+                // delegates: on a big project these tables hold well over a million entries.
+                var skipShaders = unityVer > 2020;
+                long m_ObjectsCount = 0;
+                long objectsCount = 0;
+                foreach (var f in assetsManager.AssetsFileList)
+                {
+                    if (skipShaders)
+                    {
+                        foreach (var o in f.m_Objects)
+                        {
+                            if (o.classID != (int)ClassIDType.Shader)
+                                m_ObjectsCount++;
+                        }
+                    }
+                    else
+                    {
+                        m_ObjectsCount += f.m_Objects.Count;
+                    }
+                    objectsCount += f.Objects.Count;
+                }
+                if (m_ObjectsCount != objectsCount)
+                {
+                    log += $" and {m_ObjectsCount - objectsCount} assets failed to read";
+                }
+                Logger.Info(log);
+                // Refresh the .NET tab now that a project is loaded, so its empty state can
+                // offer the "Discover assemblies" button (don't wait on the probe below).
+                UpdateDotNetEmptyState();
             }
-            allToolStripMenuItem.Checked = true;
-            var log = $"Finished loading {assetsManager.AssetsFileList.Count} file(s) with {assetListView.Items.Count} exportable assets";
-            var unityVer = assetsManager.AssetsFileList[0].version;
-            var m_ObjectsCount = unityVer > 2020
-                ? assetsManager.AssetsFileList.Sum(x => x.m_Objects.LongCount(y => y.classID != (int)ClassIDType.Shader))
-                : assetsManager.AssetsFileList.Sum(x => x.m_Objects.Count);
-            var objectsCount = assetsManager.AssetsFileList.Sum(x => x.Objects.Count);
-            if (m_ObjectsCount != objectsCount)
+            finally
             {
-                log += $" and {m_ObjectsCount - objectsCount} assets failed to read";
+                // The load is finished as far as the user is concerned. The assembly probe
+                // below is a cheap background scan and must not hold the popup open.
+                EndBusy();
             }
-            Logger.Info(log);
 
             await TryAutoLoadAssembliesAsync();
+        }
+
+        // Adding the per-file root nodes is the slowest UI step of a load: their whole
+        // subtrees are realized with them. Add the roots in chunks and repaint the popup
+        // between chunks, so this phase shows real progress instead of a frozen window.
+        private void PopulateSceneTree(List<TreeNode> roots)
+        {
+            const int chunkSize = 64;
+            sceneTreeView.BeginUpdate();
+            for (var i = 0; i < roots.Count; i += chunkSize)
+            {
+                var take = Math.Min(chunkSize, roots.Count - i);
+                var slice = new TreeNode[take];
+                roots.CopyTo(i, slice, 0, take);
+                sceneTreeView.Nodes.AddRange(slice);
+                SetBusyProgress($"Building the scene hierarchy… {i + take:N0} / {roots.Count:N0} files", i + take, roots.Count);
+            }
+            sceneTreeView.EndUpdate();
+            roots.Clear();
+            UpdateSceneEmptyState();
         }
 
         private void typeToolStripMenuItem_Click(object sender, EventArgs e)
@@ -413,6 +555,28 @@ namespace UnityRiftGUI
 
         private void UnityRiftForm_KeyDown(object sender, KeyEventArgs e)
         {
+            // Escape in a search box clears it (and re-runs the filter via TextChanged).
+            if (e.KeyCode == Keys.Escape && ActiveControl is TextBox searchBox
+                && (searchBox == listSearch || searchBox == treeSearch || searchBox == dotnetSearch)
+                && searchBox.Text.Length > 0)
+            {
+                searchBox.Clear();
+                if (searchBox == dotnetSearch)
+                    BuildDotNetTree();
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+                return;
+            }
+            // Ctrl+F / Ctrl+K: jump to the Asset List search box.
+            if (e.Control && (e.KeyCode == Keys.F || e.KeyCode == Keys.K))
+            {
+                tabControl1.SelectedTab = tabPage2;
+                listSearch.Focus();
+                listSearch.SelectAll();
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+                return;
+            }
             if (glControl1.Visible)
             {
                 if (e.Control)
@@ -538,7 +702,7 @@ namespace UnityRiftGUI
                         }
                         else
                         {
-                            previewPanel.Image = Properties.Resources.preview;
+                            previewPanel.Image = PreviewPlaceholder();
                             previewPanel.SizeMode = PictureBoxSizeMode.CenterImage;
                         }
                         break;
@@ -599,7 +763,9 @@ namespace UnityRiftGUI
 
         private void assetListView_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
         {
-            e.Item = visibleAssets[e.ItemIndex];
+            var item = visibleAssets[e.ItemIndex];
+            item.EnsureSubItems(); // cells are created when a row is first shown, not at load
+            e.Item = item;
         }
 
         private void tabPageSelected(object sender, TabControlEventArgs e)
@@ -614,26 +780,10 @@ namespace UnityRiftGUI
                     break;
                 case 3:
                     dotnetTreeView?.Select();
+                    UpdateDotNetEmptyState(); // refresh the empty state / discover button
                     break;
             }
-        }
-
-        private void treeSearch_Enter(object sender, EventArgs e)
-        {
-            if (treeSearch.Text == " Search ")
-            {
-                treeSearch.Text = "";
-                treeSearch.ForeColor = SystemColors.WindowText;
-            }
-        }
-
-        private void treeSearch_Leave(object sender, EventArgs e)
-        {
-            if (treeSearch.Text == "")
-            {
-                treeSearch.Text = " Search ";
-                treeSearch.ForeColor = SystemColors.GrayText;
-            }
+            UpdatePreviewPlaceholderForTab();
         }
 
         private void treeSearch_TextChanged(object sender, EventArgs e)
@@ -725,26 +875,6 @@ namespace UnityRiftGUI
             StatusStripUpdate($"Selected {treeNodeSelectedList.Count} object(s).");
         }
 
-        private void listSearch_Enter(object sender, EventArgs e)
-        {
-            if (listSearch.Text == " Filter ")
-            {
-                listSearch.Text = "";
-                listSearch.ForeColor = SystemColors.WindowText;
-                BeginInvoke(new Action(() => { enableFiltering = true; }));
-            }
-        }
-
-        private void listSearch_Leave(object sender, EventArgs e)
-        {
-            if (listSearch.Text == "")
-            {
-                enableFiltering = false;
-                listSearch.Text = " Filter ";
-                listSearch.ForeColor = SystemColors.GrayText;
-                listSearch.BackColor = SystemColors.Window;
-            }
-        }
 
         private void ListSearchTextChanged(object sender, EventArgs e)
         {
@@ -773,7 +903,7 @@ namespace UnityRiftGUI
         {
             BeginInvoke(new Action(() =>
             {
-                if (listSearch.Text != "" && listSearch.Text != " Filter ")
+                if (listSearch.Text.Length > 0)
                 {
                     if (listSearchHistory.Items.Count == listSearchHistory.MaxDropDownItems)
                     {
@@ -820,16 +950,16 @@ namespace UnityRiftGUI
                 case 0: //Name
                     visibleAssets.Sort((a, b) =>
                     {
-                        var at = a.SubItems[sortColumn].Text;
-                        var bt = b.SubItems[sortColumn].Text;
+                        var at = a.Text;
+                        var bt = b.Text;
                         return reverseSort ? alphanumComparator.Compare(bt, at) : alphanumComparator.Compare(at, bt);
                     });
                     break;
                 default:
                     visibleAssets.Sort((a, b) =>
                     {
-                        var at = a.SubItems[sortColumn].Text.AsSpan();
-                        var bt = b.SubItems[sortColumn].Text.AsSpan();
+                        var at = a.ColumnText(sortColumn).AsSpan();
+                        var bt = b.ColumnText(sortColumn).AsSpan();
                         return reverseSort ? bt.CompareTo(at, StringComparison.OrdinalIgnoreCase) : at.CompareTo(bt, StringComparison.OrdinalIgnoreCase);
                     });
                     break;
@@ -839,7 +969,7 @@ namespace UnityRiftGUI
 
         private void selectAsset(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            previewPanel.Image = Properties.Resources.preview;
+            previewPanel.Image = PreviewPlaceholder();
             previewPanel.SizeMode = PictureBoxSizeMode.CenterImage;
             classTextBox.Visible = false;
             assetInfoLabel.Visible = false;
@@ -860,6 +990,8 @@ namespace UnityRiftGUI
             switch (tabControl2.SelectedIndex)
             {
                 case 0 when enablePreview.Checked: //Preview
+                    // Fallback if the type has no visual preview; overwritten by PreviewAsset when it does.
+                    previewPanel.Image = NoPreviewImage(lastSelectedItem.TypeString);
                     PreviewAsset(lastSelectedItem);
                     if (displayInfo.Checked && lastSelectedItem.InfoText != null)
                     {
@@ -1559,58 +1691,55 @@ namespace UnityRiftGUI
         {
             if (InvokeRequired)
             {
-                BeginInvoke(new Action(() =>
-                {
-                    progressBar1.Value = value;
-                    progressBar1.Style = ProgressBarStyle.Continuous;
-                }));
+                BeginInvoke(new Action(() => SetProgressBarValue(value)));
+                return;
+            }
+
+            const int max = 100;
+            taskbar.SetProgressValue(value, max);
+            taskbar.SetProgressState(value >= max ? TaskbarProgressBarState.NoProgress : TaskbarProgressBarState.Normal);
+
+            // Drive the spawned popup instead of an inline bar. It appears while work is
+            // in progress (1..99%) and closes when the operation finishes or resets.
+            if (value <= 0 || value >= max)
+            {
+                // Inside a busy scope a phase reaching 100% is not the end of the
+                // operation, so keep the popup up instead of flashing it away.
+                if (busyDepth > 0)
+                    ShowProgressMarquee(busyText);
+                else
+                    HideProgress();
             }
             else
             {
-                progressBar1.Style = ProgressBarStyle.Continuous;
-                progressBar1.Value = value;
+                ShowProgress(value, string.IsNullOrEmpty(lastStatusText) ? $"Processing…  {value}%" : $"{lastStatusText}  ({value}%)");
             }
-
-            BeginInvoke(new Action(() =>
-            {
-                var max = progressBar1.Maximum;
-                taskbar.SetProgressValue(value, max);
-                if (value == max)
-                    taskbar.SetProgressState(TaskbarProgressBarState.NoProgress);
-                else
-                    taskbar.SetProgressState(TaskbarProgressBarState.Normal);
-            }));
         }
 
         private void SetProgressBarStringValue(int value)
         {
-            var str = $"Decompressing LZMA: {value}%";
-
             if (InvokeRequired)
             {
-                BeginInvoke(new Action(() =>
-                {
-                    using (var graphics = progressBar1.CreateGraphics())
-                    {
-                        progressBar1.Refresh();
-                        var rect = new Rectangle(0, 0, progressBar1.Width, progressBar1.Height);
-                        graphics.DrawString(str, progressBarTextFont, progressBarTextBrush, rect, progressBarTextFormat);
-                    }
-                }));
+                BeginInvoke(new Action(() => SetProgressBarStringValue(value)));
+                return;
+            }
+            if (value <= 0 || value >= 100)
+            {
+                // A finished LZMA block is not the end of a load: keep the popup up.
+                if (busyDepth > 0)
+                    ShowProgressMarquee(busyText);
+                else
+                    HideProgress();
             }
             else
             {
-                using (var graphics = progressBar1.CreateGraphics())
-                {
-                    progressBar1.Refresh();
-                    var rect = new Rectangle(0, 0, progressBar1.Width, progressBar1.Height);
-                    graphics.DrawString(str, progressBarTextFont, progressBarTextBrush, rect, progressBarTextFormat);
-                }
+                ShowProgress(value, $"Decompressing LZMA: {value}%");
             }
         }
 
         private void StatusStripUpdate(string statusText)
         {
+            lastStatusText = statusText;
             if (InvokeRequired)
             {
                 Invoke(new Action(() => { toolStripStatusLabel1.Text = statusText; }));
@@ -1619,6 +1748,101 @@ namespace UnityRiftGUI
             {
                 toolStripStatusLabel1.Text = statusText;
             }
+        }
+
+        // --- Spawned progress popup (replaces the inline status-bar progress bar) ---
+        private ProgressDialog progressDialog;
+        private string lastStatusText;
+
+        private void ShowProgress(int value, string text)
+        {
+            if (progressDialog == null || progressDialog.IsDisposed)
+            {
+                progressDialog = new ProgressDialog();
+                if (isDarkMode)
+                    progressDialog.ApplyDark();
+            }
+            progressDialog.SetText(string.IsNullOrEmpty(text) ? "Processing…" : text);
+            progressDialog.SetValue(value);
+            if (!progressDialog.Visible)
+            {
+                progressDialog.CenterOn(this);
+                progressDialog.Show(this);
+            }
+        }
+
+        private void HideProgress()
+        {
+            if (progressDialog != null && !progressDialog.IsDisposed && progressDialog.Visible)
+                progressDialog.Hide();
+        }
+
+        private void ShowProgressMarquee(string text)
+        {
+            if (progressDialog == null || progressDialog.IsDisposed)
+            {
+                progressDialog = new ProgressDialog();
+                if (isDarkMode)
+                    progressDialog.ApplyDark();
+            }
+            progressDialog.SetText(text);
+            progressDialog.SetMarquee(true);
+            if (!progressDialog.Visible)
+            {
+                progressDialog.CenterOn(this);
+                progressDialog.Show(this);
+            }
+        }
+
+        // --- Busy scope -----------------------------------------------------------
+        // A load runs in several phases (decompress, read objects, build the asset
+        // list, build the tree, then populate the views on the UI thread). Each phase
+        // ends at 100%, which used to close the popup and leave the window looking
+        // frozen through the phases that follow. A busy scope keeps the popup up for
+        // the whole operation: it only closes when the scope ends.
+        private int busyDepth;
+        private string busyText = "Loading…";
+
+        private void BeginBusy(string text)
+        {
+            busyDepth++;
+            busyText = text;
+            ShowProgressMarquee(text);
+        }
+
+        // Sets the phase label and repaints the popup immediately. Used before each
+        // UI-thread step: the message pump is about to block, so the popup has to be
+        // painted synchronously or it would show as a blank rectangle.
+        private void SetBusyText(string text)
+        {
+            busyText = text;
+            if (busyDepth <= 0 || progressDialog == null || progressDialog.IsDisposed)
+                return;
+            progressDialog.SetText(text);
+            progressDialog.SetMarquee(true);
+            progressDialog.Refresh();
+        }
+
+        // Same, with a real percentage for UI steps we can count.
+        private void SetBusyProgress(string text, int current, int total)
+        {
+            busyText = text;
+            if (busyDepth <= 0 || progressDialog == null || progressDialog.IsDisposed)
+                return;
+            progressDialog.SetText(text);
+            if (total > 0)
+                progressDialog.SetValue((int)(current * 100L / total));
+            progressDialog.Refresh();
+        }
+
+        private void EndBusy()
+        {
+            if (busyDepth <= 0)
+                return;
+            if (--busyDepth > 0)
+                return;
+            HideProgress();
+            taskbar.SetProgressState(TaskbarProgressBarState.NoProgress);
         }
 
         private void ResetForm()
@@ -1641,10 +1865,11 @@ namespace UnityRiftGUI
             classesListView.Groups.Clear();
             selectedAnimationAssetsList.Clear();
             selectedIndicesPrevList.Clear();
-            previewPanel.Image = Properties.Resources.preview;
+            previewPanel.Image = PreviewPlaceholder();
             previewPanel.SizeMode = PictureBoxSizeMode.CenterImage;
             imageTexture?.Dispose();
             imageTexture = null;
+            ClearNoPreviewCache();
             assetInfoLabel.Visible = false;
             assetInfoLabel.Text = null;
             textPreviewBox.Visible = false;
@@ -1653,10 +1878,7 @@ namespace UnityRiftGUI
             lastSelectedItem = null;
             sortColumn = -1;
             reverseSort = false;
-            enableFiltering = false;
-            listSearch.Text = " Filter ";
-            listSearch.ForeColor = SystemColors.GrayText;
-            listSearch.BackColor = SystemColors.Window;
+            listSearch.Text = ""; // colors are owned by the SearchHost theme, don't override
             if (tabControl1.SelectedIndex == 1)
                 assetListView.Select();
 
@@ -1668,6 +1890,10 @@ namespace UnityRiftGUI
 
             taskbar.SetProgressState(TaskbarProgressBarState.NoProgress);
             FMODreset();
+            UpdateAssetEmptyState();
+            UpdateSceneEmptyState();
+            UpdateClassesEmptyState();
+            UpdateAssetCounts();
         }
 
         private void tabControl2_SelectedIndexChanged(object sender, EventArgs e)
@@ -1978,6 +2204,7 @@ namespace UnityRiftGUI
             {
                 StatusStripUpdate($"Selected {assetListView.SelectedIndices.Count} assets.");
             }
+            UpdateAssetCounts();
 
             var selectedIndicesList = assetListView.SelectedIndices.Cast<int>().ToList();
 
@@ -2038,7 +2265,7 @@ namespace UnityRiftGUI
                     }
                 }
                 visibleAssets = filterMoc
-                    ? exportableAssets.FindAll(x => (x.Asset is MonoBehaviour monoBehaviour && l2dModelDict.ContainsKey(monoBehaviour)) || show.Contains(x.Type))
+                    ? exportableAssets.FindAll(x => (x.RawAsset is MonoBehaviour monoBehaviour && l2dModelDict.ContainsKey(monoBehaviour)) || show.Contains(x.Type))
                     : exportableAssets.FindAll(x => show.Contains(x.Type));
             }
             else
@@ -2046,56 +2273,52 @@ namespace UnityRiftGUI
                 visibleAssets = exportableAssets;
             }
 
-            if (listSearch.Text != " Filter ")
+            if (listSearch.Text.Length > 0)
             {
-                var mode = (ListSearchFilterMode)listSearchFilterMode.SelectedIndex;
-                switch (mode)
-                {
-                    case ListSearchFilterMode.Include:
-                        visibleAssets = visibleAssets.FindAll(x =>
-                            x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0
-                            || x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0
-                            || x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) >= 0);
-                        listSearch.ForeColor = SystemColors.WindowText;
-                        break;
-                    case ListSearchFilterMode.Exclude:
-                        visibleAssets = visibleAssets.FindAll(x =>
-                            x.Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0
-                            && x.SubItems[1].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0
-                            && x.SubItems[3].Text.IndexOf(listSearch.Text, StringComparison.OrdinalIgnoreCase) <= 0);
-                        listSearch.ForeColor = SystemColors.WindowText;
-                        break;
-                    case ListSearchFilterMode.RegexName:
-                    case ListSearchFilterMode.RegexContainer:
-                        StatusStripUpdate("");
-                        var pattern = listSearch.Text;
-                        var regexOptions = RegexOptions.IgnoreCase | RegexOptions.Singleline;
-                        try
-                        {
-                            visibleAssets = mode == ListSearchFilterMode.RegexName 
-                                ? visibleAssets.FindAll(x => Regex.IsMatch(x.Text, pattern, regexOptions))
-                                : visibleAssets.FindAll(x => Regex.IsMatch(x.SubItems[1].Text, pattern, regexOptions));
+                var term = listSearch.Text;
+                var useRegex = searchRegexToggle?.Checked == true;
+                var useContent = searchContentToggle?.Checked == true;
+                var exclude = searchExcludeToggle?.Checked == true;
+                Predicate<AssetItem> matches = null;
 
-                            listSearch.BackColor = SystemInformation.HighContrast ? listSearch.BackColor : System.Drawing.Color.PaleGreen;
-                            listSearch.ForeColor = isDarkMode ? System.Drawing.Color.Black : listSearch.ForeColor;
-                        }
-                        catch (ArgumentException e)
-                        {
-                            listSearch.BackColor = SystemInformation.HighContrast ? listSearch.BackColor : System.Drawing.Color.FromArgb(255, 160, 160);
-                            listSearch.ForeColor = isDarkMode ? System.Drawing.Color.Black : listSearch.ForeColor;
-                            StatusStripUpdate($"Regex error: {e.Message}");
-                        }
-                        catch (RegexMatchTimeoutException)
-                        {
-                            listSearch.BackColor = SystemInformation.HighContrast ? listSearch.BackColor : System.Drawing.Color.FromArgb(255, 160, 160);
-                            listSearch.ForeColor = isDarkMode ? System.Drawing.Color.Black : listSearch.ForeColor;
-                            StatusStripUpdate($"Timeout error");
-                        }
-                        break;
+                if (useRegex)
+                {
+                    try
+                    {
+                        var rx = new Regex(term, RegexOptions.IgnoreCase | RegexOptions.Singleline, TimeSpan.FromSeconds(2));
+                        matches = x => rx.IsMatch(x.Text) || rx.IsMatch(x.Container)
+                            || (useContent && Studio.GetSearchableContent(x) is string c && rx.IsMatch(c));
+                        StatusStripUpdate("");
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        StatusStripUpdate($"Regex error: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    var lower = term.ToLowerInvariant();
+                    matches = x =>
+                        x.Text.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0
+                        || x.Container.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0
+                        || x.PathIdText.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0
+                        || (useContent && Studio.GetSearchableContent(x)?.IndexOf(lower, StringComparison.Ordinal) >= 0);
+                }
+
+                if (matches != null)
+                {
+                    if (useContent)
+                        StatusStripUpdate("Searching contents...");
+                    var predicate = matches;
+                    visibleAssets = visibleAssets.FindAll(x => exclude ? !predicate(x) : predicate(x));
+                    if (useContent)
+                        StatusStripUpdate($"Found {visibleAssets.Count} asset(s) matching \"{term}\".");
                 }
             }
             assetListView.VirtualListSize = visibleAssets.Count;
             assetListView.EndUpdate();
+            UpdateAssetEmptyState();
+            UpdateAssetCounts();
         }
 
         private void ExportAssets(ExportFilter type, ExportType exportType)
@@ -2236,16 +2459,9 @@ namespace UnityRiftGUI
             sceneTreeView.EndUpdate();
         }
 
-        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var aboutForm = new AboutForm();
-            aboutForm.ShowDialog(this);
-        }
-
         private void listSearchFilterMode_SelectedIndexChanged(object sender, EventArgs e)
         {
-            listSearch.BackColor = SystemColors.Window;
-            if (listSearch.Text != " Filter ")
+            if (listSearch.Text.Length > 0)
             {
                 FilterAssetList();
             }
@@ -2353,6 +2569,14 @@ namespace UnityRiftGUI
         private void UnityRiftGUIForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             Logger.Verbose("Closing UnityRift");
+            // Release the long-lived GDI objects we own (the OS would reclaim them at exit,
+            // but be explicit so handle-leak tooling stays quiet).
+            ClearNoPreviewCache();
+            previewPlaceholder?.Dispose();
+            dotnetPlaceholder?.Dispose();
+            foreach (var d in new IDisposable[] { brRowEven, brRowOdd, brRowSelected, brRowHover,
+                                                   brHeader, brHeaderPressed, pnRowSeparator, pnHeaderLine })
+                d?.Dispose();
         }
 
         private void buildTreeStructureToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
@@ -2488,9 +2712,10 @@ namespace UnityRiftGUI
                 timer.Stop();
                 saveDirectoryBackup = saveFolderDialog.Folder;
                 Progress.Reset();
-                BeginInvoke(new Action(() => { progressBar1.Style = ProgressBarStyle.Marquee; }));
+                ShowProgressMarquee("Exporting Live2D…");
 
                 Studio.ExportLive2D(saveFolderDialog.Folder, selMocs, selClipMotions, selFadeMotions, selFadeLst);
+                HideProgress();
             }
         }
 
@@ -2634,51 +2859,1047 @@ namespace UnityRiftGUI
             }
         }
 
+        // ----------------------------------------------------------------- toolbar
+
+        // Builds a small icon toolbar for the most-used actions and docks it just
+        // below the menu. Buttons reuse the existing menu Click handlers, so behavior
+        // stays in one place. Icons are drawn with GDI (theme-aware, no image assets).
+        // Each toolbar button + its icon factory, so icons can be re-tinted on theme switch.
+        private readonly List<(ToolStripButton btn, Func<System.Drawing.Color, Bitmap> icon)> toolbarIcons = new List<(ToolStripButton, Func<System.Drawing.Color, Bitmap>)>();
+        private ToolStripButton themeToggleButton;
+
+        private void InitToolbar()
+        {
+            toolStripMain = new ToolStrip
+            {
+                Dock = DockStyle.Top,
+                GripStyle = ToolStripGripStyle.Hidden,
+                ImageScalingSize = new Size(16, 16),
+                Padding = new Padding(4, 2, 4, 2),
+            };
+
+            ToolStripButton Button(string tip, Func<System.Drawing.Color, Bitmap> icon, EventHandler onClick)
+            {
+                var b = new ToolStripButton
+                {
+                    DisplayStyle = ToolStripItemDisplayStyle.Image,
+                    ToolTipText = tip,
+                    ImageScaling = ToolStripItemImageScaling.None,
+                    AutoSize = false,
+                    Size = new Size(28, 24),
+                };
+                b.Click += onClick;
+                toolbarIcons.Add((b, icon));
+                return b;
+            }
+
+            toolStripMain.Items.AddRange(new ToolStripItem[]
+            {
+                Button("Load file", IconLoadFile, loadFile_Click),
+                Button("Load folder", IconLoadFolder, loadFolder_Click),
+                new ToolStripSeparator(),
+                Button("Export all assets", IconExportAll, exportAllAssetsMenuItem_Click),
+                Button("Export selected assets", IconExportSelected, exportSelectedAssetsMenuItem_Click),
+                Button("Export filtered assets", IconFilter, exportFilteredAssetsMenuItem_Click),
+                new ToolStripSeparator(),
+                Button("Export options", IconOptions, showExpOpt_Click),
+            });
+
+            // Right-aligned sun/moon toggle that flips light/dark in one click.
+            themeToggleButton = new ToolStripButton
+            {
+                DisplayStyle = ToolStripItemDisplayStyle.Image,
+                ImageScaling = ToolStripItemImageScaling.None,
+                Alignment = ToolStripItemAlignment.Right,
+                AutoSize = false,
+                Size = new Size(28, 24),
+            };
+            themeToggleButton.Click += (s, e) => SwitchTheme(isDarkMode ? GuiColorTheme.Light : GuiColorTheme.Dark);
+            toolStripMain.Items.Add(themeToggleButton);
+
+            // The toggle replaces the "Color Theme" dropdown menu.
+            colorThemeToolStripMenu.Visible = false;
+
+            // Insert below the menu: final Controls order must be
+            // [content, toolbar, menuStrip] so the menu stays on top.
+            Controls.Add(toolStripMain);
+            Controls.SetChildIndex(toolStripMain, 1);
+        }
+
+        // --------------------------------------------------------------- icon factory
+
+        private static Bitmap MakeIcon(Action<Graphics> draw)
+        {
+            var bmp = new Bitmap(16, 16);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                draw(g);
+            }
+            return bmp;
+        }
+
+        private static Bitmap IconLoadFile(System.Drawing.Color c) => MakeIcon(g =>
+        {
+            using var pen = new Pen(c, 1.4f) { LineJoin = System.Drawing.Drawing2D.LineJoin.Round };
+            var page = new[] { new Point(4, 2), new Point(10, 2), new Point(12, 4), new Point(12, 14), new Point(4, 14) };
+            g.DrawPolygon(pen, page);
+            g.DrawLines(pen, new[] { new Point(10, 2), new Point(10, 4), new Point(12, 4) }); // folded corner
+        });
+
+        private static Bitmap IconLoadFolder(System.Drawing.Color c) => MakeIcon(g =>
+        {
+            using var pen = new Pen(c, 1.4f) { LineJoin = System.Drawing.Drawing2D.LineJoin.Round };
+            var folder = new[] { new Point(2, 6), new Point(6, 6), new Point(7, 4), new Point(11, 4), new Point(11, 6), new Point(14, 6), new Point(14, 13), new Point(2, 13) };
+            g.DrawPolygon(pen, folder);
+        });
+
+        private static Bitmap IconExportSelected(System.Drawing.Color c) => MakeIcon(g =>
+        {
+            using var pen = new Pen(c, 1.4f) { LineJoin = System.Drawing.Drawing2D.LineJoin.Round };
+            g.DrawLine(pen, 3, 13, 13, 13);                       // baseline (out)
+            g.DrawLine(pen, 8, 3, 8, 10);                         // shaft
+            g.DrawLines(pen, new[] { new Point(5, 6), new Point(8, 3), new Point(11, 6) }); // arrow head
+        });
+
+        private static Bitmap IconExportAll(System.Drawing.Color c) => MakeIcon(g =>
+        {
+            using var pen = new Pen(c, 1.4f) { LineJoin = System.Drawing.Drawing2D.LineJoin.Round };
+            g.DrawRectangle(pen, 2, 2, 11, 11);                   // box = everything
+            g.DrawLine(pen, 7, 11, 7, 6);
+            g.DrawLines(pen, new[] { new Point(5, 8), new Point(7, 6), new Point(9, 8) });
+        });
+
+        private static Bitmap IconFilter(System.Drawing.Color c) => MakeIcon(g =>
+        {
+            using var pen = new Pen(c, 1.4f) { LineJoin = System.Drawing.Drawing2D.LineJoin.Round };
+            var funnel = new[] { new Point(3, 3), new Point(13, 3), new Point(9, 8), new Point(9, 13), new Point(7, 11), new Point(7, 8) };
+            g.DrawPolygon(pen, funnel);
+        });
+
+        private static Bitmap IconOptions(System.Drawing.Color c) => MakeIcon(g =>
+        {
+            using var pen = new Pen(c, 1.4f);
+            using var fill = new SolidBrush(c);
+            int[] ys = { 4, 8, 12 };
+            int[] knobs = { 11, 5, 9 };
+            for (int i = 0; i < 3; i++)
+            {
+                g.DrawLine(pen, 2, ys[i], 14, ys[i]);
+                g.FillEllipse(fill, knobs[i] - 2, ys[i] - 2, 4, 4);
+            }
+        });
+
+        private static Bitmap IconSun(System.Drawing.Color c) => MakeIcon(g =>
+        {
+            using var pen = new Pen(c, 1.4f);
+            g.DrawEllipse(pen, 5.5f, 5.5f, 5f, 5f); // body, centered on (8,8)
+            for (int k = 0; k < 8; k++)
+            {
+                double a = k * Math.PI / 4;
+                g.DrawLine(pen,
+                    (float)(8 + Math.Cos(a) * 6), (float)(8 + Math.Sin(a) * 6),
+                    (float)(8 + Math.Cos(a) * 7.6), (float)(8 + Math.Sin(a) * 7.6));
+            }
+        });
+
+        private static Bitmap IconMoon(System.Drawing.Color c) => MakeIcon(g =>
+        {
+            using var fill = new SolidBrush(c);
+            g.FillEllipse(fill, 3, 2, 11, 11);          // full disc
+            g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+            using var clear = new SolidBrush(System.Drawing.Color.Transparent);
+            g.FillEllipse(clear, 6, 1, 11, 11);         // carve a crescent
+        });
+
+        // ------------------------------------------------------------ dark-theme polish
+
+        // Managed colors for surfaces the framework's dark mode does not fully cover
+        // (list/tree bodies and the preview panels). Native tweaks (dark title bar and
+        // dark scrollbars) need window handles and are applied in OnLoad.
+        // Layered dark palette: content areas sit DARKER than the surrounding chrome, so
+        // edges read as depth/contrast instead of the white borders they replaced.
+        private static readonly System.Drawing.Color DarkContent = System.Drawing.Color.FromArgb(24, 24, 24);  // lists, trees, text, preview
+        private static readonly System.Drawing.Color DarkChrome = System.Drawing.Color.FromArgb(45, 45, 45);   // panels, tab pages, containers
+        private static readonly System.Drawing.Color DarkField = System.Drawing.Color.FromArgb(60, 60, 60);    // inputs, combos
+        private static readonly System.Drawing.Color DarkSeparator = System.Drawing.Color.FromArgb(70, 70, 72);// splitter / visible dividers
+        private static readonly System.Drawing.Color DarkFore = System.Drawing.Color.FromArgb(220, 220, 220);
+
+        // Explicit light palette (NOT SystemColors: the .NET color mode remaps SystemColors
+        // asynchronously, so reading them right after a live switch returns stale values).
+        private static readonly System.Drawing.Color LightContent = System.Drawing.Color.White;
+        private static readonly System.Drawing.Color LightChrome = System.Drawing.Color.FromArgb(240, 240, 240);
+        private static readonly System.Drawing.Color LightField = System.Drawing.Color.White;
+        private static readonly System.Drawing.Color LightSeparator = System.Drawing.Color.FromArgb(200, 200, 200);
+        private static readonly System.Drawing.Color LightFore = System.Drawing.Color.FromArgb(20, 20, 20);
+        private static readonly System.Drawing.Color LightGrayText = System.Drawing.Color.FromArgb(110, 110, 110);
+
+        // Widen a ListView's right-most column to consume any leftover width, so the
+        // area past the last real column isn't shown as a blank extra column.
+        private static void FillLastColumn(ListView lv)
+        {
+            if (lv.Columns.Count == 0)
+                return;
+            ColumnHeader last = null;
+            var maxDisplay = -1;
+            foreach (ColumnHeader ch in lv.Columns)
+                if (ch.DisplayIndex > maxDisplay) { maxDisplay = ch.DisplayIndex; last = ch; }
+            var used = 0;
+            foreach (ColumnHeader ch in lv.Columns)
+                if (ch != last) used += ch.Width;
+            var remaining = lv.ClientSize.Width - used;
+            // Only touch the width when it actually changes: setting it forces a full
+            // relayout + repaint of the list even when the value is identical.
+            if (remaining > 40 && last.Width != remaining)
+                last.Width = remaining;
+        }
+
+        // Slightly larger UI text for comfortable reading at 100% scaling (menu/toolbar
+        // are left as-is per design). The JSON/dump panels get a larger monospace font.
+        private void ApplyUiFonts()
+        {
+            var ui = new System.Drawing.Font("Segoe UI", 10F);
+            var tabFont = new System.Drawing.Font("Segoe UI", 10.5F);
+            var mono = new System.Drawing.Font("Consolas", 11F);
+            foreach (Control c in new Control[] { assetListView, classesListView,
+                                                  treeSearch, listSearch, sceneTreeView, dumpTreeView })
+            {
+                if (c != null) c.Font = ui;
+            }
+            foreach (var tc in new[] { tabControl1, tabControl2 })
+            {
+                tc.Font = tabFont;
+                tc.Padding = new System.Drawing.Point(18, 8); // taller tabs (x=horizontal, y=vertical)
+                tc.ItemSize = new System.Drawing.Size(0, 30);
+            }
+            foreach (Control c in new Control[] { dumpTextBox, classTextBox, textPreviewBox })
+            {
+                if (c != null) c.Font = mono;
+            }
+        }
+
+        // --- Empty-state message for the Asset List ---
+        private Label assetEmptyLabel;
+
+        private void InitAssetEmptyState()
+        {
+            assetEmptyLabel = new Label
+            {
+                Dock = DockStyle.Fill,
+                TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
+                Font = new System.Drawing.Font("Segoe UI", 11F),
+                ForeColor = System.Drawing.Color.FromArgb(150, 150, 150),
+                BackColor = assetListView.BackColor,
+                Visible = false,
+            };
+            tabPage2.Controls.Add(assetEmptyLabel);
+            assetEmptyLabel.BringToFront();
+            UpdateAssetEmptyState();
+
+            var tip = new ToolTip { AutoPopDelay = 8000, InitialDelay = 400 };
+            tip.SetToolTip(listSearch, "Search assets by Name, Container or Path ID  (Ctrl+F)");
+            tip.SetToolTip(listSearchFilterMode, "Match filter: Include, Exclude, Regex, or Include (+ content)");
+        }
+
+        // Empty-state overlays for the Scene Hierarchy and .NET Classes trees, built the
+        // same way as the Asset List one (a Dock.Fill label brought to the front of the page).
+        private Label sceneEmptyLabel;
+        private Label dotnetEmptyLabel;
+        private Label classesEmptyLabel;
+
+        private Label MakeEmptyLabel(Control page, Control over)
+        {
+            var label = new Label
+            {
+                Dock = DockStyle.Fill,
+                TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
+                Font = new System.Drawing.Font("Segoe UI", 11F),
+                ForeColor = System.Drawing.Color.FromArgb(150, 150, 150),
+                BackColor = over.BackColor,
+                Visible = false,
+            };
+            page.Controls.Add(label);
+            label.BringToFront();
+            return label;
+        }
+
+        private void UpdateSceneEmptyState()
+        {
+            if (sceneEmptyLabel == null)
+                sceneEmptyLabel = MakeEmptyLabel(tabPage1, sceneTreeView);
+            var empty = sceneTreeView.Nodes.Count == 0;
+            sceneEmptyLabel.Text = exportableAssets.Count == 0
+                ? "No scene loaded\r\n\r\nOpen a file or folder to see its GameObject hierarchy"
+                : "No GameObjects in the loaded files\r\n\r\nEnable Options \u2192 Build tree structure, then reload";
+            sceneEmptyLabel.BackColor = sceneTreeView.BackColor;
+            sceneEmptyLabel.Visible = empty;
+            if (empty) sceneEmptyLabel.BringToFront();
+        }
+
+        private void UpdateClassesEmptyState()
+        {
+            if (classesEmptyLabel == null)
+                classesEmptyLabel = MakeEmptyLabel(tabPage3, classesListView);
+            var empty = classesListView.Items.Count == 0;
+            classesEmptyLabel.Text = exportableAssets.Count == 0
+                ? "No classes loaded\r\n\r\nOpen a file or folder to see its serialized type classes"
+                : "No serialized type classes in the loaded files";
+            classesEmptyLabel.BackColor = classesListView.BackColor;
+            classesEmptyLabel.Visible = empty;
+            if (empty) classesEmptyLabel.BringToFront();
+        }
+
+        private void UpdateDotNetEmptyState(string loadingText = null)
+        {
+            if (dotnetTreeView == null)
+                return;
+            if (dotnetEmptyLabel == null)
+                dotnetEmptyLabel = MakeEmptyLabel(dotnetTabPage, dotnetTreeView);
+            var empty = dotnetTreeView.Nodes.Count == 0;
+            if (loadingText != null)
+                dotnetEmptyLabel.Text = loadingText;
+            else if (assemblyLoader.Modules.Count == 0)
+                dotnetEmptyLabel.Text = assetsManager.AssetsFileList.Count > 0
+                    ? "No .NET assemblies loaded\r\n\r\nDiscover the ones that belong to the loaded project,\r\nor use File \u2192 Load .NET assemblies folder / IL2CPP binary"
+                    : "No .NET assemblies loaded\r\n\r\nLoad a game folder with a Managed directory,\r\nor use File \u2192 Load .NET assemblies folder / IL2CPP binary";
+            else
+                dotnetEmptyLabel.Text = "No types match the search\r\n\r\nClear the search box (Esc) and press Enter";
+            dotnetEmptyLabel.BackColor = dotnetTreeView.BackColor;
+            dotnetEmptyLabel.Visible = empty || loadingText != null;
+            if (dotnetEmptyLabel.Visible) dotnetEmptyLabel.BringToFront();
+            UpdateDotNetDiscoverButton(loadingText != null);
+            UpdateThemeSwitchEnabled();
+        }
+
+        // Theme can only be switched before a project is loaded. A live switch while assets
+        // or assemblies are on screen is where the async SystemColors remap is most likely
+        // to leave a control half-themed, so lock the toggle once anything is loaded.
+        private void UpdateThemeSwitchEnabled()
+        {
+            var anyLoaded = exportableAssets.Count > 0 || (assemblyLoader?.Loaded ?? false);
+            if (themeToggleButton != null)
+            {
+                themeToggleButton.Enabled = !anyLoaded;
+                themeToggleButton.ToolTipText = anyLoaded
+                    ? "Theme can only be changed before a project is loaded"
+                    : (isDarkMode ? "Switch to light theme" : "Switch to dark theme");
+            }
+            if (colorThemeToolStripMenu != null)
+                colorThemeToolStripMenu.Enabled = !anyLoaded;
+        }
+
+        // Right-aligned "N assets · M selected" counter in the status bar, so the list
+        // size and selection are always visible without reading the log line.
+        private ToolStripStatusLabel assetCountLabel;
+
+        private void InitStatusCounter()
+        {
+            toolStripStatusLabel1.Spring = true;
+            toolStripStatusLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            assetCountLabel = new ToolStripStatusLabel
+            {
+                Alignment = ToolStripItemAlignment.Right,
+                BackColor = System.Drawing.Color.Transparent,
+                DisplayStyle = ToolStripItemDisplayStyle.Text,
+                TextAlign = System.Drawing.ContentAlignment.MiddleRight,
+                Margin = new Padding(8, 3, 4, 2),
+            };
+            statusStrip1.Items.Add(assetCountLabel);
+            UpdateSceneEmptyState();
+            UpdateClassesEmptyState();
+            UpdateDotNetEmptyState();
+            UpdateAssetCounts();
+        }
+
+        private void UpdateAssetCounts()
+        {
+            if (assetCountLabel == null)
+                return;
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(UpdateAssetCounts));
+                return;
+            }
+            var total = exportableAssets.Count;
+            if (total == 0)
+            {
+                assetCountLabel.Text = "";
+                return;
+            }
+            var visible = visibleAssets?.Count ?? 0;
+            var selected = assetListView.SelectedIndices.Count;
+            var text = visible == total ? $"{total:N0} assets" : $"{visible:N0} of {total:N0} assets";
+            if (selected > 0)
+                text += $"  \u00b7  {selected:N0} selected";
+            assetCountLabel.Text = text;
+        }
+
+        private void UpdateAssetEmptyState()
+        {
+            // Model / Export / Filter Type only make sense once assets are loaded.
+            var loaded = exportableAssets.Count > 0;
+            modelToolStripMenuItem.Enabled = loaded;
+            // Export stays available if either assets or .NET assemblies are loaded.
+            exportToolStripMenuItem.Enabled = loaded || (assemblyLoader?.Loaded ?? false);
+            filterTypeToolStripMenuItem.Enabled = loaded;
+
+            UpdateThemeSwitchEnabled();
+
+            if (assetEmptyLabel == null)
+                return;
+            if (visibleAssets != null && visibleAssets.Count > 0)
+            {
+                assetEmptyLabel.Visible = false;
+                return;
+            }
+            assetEmptyLabel.Text = exportableAssets.Count == 0
+                ? "No assets loaded\r\n\r\nOpen a file or folder to begin  (File → Load file / Load folder)"
+                : "No assets found\r\n\r\nSearch by name, container, path, or content.\r\nTry clearing the search or the type filter.";
+            assetEmptyLabel.BackColor = assetListView.BackColor;
+            assetEmptyLabel.Visible = true;
+            assetEmptyLabel.BringToFront();
+        }
+
+        private System.Drawing.Image previewPlaceholder;
+
+        // Placeholder shown in the preview area when no asset is selected. Built once,
+        // themed for the current mode (subtle gray reads fine on light or dark).
+        private bool previewPlaceholderDark;
+
+        private System.Drawing.Image PreviewPlaceholder()
+        {
+            if (previewPlaceholder != null && previewPlaceholderDark == isDarkMode)
+                return previewPlaceholder;
+            previewPlaceholder?.Dispose();
+            previewPlaceholder = MakePreviewMessage("Select an asset to preview", "Pick an item from the Asset List or Scene Hierarchy");
+            previewPlaceholderDark = isDarkMode;
+            return previewPlaceholder;
+        }
+
+        private System.Drawing.Image dotnetPlaceholder;
+        private bool dotnetPlaceholderDark;
+
+        // Placeholder shown in the preview area while the .NET Classes tab is active and no
+        // type is selected (the generic "Select an asset" message doesn't fit that tab).
+        private System.Drawing.Image DotNetPlaceholder()
+        {
+            if (dotnetPlaceholder != null && dotnetPlaceholderDark == isDarkMode)
+                return dotnetPlaceholder;
+            dotnetPlaceholder?.Dispose();
+            dotnetPlaceholder = MakePreviewMessage("Select a type to view its source", "Pick a class from the .NET Classes tree");
+            dotnetPlaceholderDark = isDarkMode;
+            return dotnetPlaceholder;
+        }
+
+        // Swap the idle preview placeholder to match the active left-hand tab. Only touches
+        // the image when a placeholder (not a live preview) is currently shown, so it never
+        // clobbers a real asset preview or the .NET class-source overlay.
+        private void UpdatePreviewPlaceholderForTab()
+        {
+            var cur = previewPanel.Image;
+            if (cur != null && cur != previewPlaceholder && cur != dotnetPlaceholder)
+                return;
+            var wanted = tabControl1.SelectedIndex == 3 ? DotNetPlaceholder() : PreviewPlaceholder();
+            if (cur == wanted)
+                return;
+            previewPanel.Image = wanted;
+            previewPanel.SizeMode = PictureBoxSizeMode.CenterImage;
+        }
+
+        // Shown when an asset IS selected but has no visual preview (unsupported image,
+        // font, sprite, or a type with no preview). Replaces the misleading
+        // "Select an asset to preview" for that case.
+        // Cached per asset type: this used to allocate a fresh ~165 KB bitmap on every click
+        // and orphan the previous one (GDI handle held until the finalizer ran). The set of
+        // types is small and bounded, and the cache is dropped on theme change and reset.
+        private readonly Dictionary<string, System.Drawing.Image> noPreviewCache = new Dictionary<string, System.Drawing.Image>();
+
+        private System.Drawing.Image NoPreviewImage(string typeName)
+        {
+            if (!noPreviewCache.TryGetValue(typeName, out var img))
+            {
+                img = MakePreviewMessage("No preview available", $"{typeName} — use Export or the Dump tab");
+                noPreviewCache[typeName] = img;
+            }
+            return img;
+        }
+
+        private void ClearNoPreviewCache()
+        {
+            foreach (var img in noPreviewCache.Values)
+            {
+                if (previewPanel.Image == img)
+                    previewPanel.Image = null;
+                img.Dispose();
+            }
+            noPreviewCache.Clear();
+        }
+
+        // Drop the lowercased TextAsset/MonoBehaviour dump text kept for the "search inside
+        // contents" mode. On a big game that is potentially hundreds of MB, so it must not
+        // outlive the feature being switched off.
+        private void ReleaseSearchContentCaches()
+        {
+            foreach (var item in exportableAssets)
+            {
+                item.SearchContentCache = null;
+                item.SearchContentBuilt = false;
+                // The search parsed TextAssets to read them; drop those payloads too.
+                if (item.Type == ClassIDType.TextAsset)
+                    (item.RawAsset as LazyObject)?.Release();
+            }
+        }
+
+        // Centered two-line message image, colored to read on the current theme's preview bg.
+        private System.Drawing.Image MakePreviewMessage(string title, string hint)
+        {
+            // Match the preview panel background so ClearType text renders on an opaque
+            // surface (on a transparent bitmap it fringes and reads as unreadable).
+            var backColor = isDarkMode ? DarkContent : LightChrome;
+            var titleColor = isDarkMode ? System.Drawing.Color.FromArgb(170, 170, 170) : System.Drawing.Color.FromArgb(80, 80, 80);
+            var hintColor = isDarkMode ? System.Drawing.Color.FromArgb(120, 120, 120) : System.Drawing.Color.FromArgb(115, 115, 115);
+            var bmp = new Bitmap(460, 90);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.Clear(backColor);
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+                using var titleFont = new System.Drawing.Font("Segoe UI", 15f);
+                using var hintFont = new System.Drawing.Font("Segoe UI", 9.5f);
+                using var titleBrush = new SolidBrush(titleColor);
+                using var hintBrush = new SolidBrush(hintColor);
+                var center = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                g.DrawString(title, titleFont, titleBrush, new RectangleF(0, 10, 460, 40), center);
+                g.DrawString(hint, hintFont, hintBrush, new RectangleF(0, 50, 460, 30), center);
+            }
+            return bmp;
+        }
+
+        // Owner-draw + original border styles are wired once; colors are (re)applied by
+        // ApplyTheme so the theme can switch live.
+        private bool themeWired;
+        private BorderStyle ob_sceneTree, ob_dumpTree, ob_split, ob_dumpText, ob_textPrev, ob_classText;
+        private BorderStyle ob_assetList, ob_classesList;
+        private System.Drawing.Color ob_splitBack;
+
+        private SearchHost treeSearchHost;
+        private SearchHost listSearchHost;
+
+        // Wrap the Asset List search box in the polished SearchHost and drop the old history
+        // dropdown (the field matches the other search boxes; no autocomplete).
+        private SearchToggle searchRegexToggle, searchContentToggle, searchExcludeToggle;
+
+        private void WrapListSearch()
+        {
+            panel1.Height = 48;
+            panel1.Padding = new Padding(0, 0, 0, 8); // gap below the search bar (page padding handles the rest)
+            listSearchHistory.Visible = false;      // history dropdown replaced by autocomplete
+            panel1.Controls.Remove(listSearchHistory);
+            listSearchFilterMode.Visible = false;   // Include/Exclude/Regex dropdown replaced by in-field toggles
+            panel1.Controls.Remove(listSearchFilterMode);
+            panel1.Controls.Remove(listSearch);
+            listSearchHost = new SearchHost(listSearch) { Dock = DockStyle.Fill };
+            panel1.Controls.Add(listSearchHost);
+
+            // In-field modifier toggles (left→right): regex, content, exclude.
+            searchRegexToggle = listSearchHost.AddToggle(".*", "Regular expression");
+            searchContentToggle = listSearchHost.AddToggle("{}", "Also search inside file contents (TextAsset / MonoBehaviour)");
+            searchExcludeToggle = listSearchHost.AddToggle("−", "Exclude — hide assets that match");
+            foreach (var t in new[] { searchRegexToggle, searchContentToggle, searchExcludeToggle })
+                t.CheckedChanged += (s, e) => FilterAssetList();
+            // Content search caches dump text per asset; free it as soon as the mode is off.
+            searchContentToggle.CheckedChanged += (s, e) =>
+            {
+                if (!searchContentToggle.Checked)
+                    ReleaseSearchContentCaches();
+            };
+        }
+
+        // Wrap the Scene Hierarchy search box in the polished SearchHost, with an in-field
+        // "exact match" toggle (replaces the old external "Exact search" checkbox, which is
+        // kept hidden as the state the search logic reads).
+        private void WrapTreeSearch()
+        {
+            tabPage1.Controls.Remove(treeSearch);
+            tabPage1.Controls.Remove(sceneExactSearchCheckBox);
+            sceneExactSearchCheckBox.Visible = false;
+            // Mirror the Asset List's search row exactly: a Dock=Top panel of Height 48 with
+            // an 8px bottom padding, the SearchHost filling it. Same position/size as panel1.
+            var searchRow = new Panel { Dock = DockStyle.Top, Height = 48, Padding = new Padding(0, 0, 0, 8), Name = "treeSearchRow" };
+            treeSearchHost = new SearchHost(treeSearch) { Dock = DockStyle.Fill };
+            var exact = treeSearchHost.AddToggle("W", "Whole word — exact match");
+            exact.CheckedChanged += (s, e) => sceneExactSearchCheckBox.Checked = exact.Checked;
+            searchRow.Controls.Add(treeSearchHost);
+            // Add last (highest z-index) so docking positions it at the top and the
+            // Fill tree takes the space below it (BringToFront would overlap the tree).
+            tabPage1.Controls.Add(searchRow);
+        }
+
+        private void WireThemeControls()
+        {
+            if (themeWired)
+                return;
+            themeWired = true;
+            foreach (var lv in new[] { assetListView, classesListView })
+            {
+                lv.OwnerDraw = true;
+                lv.DrawColumnHeader += DarkListView_DrawColumnHeader;
+                lv.DrawItem += ListView_DrawItem;
+                lv.DrawSubItem += DarkListView_DrawSubItem;
+                lv.MouseMove += ListView_HoverMove;
+                lv.MouseLeave += ListView_HoverLeave;
+            }
+            // Remember the light-mode border styles so we can restore them.
+            ob_sceneTree = sceneTreeView.BorderStyle;
+            ob_dumpTree = dumpTreeView.BorderStyle;
+            ob_split = splitContainer1.BorderStyle;
+            ob_dumpText = dumpTextBox.BorderStyle;
+            ob_textPrev = textPreviewBox.BorderStyle;
+            ob_classText = classTextBox.BorderStyle;
+            ob_assetList = assetListView.BorderStyle;
+            ob_classesList = classesListView.BorderStyle;
+            ob_splitBack = splitContainer1.BackColor;
+        }
+
+        // Applies the full color theme for either mode. Safe to call repeatedly (live switch).
+        private void ApplyTheme(bool dark)
+        {
+            isDarkMode = dark;
+            var content = dark ? DarkContent : LightContent;
+            var chrome = dark ? DarkChrome : LightChrome;
+            var field = dark ? DarkField : LightField;
+            var fore = dark ? DarkFore : LightFore;
+
+            foreach (Control c in new Control[] { assetListView, classesListView, sceneTreeView, dumpTreeView })
+            {
+                c.BackColor = content;
+                c.ForeColor = fore;
+            }
+            // Native grid lines render light and can't be themed; off in dark mode.
+            assetListView.GridLines = !dark;
+            classesListView.GridLines = !dark;
+            // The list's own 3-D border renders light in dark mode; drop it.
+            assetListView.BorderStyle = dark ? BorderStyle.None : ob_assetList;
+            classesListView.BorderStyle = dark ? BorderStyle.None : ob_classesList;
+            previewPanel.BackColor = dark ? DarkContent : LightChrome;
+            FMODpanel.BackColor = dark ? DarkContent : LightChrome;
+
+            panel1.BackColor = chrome;
+            panel1.ForeColor = fore;
+
+            // All three search boxes are wrapped in SearchHosts, which theme themselves.
+            listSearchHost?.Theme(dark);
+            treeSearchHost?.Theme(dark);
+            dotnetSearchHost?.Theme(dark);
+
+            foreach (Control tb in new Control[] { dumpTextBox, textPreviewBox, fontPreviewBox, classTextBox })
+            {
+                if (tb == null) continue;
+                tb.BackColor = content;
+                tb.ForeColor = fore;
+            }
+            dumpTextBox.BorderStyle = dark ? BorderStyle.None : ob_dumpText;
+            dumpTreeView.BorderStyle = dark ? BorderStyle.None : ob_dumpTree;
+            if (classTextBox != null) classTextBox.BorderStyle = dark ? BorderStyle.None : ob_classText;
+            if (textPreviewBox != null) textPreviewBox.BorderStyle = dark ? BorderStyle.None : ob_textPrev;
+            sceneTreeView.BorderStyle = dark ? BorderStyle.None : ob_sceneTree;
+            splitContainer1.BorderStyle = dark ? BorderStyle.None : ob_split;
+            splitContainer1.BackColor = dark ? DarkSeparator : LightSeparator;
+
+            if (dotnetTreeView != null)
+            {
+                dotnetTreeView.BackColor = content;
+                dotnetTreeView.ForeColor = fore;
+            }
+
+            // Tabs: DarkTabControl paints dark when DarkMode is set; native tabs otherwise.
+            foreach (var tc in new[] { tabControl1, tabControl2 })
+            {
+                tc.DarkMode = dark;
+                tc.BackColor = chrome;
+                foreach (TabPage page in tc.TabPages)
+                {
+                    page.UseVisualStyleBackColor = !dark;
+                    page.BackColor = chrome;
+                    page.ForeColor = fore;
+                    page.Padding = new Padding(8); // uniform breathing room around the content
+                }
+                tc.Invalidate(true);
+            }
+
+            ThemeContainer(tabPage1, dark);
+            if (dotnetTabPage != null)
+                ThemeContainer(dotnetTabPage, dark);
+
+            if (assetEmptyLabel != null)
+            {
+                assetEmptyLabel.BackColor = assetListView.BackColor;
+                assetEmptyLabel.ForeColor = dark ? System.Drawing.Color.FromArgb(150, 150, 150) : LightGrayText;
+            }
+            if (sceneEmptyLabel != null)
+            {
+                sceneEmptyLabel.BackColor = sceneTreeView.BackColor;
+                sceneEmptyLabel.ForeColor = dark ? System.Drawing.Color.FromArgb(150, 150, 150) : LightGrayText;
+            }
+            if (dotnetEmptyLabel != null && dotnetTreeView != null)
+            {
+                dotnetEmptyLabel.BackColor = dotnetTreeView.BackColor;
+                dotnetEmptyLabel.ForeColor = dark ? System.Drawing.Color.FromArgb(150, 150, 150) : LightGrayText;
+            }
+            ThemeDotNetDiscoverButton(dark);
+            if (classesEmptyLabel != null)
+            {
+                classesEmptyLabel.BackColor = classesListView.BackColor;
+                classesEmptyLabel.ForeColor = dark ? System.Drawing.Color.FromArgb(150, 150, 150) : LightGrayText;
+            }
+
+            ApplyToolbarTheme(dark);
+            // Menu bar, dropdowns and context menus: clean accent checks + dark surfaces.
+            ToolStripManager.Renderer = dark ? (menuRenderer ??= new MenuRenderer()) : new ToolStripProfessionalRenderer();
+            menuStrip1.Invalidate();
+            ApplyNativeTheme(dark);
+
+            // Force stale-painting controls to redraw fully on a live switch.
+            foreach (Control c in new Control[] { assetListView, classesListView, sceneTreeView, dumpTreeView,
+                                                  panel1, tabControl1, tabControl2 })
+                c?.Refresh();
+            RefreshListHeader(assetListView);
+            RefreshListHeader(classesListView);
+            // Rebuild the preview placeholder for the new theme if it's on screen.
+            if (previewPanel.Image == previewPlaceholder && previewPlaceholder != null)
+                previewPanel.Image = PreviewPlaceholder();
+            else if (previewPanel.Image == dotnetPlaceholder && dotnetPlaceholder != null)
+                previewPanel.Image = DotNetPlaceholder();
+            ClearNoPreviewCache(); // colored for the old theme
+            Invalidate(true);
+        }
+
+        private void ApplyToolbarTheme(bool dark)
+        {
+            if (toolStripMain == null)
+                return;
+            var glyph = dark ? System.Drawing.Color.FromArgb(225, 225, 225) : System.Drawing.Color.FromArgb(60, 60, 60);
+            foreach (var (btn, icon) in toolbarIcons)
+            {
+                var old = btn.Image;
+                btn.Image = icon(glyph);
+                old?.Dispose();
+            }
+            if (themeToggleButton != null)
+            {
+                var old = themeToggleButton.Image;
+                // Show the icon of the mode you'd switch TO.
+                themeToggleButton.Image = dark ? IconSun(glyph) : IconMoon(glyph);
+                themeToggleButton.ToolTipText = dark ? "Switch to light theme" : "Switch to dark theme";
+                old?.Dispose();
+            }
+            if (dark)
+            {
+                toolStripMain.Renderer = new ToolStripProfessionalRenderer(new DarkToolStripColorTable()) { RoundedEdges = false };
+                toolStripMain.BackColor = DarkChrome;
+                toolStripMain.ForeColor = DarkFore;
+            }
+            else
+            {
+                toolStripMain.RenderMode = ToolStripRenderMode.System;
+                toolStripMain.BackColor = LightChrome;
+                toolStripMain.ForeColor = LightFore;
+            }
+            toolStripMain.Invalidate();
+        }
+
+        // Native theming that needs window handles (dark title bar + dark scrollbars).
+        private void ApplyNativeTheme(bool dark)
+        {
+            if (!IsHandleCreated)
+                return;
+            try
+            {
+                int on = dark ? 1 : 0;
+                DwmSetWindowAttribute(Handle, DWMWA_USE_IMMERSIVE_DARK_MODE, ref on, sizeof(int));
+                var theme = dark ? "DarkMode_Explorer" : "Explorer";
+                foreach (Control c in new Control[] { assetListView, classesListView, sceneTreeView, dumpTreeView, dotnetTreeView })
+                {
+                    if (c == null || !c.IsHandleCreated) continue;
+                    SetWindowTheme(c.Handle, theme, null); // control body + scrollbars
+                    if (c is ListView lv) // the header is a separate sub-control
+                    {
+                        var hdr = SendMessage(lv.Handle, LVM_GETHEADER, IntPtr.Zero, IntPtr.Zero);
+                        if (hdr != IntPtr.Zero)
+                            SetWindowTheme(hdr, theme, null);
+                    }
+                }
+            }
+            catch
+            {
+                // Best-effort on older Windows.
+            }
+        }
+
+        // Applies the layered dark palette by control type through a container's tree:
+        // panels/labels = chrome, tree/list/text = content (darker), inputs = field.
+        // Recursively theme a container's children for dark or light.
+        private void ThemeContainer(Control root, bool dark)
+        {
+            var content = dark ? DarkContent : LightContent;
+            var chrome = dark ? DarkChrome : LightChrome;
+            var field = dark ? DarkField : LightField;
+            var fore = dark ? DarkFore : LightFore;
+            foreach (Control c in root.Controls)
+            {
+                switch (c)
+                {
+                    case SearchHost sh:
+                        sh.Theme(dark);
+                        continue; // owns its children's colors
+                    case TextBox _:
+                    case ComboBox _:
+                        c.BackColor = field;
+                        c.ForeColor = fore;
+                        break;
+                    case TreeView _:
+                    case ListView _:
+                        c.BackColor = content;
+                        c.ForeColor = fore;
+                        break;
+                    case CheckBox chk:
+                        chk.UseVisualStyleBackColor = !dark;
+                        chk.BackColor = chrome;
+                        chk.ForeColor = fore;
+                        break;
+                    case Button btn:
+                        btn.FlatStyle = dark ? FlatStyle.Flat : FlatStyle.Standard;
+                        btn.UseVisualStyleBackColor = !dark;
+                        btn.BackColor = dark ? DarkField : LightChrome;
+                        btn.ForeColor = fore;
+                        break;
+                    case Label _:
+                    case Panel _:
+                        c.BackColor = chrome;
+                        c.ForeColor = fore;
+                        break;
+                }
+                if (c.HasChildren)
+                    ThemeContainer(c, dark);
+            }
+        }
+
+        // Row palette (dark mode only; light mode uses e.DrawDefault).
+        private static readonly System.Drawing.Color RowEven = System.Drawing.Color.FromArgb(24, 24, 24);
+        private static readonly System.Drawing.Color RowOdd = System.Drawing.Color.FromArgb(32, 32, 34);   // subtle zebra
+        private static readonly System.Drawing.Color RowSelected = System.Drawing.Color.FromArgb(38, 79, 120); // muted blue
+        private static readonly System.Drawing.Color RowText = System.Drawing.Color.FromArgb(222, 222, 222);
+        private static readonly System.Drawing.Color RowTextSel = System.Drawing.Color.FromArgb(245, 245, 245);
+        private static readonly System.Drawing.Color RowSeparator = System.Drawing.Color.FromArgb(48, 48, 51);
+        private static readonly System.Drawing.Color RowHover = System.Drawing.Color.FromArgb(50, 50, 54);
+
+        // Cached GDI objects for the owner-draw path. The palette is fixed, and the draw
+        // handlers run for every visible cell on every scroll step, so allocating a brush
+        // and a pen per cell (hundreds per repaint) was pure overhead. Created lazily on the
+        // UI thread on first paint (avoids static-initializer ordering with the color consts).
+        private SolidBrush brRowEven, brRowOdd, brRowSelected, brRowHover, brHeader, brHeaderPressed;
+        private Pen pnRowSeparator, pnHeaderLine;
+
+        private void EnsureRowGdi()
+        {
+            if (brRowEven != null)
+                return;
+            brRowEven = new SolidBrush(RowEven);
+            brRowOdd = new SolidBrush(RowOdd);
+            brRowSelected = new SolidBrush(RowSelected);
+            brRowHover = new SolidBrush(RowHover);
+            pnRowSeparator = new Pen(RowSeparator);
+            brHeader = new SolidBrush(System.Drawing.Color.FromArgb(50, 50, 52));        // a touch lighter than rows
+            brHeaderPressed = new SolidBrush(System.Drawing.Color.FromArgb(64, 64, 66));
+            pnHeaderLine = new Pen(System.Drawing.Color.FromArgb(58, 58, 60));          // subtle divider, not whitish
+        }
+
+        private ListView hoverList;
+        private int hoverRowIndex = -1;
+
+        private void ListView_HoverMove(object sender, MouseEventArgs e)
+        {
+            var lv = (ListView)sender;
+            var idx = lv.GetItemAt(e.X, e.Y)?.Index ?? -1;
+            if (lv == hoverList && idx == hoverRowIndex)
+                return;
+            var oldList = hoverList; var oldIdx = hoverRowIndex;
+            hoverList = lv; hoverRowIndex = idx;
+            try { if (oldList != null && oldIdx >= 0) oldList.Invalidate(oldList.GetItemRect(oldIdx)); } catch { }
+            try { if (idx >= 0) lv.Invalidate(lv.GetItemRect(idx)); } catch { }
+        }
+
+        private void ListView_HoverLeave(object sender, EventArgs e)
+        {
+            if (hoverList == null || hoverRowIndex < 0)
+                return;
+            var lv = hoverList; var idx = hoverRowIndex;
+            hoverList = null; hoverRowIndex = -1;
+            try { lv.Invalidate(lv.GetItemRect(idx)); } catch { }
+        }
+
+        // In Details view the subitems handle drawing; in light mode fall back to default.
+        private void ListView_DrawItem(object sender, DrawListViewItemEventArgs e)
+        {
+            if (!isDarkMode)
+                e.DrawDefault = true;
+        }
+
+        // Full row owner-draw (dark only): zebra striping, flat selection, no focus dots.
+        private void DarkListView_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
+        {
+            if (!isDarkMode)
+            {
+                e.DrawDefault = true;
+                return;
+            }
+            var lv = (ListView)sender;
+            EnsureRowGdi();
+            var selected = e.Item.Selected;
+            var hovered = !selected && lv == hoverList && e.ItemIndex == hoverRowIndex;
+            var back = selected ? brRowSelected
+                     : hovered ? brRowHover
+                     : ((e.ItemIndex & 1) == 0 ? brRowEven : brRowOdd);
+            e.Graphics.FillRectangle(back, e.Bounds);
+
+            // Subtle column separator on the right edge of each cell (replaces the light
+            // native grid lines that don't theme).
+            e.Graphics.DrawLine(pnRowSeparator, e.Bounds.Right - 1, e.Bounds.Top, e.Bounds.Right - 1, e.Bounds.Bottom - 1);
+
+            var flags = TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.LeftAndRightPadding;
+            if (e.Header != null)
+            {
+                if (e.Header.TextAlign == HorizontalAlignment.Center)
+                    flags |= TextFormatFlags.HorizontalCenter;
+                else if (e.Header.TextAlign == HorizontalAlignment.Right)
+                    flags |= TextFormatFlags.Right;
+            }
+            TextRenderer.DrawText(e.Graphics, e.SubItem.Text, lv.Font, e.Bounds,
+                selected ? RowTextSel : RowText, flags);
+        }
+
+        private void DarkListView_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
+        {
+            if (!isDarkMode)
+            {
+                e.DrawDefault = true;
+                return;
+            }
+            EnsureRowGdi();
+            var text = System.Drawing.Color.FromArgb(235, 235, 235);
+            var pressed = (e.State & ListViewItemStates.Selected) != 0;
+
+            e.Graphics.FillRectangle(pressed ? brHeaderPressed : brHeader, e.Bounds);
+            e.Graphics.DrawLine(pnHeaderLine, e.Bounds.Right - 1, e.Bounds.Top, e.Bounds.Right - 1, e.Bounds.Bottom - 1);
+            e.Graphics.DrawLine(pnHeaderLine, e.Bounds.Left, e.Bounds.Bottom - 1, e.Bounds.Right, e.Bounds.Bottom - 1);
+
+            // Slight extra left padding + bold for a clearer information hierarchy.
+            var bounds = e.Bounds;
+            bounds.X += 4;
+            bounds.Width -= 4;
+            var flags = TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis;
+            if (e.Header.TextAlign == HorizontalAlignment.Center)
+                flags |= TextFormatFlags.HorizontalCenter;
+            else if (e.Header.TextAlign == HorizontalAlignment.Right)
+                flags |= TextFormatFlags.Right;
+            using var bold = new System.Drawing.Font(((ListView)sender).Font, System.Drawing.FontStyle.Bold);
+            TextRenderer.DrawText(e.Graphics, e.Header.Text, bold, bounds, text, flags);
+        }
+
+        // Dark color table for the toolbar's professional renderer (hover/pressed/borders).
+        private sealed class DarkToolStripColorTable : ProfessionalColorTable
+        {
+            private static readonly System.Drawing.Color Bar = System.Drawing.Color.FromArgb(45, 45, 45);
+            private static readonly System.Drawing.Color Hover = System.Drawing.Color.FromArgb(62, 62, 64);
+            private static readonly System.Drawing.Color Pressed = System.Drawing.Color.FromArgb(80, 80, 82);
+            private static readonly System.Drawing.Color BorderClr = System.Drawing.Color.FromArgb(95, 95, 98);
+            private static readonly System.Drawing.Color Sep = System.Drawing.Color.FromArgb(70, 70, 70);
+
+            public DarkToolStripColorTable() { UseSystemColors = false; }
+
+            public override System.Drawing.Color ToolStripGradientBegin => Bar;
+            public override System.Drawing.Color ToolStripGradientMiddle => Bar;
+            public override System.Drawing.Color ToolStripGradientEnd => Bar;
+            public override System.Drawing.Color ToolStripBorder => Bar;
+            public override System.Drawing.Color ButtonSelectedHighlight => Hover;
+            public override System.Drawing.Color ButtonSelectedGradientBegin => Hover;
+            public override System.Drawing.Color ButtonSelectedGradientMiddle => Hover;
+            public override System.Drawing.Color ButtonSelectedGradientEnd => Hover;
+            public override System.Drawing.Color ButtonSelectedBorder => BorderClr;
+            public override System.Drawing.Color ButtonPressedHighlight => Pressed;
+            public override System.Drawing.Color ButtonPressedGradientBegin => Pressed;
+            public override System.Drawing.Color ButtonPressedGradientMiddle => Pressed;
+            public override System.Drawing.Color ButtonPressedGradientEnd => Pressed;
+            public override System.Drawing.Color ButtonPressedBorder => BorderClr;
+            public override System.Drawing.Color SeparatorDark => Sep;
+            public override System.Drawing.Color SeparatorLight => Sep;
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            ApplyNativeTheme(isDarkMode);
+        }
+
+        // Draws over the TabControl's light 3-D frame (outer border + the divider line
+        // under the tab row) with the dark background, after the control paints itself.
+
         private void colorThemeAutoToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (!colorThemeAutoToolStripMenuItem.Checked)
-            {
-                colorThemeAutoToolStripMenuItem.Checked = true;
-                colorThemeLightToolStripMenuItem.Checked = false;
-                colorThemeDarkToolStripMenuItem.Checked = false;
-                Properties.Settings.Default.guiColorTheme = GuiColorTheme.System;
-                Properties.Settings.Default.Save();
-                ShowThemeChangingMsg();
-            }
+                SwitchTheme(GuiColorTheme.System);
         }
 
         private void colorThemeLightToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (!colorThemeLightToolStripMenuItem.Checked)
-            {
-                colorThemeAutoToolStripMenuItem.Checked = false;
-                colorThemeLightToolStripMenuItem.Checked = true;
-                colorThemeDarkToolStripMenuItem.Checked = false;
-                Properties.Settings.Default.guiColorTheme = GuiColorTheme.Light;
-                Properties.Settings.Default.Save();
-                ShowThemeChangingMsg();
-            }
+                SwitchTheme(GuiColorTheme.Light);
         }
 
         private void colorThemeDarkToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (!colorThemeDarkToolStripMenuItem.Checked)
-            {
-                colorThemeAutoToolStripMenuItem.Checked = false;
-                colorThemeLightToolStripMenuItem.Checked = false;
-                colorThemeDarkToolStripMenuItem.Checked = true;
-                Properties.Settings.Default.guiColorTheme = GuiColorTheme.Dark;
-                Properties.Settings.Default.Save();
-                ShowThemeChangingMsg();
-            }
+                SwitchTheme(GuiColorTheme.Dark);
         }
 
-        private static void ShowThemeChangingMsg()
+        // Live theme switch: no restart. Updates the framework color mode and re-applies
+        // the full custom theme in place.
+        private void SwitchTheme(GuiColorTheme theme)
         {
-            var msg = "Color theme will be changed after restarting the application.\n\n" +
-                      "Dark theme support for WinForms is not yet fully implemented and is for evaluation purposes only.\n" +
-                      "Better Dark theme support should be added in future .NET versions.";
-            MessageBox.Show(msg, "Info", MessageBoxButtons.OK);
+            colorThemeAutoToolStripMenuItem.Checked = theme == GuiColorTheme.System;
+            colorThemeLightToolStripMenuItem.Checked = theme == GuiColorTheme.Light;
+            colorThemeDarkToolStripMenuItem.Checked = theme == GuiColorTheme.Dark;
+            Properties.Settings.Default.guiColorTheme = theme;
+            Properties.Settings.Default.Save();
+
+            var dark = false;
+#if NET9_0_OR_GREATER
+#pragma warning disable WFO5001 // evaluation-only API
+            try
+            {
+                switch (theme)
+                {
+                    case GuiColorTheme.System:
+                        Application.SetColorMode(SystemColorMode.System);
+                        dark = Application.IsDarkModeEnabled;
+                        break;
+                    case GuiColorTheme.Light:
+                        Application.SetColorMode(SystemColorMode.Classic);
+                        break;
+                    case GuiColorTheme.Dark:
+                        Application.SetColorMode(SystemColorMode.Dark);
+                        dark = true;
+                        break;
+                }
+            }
+            catch { }
+#pragma warning restore WFO5001
+#endif
+            SuspendLayout();
+            ApplyTheme(dark);
+            menuStrip1.Refresh();
+            toolStripMain?.Refresh();
+            ResumeLayout(true);
         }
 
         private void DumpTreeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)

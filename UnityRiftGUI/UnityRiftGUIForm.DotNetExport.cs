@@ -17,7 +17,7 @@ namespace UnityRiftGUI
     // in the tab and from the tree's right-click menu.
     partial class UnityRiftGUIForm
     {
-        private Button dotnetExportButton;
+        private ToolStripMenuItem dotnetExportMenuItem; // ".NET Classes" submenu under the main Export menu
         private ContextMenuStrip dotnetExportMenu;
         private ToolStripMenuItem dotnetExportTypeItem;
         private ToolStripMenuItem dotnetExportAssemblyItem;
@@ -59,17 +59,38 @@ namespace UnityRiftGUI
                     && Il2CppSymbolIndex.Exists(assemblyLoader.LoadedPath);
             };
 
-            dotnetExportButton = new Button
+            // Merge the .NET export actions into the main Export menu as a submenu, so the
+            // search row stays clean. Greyed when no assemblies are loaded.
+            dotnetExportMenuItem = new ToolStripMenuItem(".NET Classes");
+            var mType = new ToolStripMenuItem("Export selected type (.cs)");
+            mType.Click += async (s, e) => await ExportDotNetSelectedTypeAsync();
+            var mAsm = new ToolStripMenuItem("Export selected assembly (.cs stubs)");
+            mAsm.Click += async (s, e) => await ExportDotNetStubsAsync(SelectedDotNetModule() is ModuleDefinition m2 ? new[] { m2 } : null);
+            var mAll = new ToolStripMenuItem("Export all assemblies (.cs stubs)");
+            mAll.Click += async (s, e) => await ExportDotNetStubsAsync(assemblyLoader.Modules.Values);
+            var mDll = new ToolStripMenuItem("Export assembly files (.dll)");
+            mDll.Click += async (s, e) => await ExportDotNetAssemblyFilesAsync();
+            var mGhidra = new ToolStripMenuItem("Export Ghidra / Il2CppDumper package");
+            mGhidra.Click += async (s, e) => await ExportIl2CppGhidraPackageAsync();
+            dotnetExportMenuItem.DropDownItems.AddRange(new ToolStripItem[]
             {
-                Dock = DockStyle.Right,
-                AutoSize = true,
-                Text = "Export ▾",
-                FlatStyle = FlatStyle.Flat,
-                Cursor = Cursors.Hand,
-                UseVisualStyleBackColor = true,
+                mType, mAsm, mAll, new ToolStripSeparator(), mDll, mGhidra,
+            });
+            dotnetExportMenuItem.DropDownOpening += (s, e) =>
+            {
+                var loaded = assemblyLoader.Modules.Count > 0;
+                mType.Enabled = loaded && SelectedDotNetType() != null;
+                mAsm.Enabled = loaded && SelectedDotNetModule() != null;
+                mAll.Enabled = loaded;
+                mDll.Enabled = loaded;
+                mGhidra.Enabled = loaded && assemblyLoader.IsIl2CppStubs
+                    && !string.IsNullOrEmpty(assemblyLoader.LoadedPath)
+                    && Il2CppSymbolIndex.Exists(assemblyLoader.LoadedPath);
             };
-            dotnetExportButton.Click += (s, e) => dotnetExportMenu.Show(dotnetExportButton, new Point(0, dotnetExportButton.Height));
-            topPanel.Controls.Add(dotnetExportButton);
+            exportToolStripMenuItem.DropDownItems.Add(new ToolStripSeparator());
+            exportToolStripMenuItem.DropDownItems.Add(dotnetExportMenuItem);
+            exportToolStripMenuItem.DropDownOpening += (s, e) =>
+                dotnetExportMenuItem.Enabled = assemblyLoader.Loaded;
 
             dotnetTreeView.ContextMenuStrip = dotnetExportMenu;
             dotnetTreeView.MouseDown += (s, e) =>
