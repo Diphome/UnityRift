@@ -118,6 +118,7 @@ namespace UnityRiftCLI.Options
         public static bool convertTexture;
         public static Option<ImageFormat> o_imageFormat;
         public static Option<AudioFormat> o_audioFormat;
+        public static Option<bool> f_spriteExportWithCanvas;
         //live2d
         public static Option<CubismLive2DExtractor.Live2DModelGroupOption> o_l2dGroupOption;
         public static Option<bool> f_l2dAssetSearchByFilename;
@@ -130,18 +131,21 @@ namespace UnityRiftCLI.Options
         public static Option<int> o_fbxBoneSize;
         public static Option<AnimationExportMode> o_fbxAnimMode;
         public static Option<bool> f_fbxUvsAsDiffuseMaps;
+        public static Option<bool> f_fbxAsciiFormat;
         //filter
         public static Option<List<string>> o_filterByName;
         public static Option<List<string>> o_filterByContainer;
         public static Option<List<string>> o_filterByPathID;
         public static Option<List<string>> o_filterByText;
         public static Option<bool> f_filterWithRegex;
+        public static Option<bool> f_filterExcludeMode;
         //advanced
         public static Option<CompressionType> o_bundleBlockInfoCompression;
         public static Option<CompressionType> o_bundleBlockCompression;
         public static Option<int> o_maxParallelExportTasks;
         public static Option<ExportListType> o_exportAssetList;
         public static Option<string> o_assemblyPath;
+        public static Option<string> o_stripPathPrefix;
         public static Option<string> o_typeTreeDBPath;
         public static Option<UnityVersion> o_unityVersion;
         public static Option<bool> f_decompressToDisk;
@@ -355,6 +359,16 @@ namespace UnityRiftCLI.Options
                 optionExample: "Example: \"--audio-format wav\"",
                 optionHelpGroup: HelpGroups.Convert
             );
+            f_spriteExportWithCanvas = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--sprite-canvas",
+                optionDescription: "(Flag) If specified, sprites are exported at their full authored\n" +
+                    "size (m_Rect) with transparent padding, instead of just the cropped region",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.Convert,
+                isFlag: true
+            );
             #endregion
 
             #region Init Cubism Live2D Options
@@ -463,6 +477,15 @@ namespace UnityRiftCLI.Options
                 optionExample: "",
                 optionHelpGroup: HelpGroups.FBX
             );
+            f_fbxAsciiFormat = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--fbx-ascii-format",
+                optionDescription: "(Flag) If specified, Studio will export FBX in ASCII format.\n" +
+                    "If not specified, Binary format will be used",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.FBX
+            );
             #endregion
 
             #region Init Filter Options
@@ -509,6 +532,16 @@ namespace UnityRiftCLI.Options
                 optionName: "--filter-with-regex",
                 optionDescription: "(Flag) If specified, the filter options will handle the specified text\n" +
                     "as a regular expression (doesn't apply to --filter-by-pathid)",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.Filter,
+                isFlag: true
+            );
+            f_filterExcludeMode = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--filter-exclude-mode",
+                optionDescription: "(Flag) If specified, the filter options will work as an exclusion\n" +
+                    "(i.e. assets that match the filter conditions will be excluded)",
                 optionExample: "",
                 optionHelpGroup: HelpGroups.Filter,
                 isFlag: true
@@ -676,6 +709,15 @@ namespace UnityRiftCLI.Options
                 optionName: "--assembly-folder <path>",
                 optionDescription: "Specify the path to the assembly folder\n",
                 optionExample: "",
+                optionHelpGroup: HelpGroups.Advanced
+            );
+            o_stripPathPrefix = new GroupedOption<string>
+            (
+                optionDefaultValue: "",
+                optionName: "--strip-path-prefix <path>",
+                optionDescription: "Specify a path prefix to be stripped from exported asset container paths\n" +
+                    "(applies to the ContainerPath / ContainerPathFull group options)\n",
+                optionExample: "Example: \"--strip-path-prefix assets/models/char/\"\n",
                 optionHelpGroup: HelpGroups.Advanced
             );
             o_typeTreeDBPath = new GroupedOption<string>
@@ -889,6 +931,7 @@ namespace UnityRiftCLI.Options
                         o_exportAssetTypes.Value = new List<ClassIDType>
                         {
                             ClassIDType.Animator,
+                            ClassIDType.AnimationClip, // needed so --fbx-animation all can bind clips
                             ClassIDType.Mesh,
                             ClassIDType.Texture2D,
                         };
@@ -948,7 +991,7 @@ namespace UnityRiftCLI.Options
                         flagIndexes.Add(i);
                         break;
                     case "--fbx-uvs-as-diffuse":
-                        if (o_workMode.Value != WorkMode.SplitObjects)
+                        if (o_workMode.Value != WorkMode.SplitObjects && o_workMode.Value != WorkMode.Animator)
                         {
                             Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is not suitable for the current working mode [{o_workMode.Value}].\n");
                             ShowOptionDescription(o_workMode);
@@ -957,8 +1000,20 @@ namespace UnityRiftCLI.Options
                         f_fbxUvsAsDiffuseMaps.Value = true;
                         flagIndexes.Add(i);
                         break;
+                    case "--fbx-ascii-format":
+                        f_fbxAsciiFormat.Value = true;
+                        flagIndexes.Add(i);
+                        break;
                     case "--filter-with-regex":
                         f_filterWithRegex.Value = true;
+                        flagIndexes.Add(i);
+                        break;
+                    case "--filter-exclude-mode":
+                        f_filterExcludeMode.Value = true;
+                        flagIndexes.Add(i);
+                        break;
+                    case "--sprite-canvas":
+                        f_spriteExportWithCanvas.Value = true;
                         flagIndexes.Add(i);
                         break;
                     case "--il2cpp":
@@ -1545,6 +1600,10 @@ namespace UnityRiftCLI.Options
                                 Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Assembly folder [{value.Color(brightRed)}] was not found.");
                                 return;
                             }
+                            break;
+                        case "--strip-path-prefix":
+                            // Normalize to a directory-style prefix ending with a separator.
+                            o_stripPathPrefix.Value = value.Replace('\\', '/').TrimEnd('/') + "/";
                             break;
                         case "--unity-version":
                             try

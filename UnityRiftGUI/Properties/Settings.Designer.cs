@@ -154,7 +154,19 @@ namespace UnityRiftGUI.Properties {
                 this["exportSpriteWithMask"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool spriteExportWithCanvas {
+            get {
+                return ((bool)(this["spriteExportWithCanvas"]));
+            }
+            set {
+                this["spriteExportWithCanvas"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("MonoBehaviour")]
