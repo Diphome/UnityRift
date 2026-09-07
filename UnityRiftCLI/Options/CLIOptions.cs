@@ -35,6 +35,7 @@ namespace UnityRiftCLI.Options
         Godot,
         GodotScene,
         GodotScripts,
+        Spine,
     }
 
     internal enum AssetGroupOption
@@ -225,7 +226,7 @@ namespace UnityRiftCLI.Options
                 optionDefaultValue: WorkMode.Export,
                 optionName: "-m, --mode <value>",
                 optionDescription: "Specify working mode\n" +
-                    "<Value: extract | export(default) | exportRaw | dump | info | live2d |\nsplitObjects | animator | dotnet | il2cpp | godot>\n" +
+                    "<Value: extract | export(default) | exportRaw | dump | info | live2d |\nsplitObjects | animator | dotnet | il2cpp | godot | spine>\n" +
                     "Extract - Extract(Decompress) asset bundles\n" +
                     "Export - Convert and export assets\n" +
                     "ExportRaw - Export raw assets\n" +
@@ -238,7 +239,8 @@ namespace UnityRiftCLI.Options
                     "Il2Cpp - Generate Il2CppDumper-compatible Ghidra helpers (script.json, il2cpp.h) from GameAssembly/libil2cpp\n" +
                     "Godot - Convert materials to Godot 4 scaffolds (.gdshader + .tres) with their textures\n" +
                     "GodotScene - Export the scene as glTF model(s) + a Godot 4 scene (.tscn) that instances them\n" +
-                    "GodotScripts - Generate Godot GDScript stubs from MonoBehaviours (class + serialized fields; Mono & IL2CPP)\n",
+                    "GodotScripts - Generate Godot GDScript stubs from MonoBehaviours (class + serialized fields; Mono & IL2CPP)\n" +
+                    "Spine - Detect and export Spine (esotericsoftware) models (skeleton + atlas + texture pages)\n",
                 optionExample: "Example: \"-m info\"\n",
                 optionHelpGroup: HelpGroups.General
             );
@@ -889,6 +891,18 @@ namespace UnityRiftCLI.Options
                             ClassIDType.Animator,
                             ClassIDType.Mesh,
                             ClassIDType.Texture2D,
+                        };
+                        break;
+                    case "spine":
+                        o_workMode.Value = WorkMode.Spine;
+                        // Spine skeletons (.json/.skel) and atlases (.atlas) are TextAssets; the
+                        // atlas texture pages are Texture2Ds; SkeletonDataAsset/AtlasAsset
+                        // MonoBehaviours give the authoritative grouping when readable.
+                        o_exportAssetTypes.Value = new List<ClassIDType>
+                        {
+                            ClassIDType.TextAsset,
+                            ClassIDType.Texture2D,
+                            ClassIDType.MonoBehaviour,
                         };
                         break;
                     default:

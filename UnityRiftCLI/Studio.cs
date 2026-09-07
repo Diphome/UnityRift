@@ -561,6 +561,7 @@ namespace UnityRiftCLI
                 case WorkMode.Live2D:
                 case WorkMode.SplitObjects:
                 case WorkMode.Animator:
+                case WorkMode.Spine:
                     break;
                 default:
                     FilterAssets();

@@ -79,6 +79,9 @@ namespace UnityRiftCLI
                         case WorkMode.GodotScripts:
                             Studio.ExportGodotScripts();
                             break;
+                        case WorkMode.Spine:
+                            Studio.ExportSpine();
+                            break;
                         default:
                             Studio.ExportAssets();
                             break;
