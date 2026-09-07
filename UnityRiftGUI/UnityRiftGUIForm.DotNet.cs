@@ -50,7 +50,9 @@ namespace UnityRiftGUI
             var topPanel = new Panel { Dock = DockStyle.Top, Height = 48, Padding = new Padding(0, 0, 0, 8) };
             dotnetSearch = new TextBox
             {
+#if NET5_0_OR_GREATER
                 PlaceholderText = "Search types…",
+#endif
                 Font = new System.Drawing.Font("Segoe UI", 11F),
             };
             dotnetSearch.KeyDown += (s, e) =>
