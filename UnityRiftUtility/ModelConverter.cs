@@ -100,6 +100,119 @@ namespace UnityRift
             ConvertAnimations();
         }
 
+        // Standalone Mesh asset (no GameObject/renderer): produce a single rigid mesh
+        // under a one-node root so it can be exported through the same IImported path
+        // as FBX/glTF (used by the Mesh export when a model format other than OBJ is chosen).
+        public ModelConverter(Mesh m_Mesh, ImageFormat imageFormat)
+        {
+            this.imageFormat = imageFormat;
+            RootFrame = CreateFrame(m_Mesh.m_Name, Vector3.Zero, new Quaternion(0, 0, 0, 0), Vector3.One);
+            ConvertStandaloneMesh(m_Mesh);
+        }
+
+        private void ConvertStandaloneMesh(Mesh mesh)
+        {
+            mesh.ProcessData();
+            if (mesh.m_VertexCount <= 0 || mesh.m_Vertices == null || mesh.m_Vertices.Length == 0)
+                return;
+
+            var iMesh = new ImportedMesh();
+            iMesh.Path = RootFrame.Path;
+            iMesh.SubmeshList = new List<ImportedSubmesh>();
+
+            iMesh.hasNormal = mesh.m_Normals?.Length > 0;
+            iMesh.hasUV = new bool[8];
+            for (int uv = 0; uv < 8; uv++)
+            {
+                iMesh.hasUV[uv] = mesh.GetUV(uv)?.Length > 0;
+            }
+            iMesh.hasTangent = mesh.m_Tangents != null && mesh.m_Tangents.Length == mesh.m_VertexCount * 4;
+            iMesh.hasColor = mesh.m_Colors?.Length > 0;
+
+            int firstFace = 0;
+            for (int i = 0; i < mesh.m_SubMeshes.Count; i++)
+            {
+                int numFaces = (int)mesh.m_SubMeshes[i].indexCount / 3;
+                var submesh = mesh.m_SubMeshes[i];
+                var iSubmesh = new ImportedSubmesh();
+                iSubmesh.Material = null; // no renderer/material; glTF/FBX use the default
+                iSubmesh.BaseVertex = (int)submesh.firstVertex;
+                iSubmesh.FaceList = new List<ImportedFace>(numFaces);
+                var end = firstFace + numFaces;
+                for (int f = firstFace; f < end; f++)
+                {
+                    var face = new ImportedFace();
+                    face.VertexIndices = new int[3];
+                    face.VertexIndices[0] = (int)(mesh.m_Indices[f * 3 + 2] - submesh.firstVertex);
+                    face.VertexIndices[1] = (int)(mesh.m_Indices[f * 3 + 1] - submesh.firstVertex);
+                    face.VertexIndices[2] = (int)(mesh.m_Indices[f * 3] - submesh.firstVertex);
+                    iSubmesh.FaceList.Add(face);
+                }
+                firstFace = end;
+                iMesh.SubmeshList.Add(iSubmesh);
+            }
+
+            iMesh.VertexList = new List<ImportedVertex>((int)mesh.m_VertexCount);
+            for (var j = 0; j < mesh.m_VertexCount; j++)
+            {
+                var iVertex = new ImportedVertex();
+                int c = 3;
+                if (mesh.m_Vertices.Length == mesh.m_VertexCount * 4)
+                {
+                    c = 4;
+                }
+                iVertex.Vertex = new Vector3(-mesh.m_Vertices[j * c], mesh.m_Vertices[j * c + 1], mesh.m_Vertices[j * c + 2]);
+                if (iMesh.hasNormal)
+                {
+                    if (mesh.m_Normals.Length == mesh.m_VertexCount * 3)
+                    {
+                        c = 3;
+                    }
+                    else if (mesh.m_Normals.Length == mesh.m_VertexCount * 4)
+                    {
+                        c = 4;
+                    }
+                    iVertex.Normal = new Vector3(-mesh.m_Normals[j * c], mesh.m_Normals[j * c + 1], mesh.m_Normals[j * c + 2]);
+                }
+                iVertex.UV = new float[8][];
+                for (int uv = 0; uv < 8; uv++)
+                {
+                    if (iMesh.hasUV[uv])
+                    {
+                        var m_UV = mesh.GetUV(uv);
+                        c = 4;
+                        if (m_UV.Length == mesh.m_VertexCount * 2)
+                        {
+                            c = 2;
+                        }
+                        else if (m_UV.Length == mesh.m_VertexCount * 3)
+                        {
+                            c = 3;
+                        }
+                        iVertex.UV[uv] = new[] { m_UV[j * c], m_UV[j * c + 1] };
+                    }
+                }
+                if (iMesh.hasTangent)
+                {
+                    iVertex.Tangent = new Vector4(-mesh.m_Tangents[j * 4], mesh.m_Tangents[j * 4 + 1], mesh.m_Tangents[j * 4 + 2], mesh.m_Tangents[j * 4 + 3]);
+                }
+                if (iMesh.hasColor)
+                {
+                    if (mesh.m_Colors.Length == mesh.m_VertexCount * 3)
+                    {
+                        iVertex.Color = new Color(mesh.m_Colors[j * 3], mesh.m_Colors[j * 3 + 1], mesh.m_Colors[j * 3 + 2], 1.0f);
+                    }
+                    else
+                    {
+                        iVertex.Color = new Color(mesh.m_Colors[j * 4], mesh.m_Colors[j * 4 + 1], mesh.m_Colors[j * 4 + 2], mesh.m_Colors[j * 4 + 3]);
+                    }
+                }
+                iMesh.VertexList.Add(iVertex);
+            }
+
+            MeshList.Add(iMesh);
+        }
+
         private void InitWithAnimator(Animator m_Animator)
         {
             if (m_Animator.m_Avatar.TryGet(out var m_Avatar))
@@ -602,7 +715,10 @@ namespace UnityRift
                 var meshR_originalName = m_GameObject.m_Name;
                 foreach (var serializedFile in m_GameObject.assetsFile.assetsManager.AssetsFileList)
                 {
-                    var nameRelatedMesh = (Mesh)serializedFile.Objects.Find(x => x is Mesh m_Mesh && m_Mesh.m_Name == meshR_originalName);
+                    // Meshes may still be LazyObject placeholders: match on type + name, then hydrate.
+                    var nameRelatedMesh = serializedFile.Objects
+                        .Find(x => x.type == ClassIDType.Mesh && x is NamedObject named && named.m_Name == meshR_originalName)
+                        ?.Resolve() as Mesh;
                     if (nameRelatedMesh != null)
                     {
                         Logger.Debug($"Successfully found a Mesh replacement for the component \"{meshR_originalName}\"");

@@ -1,10 +1,18 @@
-﻿using UnityRift;
+using UnityRift;
 
 namespace UnityRiftCLI
 {
     internal class AssetItem
     {
-        public Object Asset;
+        private readonly Object _asset;
+
+        // The fully parsed object. Heavy types are LazyObject placeholders after load and
+        // are parsed here on first use (export, dump).
+        public Object Asset => _asset.Resolve();
+        // The object as it sits in the file's object list (possibly a placeholder). Use
+        // this for identity / type checks so they never trigger a parse.
+        public Object RawAsset => _asset;
+
         public SerializedFile SourceFile;
         public string Container = string.Empty;
         public string TypeString;
@@ -17,7 +25,7 @@ namespace UnityRiftCLI
 
         public AssetItem(Object asset)
         {
-            Asset = asset;
+            _asset = asset;
             SourceFile = asset.assetsFile;
             Type = asset.type;
             TypeString = Type.ToString();

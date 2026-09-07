@@ -38,7 +38,7 @@ they are `-m <mode>` and `-t <types>`.
 | `text` (TextAsset) | original extension, else **.txt** / `.bytes` | Config, dialogue, JSON/CSV, arbitrary data blobs. |
 | `shader` | **.shader** text (Unity < 2021 only) | Inspect shader source. |
 | `monoBehaviour` | **.json** | **The data goldmine** — item/enemy/level/config data defined by the game's scripts. Needs a type tree (embedded, or via assemblies for custom fields). |
-| `mesh` | **.obj** (geometry only) | A single 3D mesh. For rigged/animated models use the model modes instead. |
+| `mesh` | **.obj** by default, or **.gltf/.glb** with `--model-format` (geometry only) | A single 3D mesh. For rigged/animated models use the model modes instead. |
 | *(anything else)* | raw **.dat** | Fallback: the untouched serialized asset. |
 
 Multiple types at once: `-t tex2d,sprite,audio`. Default is "all supported".
@@ -59,8 +59,10 @@ format with `--model-format`:
 | `gltf` | `.gltf` (textures embedded) | Modern, open format; web/Blender friendly. |
 | `glb` | `.glb` (single self-contained file) | Same as glTF but one tidy file — easiest to hand around. |
 
-> A plain `mesh` export is just geometry (`.obj`). Use `animator`/`splitObjects` (or the
-> GUI Model menu) when you want the rig and animations too.
+> A plain `mesh` export is just geometry. It defaults to `.obj`, but `--model-format
+> gltf|glb` now applies to single meshes too (no skeleton/animation, since a bare Mesh
+> has none). Use `animator`/`splitObjects` (or the GUI Model menu) when you want the rig
+> and animations too.
 
 ### Which animation clips get included
 

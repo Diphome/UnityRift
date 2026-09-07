@@ -179,6 +179,19 @@ namespace UnityRiftCLI
 
             if (m_Mesh.m_VertexCount <= 0)
                 return false;
+
+            // Honor --model-format for standalone Mesh assets: FBX keeps the classic
+            // Wavefront OBJ output; glTF/GLB route through the shared model exporter.
+            if (CLIOptions.o_modelFormat.Value == ModelFormat.Gltf || CLIOptions.o_modelFormat.Value == ModelFormat.Glb)
+            {
+                if (!TryExportFile(exportPath, item, ModelExt(), out var modelPath))
+                    return false;
+                var convert = new ModelConverter(m_Mesh, CLIOptions.o_imageFormat.Value);
+                ExportModel(convert, modelPath);
+                Logger.Debug($"{item.TypeString} \"{item.Text}\" exported to \"{modelPath}\"");
+                return true;
+            }
+
             if (!TryExportFile(exportPath, item, ".obj", out var exportFullPath))
                 return false;
 

@@ -410,7 +410,7 @@ namespace UnityRiftCLI.Options
                 optionDefaultValue: ModelFormat.Fbx,
                 optionName: "--model-format",
                 optionDescription: "Specify the export format for 3D models\n" +
-                    "(applies to Animator, SplitObjects and model exports)\n" +
+                    "(applies to Animator, SplitObjects, Mesh and model exports)\n" +
                     "<Value: fbx(default) | gltf | glb>\n" +
                     "Fbx - Export models as FBX (uses the native FBX library)\n" +
                     "Gltf - Export models as glTF 2.0 (.gltf, textures embedded)\n" +

@@ -357,11 +357,11 @@ namespace UnityRiftCLI
 
                 foreach (var asset in fileAssetsList)
                 {
-                    if (containers.TryGetValue(asset.Asset, out var container))
+                    if (containers.TryGetValue(asset.RawAsset, out var container))
                     {
                         asset.Container = container;
 
-                        if (asset.Asset is GameObject m_GameObject && m_GameObject.CubismModel != null)
+                        if (asset.RawAsset is GameObject m_GameObject && m_GameObject.CubismModel != null)
                         {
                             m_GameObject.CubismModel.Container = container;
                         }
@@ -442,14 +442,14 @@ namespace UnityRiftCLI
                                 objectAssetItemDic[m_Component].Node = currentNode;
                                 if (m_Component is MeshFilter m_MeshFilter)
                                 {
-                                    if (m_MeshFilter.m_Mesh.TryGet(out var m_Mesh))
+                                    if (m_MeshFilter.m_Mesh.TryGet<UnityRift.Object>(out var m_Mesh)) // identity only: don't parse the mesh to tag its node
                                     {
                                         objectAssetItemDic[m_Mesh].Node = currentNode;
                                     }
                                 }
                                 else if (m_Component is SkinnedMeshRenderer m_SkinnedMeshRenderer)
                                 {
-                                    if (m_SkinnedMeshRenderer.m_Mesh.TryGet(out var m_Mesh))
+                                    if (m_SkinnedMeshRenderer.m_Mesh.TryGet<UnityRift.Object>(out var m_Mesh)) // identity only: don't parse the mesh to tag its node
                                     {
                                         objectAssetItemDic[m_Mesh].Node = currentNode;
                                     }
@@ -783,6 +783,8 @@ namespace UnityRiftCLI
                     exportedCount++;
                 }
                 Console.Write($"Exported [{exportedCount}/{toExportCount}]\r");
+                // Drop the on-demand parsed payload so a full export stays flat in memory.
+                (asset.RawAsset as LazyObject)?.Release();
             }
             Exporter.ClearHash();
 
@@ -1236,7 +1238,7 @@ namespace UnityRiftCLI
                         case ClassIDType.AnimationClip:
                         case ClassIDType.Texture2D:
                         case ClassIDType.MonoBehaviour:
-                            l2dContainers[asset.Asset] = asset.Asset.assetsFile.fullName;
+                            l2dContainers[asset.RawAsset] = asset.RawAsset.assetsFile.fullName;
                             break;
                     }
                 }

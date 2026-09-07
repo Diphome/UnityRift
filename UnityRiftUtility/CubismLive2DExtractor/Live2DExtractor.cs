@@ -201,6 +201,13 @@ namespace CubismLive2DExtractor
                             AnimationClips.Add(m_AnimationClip);
                         }
                         break;
+                    case LazyObject lazyClip when lazyClip.type == ClassIDType.AnimationClip:
+                        // Clips are placeholders until first use: parse now that we need the curves.
+                        if (selClipMotions == null && lazyClip.Resolve() is AnimationClip parsedClip)
+                        {
+                            AnimationClips.Add(parsedClip);
+                        }
+                        break;
                     case Texture2D m_Texture2D:
                         Texture2Ds.Add(m_Texture2D);
                         break;
