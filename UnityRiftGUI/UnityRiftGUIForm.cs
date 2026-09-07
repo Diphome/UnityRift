@@ -3680,6 +3680,16 @@ namespace UnityRiftGUI
             previewPanel.BackColor = dark ? DarkContent : LightChrome;
             FMODpanel.BackColor = dark ? DarkContent : LightChrome;
 
+            // The preview overlay labels (asset info + the FMOD audio player) are hardcoded
+            // white in the Designer for the dark preview background; that is unreadable on the
+            // light background, so theme their foreground to match the current mode.
+            foreach (var lbl in new Label[] { assetInfoLabel, FMODstatusLabel, FMODinfoLabel,
+                                              FMODtimerLabel, FMODaudioChannelsLabel, FMODcopyrightLabel })
+            {
+                if (lbl != null)
+                    lbl.ForeColor = fore;
+            }
+
             panel1.BackColor = chrome;
             panel1.ForeColor = fore;
 
