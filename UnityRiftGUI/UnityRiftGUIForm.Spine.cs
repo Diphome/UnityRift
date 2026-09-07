@@ -28,6 +28,7 @@ namespace UnityRiftGUI
             // pattern-matching the placeholder.
             var textAssets = new List<TextAsset>();
             var textures = new List<Texture2D>();
+            var monoBehaviours = new List<MonoBehaviour>();
             foreach (var file in assetsManager.AssetsFileList)
                 foreach (var obj in file.Objects)
                 {
@@ -39,6 +40,10 @@ namespace UnityRiftGUI
                     {
                         if (obj.Resolve() is Texture2D tex) textures.Add(tex);
                     }
+                    else if (obj.type == ClassIDType.MonoBehaviour)
+                    {
+                        if (obj.Resolve() is MonoBehaviour mb) monoBehaviours.Add(mb);
+                    }
                 }
 
             if (textAssets.Count == 0)
@@ -47,7 +52,10 @@ namespace UnityRiftGUI
                 return;
             }
 
-            var models = SpineCollector.Collect(textAssets, textures, explicitLinks: null, log: msg => Logger.Info(msg));
+            // Hybrid: authoritative SkeletonDataAsset grouping when the MonoBehaviour fields are
+            // readable (serialized type trees, or assemblies loaded via the .NET menu), else heuristics.
+            var links = SpineMonoBehaviourReader.BuildLinks(monoBehaviours, assemblyLoader, msg => Logger.Info(msg));
+            var models = SpineCollector.Collect(textAssets, textures, explicitLinks: links, log: msg => Logger.Info(msg));
             if (models.Count == 0)
             {
                 StatusStripUpdate("No Spine models detected in the loaded assets.");

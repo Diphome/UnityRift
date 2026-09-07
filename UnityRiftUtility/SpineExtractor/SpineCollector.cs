@@ -64,6 +64,9 @@ namespace SpineExtractor
                 foreach (var link in explicitLinks)
                 {
                     if (link?.Skeleton?.m_Script == null || link.Skeleton.m_Script.Length == 0) continue;
+                    // A link with no atlas is worse than the heuristic (which can still attach one
+                    // by source file), so leave it for the fallback.
+                    if (link.Atlases == null || link.Atlases.Count == 0) continue;
                     var model = BuildModel(link.Name, link.Skeleton, link.Atlases, textureByName, log);
                     if (model == null) continue;
                     usedSkeletons.Add(link.Skeleton);

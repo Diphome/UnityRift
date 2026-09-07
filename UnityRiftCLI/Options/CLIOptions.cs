@@ -896,11 +896,13 @@ namespace UnityRiftCLI.Options
                     case "spine":
                         o_workMode.Value = WorkMode.Spine;
                         // Spine skeletons (.json/.skel) and atlases (.atlas) are TextAssets; the
-                        // atlas texture pages are Texture2Ds. Load just those.
+                        // atlas texture pages are Texture2Ds; SkeletonDataAsset/AtlasAsset
+                        // MonoBehaviours give the authoritative grouping when readable.
                         o_exportAssetTypes.Value = new List<ClassIDType>
                         {
                             ClassIDType.TextAsset,
                             ClassIDType.Texture2D,
+                            ClassIDType.MonoBehaviour,
                         };
                         break;
                     default:
