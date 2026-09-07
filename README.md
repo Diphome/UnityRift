@@ -6,6 +6,8 @@
 
 **Neither the repository, nor the tool, nor its authors are affiliated with, sponsored, or authorized by Unity Technologies or its affiliates.** UnityRift extracts and inspects assets for interoperability, research, and preservation; respect the rights and terms of any content you process.
 
+![The UnityRift GUI](docs/images/gui.png)
+
 ## What UnityRift adds
 
 - **IL2CPP support** via [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL): `GameAssembly.dll` / `libil2cpp.so` + `global-metadata.dat` are detected automatically, dummy assemblies are generated and cached, and they feed the .NET explorer and MonoBehaviour field parsing.
