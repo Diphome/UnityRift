@@ -2110,7 +2110,11 @@ namespace UnityRiftGUI
 
                 if (assetListView.SelectedIndices.Count == 1)
                 {
-                    goToSceneHierarchyToolStripMenuItem.Visible = true;
+                    // Only offer "Go to scene hierarchy" for assets that actually have a scene
+                    // node (Components and the Mesh under a MeshFilter/SkinnedMeshRenderer);
+                    // otherwise the item was shown but clicking it did nothing.
+                    var single = visibleAssets[assetListView.SelectedIndices[0]];
+                    goToSceneHierarchyToolStripMenuItem.Visible = single.TreeNode != null;
                     showOriginalFileToolStripMenuItem.Visible = true;
                 }
                 if (assetListView.SelectedIndices.Count >= 1)
@@ -2280,12 +2284,15 @@ namespace UnityRiftGUI
 
         private void goToSceneHierarchyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var selectAsset = (AssetItem)assetListView.Items[assetListView.SelectedIndices[0]];
-            if (selectAsset.TreeNode != null)
-            {
-                sceneTreeView.SelectedNode = selectAsset.TreeNode;
-                tabControl1.SelectedTab = tabPage1;
-            }
+            if (assetListView.SelectedIndices.Count == 0)
+                return;
+            var selectAsset = visibleAssets[assetListView.SelectedIndices[0]];
+            if (selectAsset.TreeNode == null)
+                return;
+            tabControl1.SelectedTab = tabPage1; // switch to the Scene Hierarchy tab first
+            sceneTreeView.SelectedNode = selectAsset.TreeNode;
+            selectAsset.TreeNode.EnsureVisible(); // expand ancestors and scroll into view
+            sceneTreeView.Focus();
         }
 
         private void exportAllAssetsMenuItem_Click(object sender, EventArgs e)
