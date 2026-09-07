@@ -38,6 +38,7 @@ namespace UnityRiftGUI
         private AssetItem lastSelectedItem;
         private AssetItem lastPreviewItem;
         private DirectBitmap imageTexture;
+        private System.Drawing.Bitmap videoThumb; // OS-generated poster frame for the current VideoClip preview
         private string tempClipboard;
         private bool isDarkMode;
 
@@ -981,6 +982,7 @@ namespace UnityRiftGUI
             StatusStripUpdate("");
 
             FMODreset();
+            DisposeVideoThumb();
 
             lastSelectedItem = (AssetItem)e.Item;
 
@@ -1387,7 +1389,74 @@ namespace UnityRiftGUI
             sb.AppendLine($"Split alpha: {m_VideoClip.m_HasSplitAlpha}");
             assetItem.InfoText = sb.ToString();
 
-            StatusStripUpdate("Only supported export.");
+            // Visual preview: ask the Windows shell for a poster-frame thumbnail. The shell
+            // needs a real file with the right extension, so dump the video bytes to a temp
+            // file, let the OS decode a frame, then drop the temp file. Any failure (no codec,
+            // no cached thumbnail) falls back to the metadata-only text below.
+            var thumb = TryMakeVideoThumbnail(m_VideoClip);
+            if (thumb != null)
+            {
+                ShowVideoThumb(thumb);
+                StatusStripUpdate("Video poster frame (first decodable frame). Export to play the full clip.");
+            }
+            else
+            {
+                StatusStripUpdate("No thumbnail available (missing codec?). Only supported export.");
+            }
+        }
+
+        private System.Drawing.Bitmap TryMakeVideoThumbnail(VideoClip m_VideoClip)
+        {
+            if (m_VideoClip?.m_VideoData == null || m_VideoClip.m_VideoData.Size <= 0)
+                return null;
+
+            var ext = Path.GetExtension(m_VideoClip.m_OriginalPath);
+            if (string.IsNullOrEmpty(ext))
+                ext = ".mp4"; // best-effort default for Unity's external video resource
+            var dir = Path.Combine(Path.GetTempPath(), "UnityRift", "vpreview");
+            var tempPath = Path.Combine(dir, "preview_" + Guid.NewGuid().ToString("N") + ext);
+            try
+            {
+                Directory.CreateDirectory(dir);
+                m_VideoClip.m_VideoData.WriteData(tempPath);
+
+                using (var shellFile = Microsoft.WindowsAPICodePack.Shell.ShellObject.FromParsingName(tempPath))
+                {
+                    // ThumbnailOnly so we never get a generic file-type icon back; if the shell
+                    // has no frame for us it throws and we fall through to null.
+                    shellFile.Thumbnail.FormatOption = Microsoft.WindowsAPICodePack.Shell.ShellThumbnailFormatOption.ThumbnailOnly;
+                    shellFile.Thumbnail.AllowBiggerSize = true;
+                    return shellFile.Thumbnail.ExtraLargeBitmap;
+                }
+            }
+            catch
+            {
+                return null;
+            }
+            finally
+            {
+                try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { /* best effort */ }
+            }
+        }
+
+        private void ShowVideoThumb(System.Drawing.Bitmap bmp)
+        {
+            DisposeVideoThumb();
+            videoThumb = bmp;
+            previewPanel.Image = videoThumb;
+            previewPanel.SizeMode = (bmp.Width > previewPanel.Width || bmp.Height > previewPanel.Height)
+                ? PictureBoxSizeMode.Zoom
+                : PictureBoxSizeMode.CenterImage;
+        }
+
+        private void DisposeVideoThumb()
+        {
+            if (videoThumb == null)
+                return;
+            if (previewPanel.Image == videoThumb)
+                previewPanel.Image = null;
+            videoThumb.Dispose();
+            videoThumb = null;
         }
 
         private void PreviewShader(Shader m_Shader)
@@ -1869,6 +1938,7 @@ namespace UnityRiftGUI
             previewPanel.SizeMode = PictureBoxSizeMode.CenterImage;
             imageTexture?.Dispose();
             imageTexture = null;
+            DisposeVideoThumb();
             ClearNoPreviewCache();
             assetInfoLabel.Visible = false;
             assetInfoLabel.Text = null;
@@ -2572,6 +2642,8 @@ namespace UnityRiftGUI
             // Release the long-lived GDI objects we own (the OS would reclaim them at exit,
             // but be explicit so handle-leak tooling stays quiet).
             ClearNoPreviewCache();
+            DisposeVideoThumb();
+            imageTexture?.Dispose();
             previewPlaceholder?.Dispose();
             dotnetPlaceholder?.Dispose();
             foreach (var d in new IDisposable[] { brRowEven, brRowOdd, brRowSelected, brRowHover,
