@@ -1312,7 +1312,15 @@ namespace UnityRiftGUI
             exinfo.cbsize = Marshal.SizeOf(exinfo);
             exinfo.length = (uint)m_AudioClip.m_Size;
 
-            var result = system.createStream(soundBuff, FMOD.MODE.OPENMEMORY | FMOD.MODE.LOWMEM | FMOD.MODE.IGNORETAGS | FMOD.MODE.ACCURATETIME | loopMode, ref exinfo, out sound);
+            // FMOD cannot *stream* AAC/M4A, so createStream fails and the clip couldn't be
+            // previewed. Decode it fully with createSound instead (same path the exporter uses).
+            var isAac = m_AudioClip.version < 5
+                ? m_AudioClip.m_Type == FMODSoundType.AAC
+                : m_AudioClip.m_CompressionFormat == AudioCompressionFormat.AAC;
+            var mode = FMOD.MODE.OPENMEMORY | FMOD.MODE.LOWMEM | FMOD.MODE.IGNORETAGS | FMOD.MODE.ACCURATETIME | loopMode;
+            var result = isAac
+                ? system.createSound(soundBuff, mode, ref exinfo, out sound)
+                : system.createStream(soundBuff, mode, ref exinfo, out sound);
             if (result != FMOD.RESULT.OK)
             {
                 if (m_AudioClip.version < (2, 6) || m_AudioClip.version >= 5)
