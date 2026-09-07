@@ -783,6 +783,13 @@ namespace UnityRiftGUI
                     break;
                 case 1:
                     assetListView.Select();
+                    // The virtual list is double-buffered (LVS_EX_DOUBLEBUFFER); when its tab is
+                    // hidden and shown again the stale back buffer is blitted and rows only paint
+                    // where the mouse later invalidates. Force a full repaint on re-entry.
+                    assetListView.Invalidate();
+                    break;
+                case 2:
+                    classesListView.Invalidate(); // same double-buffer redraw fix for Asset Classes
                     break;
                 case 3:
                     dotnetTreeView?.Select();
