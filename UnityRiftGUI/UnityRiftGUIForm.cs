@@ -1312,15 +1312,15 @@ namespace UnityRiftGUI
             exinfo.cbsize = Marshal.SizeOf(exinfo);
             exinfo.length = (uint)m_AudioClip.m_Size;
 
-            // FMOD cannot *stream* AAC/M4A, so createStream fails and the clip couldn't be
-            // previewed. Decode it fully with createSound instead (same path the exporter uses).
+            // The bundled FMOD build can't decode AAC/M4A (createStream/createSound both return
+            // ERR_FORMAT), so those clips couldn't be previewed. Decode AAC to PCM with Windows
+            // Media Foundation and hand the raw PCM to FMOD instead; other formats keep streaming.
             var isAac = m_AudioClip.version < 5
                 ? m_AudioClip.m_Type == FMODSoundType.AAC
                 : m_AudioClip.m_CompressionFormat == AudioCompressionFormat.AAC;
-            var mode = FMOD.MODE.OPENMEMORY | FMOD.MODE.LOWMEM | FMOD.MODE.IGNORETAGS | FMOD.MODE.ACCURATETIME | loopMode;
             var result = isAac
-                ? system.createSound(soundBuff, mode, ref exinfo, out sound)
-                : system.createStream(soundBuff, mode, ref exinfo, out sound);
+                ? CreateAacSound(soundBuff, dataLen, loopMode, out sound)
+                : system.createStream(soundBuff, FMOD.MODE.OPENMEMORY | FMOD.MODE.LOWMEM | FMOD.MODE.IGNORETAGS | FMOD.MODE.ACCURATETIME | loopMode, ref exinfo, out sound);
             if (result != FMOD.RESULT.OK)
             {
                 if (m_AudioClip.version < (2, 6) || m_AudioClip.version >= 5)
@@ -1398,6 +1398,50 @@ namespace UnityRiftGUI
                 default:
                     FMODaudioChannelsLabel.Text = $"{audioChannels}-Channel";
                     break;
+            }
+        }
+
+        // Decode an AAC/M4A audio clip to raw PCM via Windows Media Foundation (the bundled FMOD
+        // build can't decode AAC itself) and create an FMOD sound from that PCM so the normal
+        // preview player can play it.
+        private FMOD.RESULT CreateAacSound(byte[] data, int length, FMOD.MODE loopMode, out FMOD.Sound sound)
+        {
+            sound = default;
+            try
+            {
+                int channels, sampleRate;
+                byte[] pcm;
+                using (var ms = new System.IO.MemoryStream(data, 0, length, writable: false))
+                using (var reader = new NAudio.Wave.StreamMediaFoundationReader(ms))
+                {
+                    channels = reader.WaveFormat.Channels;
+                    sampleRate = reader.WaveFormat.SampleRate;
+                    var pcmProvider = reader.WaveFormat.Encoding == NAudio.Wave.WaveFormatEncoding.Pcm && reader.WaveFormat.BitsPerSample == 16
+                        ? (NAudio.Wave.IWaveProvider)reader
+                        : new NAudio.Wave.SampleProviders.SampleToWaveProvider16(NAudio.Wave.WaveExtensionMethods.ToSampleProvider(reader));
+                    using (var outMs = new System.IO.MemoryStream())
+                    {
+                        var buf = new byte[65536];
+                        int n;
+                        while ((n = pcmProvider.Read(buf, 0, buf.Length)) > 0)
+                            outMs.Write(buf, 0, n);
+                        pcm = outMs.ToArray();
+                    }
+                }
+                if (pcm.Length == 0)
+                    return FMOD.RESULT.ERR_FORMAT;
+
+                var exinfo = new FMOD.CREATESOUNDEXINFO();
+                exinfo.cbsize = Marshal.SizeOf(exinfo);
+                exinfo.length = (uint)pcm.Length;
+                exinfo.numchannels = channels;
+                exinfo.defaultfrequency = sampleRate;
+                exinfo.format = FMOD.SOUND_FORMAT.PCM16;
+                return system.createSound(pcm, FMOD.MODE.OPENMEMORY | FMOD.MODE.OPENRAW | FMOD.MODE.LOWMEM | loopMode, ref exinfo, out sound);
+            }
+            catch
+            {
+                return FMOD.RESULT.ERR_FORMAT;
             }
         }
 

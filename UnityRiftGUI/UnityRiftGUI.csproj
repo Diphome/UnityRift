@@ -63,6 +63,7 @@
         <PackageReference Include="Microsoft-WindowsAPICodePack-Core-6.0" Version="1.1.7" />
         <PackageReference Include="Microsoft-WindowsAPICodePack-Shell-6.0" Version="1.1.7" />
         <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
+        <PackageReference Include="NAudio" Version="2.2.1" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
 
