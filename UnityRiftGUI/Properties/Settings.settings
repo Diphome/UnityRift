@@ -35,6 +35,9 @@
     <Setting Name="exportSpriteWithMask" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="spriteExportWithCanvas" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="l2dMotionMode" Type="CubismLive2DExtractor.Live2DMotionMode" Scope="User">
       <Value Profile="(Default)">MonoBehaviour</Value>
     </Setting>

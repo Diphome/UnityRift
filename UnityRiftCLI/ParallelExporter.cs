@@ -78,7 +78,7 @@ namespace UnityRiftCLI
             var alphaMask = SpriteMaskMode.On;
             if (!TryExportFile(exportPath, item, "." + type.ToString().ToLower(), out var exportFullPath))
                 return false;
-            var image = ((Sprite)item.Asset).GetImage(alphaMask);
+            var image = ((Sprite)item.Asset).GetImage(alphaMask, CLIOptions.f_spriteExportWithCanvas.Value);
             if (image != null)
             {
                 using (image)

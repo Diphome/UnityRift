@@ -40,6 +40,7 @@
             this.filenameFormatLabel = new System.Windows.Forms.Label();
             this.filenameFormatComboBox = new System.Windows.Forms.ComboBox();
             this.exportSpriteWithAlphaMask = new System.Windows.Forms.CheckBox();
+            this.exportSpriteWithCanvas = new System.Windows.Forms.CheckBox();
             this.openAfterExport = new System.Windows.Forms.CheckBox();
             this.restoreExtensionName = new System.Windows.Forms.CheckBox();
             this.assetGroupOptions = new System.Windows.Forms.ComboBox();
@@ -134,6 +135,7 @@
             this.groupBox1.Controls.Add(this.filenameFormatLabel);
             this.groupBox1.Controls.Add(this.filenameFormatComboBox);
             this.groupBox1.Controls.Add(this.exportSpriteWithAlphaMask);
+            this.groupBox1.Controls.Add(this.exportSpriteWithCanvas);
             this.groupBox1.Controls.Add(this.openAfterExport);
             this.groupBox1.Controls.Add(this.restoreExtensionName);
             this.groupBox1.Controls.Add(this.assetGroupOptions);
@@ -143,7 +145,7 @@
             this.groupBox1.Controls.Add(this.converttexture);
             this.groupBox1.Location = new System.Drawing.Point(12, 13);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(316, 303);
+            this.groupBox1.Size = new System.Drawing.Size(316, 340);
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Export";
@@ -248,7 +250,17 @@
             this.exportSpriteWithAlphaMask.TabIndex = 9;
             this.exportSpriteWithAlphaMask.Text = "Export sprites with alpha mask applied";
             this.exportSpriteWithAlphaMask.UseVisualStyleBackColor = true;
-            // 
+            //
+            // exportSpriteWithCanvas
+            //
+            this.exportSpriteWithCanvas.AutoSize = true;
+            this.exportSpriteWithCanvas.Location = new System.Drawing.Point(6, 314);
+            this.exportSpriteWithCanvas.Name = "exportSpriteWithCanvas";
+            this.exportSpriteWithCanvas.Size = new System.Drawing.Size(205, 17);
+            this.exportSpriteWithCanvas.TabIndex = 16;
+            this.exportSpriteWithCanvas.Text = "Export sprites at full canvas size";
+            this.exportSpriteWithCanvas.UseVisualStyleBackColor = true;
+            //
             // openAfterExport
             // 
             this.openAfterExport.AutoSize = true;
@@ -889,6 +901,7 @@
         private System.Windows.Forms.CheckBox exportAllUvsAsDiffuseMaps;
         private System.Windows.Forms.ToolTip optionTooltip;
         private System.Windows.Forms.CheckBox exportSpriteWithAlphaMask;
+        private System.Windows.Forms.CheckBox exportSpriteWithCanvas;
         private System.Windows.Forms.RadioButton towebp;
         private System.Windows.Forms.GroupBox l2dGroupBox;
         private System.Windows.Forms.CheckBox l2dForceBezierCheckBox;

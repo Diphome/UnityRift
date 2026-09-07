@@ -77,7 +77,7 @@ namespace UnityRiftGUI
             var spriteMaskMode = Properties.Settings.Default.exportSpriteWithMask ? SpriteMaskMode.Export : SpriteMaskMode.Off;
             if (!TryExportFile(exportPath, item, "." + type.ToString().ToLower(), out var exportFullPath))
                 return false;
-            var image = ((Sprite)item.Asset).GetImage(spriteMaskMode: spriteMaskMode);
+            var image = ((Sprite)item.Asset).GetImage(spriteMaskMode: spriteMaskMode, spriteWithCanvas: Properties.Settings.Default.spriteExportWithCanvas);
             if (image != null)
             {
                 using (image)

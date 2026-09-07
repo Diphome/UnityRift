@@ -118,6 +118,7 @@ namespace UnityRiftCLI.Options
         public static bool convertTexture;
         public static Option<ImageFormat> o_imageFormat;
         public static Option<AudioFormat> o_audioFormat;
+        public static Option<bool> f_spriteExportWithCanvas;
         //live2d
         public static Option<CubismLive2DExtractor.Live2DModelGroupOption> o_l2dGroupOption;
         public static Option<bool> f_l2dAssetSearchByFilename;
@@ -357,6 +358,16 @@ namespace UnityRiftCLI.Options
                     "None - Do not convert FMOD audios and export them in their own format\n",
                 optionExample: "Example: \"--audio-format wav\"",
                 optionHelpGroup: HelpGroups.Convert
+            );
+            f_spriteExportWithCanvas = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--sprite-canvas",
+                optionDescription: "(Flag) If specified, sprites are exported at their full authored\n" +
+                    "size (m_Rect) with transparent padding, instead of just the cropped region",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.Convert,
+                isFlag: true
             );
             #endregion
 
@@ -999,6 +1010,10 @@ namespace UnityRiftCLI.Options
                         break;
                     case "--filter-exclude-mode":
                         f_filterExcludeMode.Value = true;
+                        flagIndexes.Add(i);
+                        break;
+                    case "--sprite-canvas":
+                        f_spriteExportWithCanvas.Value = true;
                         flagIndexes.Add(i);
                         break;
                     case "--il2cpp":
