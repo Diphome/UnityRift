@@ -600,6 +600,40 @@ const tools = [
     },
   },
   {
+    name: "spine_export",
+    description:
+      "Detect and export Spine (esotericsoftware) 2D skeletal models (CLI '-m spine'): for each detected " +
+      "model it writes the raw Spine files into a per-model subfolder — the skeleton (.json or .skel), the " +
+      "atlas (.atlas), and one .png per atlas page named exactly as the atlas references it — ready to " +
+      "re-import into the Spine editor. The skeleton and atlas are stored as Unity TextAssets and the pages " +
+      "as Texture2Ds; point input_path at the file/bundle (or a folder) that contains them. When the pages " +
+      "live in a different bundle than the skeleton/atlas, put both in one folder and pass that folder.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Path to an asset file or folder that contains the Spine TextAssets and their atlas-page textures." },
+        output_path: { type: "string", description: `Output folder (each model goes to <output>/<model>). Default: ${defaultOutDir()}` },
+        overwrite: { type: "boolean", description: "Overwrite existing files." },
+        unity_version: { type: "string" },
+        ...typeTreeDbProp,
+        log_level: { type: "string", enum: ["verbose", "debug", "info", "warning", "error"] },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "spine", "-o", out];
+      if (a.overwrite) args.push("-r");
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      if (a.typetree_db) args.push("--typetree-db", a.typetree_db);
+      if (a.log_level) args.push("--log-level", a.log_level);
+      const r = await runCli(args, a.timeout_sec || DEFAULT_TIMEOUT);
+      if (r.ok) r.output += `\n\n[output folder: ${out}]`;
+      return resultText(r);
+    },
+  },
+  {
     name: "list_output",
     description:
       "List files under an export/output folder (recursive) with sizes, so you can verify what an " +
