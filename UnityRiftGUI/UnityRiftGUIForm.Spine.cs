@@ -48,7 +48,11 @@ namespace UnityRiftGUI
 
             if (textAssets.Count == 0)
             {
-                StatusStripUpdate("No TextAssets loaded — Spine skeletons/atlases are stored as TextAssets.");
+                // The status bar is hidden, so give visible feedback rather than failing silently.
+                StatusStripUpdate("No Spine models found.");
+                MessageBox.Show(this,
+                    "No Spine models found in the loaded assets.\n\nSpine skeletons (.json/.skel) and atlases (.atlas) are stored as TextAssets — make sure the file/bundle that contains them is loaded.",
+                    "Export to Spine", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
@@ -58,7 +62,10 @@ namespace UnityRiftGUI
             var models = SpineCollector.Collect(textAssets, textures, explicitLinks: links, log: msg => Logger.Info(msg));
             if (models.Count == 0)
             {
-                StatusStripUpdate("No Spine models detected in the loaded assets.");
+                StatusStripUpdate("No Spine models found.");
+                MessageBox.Show(this,
+                    "No Spine models found in the loaded assets.\n\nThis game may not use Spine, or the skeleton/atlas TextAssets aren't in the loaded file(s). The atlas texture pages can also live in a separate bundle — load it too.",
+                    "Export to Spine", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
