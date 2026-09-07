@@ -137,12 +137,14 @@ namespace UnityRiftCLI.Options
         public static Option<List<string>> o_filterByPathID;
         public static Option<List<string>> o_filterByText;
         public static Option<bool> f_filterWithRegex;
+        public static Option<bool> f_filterExcludeMode;
         //advanced
         public static Option<CompressionType> o_bundleBlockInfoCompression;
         public static Option<CompressionType> o_bundleBlockCompression;
         public static Option<int> o_maxParallelExportTasks;
         public static Option<ExportListType> o_exportAssetList;
         public static Option<string> o_assemblyPath;
+        public static Option<string> o_stripPathPrefix;
         public static Option<string> o_typeTreeDBPath;
         public static Option<UnityVersion> o_unityVersion;
         public static Option<bool> f_decompressToDisk;
@@ -523,6 +525,16 @@ namespace UnityRiftCLI.Options
                 optionHelpGroup: HelpGroups.Filter,
                 isFlag: true
             );
+            f_filterExcludeMode = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--filter-exclude-mode",
+                optionDescription: "(Flag) If specified, the filter options will work as an exclusion\n" +
+                    "(i.e. assets that match the filter conditions will be excluded)",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.Filter,
+                isFlag: true
+            );
             #endregion
 
             #region Init Advanced Options
@@ -686,6 +698,15 @@ namespace UnityRiftCLI.Options
                 optionName: "--assembly-folder <path>",
                 optionDescription: "Specify the path to the assembly folder\n",
                 optionExample: "",
+                optionHelpGroup: HelpGroups.Advanced
+            );
+            o_stripPathPrefix = new GroupedOption<string>
+            (
+                optionDefaultValue: "",
+                optionName: "--strip-path-prefix <path>",
+                optionDescription: "Specify a path prefix to be stripped from exported asset container paths\n" +
+                    "(applies to the ContainerPath / ContainerPathFull group options)\n",
+                optionExample: "Example: \"--strip-path-prefix assets/models/char/\"\n",
                 optionHelpGroup: HelpGroups.Advanced
             );
             o_typeTreeDBPath = new GroupedOption<string>
@@ -974,6 +995,10 @@ namespace UnityRiftCLI.Options
                         break;
                     case "--filter-with-regex":
                         f_filterWithRegex.Value = true;
+                        flagIndexes.Add(i);
+                        break;
+                    case "--filter-exclude-mode":
+                        f_filterExcludeMode.Value = true;
                         flagIndexes.Add(i);
                         break;
                     case "--il2cpp":
@@ -1560,6 +1585,10 @@ namespace UnityRiftCLI.Options
                                 Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. Assembly folder [{value.Color(brightRed)}] was not found.");
                                 return;
                             }
+                            break;
+                        case "--strip-path-prefix":
+                            // Normalize to a directory-style prefix ending with a separator.
+                            o_stripPathPrefix.Value = value.Replace('\\', '/').TrimEnd('/') + "/";
                             break;
                         case "--unity-version":
                             try

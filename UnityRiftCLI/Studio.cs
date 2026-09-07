@@ -655,6 +655,14 @@ namespace UnityRiftCLI
                     );
                     break;
             }
+
+            if (CLIOptions.f_filterExcludeMode.Value)
+            {
+                var matchedCount = filteredAssets.Count;
+                filteredAssets = parsedAssetsList.Except(filteredAssets).ToList();
+                Logger.Info($"Exclusion mode: dropping {matchedCount} matched asset(s), keeping {filteredAssets.Count}.");
+            }
+
             parsedAssetsList.Clear();
             parsedAssetsList = filteredAssets;
         }
@@ -668,6 +676,26 @@ namespace UnityRiftCLI
             var groupOption = CLIOptions.o_groupAssetsBy.Value;
             var parallelExportCount = CLIOptions.o_maxParallelExportTasks.Value;
             var toExportAssetDict = new ConcurrentDictionary<AssetItem, string>();
+
+            // Validate the strip-path-prefix against loaded containers; ignore it if any container
+            // doesn't start with it (upstream #113).
+            if (!string.IsNullOrEmpty(CLIOptions.o_stripPathPrefix.Value))
+            {
+                foreach (var asset in parsedAssetsList)
+                {
+                    if (string.IsNullOrEmpty(asset.Container))
+                        continue;
+                    if (!asset.Container.StartsWith(CLIOptions.o_stripPathPrefix.Value))
+                    {
+                        Logger.Warning($"Asset container path \"{asset.Container}\" does not start with the specified path prefix \"{CLIOptions.o_stripPathPrefix.Value}\"");
+                        Logger.Warning("strip-path-prefix option will be ignored.");
+                        CLIOptions.o_stripPathPrefix.Value = "";
+                        break;
+                    }
+                }
+                if (!string.IsNullOrEmpty(CLIOptions.o_stripPathPrefix.Value))
+                    Logger.Info($"Asset container path prefix \"{CLIOptions.o_stripPathPrefix.Value}\" will be stripped off.");
+            }
             var toParallelExportAssetDict = new ConcurrentDictionary<AssetItem, string>();
             Parallel.ForEach(parsedAssetsList, asset =>
             {
@@ -681,7 +709,17 @@ namespace UnityRiftCLI
                     case AssetGroupOption.ContainerPathFull:
                         if (!string.IsNullOrEmpty(asset.Container))
                         {
-                            exportPath = Path.Combine(savePath, Path.GetDirectoryName(asset.Container));
+                            var containerDir = Path.GetDirectoryName(asset.Container) ?? "";
+                            // Strip the configured prefix from the container path (upstream #113).
+                            if (!string.IsNullOrEmpty(CLIOptions.o_stripPathPrefix.Value)
+                                && asset.Container.StartsWith(CLIOptions.o_stripPathPrefix.Value))
+                            {
+                                var stripped = asset.Container.Substring(CLIOptions.o_stripPathPrefix.Value.Length);
+                                containerDir = Path.GetDirectoryName(stripped) ?? "";
+                            }
+                            exportPath = string.IsNullOrEmpty(containerDir)
+                                ? savePath
+                                : Path.Combine(savePath, containerDir);
                             if (groupOption == AssetGroupOption.ContainerPathFull)
                             {
                                 exportPath = Path.Combine(exportPath, Path.GetFileNameWithoutExtension(asset.Container));
