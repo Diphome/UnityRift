@@ -548,7 +548,14 @@ namespace UnityRift
                                 }
                             }
                             splitStream.Seek(0, SeekOrigin.Begin);
-                            FileReader entryReader = new FileReader(basePath, splitStream);
+                            // Prefix the archive path like the normal entry loader below, so
+                            // the merged split file gets a virtual path under the archive
+                            // (e.g. "<apk>/assets/bin/Data/globalgamemanagers.assets") instead
+                            // of a bare relative path that FileReader would expand against the
+                            // current working directory — which made these loads log a
+                            // misleading "<cwd>\assets\bin\Data\..." path.
+                            string dummyPath = Path.Combine(Path.GetDirectoryName(reader.FullPath), reader.FileName, basePath);
+                            FileReader entryReader = new FileReader(dummyPath, splitStream);
                             if (!LoadFile(entryReader, fromZip: true))
                                 break;
                         }
