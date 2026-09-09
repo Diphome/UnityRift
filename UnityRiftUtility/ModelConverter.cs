@@ -305,10 +305,22 @@ namespace UnityRift
             {
                 AnimatorController m_AnimatorController;
                 var animationList = new List<AnimationClip>();
+                var overrideMap = new Dictionary<AnimationClip, AnimationClip>();
                 if (m_Controller is AnimatorOverrideController overrideController)
                 {
                     if (!overrideController.m_Controller.TryGet(out m_AnimatorController))
                         return;
+                    // The base controller only holds empty template_* placeholder clips; the
+                    // real animation data lives in the override map. Map each original clip to
+                    // its override so we collect the playable clips instead of 0.00s templates.
+                    foreach (var clipOverride in overrideController.m_Clips)
+                    {
+                        if (clipOverride.m_OriginalClip.TryGet(out var originalClip)
+                            && clipOverride.m_OverrideClip.TryGet(out var overrideClip))
+                        {
+                            overrideMap[originalClip] = overrideClip;
+                        }
+                    }
                 }
                 else
                 {
@@ -319,7 +331,9 @@ namespace UnityRift
                 {
                     if (pptr.TryGet(out var m_AnimationClip))
                     {
-                        animationList.Add(m_AnimationClip);
+                        animationList.Add(overrideMap.TryGetValue(m_AnimationClip, out var overrideClip)
+                            ? overrideClip
+                            : m_AnimationClip);
                     }
                 }
                 animationClipUniqArray = animationList.Distinct(animationClipEqComparer).ToArray();
