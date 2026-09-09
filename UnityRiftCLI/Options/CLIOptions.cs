@@ -1152,7 +1152,12 @@ namespace UnityRiftCLI.Options
                                         var isKnownType = knownAssetTypesDict.TryGetValue(type.ToLower(), out var assetType);
                                         if (isKnownType)
                                         {
-                                            if (f_loadAllAssets.Value || exportableAssetTypes.Contains(assetType))
+                                            // Dump and Info are read-only inspection modes that can
+                                            // handle any ClassIDType, so don't restrict them to the
+                                            // exportable set (which only bounds the actual exporters).
+                                            var readOnlyMode = o_workMode.Value == WorkMode.Dump
+                                                || o_workMode.Value == WorkMode.Info;
+                                            if (f_loadAllAssets.Value || readOnlyMode || exportableAssetTypes.Contains(assetType))
                                             {
                                                 o_exportAssetTypes.Value.Add(assetType);
                                                 break;
