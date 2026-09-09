@@ -72,7 +72,14 @@ namespace UnityRift
             if (!spriteWithCanvas)
                 return cropped;
 
-            var canvas = new Image<Bgra32>((int)MathF.Floor(m_Sprite.m_Rect.width), (int)MathF.Floor(m_Sprite.m_Rect.height));
+            var canvasWidth = (int)MathF.Floor(m_Sprite.m_Rect.width);
+            var canvasHeight = (int)MathF.Floor(m_Sprite.m_Rect.height);
+            if (canvasWidth <= 0 || canvasHeight <= 0)
+            {
+                // Degenerate authored rect: no canvas to place onto, just return the crop.
+                return cropped;
+            }
+            var canvas = new Image<Bgra32>(canvasWidth, canvasHeight);
             canvas.Mutate(ctx => ctx.DrawImage(
                 cropped,
                 new Point((int)MathF.Floor(textureRectOffset.X), (int)MathF.Floor(m_Sprite.m_Rect.height - textureRectOffset.Y - cropped.Height)),
@@ -125,6 +132,16 @@ namespace UnityRift
                 rectRight = Math.Min(rectRight, originalImage.Width);
                 rectBottom = Math.Min(rectBottom, originalImage.Height);
                 var rect = new Rectangle(rectX, rectY, rectRight - rectX, rectBottom - rectY);
+                if (rect.Width <= 0 || rect.Height <= 0)
+                {
+                    // Some games keep 0x0 (removed / invisible) sprites. There is no image
+                    // region to cut, and a zero-size crop makes ImageSharp throw. Skip it:
+                    // callers treat a null image as "nothing to export" (logged as a warning
+                    // that doesn't interrupt a batch export).
+                    Logger.Debug($"Sprite \"{m_Sprite.m_Name}\" has an empty image region ({rect.Width}x{rect.Height}); skipping.");
+                    originalImage.Dispose();
+                    return null;
+                }
                 var spriteImage = originalImage.Clone(x => x.Crop(rect));
                 originalImage.Dispose();
                 if (settingsRaw.packed == 1)
