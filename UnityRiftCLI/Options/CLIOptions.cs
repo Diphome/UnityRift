@@ -843,7 +843,7 @@ namespace UnityRiftCLI.Options
                 if (workModeOptionIndex + 1 >= processedArgs.Count)
                 {
                     Console.WriteLine($"{"Error during parsing options:".Color(brightRed)} Value for [{option.Color(brightYellow)}] option was not found.\n");
-                    TryFindOptionDescription(option, optionsDict);
+                    ShowKnownOptionDescription(option, optionsDict);
                     return;
                 }
                 var value = processedArgs[workModeOptionIndex + 1];
@@ -1637,7 +1637,7 @@ namespace UnityRiftCLI.Options
                     if (optionsDict.Any(x => x.Key.Contains(option)))
                     {
                         Console.WriteLine($"{"Error during parsing options:".Color(brightRed)} Value for [{option.Color(brightYellow)}] option was not found.\n");
-                        TryFindOptionDescription(option, optionsDict);
+                        ShowKnownOptionDescription(option, optionsDict);
                     }
                     else if (flagsDict.Any(x => x.Key.Contains(option)))
                     {
@@ -1692,6 +1692,22 @@ namespace UnityRiftCLI.Options
             var arg = isFlag ? "Flag" : "Option";
             var optionDesc = option.Description + option.Example.Color(ColorConsole.BrightCyan);
             Console.WriteLine($"{arg} description:\n{optionDesc}");
+        }
+
+        // The option/flag is known but its value is missing. Show its own description
+        // directly, without the fuzzy "Did you mean [X]?" wording that TryFindOptionDescription
+        // uses for unknown/misspelled input (which, for a known option, nonsensically
+        // suggests the very option the user already typed).
+        private static void ShowKnownOptionDescription(string option, Dictionary<string, string> dict, bool isFlag = false)
+        {
+            var matches = dict.Where(x => x.Key.Contains(option)).ToArray();
+            if (matches.Length == 0)
+                return;
+            var arg = isFlag ? "Flag" : "Option";
+            // Prefer an exact token match, e.g. "--fbx-animation" within "--fbx-animation <value>".
+            var exact = Array.Find(matches, x => x.Key.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries).Contains(option));
+            var desc = exact.Key != null ? exact.Value : matches[0].Value;
+            Console.WriteLine($"{arg} description:\n{desc}");
         }
 
         private static bool TryFindOptionDescription(string option, Dictionary<string, string> dict, bool isFlag = false)
