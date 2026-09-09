@@ -4,7 +4,7 @@
     <TargetFrameworks>net472;net8.0;net8.0-windows;net9.0;net9.0-windows</TargetFrameworks>
     <RootNamespace>UnityRift.PInvoke</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Version>0.21.1.0</Version>
+    <Version>0.22.0.0</Version>
     <Copyright>Copyright © Perfare 2020-2022; Copyright © hozuki 2020</Copyright>
     <DebugType>embedded</DebugType>
   </PropertyGroup>
