@@ -307,7 +307,8 @@ namespace UnityRift
             var uncompressedSize = (int)m_Header.uncompressedBlocksInfoSize;
             if (uncompressedSize < 0 || compressedSize < 0 || compressedSize > reader.BaseStream.Length)
             {
-                throw new IOException("Incorrect blockInfo length.\nBlockInfo sizes might be encrypted.\n");
+                Logger.Debug($"Incorrect blockInfo length (compressed {compressedSize}, uncompressed {uncompressedSize}, stream {reader.BaseStream.Length}).");
+                throw EncryptedBundle(reader, "the block-info sizes are out of range (the bundle header is likely encrypted)");
             }
 
             if ((m_Header.flags & ArchiveFlags.BlocksInfoAtTheEnd) != 0)
@@ -380,11 +381,9 @@ namespace UnityRift
 
             if (numWrite != uncompressedSize)
             {
-                var msg = $"{compressionType} blockInfo decompression error. {errorMsg}\nWrite {numWrite} bytes but expected {uncompressedSize} bytes.";
-                var exMsg = compressionType > CompressionType.Lz4HC || customBlockInfoCompression != CompressionType.Auto
-                    ? "Wrong compression type or blockInfo data might be encrypted."
-                    : "BlockInfo data might be encrypted.";
-                throw new IOException($"{msg}\n{exMsg}\n");
+                Logger.Debug($"{compressionType} blockInfo decompression error. {errorMsg} Wrote {numWrite} bytes but expected {uncompressedSize} bytes.");
+                var wrongTypePossible = compressionType > CompressionType.Lz4HC || customBlockInfoCompression != CompressionType.Auto;
+                throw EncryptedBundle(reader, $"its block info could not be decompressed ({compressionType})", wrongTypePossible);
             }
 
             using (var blocksInfoReader = new EndianBinaryReader(blocksInfoUncompressedStream))
@@ -506,11 +505,9 @@ namespace UnityRift
 
                     if (numWrite != blockInfo.uncompressedSize)
                     {
-                        var msg = $"{compressionType} block decompression error. {errorMsg}\nWrite {numWrite} bytes but expected {blockInfo.uncompressedSize} bytes.";
-                        var exMsg = compressionType > CompressionType.Lz4HC || customBlockCompression != CompressionType.Auto
-                            ? "Wrong compression type or block data might be encrypted."
-                            : "Block data might be encrypted.";
-                        throw new IOException($"{msg}\n{exMsg}\n");
+                        Logger.Debug($"{compressionType} block decompression error. {errorMsg} Wrote {numWrite} bytes but expected {blockInfo.uncompressedSize} bytes.");
+                        var wrongTypePossible = compressionType > CompressionType.Lz4HC || customBlockCompression != CompressionType.Auto;
+                        throw EncryptedBundle(reader, $"its block data could not be decompressed ({compressionType})", wrongTypePossible);
                     }
                 }
             }
@@ -562,6 +559,18 @@ namespace UnityRift
                 return;
             }
             throw new NotSupportedException("Unsupported bundle file. UnityCN encryption was detected.");
+        }
+
+        // Builds a clear, user-facing reason for a bundle whose blocks won't decompress,
+        // which almost always means custom (non-UnityCN) encryption/obfuscation.
+        private static EncryptedBundleException EncryptedBundle(FileReader reader, string reason, bool wrongTypePossible = false)
+        {
+            var msg = $"Bundle \"{reader.FileName}\" appears to be encrypted or obfuscated: {reason}. " +
+                      "No standard UnityCN encryption flag is present, so this is a custom, game-specific " +
+                      "protection — AssetStudio cannot open it without the game's decryption key or method.";
+            if (wrongTypePossible)
+                msg += " (If you are certain the bundle is not encrypted, the compression type may be wrong — try specifying it manually.)";
+            return new EncryptedBundleException(msg);
         }
 
         private bool IsUncompressedBundle => m_BlocksInfo.All(x => (CompressionType)(x.flags & StorageBlockFlags.CompressionTypeMask) == CompressionType.None);

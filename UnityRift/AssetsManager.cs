@@ -412,6 +412,13 @@ namespace UnityRift
                 }
                 return isLoaded;
             }
+            catch (EncryptedBundleException e)
+            {
+                // A bundle protected by a custom (non-UnityCN) encryption scheme. Report the
+                // clear reason without the decompression stack trace (full detail is at Debug).
+                Logger.Warning(e.Message);
+                return false;
+            }
             catch (NotSupportedException e)
             {
                 Logger.Error(e.Message);
