@@ -1002,6 +1002,25 @@ namespace UnityRiftGUI
         {
             if (!assemblyLoader.Loaded)
             {
+                // Standalone builds strip MonoBehaviour script fields, so without the game's
+                // assemblies the preview reads only the 32-byte base and logs "Failed to read
+                // type, read 32 bytes but expected N bytes" for every field. Auto-load the Mono
+                // "Managed" folder found next to the loaded files before falling back to the
+                // manual picker. IL2CPP games have no Managed folder, so they still fall through
+                // to the manual "Select Assembly Folder" dialog.
+                var paths = assetsManager.AssetsFileList
+                    .Select(f => f.originalPath ?? f.fullName)
+                    .Where(p => p != null)
+                    .Distinct()
+                    .ToList();
+                var managed = AssemblyLoader.FindManagedFolder(paths);
+                if (managed != null)
+                {
+                    assemblyLoader.Load(managed);
+                    AssembliesLoaded?.Invoke();
+                    return;
+                }
+
                 var openFolderDialog = new OpenFolderDialog();
                 openFolderDialog.Title = "Select Assembly Folder";
                 if (openFolderDialog.ShowDialog() == DialogResult.OK)
