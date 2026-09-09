@@ -368,6 +368,24 @@ namespace UnityRiftGUI
                                 containers.Add((m_Container.Value, m_Container.Key));
                             }
                             break;
+                        case LazyObject lazyAsset:
+                            // Heavy assets are loaded as placeholders; derive exportability from
+                            // the real ClassIDType so lazy Mesh/AnimationClip/Shader/Font/TextAsset/
+                            // MovieTexture are not dropped from the type filter. Avatar and
+                            // AnimatorController placeholders stay non-exportable.
+                            assetItem.Text = lazyAsset.m_Name;
+                            switch (lazyAsset.type)
+                            {
+                                case ClassIDType.Mesh:
+                                case ClassIDType.AnimationClip:
+                                case ClassIDType.Shader:
+                                case ClassIDType.Font:
+                                case ClassIDType.TextAsset:
+                                case ClassIDType.MovieTexture:
+                                    exportable = true;
+                                    break;
+                            }
+                            break;
                         case NamedObject m_NamedObject:
                             assetItem.Text = m_NamedObject.m_Name;
                             break;
