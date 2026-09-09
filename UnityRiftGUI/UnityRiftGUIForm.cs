@@ -2184,10 +2184,20 @@ namespace UnityRiftGUI
                     var selectedTypes = (SelectedAssetType)0;
                     foreach (var asset in selectedAssets)
                     {
-                        switch (asset.Asset)
+                        // Switch on the ClassID (which never parses the object) instead of
+                        // asset.Asset (which resolves LazyObject placeholders): deciding menu
+                        // visibility must not hydrate a whole multi-selection of heavy assets
+                        // (Mesh/AnimationClip) and stall the UI on right-click.
+                        switch (asset.Type)
                         {
-                            case MonoBehaviour m_MonoBehaviour:
-                                if (Studio.l2dModelDict.Count > 0 && m_MonoBehaviour.m_Script.TryGet(out var m_Script))
+                            case ClassIDType.MonoBehaviour:
+                                // Only the Live2D export items need the script name, and only
+                                // when the project actually has Cubism models. Resolve (parse)
+                                // the MonoBehaviour just in that case, so ordinary projects
+                                // never pay for hydration here.
+                                if (Studio.l2dModelDict.Count > 0
+                                    && asset.Asset is MonoBehaviour m_MonoBehaviour
+                                    && m_MonoBehaviour.m_Script.TryGet(out var m_Script))
                                 {
                                     if (m_Script.m_ClassName == "CubismMoc")
                                     {
@@ -2203,10 +2213,10 @@ namespace UnityRiftGUI
                                     }
                                 }
                                 break;
-                            case AnimationClip _:
+                            case ClassIDType.AnimationClip:
                                 selectedTypes |= SelectedAssetType.AnimationClip;
                                 break;
-                            case Animator _:
+                            case ClassIDType.Animator:
                                 selectedTypes |= SelectedAssetType.Animator;
                                 break;
                         }
