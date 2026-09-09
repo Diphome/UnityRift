@@ -239,7 +239,7 @@ namespace UnityRift
 
             if (version >= 2017) //2017 and up
             {
-                var first = new Guid(reader.ReadBytes(16));
+                var first = UnityGuidHelper.UnityGuidToGuid(reader.ReadBytes(16));
                 var second = reader.ReadInt64();
                 m_RenderDataKey = new KeyValuePair<Guid, long>(first, second);
 
