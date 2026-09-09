@@ -26,6 +26,10 @@ MCP **stdio** transport (newline-delimited JSON-RPC 2.0). No `npm install` neede
 | `il2cpp_export` | Generate an Il2CppDumper-compatible Ghidra package (`script.json`, `il2cpp.h`, `ghidra.py`) from GameAssembly/libil2cpp (`-m il2cpp`). |
 | `il2cpp_lookup` | Translate managed names ↔ RVAs/VAs while decompiling (`-m il2cpp --il2cpp-lookup`). |
 | `il2cpp_strings` | Search IL2CPP string literals by text (`-m il2cpp --il2cpp-strings`). |
+| `il2cpp_decode` | Decode a raw hex immediate into the float/double/int constant(s) it really is (`--il2cpp-decode`). |
+| `il2cpp_data` | Resolve a `DAT_<addr>` literal-pool load to its constant by reading the binary (`--il2cpp-data`). |
+| `il2cpp_clean` | Strip IL2CPP boilerplate from Ghidra pseudocode and annotate constants inline (`--il2cpp-clean`). |
+| `il2cpp_suggest` | Suggest `Type$$`/`Type$$Method` symbols to decompile from keywords or a script file (`--il2cpp-suggest`). |
 | `asset_run` | Run the CLI with a verbatim argument list (escape hatch). |
 | `list_output` | Recursively list files in an output folder with sizes. |
 
@@ -48,7 +52,13 @@ cached under `%LOCALAPPDATA%\UnityRift\il2cpp`; the first run takes
 `il2cpp_export` writes the Ghidra helpers next to those stubs (`<output>/il2cpp/script.json`,
 `il2cpp_ghidra.h`, and a `ghidra/` folder with `ghidra.py` / `ghidra_with_struct.py`). Import
 the native binary into Ghidra, parse `il2cpp_ghidra.h`, then run the script and pick `script.json`.
-`il2cpp_lookup` / `il2cpp_strings` translate names and addresses while you decompile.
+`il2cpp_lookup` / `il2cpp_strings` translate names and addresses while you decompile
+(`il2cpp_lookup` takes `use_fuzzy` for typo-tolerant name matching). To read the actual
+game-logic numbers, `il2cpp_decode` turns a raw hex immediate into its float/double value
+and `il2cpp_data` reads the constant behind a `DAT_<addr>` load from the binary;
+`il2cpp_clean` makes a decompiled function readable (drops IL2CPP boilerplate, annotates
+constants); and `il2cpp_suggest` maps a feature you're chasing ("parry", "adrenaline") to
+the `Type$$` symbols worth decompiling.
 
 Every CLI-invoking tool returns the exact command line, the exit code, elapsed
 time, and the combined stdout+stderr (ANSI stripped) — i.e. the CLI's own log.

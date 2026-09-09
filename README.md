@@ -12,7 +12,7 @@
 
 - **IL2CPP support** via [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL): `GameAssembly.dll` / `libil2cpp.so` + `global-metadata.dat` are detected automatically, dummy assemblies are generated and cached, and they feed the .NET explorer and MonoBehaviour field parsing.
 - **.NET class explorer** — browse the game's managed assemblies as C#-like stubs (with optional IL). GUI tab **".NET Classes"**, CLI `-m dotnet`, MCP `dotnet_list` / `dotnet_type`.
-- **Ghidra / Il2CppDumper package** (`-m il2cpp`) — generates `script.json`, `il2cpp.h`, `il2cpp_ghidra.h` and bundled `ghidra.py` / `ghidra_with_struct.py` scripts (patched for Ghidra Jython 2.7 **and** 11.3+ PyGhidra) so functions get named the same way [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) does. Plus `--il2cpp-lookup`, `--il2cpp-strings`, and `--il2cpp-dummy-dll` (export the dummy .NET assemblies to `<out>/DummyDll` for dnSpy / ILSpy / dotPeek).
+- **Ghidra / Il2CppDumper package** (`-m il2cpp`) — generates `script.json`, `il2cpp.h`, `il2cpp_ghidra.h` and bundled `ghidra.py` / `ghidra_with_struct.py` scripts (patched for Ghidra Jython 2.7 **and** 11.3+ PyGhidra) so functions get named the same way [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) does. Plus `--il2cpp-lookup` (name ↔ address, `--il2cpp-fuzzy` for typo tolerance), `--il2cpp-strings`, `--il2cpp-decode` / `--il2cpp-data` (recover the float/double/int constants Ghidra hides as raw hex or `DAT_` loads), `--il2cpp-clean` (strip IL2CPP boilerplate from decompiled functions + annotate constants), `--il2cpp-suggest` (map a feature to the `Type$$` symbols worth decompiling), and `--il2cpp-dummy-dll` (export the dummy .NET assemblies to `<out>/DummyDll` for dnSpy / ILSpy / dotPeek).
 - **Type-tree database (TPK)** — decode type-tree-stripped builds via a bundled `classdata.tpk` (`--typetree-db`, auto-loaded when present).
 - **glTF 2.0 export** (`.glb` / `.gltf`) as an FBX-free alternative (meshes, skinning, materials + embedded textures, node animations).
 - **Godot 4 export** (`-m godot`) — converts a game's **materials** and **particle FX** into Godot 4 scaffolds:
@@ -123,10 +123,17 @@ UnityRiftCLI <asset folder path> -m animator
 ```
 UnityRiftCLI <game folder> -m il2cpp -o <output folder>
 ```
-Look up a method/address while decompiling:
+Look up a method/address while decompiling (add `--il2cpp-fuzzy` for typo-tolerant name matching):
 ```
 UnityRiftCLI <game folder> -m il2cpp --il2cpp-lookup PlayerController$$Update
 UnityRiftCLI <game folder> -m il2cpp --il2cpp-lookup 0x1A2B3C
+```
+Recover the constants Ghidra hides as raw hex, clean up a decompiled function, and find symbols to look at:
+```
+UnityRiftCLI <game folder> -m il2cpp --il2cpp-decode 0x3f19999a3e99999a   # -> (0.3f, 0.6f)
+UnityRiftCLI <game folder> -m il2cpp --il2cpp-data 0x4fb2ada             # read the DAT_ literal from the binary
+UnityRiftCLI <game folder> -m il2cpp --il2cpp-clean FUN_1800abcd.c       # strip boilerplate + annotate constants
+UnityRiftCLI <game folder> -m il2cpp --il2cpp-suggest parry,adrenaline   # ranked Type$$ symbols to decompile
 ```
 
 ### Advanced Samples

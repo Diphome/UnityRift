@@ -162,6 +162,12 @@ namespace UnityRiftCLI.Options
         public static Option<bool> f_il2cpp;
         public static Option<List<string>> o_il2cppLookup;
         public static Option<List<string>> o_il2cppStrings;
+        public static Option<List<string>> o_il2cppDecode;
+        public static Option<List<string>> o_il2cppData;
+        public static Option<List<string>> o_il2cppClean;
+        public static Option<List<string>> o_il2cppSuggest;
+        public static Option<bool> f_il2cppFuzzy;
+        public static Option<bool> f_il2cppCleanRaw;
         public static Option<bool> f_il2cppDummyDll;
         public static Option<bool> f_godotAttachPlugin;
 
@@ -681,6 +687,67 @@ namespace UnityRiftCLI.Options
                 optionExample: "Example: \"-m il2cpp --il2cpp-strings error\"\n",
                 optionHelpGroup: HelpGroups.Il2Cpp
             );
+            o_il2cppDecode = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--il2cpp-decode <hex>",
+                optionDescription: "Decode a packed float/double/int immediate seen in Ghidra pseudocode\n" +
+                    "(e.g. a '= 0x3f19999a3e99999a;' store -> '(0.3f, 0.6f)'). No binary read needed.\n" +
+                    "Only for \"-m il2cpp\". *Multiple values separated by ',' or ';' without spaces\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-decode 0x3f19999a3e99999a\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp
+            );
+            o_il2cppData = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--il2cpp-data <va>",
+                optionDescription: "Read the literal-pool constant behind a DAT_<addr> load from the IL2CPP binary\n" +
+                    "and decode it as a float/double (the hex in DAT_xxxxxxxx is the virtual address).\n" +
+                    "Only for \"-m il2cpp\". *Multiple values separated by ',' or ';' without spaces\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-data 0x4fb2ada\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp
+            );
+            o_il2cppClean = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--il2cpp-clean <path>",
+                optionDescription: "Clean Ghidra IL2CPP pseudocode: strip class-init/metadata/ctor boilerplate (by shape)\n" +
+                    "and annotate hidden float/DAT_ constants inline. <path> is a .c file or a folder of them.\n" +
+                    "Only for \"-m il2cpp\". *Multiple paths separated by ',' or ';' without spaces\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-clean out/FUN_1800abcd.c\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp
+            );
+            o_il2cppSuggest = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--il2cpp-suggest <kw|file>",
+                optionDescription: "Suggest IL2CPP types/methods worth decompiling for the given keyword(s) or a text file\n" +
+                    "(CamelCase / long identifiers are extracted from a file). Prints ranked Type$$ prefixes.\n" +
+                    "Combine with --il2cpp-fuzzy for typo-tolerant matching. Only for \"-m il2cpp\".\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-suggest adrenaline,parry,damage\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp
+            );
+            f_il2cppFuzzy = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--il2cpp-fuzzy",
+                optionDescription: "(Flag) Typo-tolerant matching for --il2cpp-lookup and --il2cpp-suggest\n" +
+                    "(ranks near-miss names by similarity instead of exact substring).\n" +
+                    "Only for \"-m il2cpp\".\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-lookup PlyerController --il2cpp-fuzzy\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp,
+                isFlag: true
+            );
+            f_il2cppCleanRaw = new GroupedOption<bool>
+            (
+                optionDefaultValue: false,
+                optionName: "--il2cpp-clean-raw",
+                optionDescription: "(Flag) For --il2cpp-clean: keep the structural noise, only annotate constants.\n" +
+                    "Only for \"-m il2cpp\".\n",
+                optionExample: "",
+                optionHelpGroup: HelpGroups.Il2Cpp,
+                isFlag: true
+            );
             f_il2cppDummyDll = new GroupedOption<bool>
             (
                 optionDefaultValue: false,
@@ -1028,6 +1095,18 @@ namespace UnityRiftCLI.Options
                             return;
                         }
                         f_il2cppDummyDll.Value = true;
+                        flagIndexes.Add(i);
+                        break;
+                    case "--il2cpp-fuzzy":
+                    case "--il2cpp-clean-raw":
+                        if (o_workMode.Value != WorkMode.Il2Cpp)
+                        {
+                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is only for \"-m il2cpp\".\n");
+                            ShowOptionDescription(o_workMode);
+                            return;
+                        }
+                        if (flag == "--il2cpp-fuzzy") f_il2cppFuzzy.Value = true;
+                        else f_il2cppCleanRaw.Value = true;
                         flagIndexes.Add(i);
                         break;
                     case "--godot-attach-plugin":
@@ -1582,6 +1661,24 @@ namespace UnityRiftCLI.Options
                                 return;
                             }
                             o_il2cppStrings.Value.AddRange(ValueSplitter(value, isRegex: f_filterWithRegex.Value));
+                            break;
+                        case "--il2cpp-decode":
+                        case "--il2cpp-data":
+                        case "--il2cpp-clean":
+                        case "--il2cpp-suggest":
+                            if (o_workMode.Value != WorkMode.Il2Cpp)
+                            {
+                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. This option is only for \"-m il2cpp\".\n");
+                                ShowOptionDescription(o_workMode);
+                                return;
+                            }
+                            switch (option)
+                            {
+                                case "--il2cpp-decode": o_il2cppDecode.Value.AddRange(ValueSplitter(value)); break;
+                                case "--il2cpp-data": o_il2cppData.Value.AddRange(ValueSplitter(value)); break;
+                                case "--il2cpp-clean": o_il2cppClean.Value.AddRange(ValueSplitter(value)); break;
+                                default: o_il2cppSuggest.Value.AddRange(ValueSplitter(value)); break;
+                            }
                             break;
                         case "--typetree-db":
                             if (File.Exists(value))

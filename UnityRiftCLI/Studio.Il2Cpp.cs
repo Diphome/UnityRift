@@ -3,6 +3,7 @@ using UnityRiftCLI.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Ansi = UnityRift.ColorConsole;
 
@@ -86,9 +87,30 @@ namespace UnityRiftCLI
 
             var lookups = CLIOptions.o_il2cppLookup.Value;
             var strings = CLIOptions.o_il2cppStrings.Value;
+            var decodes = CLIOptions.o_il2cppDecode.Value;
+            var datas = CLIOptions.o_il2cppData.Value;
+            var cleans = CLIOptions.o_il2cppClean.Value;
+            var suggests = CLIOptions.o_il2cppSuggest.Value;
             var regex = CLIOptions.f_filterWithRegex.Value;
-            if (lookups.Count == 0 && strings.Count == 0)
+            var fuzzy = CLIOptions.f_il2cppFuzzy.Value;
+            if (lookups.Count == 0 && strings.Count == 0 && decodes.Count == 0 &&
+                datas.Count == 0 && cleans.Count == 0 && suggests.Count == 0)
                 return;
+
+            // The game binary backs DAT_ literal-pool reads (data/clean); opened lazily.
+            BinaryImage image = null;
+            var imageTried = false;
+            BinaryImage GetImage()
+            {
+                if (!imageTried)
+                {
+                    imageTried = true;
+                    image = BinaryImage.TryOpen(game.BinaryPath);
+                    if (image == null)
+                        Logger.Warning($"Could not open IL2CPP binary for literal-pool reads: {game.BinaryPath}");
+                }
+                return image;
+            }
 
             var root = new JObject();
             if (lookups.Count > 0)
@@ -104,7 +126,7 @@ namespace UnityRiftCLI
                     }
                     else
                     {
-                        item["result"] = idx.FindByName(q, regex);
+                        item["result"] = idx.FindByName(q, regex, fuzzy: fuzzy);
                     }
                     arr.Add(item);
                 }
@@ -117,7 +139,64 @@ namespace UnityRiftCLI
                     arr.Add(new JObject { ["query"] = q, ["result"] = idx.FindStrings(q, regex) });
                 root["strings"] = arr;
             }
-            Logger.Default.Log(LoggerEvent.Info, root.ToString(Formatting.Indented), ignoreLevel: true);
+            if (decodes.Count > 0)
+            {
+                var arr = new JArray();
+                foreach (var q in decodes)
+                {
+                    var item = new JObject { ["value"] = q };
+                    if (Il2CppConstantResolver.TryParseHex(q, out var v))
+                        item["decoded"] = Il2CppConstantResolver.DecodeImmediate(v) ?? "(not a plausible float/double/int)";
+                    else
+                        item["error"] = "not a hex value";
+                    arr.Add(item);
+                }
+                root["decode"] = arr;
+            }
+            if (datas.Count > 0)
+            {
+                var arr = new JArray();
+                var img = GetImage();
+                foreach (var q in datas)
+                {
+                    var item = new JObject { ["va"] = q };
+                    if (!Il2CppConstantResolver.TryParseHex(q, out var va)) item["error"] = "not a hex address";
+                    else if (img == null) item["error"] = "binary not available";
+                    else item["decoded"] = img.ResolveData(va) ?? "(no plausible constant at this address)";
+                    arr.Add(item);
+                }
+                root["data"] = arr;
+            }
+            if (cleans.Count > 0)
+            {
+                var strip = !CLIOptions.f_il2cppCleanRaw.Value;
+                var img = GetImage();
+                foreach (var pathArg in cleans)
+                {
+                    var files = new List<string>();
+                    if (Directory.Exists(pathArg)) files.AddRange(Directory.GetFiles(pathArg, "*.c"));
+                    else if (File.Exists(pathArg)) files.Add(pathArg);
+                    else { Logger.Warning($"--il2cpp-clean: path not found: {pathArg}"); continue; }
+                    foreach (var f in files)
+                    {
+                        var cleaned = Il2CppDecompCleaner.Clean(File.ReadAllText(f), strip, floats: true, img: img);
+                        Logger.Default.Log(LoggerEvent.Info, $"========= {Path.GetFileName(f)}\n{cleaned}", ignoreLevel: true);
+                    }
+                }
+            }
+            if (suggests.Count > 0)
+            {
+                // A single arg that is a file path -> extract keywords from its text; otherwise treat as keywords.
+                var keywords = new List<string>();
+                foreach (var s in suggests)
+                {
+                    if (File.Exists(s)) keywords.AddRange(Il2CppSymbolIndex.KeywordsFromText(File.ReadAllText(s)));
+                    else keywords.Add(s);
+                }
+                root["suggest"] = idx.Suggest(keywords, methods: true, fuzzy: fuzzy);
+            }
+            if (root.HasValues)
+                Logger.Default.Log(LoggerEvent.Info, root.ToString(Formatting.Indented), ignoreLevel: true);
 #endif
         }
     }
