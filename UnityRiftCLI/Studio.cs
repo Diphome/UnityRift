@@ -54,8 +54,17 @@ namespace UnityRiftCLI
                 assetsManager.LoadTypeTreeDatabase(dbPath);
         }
 
+        // Cached once: the \r-overwrite progress display only makes sense on a real
+        // terminal. When stdout is redirected (piped, captured, or driven via the MCP
+        // server) \r does not overwrite, so every tick accumulates into
+        // "[000%][001%]...[100%]" log spam. Suppress the incremental display there — the
+        // [Info] phase messages already convey progress.
+        private static readonly bool ConsoleOutputRedirected = Console.IsOutputRedirected;
+
         private static void ShowCurProgressValue(int value)
         {
+            if (ConsoleOutputRedirected)
+                return;
             Console.Write($"[{value:000}%]\r");
         }
 

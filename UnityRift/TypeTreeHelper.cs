@@ -41,7 +41,7 @@ namespace UnityRift
             }
             if (readed != reader.byteSize)
             {
-                Logger.Info($"Failed to read type, read {readed} bytes but expected {reader.byteSize} bytes");
+                Logger.Debug($"Failed to fully read type-tree for {reader.type} (PathID {reader.m_PathID}): read {readed} bytes but expected {reader.byteSize} bytes. This is expected for MonoBehaviour when no matching assembly is loaded.");
             }
 
             return sb.ToString();
@@ -243,7 +243,7 @@ namespace UnityRift
                 var readed = reader.Position - reader.byteStart;
                 if (readed != reader.byteSize)
                 {
-                    Logger.Info($"Failed to read type, read {readed} bytes but expected {reader.byteSize} bytes");
+                    Logger.Debug($"Failed to fully read type-tree for {reader.type} (PathID {reader.m_PathID}): read {readed} bytes but expected {reader.byteSize} bytes. This is expected for MonoBehaviour when no matching assembly is loaded.");
                 }
                 return buffer.ToArray();
             }
@@ -457,7 +457,7 @@ namespace UnityRift
             }
             if (readed != reader.byteSize)
             {
-                Logger.Info($"Failed to read type, read {readed} bytes but expected {reader.byteSize} bytes");
+                Logger.Debug($"Failed to fully read type-tree for {reader.type} (PathID {reader.m_PathID}): read {readed} bytes but expected {reader.byteSize} bytes. This is expected for MonoBehaviour when no matching assembly is loaded.");
             }
             return obj;
         }

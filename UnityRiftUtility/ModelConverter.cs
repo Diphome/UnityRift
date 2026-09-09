@@ -1068,7 +1068,10 @@ namespace UnityRift
                         }
                     }
                 }
-                Console.Write($"Converted [{k+1}/{totalCount}] animations\r");
+                // \r-overwrite only makes sense on a real terminal; when stdout is
+                // redirected every tick accumulates into log spam, so skip it there.
+                if (!Console.IsOutputRedirected)
+                    Console.Write($"Converted [{k + 1}/{totalCount}] animations\r");
             }
         }
 
