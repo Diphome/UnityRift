@@ -437,6 +437,7 @@ const tools = [
         input_path: { type: "string", description: "Game folder or IL2CPP binary (same as il2cpp_export)." },
         query: { type: "string", description: "Name (PlayerController$$Update) or address (0x1A2B3C or va:0x1800...). " },
         use_regex: { type: "boolean", description: "Treat query as a regular expression (names only)." },
+        use_fuzzy: { type: "boolean", description: "Typo-tolerant name matching: rank near-miss names by similarity (names only)." },
         unity_version: { type: "string" },
         output_path: { type: "string", description: `Also copy the Ghidra package to <output>/il2cpp. Default: ${defaultOutDir()}` },
         timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
@@ -447,6 +448,7 @@ const tools = [
       const out = a.output_path || defaultOutDir();
       const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-lookup", a.query];
       if (a.use_regex) args.push("--filter-with-regex");
+      if (a.use_fuzzy) args.push("--il2cpp-fuzzy");
       if (a.unity_version) args.push("--unity-version", a.unity_version);
       return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
     },
@@ -472,6 +474,111 @@ const tools = [
       const out = a.output_path || defaultOutDir();
       const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-strings", a.query];
       if (a.use_regex) args.push("--filter-with-regex");
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
+    },
+  },
+  {
+    name: "il2cpp_decode",
+    description:
+      "Decode a raw hex immediate that Ghidra shows in IL2CPP pseudocode into the float/double/int " +
+      "constant(s) it really is (CLI '-m il2cpp --il2cpp-decode'). A 16-digit value is two packed " +
+      "32-bit floats (e.g. 0x3f19999a3e99999a -> (0.3f, 0.6f)); an 8-digit one is a single float " +
+      "(0x3f800000 -> 1.0f). No binary read needed. Use it to recover the game-logic numbers behind " +
+      "'*(undefined8 *)(x + 0x24) = 0x...;' stores.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder or IL2CPP binary (same as il2cpp_export)." },
+        value: { type: "string", description: "Hex immediate(s), e.g. '0x3f19999a3e99999a' (comma/semicolon separated for multiple)." },
+        unity_version: { type: "string" },
+        output_path: { type: "string", description: `Ghidra package folder. Default: ${defaultOutDir()}` },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path", "value"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-decode", a.value];
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
+    },
+  },
+  {
+    name: "il2cpp_data",
+    description:
+      "Resolve a DAT_<addr> literal-pool load to its constant value by reading the IL2CPP binary " +
+      "(CLI '-m il2cpp --il2cpp-data'). The hex in a Ghidra symbol like DAT_04fb2ada IS the virtual " +
+      "address; this maps VA -> file offset (PE and ELF) and decodes the bytes as a float/double. " +
+      "Use for float constants too big for an inline immediate.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder or IL2CPP binary." },
+        va: { type: "string", description: "Virtual address(es) of the DAT_ load, e.g. '0x4fb2ada' (comma/semicolon separated)." },
+        unity_version: { type: "string" },
+        output_path: { type: "string", description: `Ghidra package folder. Default: ${defaultOutDir()}` },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path", "va"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-data", a.va];
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
+    },
+  },
+  {
+    name: "il2cpp_clean",
+    description:
+      "Clean Ghidra IL2CPP pseudocode for reading (CLI '-m il2cpp --il2cpp-clean'). Strips the " +
+      "boilerplate IL2CPP puts in every function (class-init guards, metadata-init thunks, ctor " +
+      "scaffolding, empty declarations) by SHAPE (survives a rebased binary) and annotates hidden " +
+      "float/DAT_ constants inline. Point clean_path at a .c file exported from Ghidra, or a folder of them.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder or IL2CPP binary (backs DAT_ reads)." },
+        clean_path: { type: "string", description: "A .c pseudocode file, or a folder of *.c files (comma/semicolon separated for multiple)." },
+        raw: { type: "boolean", description: "Keep structural noise; only annotate constants." },
+        unity_version: { type: "string" },
+        output_path: { type: "string", description: `Ghidra package folder. Default: ${defaultOutDir()}` },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path", "clean_path"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-clean", a.clean_path];
+      if (a.raw) args.push("--il2cpp-clean-raw");
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
+    },
+  },
+  {
+    name: "il2cpp_suggest",
+    description:
+      "Suggest which IL2CPP types/methods to decompile for a feature you're reversing " +
+      "(CLI '-m il2cpp --il2cpp-suggest'). Give keywords (or a text/script file to extract them from) " +
+      "and it fuzzy-matches type/method names from the package and returns ranked Type$$ prefixes " +
+      "(plus specific Type$$Method hits). Bridges 'I want the parry logic' -> the actual symbol names.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder or IL2CPP binary." },
+        keywords: { type: "string", description: "Keyword(s) e.g. 'adrenaline,parry,damage', OR a path to a text/script file to pull tokens from." },
+        use_fuzzy: { type: "boolean", description: "Typo-tolerant matching (ranks near-miss names by similarity)." },
+        unity_version: { type: "string" },
+        output_path: { type: "string", description: `Ghidra package folder. Default: ${defaultOutDir()}` },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path", "keywords"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-suggest", a.keywords];
+      if (a.use_fuzzy) args.push("--il2cpp-fuzzy");
       if (a.unity_version) args.push("--unity-version", a.unity_version);
       return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
     },
@@ -715,7 +822,7 @@ async function handle(msg) {
       reply(id, {
         protocolVersion: params?.protocolVersion || "2025-06-18",
         capabilities: { tools: {} },
-        serverInfo: { name: "unityrift-cli", version: "0.4.0" },
+        serverInfo: { name: "unityrift-cli", version: "0.5.0" },
       });
       return;
     case "notifications/initialized":

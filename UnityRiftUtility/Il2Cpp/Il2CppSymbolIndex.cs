@@ -139,9 +139,13 @@ namespace UnityRift
             return ans;
         }
 
-        /// <summary>Name search over methods and metadata symbols (substring, or regex). Case-insensitive.</summary>
-        public JArray FindByName(string query, bool regex, int max = 50)
+        /// <summary>Name search over methods and metadata symbols (substring, or regex). Case-insensitive.
+        /// With <paramref name="fuzzy"/>, also matches near-misses (typo-tolerant) and ranks by similarity.</summary>
+        public JArray FindByName(string query, bool regex, int max = 50, bool fuzzy = false)
         {
+            if (fuzzy && !regex)
+                return FindFuzzy(query, max);
+
             Func<string, bool> match;
             if (regex)
             {
@@ -169,6 +173,128 @@ namespace UnityRift
             }
             return arr;
         }
+
+        private JArray FindFuzzy(string query, int max)
+        {
+            var q = query.ToLowerInvariant();
+            var scored = new List<(double score, Method m)>();
+            foreach (var m in Methods)
+            {
+                if (m.Name == null) continue;
+                var name = m.Name.ToLowerInvariant();
+                var contains = name.IndexOf(q, StringComparison.Ordinal) >= 0;
+                var s = Ratio(q, Leaf(name));
+                if (contains) s += 1.0;
+                if (s >= 0.6) scored.Add((s, m));
+            }
+            return new JArray(scored.OrderByDescending(x => x.score).Take(max).Select(x =>
+                new JObject { ["kind"] = "method", ["name"] = x.m.Name, ["rva"] = "0x" + x.m.Rva.ToString("X"), ["va"] = Va(x.m.Rva), ["signature"] = x.m.Signature, ["score"] = Math.Round(x.score, 3) }));
+        }
+
+        #region fuzzy suggestion
+
+        private static readonly HashSet<string> StopWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "the","and","for","with","this","that","from","into","your","have","will","value","float","int","bool",
+            "void","null","true","false","return","string","object","class","struct","public","private","static",
+            "get","set","update","start","awake","ctor","field","backing","enum","using","namespace",
+        };
+
+        /// <summary>The type/method leaf name (drops namespace, keeps the identifier we compare against).</summary>
+        private static string Leaf(string name)
+        {
+            var t = name.Split(new[] { "$$" }, StringSplitOptions.None)[0];
+            var dot = t.LastIndexOf('.');
+            return dot >= 0 ? t.Substring(dot + 1) : t;
+        }
+
+        private static string TypeOf(string name)
+        {
+            var i = name.IndexOf("$$", StringComparison.Ordinal);
+            return i < 0 ? name : name.Substring(0, i);
+        }
+
+        /// <summary>difflib-style similarity ratio in [0,1] via normalised Levenshtein distance.</summary>
+        public static double Ratio(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return 0;
+            var n = a.Length; var m = b.Length;
+            var d = new int[m + 1];
+            for (var j = 0; j <= m; j++) d[j] = j;
+            for (var i = 1; i <= n; i++)
+            {
+                var prev = d[0];
+                d[0] = i;
+                for (var j = 1; j <= m; j++)
+                {
+                    var tmp = d[j];
+                    d[j] = Math.Min(Math.Min(d[j] + 1, d[j - 1] + 1), prev + (a[i - 1] == b[j - 1] ? 0 : 1));
+                    prev = tmp;
+                }
+            }
+            var dist = d[m];
+            var max = Math.Max(n, m);
+            return max == 0 ? 1.0 : 1.0 - (double)dist / max;
+        }
+
+        /// <summary>Pulls domain tokens from arbitrary text (a script, notes, keywords): CamelCase parts and long identifiers.</summary>
+        public static List<string> KeywordsFromText(string text)
+        {
+            var toks = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (Match m in Regex.Matches(text, @"[A-Z][a-z]+(?:[A-Z][a-z]+)+"))
+                foreach (Match p in Regex.Matches(m.Value, @"[A-Z][a-z]+"))
+                    if (p.Value.Length >= 4) toks.Add(p.Value.ToLowerInvariant());
+            foreach (Match m in Regex.Matches(text, @"[A-Za-z_]{4,}"))
+            {
+                var w = m.Value.Trim('_').ToLowerInvariant();
+                if (w.Length >= 4 && !StopWords.Contains(w)) toks.Add(w);
+            }
+            return toks.ToList();
+        }
+
+        /// <summary>
+        /// Given keywords (or tokens extracted from text), suggests IL2CPP types/methods worth
+        /// decompiling — ranked candidate <c>Type$$</c> prefixes (and optionally <c>Type$$Method</c> hits),
+        /// ready to paste into a names file or feed to Ghidra.
+        /// </summary>
+        public JObject Suggest(IEnumerable<string> keywords, int top = 8, bool methods = false, bool fuzzy = false)
+        {
+            var kws = keywords.Select(k => k.ToLowerInvariant()).Where(k => k.Length >= 4 && !StopWords.Contains(k)).Distinct().ToList();
+            var typeScore = new Dictionary<string, double>(StringComparer.Ordinal);
+            var methodScore = new Dictionary<string, double>(StringComparer.Ordinal);
+            foreach (var kw in kws)
+            {
+                var hits = new List<(double score, string name)>();
+                foreach (var m in Methods)
+                {
+                    if (m.Name == null) continue;
+                    var lname = m.Name.ToLowerInvariant();
+                    var contains = lname.Contains(kw);
+                    var r = Ratio(kw, Leaf(lname));
+                    var score = contains ? 1.0 + r : r;
+                    if (contains || (fuzzy && r >= 0.72)) hits.Add((score, m.Name));
+                }
+                hits.Sort((x, y) => y.score.CompareTo(x.score));
+                foreach (var (score, name) in hits.Take(top * 4))
+                {
+                    var t = TypeOf(name);
+                    typeScore[t] = Math.Max(typeScore.TryGetValue(t, out var s) ? s : 0, score);
+                    if (methods) methodScore[name] = score;
+                }
+            }
+            var types = typeScore.OrderByDescending(x => x.Value).Select(x => x.Key + "$$").ToList();
+            var result = new JObject
+            {
+                ["keywords"] = new JArray(kws),
+                ["typeCount"] = types.Count,
+                ["types"] = new JArray(types),
+            };
+            if (methods)
+                result["methods"] = new JArray(methodScore.OrderByDescending(x => x.Value).Take(top * 3).Select(x => x.Key));
+            return result;
+        }
+
+        #endregion
 
         public JArray FindStrings(string query, bool regex, int max = 50)
         {
