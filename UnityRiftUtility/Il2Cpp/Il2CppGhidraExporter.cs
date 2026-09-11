@@ -127,6 +127,7 @@ Files (one folder up):
   il2cpp.h           C struct layouts of every managed type (Foo_o object, Foo_Fields, Foo_c class, Foo_VTable, Foo_array)
   il2cpp_ghidra.h    il2cpp.h pre-processed for Ghidra (typedefs added, ': Parent_Fields' inheritance flattened)
   il2cpp_info.json   image base, pointer size, Unity/metadata versions, counts
+  il2cpp_types.json  per-type field offsets + enum value maps (from the dummy DLLs; used by --il2cpp-field / --il2cpp-enum)
 
 Ghidra workflow:
   1. Import GameAssembly.dll / libil2cpp.so into Ghidra and let auto-analysis finish.

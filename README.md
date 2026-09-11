@@ -12,7 +12,7 @@
 
 - **IL2CPP support** via [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL): `GameAssembly.dll` / `libil2cpp.so` + `global-metadata.dat` are detected automatically, dummy assemblies are generated and cached, and they feed the .NET explorer and MonoBehaviour field parsing.
 - **.NET class explorer** — browse the game's managed assemblies as C#-like stubs (with optional IL). GUI tab **".NET Classes"**, CLI `-m dotnet`, MCP `dotnet_list` / `dotnet_type`.
-- **Ghidra / Il2CppDumper package** (`-m il2cpp`) — generates `script.json`, `il2cpp.h`, `il2cpp_ghidra.h` and bundled `ghidra.py` / `ghidra_with_struct.py` scripts (patched for Ghidra Jython 2.7 **and** 11.3+ PyGhidra) so functions get named the same way [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) does. Plus `--il2cpp-lookup` (name ↔ address, `--il2cpp-fuzzy` for typo tolerance), `--il2cpp-strings`, `--il2cpp-decode` / `--il2cpp-data` (recover the float/double/int constants Ghidra hides as raw hex or `DAT_` loads), `--il2cpp-clean` (strip IL2CPP boilerplate from decompiled functions + annotate constants), `--il2cpp-suggest` (map a feature to the `Type$$` symbols worth decompiling), and `--il2cpp-dummy-dll` (export the dummy .NET assemblies to `<out>/DummyDll` for dnSpy / ILSpy / dotPeek).
+- **Ghidra / Il2CppDumper package** (`-m il2cpp`) — generates `script.json`, `il2cpp.h`, `il2cpp_ghidra.h` and bundled `ghidra.py` / `ghidra_with_struct.py` scripts (patched for Ghidra Jython 2.7 **and** 11.3+ PyGhidra) so functions get named the same way [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) does. Plus `--il2cpp-lookup` (name ↔ address, `--il2cpp-fuzzy` for typo tolerance), `--il2cpp-strings`, `--il2cpp-decode` / `--il2cpp-data` (recover the float/double/int constants Ghidra hides as raw hex or `DAT_` loads), `--il2cpp-clean` (strip IL2CPP boilerplate from decompiled functions, rewrite `FUN_`/`DAT_` to managed names, annotate constants), `--il2cpp-suggest` (map a feature to the `Type$$` symbols worth decompiling), `--il2cpp-field` / `--il2cpp-enum` (turn `x + 0x24` and `state == 3` into field names and enum constants), `--il2cpp-frida` (generate a runtime hook script), `--il2cpp-apply-plan` (batch rename/retype plan for Ghidra's MCP), and `--il2cpp-dummy-dll` (export the dummy .NET assemblies to `<out>/DummyDll` for dnSpy / ILSpy / dotPeek).
 - **Type-tree database (TPK)** — decode type-tree-stripped builds via a bundled `classdata.tpk` (`--typetree-db`, auto-loaded when present).
 - **glTF 2.0 export** (`.glb` / `.gltf`) as an FBX-free alternative (meshes, skinning, materials + embedded textures, node animations).
 - **Godot 4 export** (`-m godot`) — converts a game's **materials** and **particle FX** into Godot 4 scaffolds:
@@ -132,8 +132,15 @@ Recover the constants Ghidra hides as raw hex, clean up a decompiled function, a
 ```
 UnityRiftCLI <game folder> -m il2cpp --il2cpp-decode 0x3f19999a3e99999a   # -> (0.3f, 0.6f)
 UnityRiftCLI <game folder> -m il2cpp --il2cpp-data 0x4fb2ada             # read the DAT_ literal from the binary
-UnityRiftCLI <game folder> -m il2cpp --il2cpp-clean FUN_1800abcd.c       # strip boilerplate + annotate constants
+UnityRiftCLI <game folder> -m il2cpp --il2cpp-clean FUN_1800abcd.c       # strip boilerplate, symbolize FUN_/DAT_, annotate constants
 UnityRiftCLI <game folder> -m il2cpp --il2cpp-suggest parry,adrenaline   # ranked Type$$ symbols to decompile
+```
+Read the pointer math and confirm behaviour at runtime:
+```
+UnityRiftCLI <game folder> -m il2cpp --il2cpp-field PlayerController@0x24 # which field is at offset 0x24
+UnityRiftCLI <game folder> -m il2cpp --il2cpp-enum CombatState@3         # which enum constant is 3
+UnityRiftCLI <game folder> -m il2cpp --il2cpp-frida "PlayerController$$TakeDamage"  # -> il2cpp/hooks.js (Frida)
+UnityRiftCLI <game folder> -m il2cpp --il2cpp-apply-plan PlayerController # {va,name,prototype} batch for Ghidra's MCP
 ```
 
 ### Advanced Samples
