@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# @runtime Jython
 # Based on Il2CppDumper il2cpp_header_to_ghidra.py (https://github.com/Perfare/Il2CppDumper), MIT License, Copyright (c) 2016 Perfare.
 # Standalone helper: UnityRift already writes il2cpp_ghidra.h next to il2cpp.h, so this is only needed
 # if you want to re-run the transform yourself.
