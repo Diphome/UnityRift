@@ -23,7 +23,6 @@ namespace UnityRiftGUI
         private ToolStripMenuItem dotnetExportAssemblyItem;
         private ToolStripMenuItem dotnetExportAllItem;
         private ToolStripMenuItem dotnetExportDllItem;
-        private ToolStripMenuItem dotnetExportGhidraItem;
 
         private void InitDotNetExport(Panel topPanel)
         {
@@ -36,8 +35,6 @@ namespace UnityRiftGUI
             dotnetExportAllItem.Click += async (s, e) => await ExportDotNetStubsAsync(assemblyLoader.Modules.Values);
             dotnetExportDllItem = new ToolStripMenuItem("Export assembly files (.dll)");
             dotnetExportDllItem.Click += async (s, e) => await ExportDotNetAssemblyFilesAsync();
-            dotnetExportGhidraItem = new ToolStripMenuItem("Export Ghidra / Il2CppDumper package");
-            dotnetExportGhidraItem.Click += async (s, e) => await ExportIl2CppGhidraPackageAsync();
             dotnetExportMenu.Items.AddRange(new ToolStripItem[]
             {
                 dotnetExportTypeItem,
@@ -45,7 +42,6 @@ namespace UnityRiftGUI
                 dotnetExportAllItem,
                 new ToolStripSeparator(),
                 dotnetExportDllItem,
-                dotnetExportGhidraItem,
             });
             dotnetExportMenu.Opening += (s, e) =>
             {
@@ -54,9 +50,6 @@ namespace UnityRiftGUI
                 dotnetExportAssemblyItem.Enabled = loaded && SelectedDotNetModule() != null;
                 dotnetExportAllItem.Enabled = loaded;
                 dotnetExportDllItem.Enabled = loaded;
-                dotnetExportGhidraItem.Enabled = loaded && assemblyLoader.IsIl2CppStubs
-                    && !string.IsNullOrEmpty(assemblyLoader.LoadedPath)
-                    && Il2CppSymbolIndex.Exists(assemblyLoader.LoadedPath);
             };
 
             // Merge the .NET export actions into the main Export menu as a submenu, so the
@@ -70,11 +63,9 @@ namespace UnityRiftGUI
             mAll.Click += async (s, e) => await ExportDotNetStubsAsync(assemblyLoader.Modules.Values);
             var mDll = new ToolStripMenuItem("Export assembly files (.dll)");
             mDll.Click += async (s, e) => await ExportDotNetAssemblyFilesAsync();
-            var mGhidra = new ToolStripMenuItem("Export Ghidra / Il2CppDumper package");
-            mGhidra.Click += async (s, e) => await ExportIl2CppGhidraPackageAsync();
             dotnetExportMenuItem.DropDownItems.AddRange(new ToolStripItem[]
             {
-                mType, mAsm, mAll, new ToolStripSeparator(), mDll, mGhidra,
+                mType, mAsm, mAll, new ToolStripSeparator(), mDll,
             });
             dotnetExportMenuItem.DropDownOpening += (s, e) =>
             {
@@ -83,9 +74,6 @@ namespace UnityRiftGUI
                 mAsm.Enabled = loaded && SelectedDotNetModule() != null;
                 mAll.Enabled = loaded;
                 mDll.Enabled = loaded;
-                mGhidra.Enabled = loaded && assemblyLoader.IsIl2CppStubs
-                    && !string.IsNullOrEmpty(assemblyLoader.LoadedPath)
-                    && Il2CppSymbolIndex.Exists(assemblyLoader.LoadedPath);
             };
             exportToolStripMenuItem.DropDownItems.Add(new ToolStripSeparator());
             exportToolStripMenuItem.DropDownItems.Add(dotnetExportMenuItem);
@@ -191,24 +179,6 @@ namespace UnityRiftGUI
             var result = await Task.Run(() => DotNetExporter.ExportAssemblyFiles(list, folder, (cur, total) => Progress.Report(cur, total), Logger.Warning));
             Logger.Info($"Copied {result.Files} assembly file(s) to \"{folder}\"" + (result.Failed > 0 ? $" ({result.Failed} failed)" : ""));
             if (Properties.Settings.Default.openAfterExport && result.Files > 0)
-                OpenFolderInExplorer(folder);
-        }
-
-        private async Task ExportIl2CppGhidraPackageAsync()
-        {
-            var src = assemblyLoader.LoadedPath;
-            if (string.IsNullOrEmpty(src) || !Il2CppSymbolIndex.Exists(src))
-            {
-                Logger.Warning("No Ghidra package in the loaded IL2CPP cache. Re-load the IL2CPP binary to regenerate it.");
-                return;
-            }
-            var folder = AskDotNetExportFolder("Export Ghidra / Il2CppDumper package to");
-            if (folder == null)
-                return;
-            var copied = await Task.Run(() => Il2CppAssemblyProvider.ExportGhidraPackage(src, folder));
-            Logger.Info($"Copied {copied.Count} Ghidra helper file(s) to \"{folder}\"");
-            Logger.Info("Ghidra: import GameAssembly.dll / libil2cpp.so, File > Parse C Source > il2cpp_ghidra.h, then Script Manager → add the 'ghidra' folder and run ghidra.py (or ghidra_with_struct.py) and pick script.json.");
-            if (Properties.Settings.Default.openAfterExport && copied.Count > 0)
                 OpenFolderInExplorer(folder);
         }
     }

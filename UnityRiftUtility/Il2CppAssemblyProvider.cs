@@ -371,37 +371,6 @@ namespace UnityRift
         /// <summary>Folder of the cached package for the game, or null when not generated yet.</summary>
         public static string GetCachedFolder(Il2CppGame game) => IsCached(game) ? GetCacheFolder(game) : null;
 
-        /// <summary>
-        /// Copies the reverse-engineering package (script.json, stringliteral.json, il2cpp.h, il2cpp_ghidra.h,
-        /// il2cpp_info.json and the ghidra/ scripts) from the cache folder to <paramref name="destFolder"/>.
-        /// Returns the copied file paths.
-        /// </summary>
-        public static List<string> ExportGhidraPackage(string cacheFolder, string destFolder)
-        {
-            Directory.CreateDirectory(destFolder);
-            var copied = new List<string>();
-            foreach (var name in new[] { "script.json", "stringliteral.json", "il2cpp.h", "il2cpp_ghidra.h", "il2cpp_info.json", "il2cpp_types.json" })
-            {
-                var src = Path.Combine(cacheFolder, name);
-                if (!File.Exists(src)) continue;
-                var dst = Path.Combine(destFolder, name);
-                File.Copy(src, dst, true);
-                copied.Add(dst);
-            }
-            var scripts = Path.Combine(cacheFolder, "ghidra");
-            if (Directory.Exists(scripts))
-            {
-                var dstDir = Path.Combine(destFolder, "ghidra");
-                Directory.CreateDirectory(dstDir);
-                foreach (var f in Directory.GetFiles(scripts))
-                {
-                    var dst = Path.Combine(dstDir, Path.GetFileName(f));
-                    File.Copy(f, dst, true);
-                    copied.Add(dst);
-                }
-            }
-            return copied;
-        }
 
         /// <summary>
         /// Copies the generated dummy .NET assemblies (the *.dll files Cpp2IL produced) from the cache
@@ -495,18 +464,6 @@ namespace UnityRift
                 foreach (var l in layers) l.Process(ctx, null);
 
                 new Cpp2IL.Core.OutputFormats.AsmResolverDllOutputFormatDefault().DoOutput(ctx, folder);
-
-                // Ghidra / reverse-engineering helpers (script.json, il2cpp.h, ...) while LibCpp2IL is still loaded.
-                try
-                {
-                    var swG = System.Diagnostics.Stopwatch.StartNew();
-                    var info = Il2CppGhidraExporter.Write(folder, game.BinaryPath, game.MetadataPath, version.ToString(), log);
-                    log?.Invoke($"[il2cpp] Wrote script.json / il2cpp.h: {info.Methods} methods (+{info.GenericMethods} generic), {info.Strings} strings, {info.MetadataSymbols + info.MetadataMethods} metadata symbols, {info.Structs} structs, image base {info.ImageBase} ({swG.ElapsedMilliseconds} ms)");
-                }
-                catch (Exception ex)
-                {
-                    log?.Invoke($"[il2cpp] Ghidra helper generation failed (dummy DLLs are still usable): {ex}");
-                }
 
                 // Cpp2IL may nest the DLLs in a sub-folder; flatten so the loader sees one folder.
                 var dlls = Directory.GetFiles(folder, "*.dll", SearchOption.AllDirectories);
