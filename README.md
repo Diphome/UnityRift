@@ -2,7 +2,7 @@
 
 **UnityRift** is a toolkit for **reverse-engineering and porting Unity games** — with a full **Unity → Godot 4 pipeline** at its center: export whole scenes (meshes, materials, particles, lights, cameras) and MonoBehaviour script stubs straight into a ready-to-open Godot project, recover shaders and IL2CPP/Mono code, and drive it all from the GUI, the CLI, or an MCP server for AI agents.
 
-> **Origins.** UnityRift began as a fork of aelurum's [AssetStudioMod](https://github.com/aelurum/AssetStudio) (itself a fork of Perfare's [AssetStudio](https://github.com/Perfare/AssetStudio)) — huge thanks to both. It has since grown into a **distinct project** with its own direction (the Godot pipeline, IL2CPP/Ghidra tooling, a .NET class explorer, an MCP server, and many core fixes) that no longer resembles a simple fork. The original asset-extraction features are still here and credited below.
+> **Origins.** UnityRift began as a fork of aelurum's [AssetStudioMod](https://github.com/aelurum/AssetStudio) (itself a fork of Perfare's [AssetStudio](https://github.com/Perfare/AssetStudio)) — huge thanks to both. It has since grown into a **distinct project** with its own direction (the Godot pipeline, IL2CPP/Cpp2IL support, a .NET class explorer, an MCP server, and many core fixes) that no longer resembles a simple fork. The original asset-extraction features are still here and credited below.
 
 **Neither the repository, nor the tool, nor its authors are affiliated with, sponsored, or authorized by Unity Technologies or its affiliates.** UnityRift extracts and inspects assets for interoperability, research, and preservation; respect the rights and terms of any content you process.
 
@@ -12,7 +12,8 @@
 
 - **IL2CPP support** via [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL): `GameAssembly.dll` / `libil2cpp.so` + `global-metadata.dat` are detected automatically, dummy assemblies are generated and cached, and they feed the .NET explorer and MonoBehaviour field parsing.
 - **.NET class explorer** — browse the game's managed assemblies as C#-like stubs (with optional IL). GUI tab **".NET Classes"**, CLI `-m dotnet`, MCP `dotnet_list` / `dotnet_type`.
-- **Ghidra / Il2CppDumper package** (`-m il2cpp`) — generates `script.json`, `il2cpp.h`, `il2cpp_ghidra.h` and bundled `ghidra.py` / `ghidra_with_struct.py` scripts (patched for Ghidra Jython 2.7 **and** 11.3+ PyGhidra) so functions get named the same way [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) does. Plus `--il2cpp-lookup` (name ↔ address, `--il2cpp-fuzzy` for typo tolerance), `--il2cpp-strings`, `--il2cpp-decode` / `--il2cpp-data` (recover the float/double/int constants Ghidra hides as raw hex or `DAT_` loads), `--il2cpp-clean` (strip IL2CPP boilerplate from decompiled functions, rewrite `FUN_`/`DAT_` to managed names, annotate constants), `--il2cpp-suggest` (map a feature to the `Type$$` symbols worth decompiling), `--il2cpp-field` / `--il2cpp-enum` (turn `x + 0x24` and `state == 3` into field names and enum constants), `--il2cpp-frida` (generate a runtime hook script), `--il2cpp-apply-plan` (batch rename/retype plan for Ghidra's MCP), and `--il2cpp-dummy-dll` (export the dummy .NET assemblies to `<out>/DummyDll` for dnSpy / ILSpy / dotPeek).
+- **Dummy .NET assemblies** for IL2CPP games — generated with [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) and exportable to `<out>/DummyDll` (`-m dotnet --il2cpp --dotnet-export-dll`) to open in dnSpy / ILSpy / dotPeek, and used internally to read custom MonoBehaviour fields and Godot script stubs.
+  > **Native reverse-engineering** of the compiled binary (Ghidra package, decompilation helpers, Frida hooks, protocol/wire-layout analysis) is **not** part of UnityRift — it lives in a separate project, **unityWyvern**. UnityRift stays focused on reading and converting Unity content.
 - **Type-tree database (TPK)** — decode type-tree-stripped builds via a bundled `classdata.tpk` (`--typetree-db`, auto-loaded when present).
 - **glTF 2.0 export** (`.glb` / `.gltf`) as an FBX-free alternative (meshes, skinning, materials + embedded textures, node animations).
 - **Godot 4 export** (`-m godot`) — converts a game's **materials** and **particle FX** into Godot 4 scaffolds:
@@ -21,7 +22,7 @@
    - Also on the MCP as `godot_export`.
 - **Godot 4 scene export** (`-m godotscene`) — turns a Unity scene/prefab into a ready-to-open Godot 4 project: each mesh root is exported as glTF (correct orientation, materials, skinning, animations) and a `scene.tscn` instances them under a `Node3D`, plus native Godot nodes for **ParticleSystems** (GPUParticles3D), **Lights** (Directional/Omni/Spot Light3D) and **Cameras** (Camera3D) placed at their world transform, and **MonoBehaviour script stubs**: objects inside a mesh are listed in `scripts_manifest.json` with a shipped `attach_scripts.gd` EditorScript that binds each stub onto the real imported glTF node (run it in Godot with the scene open); objects with no mesh get `<Object>_Scripts` holder nodes (objects parented to bones are handled via `BoneAttachment3D`). Add `--godot-attach-plugin` to instead ship an editor plugin that attaches the stubs automatically when the scene is opened. Generated with a `project.godot`. Point it at a `levelN` file, a prefab bundle, or the game's `*_Data` folder; open the output in Godot 4 and run `scene.tscn`. Also on the MCP as `godot_scene_export`. (Validated against Godot 4.7.)
 - **Godot 4 script stubs** (`-m godotscripts`) — one GDScript stub per MonoBehaviour class, with its serialized fields as `@export` vars (defaults captured from an instance), object references noted for manual wiring, and `_ready()`/`_process()` TODOs. Works for **Mono** (managed assemblies auto-detected) and **IL2CPP** (`--il2cpp`, Cpp2IL dummy assemblies). The Unity logic is not translated — this is scaffolding to port by hand. Also on the MCP as `godot_scripts_export`. (Stubs validated against Godot 4.7.)
-- **MCP server** (`tools/mcp/unityrift-mcp.mjs`) — exposes the CLI as tools so an agent can drive info/export/dump, the .NET explorer, and the IL2CPP/Ghidra workflow. For reversing IL2CPP with the UnityRift **and** Ghidra MCPs together, see the [agent playbook](docs/AGENT_GHIDRA_PLAYBOOK.md).
+- **MCP server** (`tools/mcp/unityrift-mcp.mjs`) — exposes the CLI as tools so an agent can drive info/export/dump, the .NET explorer, and the Godot pipeline.
 - **Animated model preview** in the GUI — select an Animator, pick a clip, play it with textured per-submesh rendering.
 - **Faster project loading** — parallel asset reads, direct type-tree→JSON streaming, and garbage-count guards.
 
@@ -119,29 +120,13 @@ UnityRiftCLI <asset folder path> -m splitObjects
 ```
 UnityRiftCLI <asset folder path> -m animator
 ```
-- Generate Il2CppDumper-compatible Ghidra helpers from an IL2CPP game (script.json, il2cpp.h, ghidra.py)
+- Generate dummy .NET assemblies from an IL2CPP game (for the .NET explorer / MonoBehaviour fields)
 ```
-UnityRiftCLI <game folder> -m il2cpp -o <output folder>
+UnityRiftCLI <game folder> -m dotnet --il2cpp
 ```
-Look up a method/address while decompiling (add `--il2cpp-fuzzy` for typo-tolerant name matching):
-```
-UnityRiftCLI <game folder> -m il2cpp --il2cpp-lookup PlayerController$$Update
-UnityRiftCLI <game folder> -m il2cpp --il2cpp-lookup 0x1A2B3C
-```
-Recover the constants Ghidra hides as raw hex, clean up a decompiled function, and find symbols to look at:
-```
-UnityRiftCLI <game folder> -m il2cpp --il2cpp-decode 0x3f19999a3e99999a   # -> (0.3f, 0.6f)
-UnityRiftCLI <game folder> -m il2cpp --il2cpp-data 0x4fb2ada             # read the DAT_ literal from the binary
-UnityRiftCLI <game folder> -m il2cpp --il2cpp-clean FUN_1800abcd.c       # strip boilerplate, symbolize FUN_/DAT_, annotate constants
-UnityRiftCLI <game folder> -m il2cpp --il2cpp-suggest parry,adrenaline   # ranked Type$$ symbols to decompile
-```
-Read the pointer math and confirm behaviour at runtime:
-```
-UnityRiftCLI <game folder> -m il2cpp --il2cpp-field PlayerController@0x24 # which field is at offset 0x24
-UnityRiftCLI <game folder> -m il2cpp --il2cpp-enum CombatState@3         # which enum constant is 3
-UnityRiftCLI <game folder> -m il2cpp --il2cpp-frida "PlayerController$$TakeDamage"  # -> il2cpp/hooks.js (Frida)
-UnityRiftCLI <game folder> -m il2cpp --il2cpp-apply-plan PlayerController # {va,name,prototype} batch for Ghidra's MCP
-```
+> Native reverse-engineering of the compiled binary (Ghidra package, decompilation helpers,
+> Frida hooks, protocol/wire-layout analysis) lives in a **separate project, unityWyvern** —
+> UnityRift focuses on reading and converting Unity content (assets, scenes, effects, Godot).
 
 ### Advanced Samples
 - Export image assets converted to webp format to a specified output folder
@@ -226,16 +211,9 @@ When you select an asset of the MonoBehaviour type for the first time, UnityRift
 
 #### For Il2Cpp
 
-UnityRift generates dummy assemblies itself: **File → Load IL2CPP binary**, or just load the game folder (GameAssembly.dll / libil2cpp.so + `global-metadata.dat` are detected automatically). The first run uses [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) and is cached.
+UnityRift generates dummy assemblies itself: **File → Load IL2CPP binary**, or just load the game folder (GameAssembly.dll / libil2cpp.so + `global-metadata.dat` are detected automatically). The first run uses [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) and is cached. This lets UnityRift read custom MonoBehaviour fields and produce Godot script stubs for IL2CPP games.
 
-To name functions in Ghidra the same way [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) does:
-
-1. CLI: `UnityRiftCLI <game folder> -m il2cpp -o <out>` (or GUI **.NET Classes → Export → Export Ghidra / Il2CppDumper package**).
-2. Import `GameAssembly.dll` / `libil2cpp.so` into Ghidra and let auto-analysis finish.
-3. **File → Parse C Source...** and add `<out>/il2cpp/il2cpp_ghidra.h`.
-4. **Window → Script Manager** → add `<out>/il2cpp/ghidra` as a script directory, run `ghidra.py` (names) or `ghidra_with_struct.py` (names + types), and pick `script.json`.
-
-Scripts work in Ghidra's Jython 2.7 and in Ghidra 11.3+ PyGhidra (Python 3). Addresses in `script.json` are RVAs; the scripts add `currentProgram.getImageBase()`.
+> Reverse-engineering the native binary in Ghidra (the Il2CppDumper-style package, decompilation helpers, Frida hooks, wire-layout analysis) is handled by the separate **unityWyvern** project, not UnityRift.
 
 ## Build
 
