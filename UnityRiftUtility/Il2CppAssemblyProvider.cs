@@ -380,7 +380,7 @@ namespace UnityRift
         {
             Directory.CreateDirectory(destFolder);
             var copied = new List<string>();
-            foreach (var name in new[] { "script.json", "stringliteral.json", "il2cpp.h", "il2cpp_ghidra.h", "il2cpp_info.json" })
+            foreach (var name in new[] { "script.json", "stringliteral.json", "il2cpp.h", "il2cpp_ghidra.h", "il2cpp_info.json", "il2cpp_types.json" })
             {
                 var src = Path.Combine(cacheFolder, name);
                 if (!File.Exists(src)) continue;

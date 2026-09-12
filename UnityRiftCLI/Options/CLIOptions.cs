@@ -166,6 +166,10 @@ namespace UnityRiftCLI.Options
         public static Option<List<string>> o_il2cppData;
         public static Option<List<string>> o_il2cppClean;
         public static Option<List<string>> o_il2cppSuggest;
+        public static Option<List<string>> o_il2cppField;
+        public static Option<List<string>> o_il2cppEnum;
+        public static Option<List<string>> o_il2cppFrida;
+        public static Option<List<string>> o_il2cppApplyPlan;
         public static Option<bool> f_il2cppFuzzy;
         public static Option<bool> f_il2cppCleanRaw;
         public static Option<bool> f_il2cppDummyDll;
@@ -725,6 +729,47 @@ namespace UnityRiftCLI.Options
                     "(CamelCase / long identifiers are extracted from a file). Prints ranked Type$$ prefixes.\n" +
                     "Combine with --il2cpp-fuzzy for typo-tolerant matching. Only for \"-m il2cpp\".\n",
                 optionExample: "Example: \"-m il2cpp --il2cpp-suggest adrenaline,parry,damage\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp
+            );
+            o_il2cppField = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--il2cpp-field <Type[@offset]>",
+                optionDescription: "Resolve a struct field: give a type for its full offset layout, or 'Type@0x24' for the\n" +
+                    "field at a byte offset (turns '*(int *)(param_1 + 0x24)' into a field name/type).\n" +
+                    "Needs il2cpp_types.json (built from the dummy DLLs). Only for \"-m il2cpp\".\n" +
+                    "*Multiple queries separated by ';' (values use '@', so ',' would split the offset)\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-field PlayerController@0x24\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp
+            );
+            o_il2cppEnum = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--il2cpp-enum <Type[@value]>",
+                optionDescription: "Resolve an enum: give a type for all value->name pairs, or 'Type@3' for the name of a\n" +
+                    "value (also decomposes flags). Turns 'if (state == 3)' into a constant name.\n" +
+                    "Needs il2cpp_types.json. Only for \"-m il2cpp\". *Multiple queries separated by ';'\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-enum CombatState@3\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp
+            );
+            o_il2cppFrida = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--il2cpp-frida <name|0xRVA>",
+                optionDescription: "Generate a ready-to-run Frida script that hooks the matching method(s) by RVA and logs\n" +
+                    "typed args/return (written to <output>/il2cpp/hooks.js). Confirms behaviour at runtime.\n" +
+                    "Only for \"-m il2cpp\". *Multiple queries separated by ',' or ';'\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-frida PlayerController$$TakeDamage\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp
+            );
+            o_il2cppApplyPlan = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--il2cpp-apply-plan <regex|*>",
+                optionDescription: "Emit a JSON batch of {va, name, prototype} for every method (or those matching a name\n" +
+                    "regex), to drive Ghidra rename+retype via its MCP or a script. Use '*' for all.\n" +
+                    "Only for \"-m il2cpp\".\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-apply-plan PlayerController\"\n",
                 optionHelpGroup: HelpGroups.Il2Cpp
             );
             f_il2cppFuzzy = new GroupedOption<bool>
@@ -1666,6 +1711,10 @@ namespace UnityRiftCLI.Options
                         case "--il2cpp-data":
                         case "--il2cpp-clean":
                         case "--il2cpp-suggest":
+                        case "--il2cpp-field":
+                        case "--il2cpp-enum":
+                        case "--il2cpp-frida":
+                        case "--il2cpp-apply-plan":
                             if (o_workMode.Value != WorkMode.Il2Cpp)
                             {
                                 Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. This option is only for \"-m il2cpp\".\n");
@@ -1677,7 +1726,11 @@ namespace UnityRiftCLI.Options
                                 case "--il2cpp-decode": o_il2cppDecode.Value.AddRange(ValueSplitter(value)); break;
                                 case "--il2cpp-data": o_il2cppData.Value.AddRange(ValueSplitter(value)); break;
                                 case "--il2cpp-clean": o_il2cppClean.Value.AddRange(ValueSplitter(value)); break;
-                                default: o_il2cppSuggest.Value.AddRange(ValueSplitter(value)); break;
+                                case "--il2cpp-suggest": o_il2cppSuggest.Value.AddRange(ValueSplitter(value)); break;
+                                case "--il2cpp-field": o_il2cppField.Value.AddRange(ValueSplitter(value)); break;
+                                case "--il2cpp-enum": o_il2cppEnum.Value.AddRange(ValueSplitter(value)); break;
+                                case "--il2cpp-frida": o_il2cppFrida.Value.AddRange(ValueSplitter(value)); break;
+                                default: o_il2cppApplyPlan.Value.Add(value); break;
                             }
                             break;
                         case "--typetree-db":

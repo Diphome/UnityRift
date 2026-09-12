@@ -55,6 +55,7 @@ namespace UnityRift
             idx.Methods.Sort((a, b) => a.Rva.CompareTo(b.Rva));
             idx.Symbols.Sort((a, b) => a.Rva.CompareTo(b.Rva));
             idx.Strings.Sort((a, b) => a.Rva.CompareTo(b.Rva));
+            idx.LoadTypes();
             return idx;
         }
 
@@ -313,6 +314,159 @@ namespace UnityRift
             {
                 if (arr.Count >= max) break;
                 arr.Add(new JObject { ["value"] = s.Value, ["rva"] = "0x" + s.Rva.ToString("X"), ["va"] = Va(s.Rva) });
+            }
+            return arr;
+        }
+
+        #region address -> name (for symbolizing decompilation)
+
+        private Dictionary<ulong, string> _rvaToName;
+
+        private Dictionary<ulong, string> RvaToName()
+        {
+            if (_rvaToName != null) return _rvaToName;
+            var d = new Dictionary<ulong, string>();
+            foreach (var m in Methods) if (!d.ContainsKey(m.Rva)) d[m.Rva] = m.Name;
+            foreach (var s in Symbols) if (!d.ContainsKey(s.Rva)) d[s.Rva] = s.Name;
+            _rvaToName = d;
+            return d;
+        }
+
+        /// <summary>Managed name for a function/data address exactly at <paramref name="rva"/> (RVA), or null.</summary>
+        public string NameForRva(ulong rva) => RvaToName().TryGetValue(rva, out var n) ? n : null;
+
+        /// <summary>Managed name for a Ghidra address token that may be an RVA or a VA (image base applied), or null.</summary>
+        public string NameForToken(ulong value)
+        {
+            var n = NameForRva(value);
+            if (n != null) return n;
+            if (ImageBase != 0 && value >= ImageBase) return NameForRva(value - ImageBase);
+            return null;
+        }
+
+        #endregion
+
+        #region type layouts + enums (loaded from il2cpp_types.json)
+
+        public class FieldEntry { public string Name; public long Offset; public string Type; public bool Static; }
+        public class TypeEntry
+        {
+            public bool IsEnum;
+            public string Underlying;
+            public List<FieldEntry> Fields = new List<FieldEntry>();
+            public Dictionary<string, long> EnumValues = new Dictionary<string, long>();
+        }
+
+        public Dictionary<string, TypeEntry> Types { get; private set; }
+
+        public bool HasTypes => Types != null && Types.Count > 0;
+
+        public static readonly string TypesFileName = "il2cpp_types.json";
+
+        private void LoadTypes()
+        {
+            var path = Path.Combine(Folder, TypesFileName);
+            if (!File.Exists(path)) return;
+            Types = new Dictionary<string, TypeEntry>(StringComparer.OrdinalIgnoreCase);
+            var root = JObject.Parse(File.ReadAllText(path));
+            var types = root["types"] as JObject;
+            if (types == null) return;
+            foreach (var p in types.Properties())
+            {
+                var o = (JObject)p.Value;
+                var te = new TypeEntry
+                {
+                    IsEnum = o.Value<bool?>("enum") ?? false,
+                    Underlying = o.Value<string>("underlying"),
+                };
+                foreach (var f in o["fields"] as JArray ?? new JArray())
+                    te.Fields.Add(new FieldEntry
+                    {
+                        Name = f.Value<string>("name"),
+                        Offset = f.Value<long?>("offset") ?? -1,
+                        Type = f.Value<string>("type"),
+                        Static = f.Value<bool?>("static") ?? false,
+                    });
+                var ev = o["enumValues"] as JObject;
+                if (ev != null) foreach (var e in ev.Properties()) te.EnumValues[e.Name] = e.Value.Value<long>();
+                Types[p.Name] = te;
+            }
+        }
+
+        private TypeEntry FindType(string name)
+        {
+            if (Types == null) return null;
+            if (Types.TryGetValue(name, out var t)) return t;
+            // tolerate Type$$Method / trailing noise, and match on the leaf type name
+            var q = name.Split(new[] { "$$" }, StringSplitOptions.None)[0];
+            if (Types.TryGetValue(q, out t)) return t;
+            return Types.FirstOrDefault(kv => kv.Key.EndsWith("." + q, StringComparison.OrdinalIgnoreCase) || kv.Key.Equals(q, StringComparison.OrdinalIgnoreCase)).Value;
+        }
+
+        /// <summary>Full field layout of a type, or the field(s) at/covering a byte offset when <paramref name="offset"/> is given.</summary>
+        public JObject FieldLookup(string typeName, long? offset)
+        {
+            var result = new JObject { ["query"] = typeName };
+            if (!HasTypes) { result["error"] = $"no {TypesFileName} in package (generate it with the dummy DLLs)"; return result; }
+            var t = FindType(typeName);
+            if (t == null) { result["error"] = "type not found"; return result; }
+            IEnumerable<FieldEntry> fields = t.Fields;
+            if (offset.HasValue)
+            {
+                var exact = t.Fields.Where(f => f.Offset == offset.Value).ToList();
+                fields = exact.Count > 0 ? exact : t.Fields.Where(f => f.Offset >= 0 && f.Offset <= offset.Value).OrderByDescending(f => f.Offset).Take(1);
+                result["offset"] = "0x" + offset.Value.ToString("X");
+            }
+            result["fields"] = new JArray(fields.Select(f => new JObject
+            {
+                ["name"] = f.Name, ["offset"] = "0x" + f.Offset.ToString("X"), ["type"] = f.Type, ["static"] = f.Static,
+            }));
+            return result;
+        }
+
+        /// <summary>All values of an enum type, or the name(s) for a specific value when <paramref name="value"/> is given.</summary>
+        public JObject EnumLookup(string typeName, long? value)
+        {
+            var result = new JObject { ["query"] = typeName };
+            if (!HasTypes) { result["error"] = $"no {TypesFileName} in package (generate it with the dummy DLLs)"; return result; }
+            var t = FindType(typeName);
+            if (t == null || !t.IsEnum) { result["error"] = t == null ? "type not found" : "not an enum"; return result; }
+            result["underlying"] = t.Underlying;
+            if (value.HasValue)
+            {
+                result["value"] = value.Value;
+                result["names"] = new JArray(t.EnumValues.Where(kv => kv.Value == value.Value).Select(kv => kv.Key));
+                // also decompose as flags if no exact hit
+                if (((JArray)result["names"]).Count == 0 && value.Value != 0)
+                {
+                    var flags = t.EnumValues.Where(kv => kv.Value != 0 && (value.Value & kv.Value) == kv.Value).Select(kv => kv.Key).ToList();
+                    if (flags.Count > 0) result["flags"] = new JArray(flags);
+                }
+            }
+            else
+            {
+                result["values"] = new JObject(t.EnumValues.OrderBy(kv => kv.Value).Select(kv => new JProperty(kv.Key, kv.Value)));
+            }
+            return result;
+        }
+
+        #endregion
+
+        /// <summary>Every method with its VA and C prototype, optionally filtered by a name regex — a batch "apply plan"
+        /// for driving Ghidra (rename + set prototype) via its MCP or a script.</summary>
+        public JArray ApplyPlan(string nameRegex, int max = 100000)
+        {
+            Regex re = string.IsNullOrEmpty(nameRegex) || nameRegex == "*" ? null : new Regex(nameRegex, RegexOptions.IgnoreCase);
+            var arr = new JArray();
+            foreach (var m in Methods)
+            {
+                if (re != null && !re.IsMatch(m.Name)) continue;
+                if (arr.Count >= max) break;
+                arr.Add(new JObject
+                {
+                    ["va"] = Va(m.Rva), ["rva"] = "0x" + m.Rva.ToString("X"),
+                    ["name"] = m.Name, ["prototype"] = m.Signature,
+                });
             }
             return arr;
         }

@@ -534,8 +534,9 @@ const tools = [
     description:
       "Clean Ghidra IL2CPP pseudocode for reading (CLI '-m il2cpp --il2cpp-clean'). Strips the " +
       "boilerplate IL2CPP puts in every function (class-init guards, metadata-init thunks, ctor " +
-      "scaffolding, empty declarations) by SHAPE (survives a rebased binary) and annotates hidden " +
-      "float/DAT_ constants inline. Point clean_path at a .c file exported from Ghidra, or a folder of them.",
+      "scaffolding, empty declarations) by SHAPE (survives a rebased binary), rewrites Ghidra's " +
+      "FUN_/DAT_/PTR_ address symbols to their managed names, and annotates hidden float/DAT_ " +
+      "constants inline. Point clean_path at a .c file exported from Ghidra, or a folder of them.",
     inputSchema: {
       type: "object",
       properties: {
@@ -579,6 +580,111 @@ const tools = [
       const out = a.output_path || defaultOutDir();
       const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-suggest", a.keywords];
       if (a.use_fuzzy) args.push("--il2cpp-fuzzy");
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
+    },
+  },
+  {
+    name: "il2cpp_field",
+    description:
+      "Resolve an IL2CPP struct field (CLI '-m il2cpp --il2cpp-field'). Give a type name for its full " +
+      "offset layout, or 'Type@0x24' for the field at a byte offset — turns '*(int *)(param_1 + 0x24)' " +
+      "in a Ghidra decompilation into a field name and type. Backed by il2cpp_types.json (built from the " +
+      "dummy DLLs on first run).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder or IL2CPP binary." },
+        query: { type: "string", description: "Type name for full layout, or 'Type@0xOFFSET' for one offset (';'-separate multiple)." },
+        unity_version: { type: "string" },
+        output_path: { type: "string", description: `Ghidra package folder. Default: ${defaultOutDir()}` },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path", "query"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-field", a.query];
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
+    },
+  },
+  {
+    name: "il2cpp_enum",
+    description:
+      "Resolve an IL2CPP enum (CLI '-m il2cpp --il2cpp-enum'). Give a type name for all value->name pairs, " +
+      "or 'Type@3' for the name of a value (also decomposes bit flags) — turns 'if (state == 3)' into a " +
+      "readable constant. Backed by il2cpp_types.json.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder or IL2CPP binary." },
+        query: { type: "string", description: "Enum type name, or 'Type@VALUE' for one value (';'-separate multiple)." },
+        unity_version: { type: "string" },
+        output_path: { type: "string", description: `Ghidra package folder. Default: ${defaultOutDir()}` },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path", "query"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-enum", a.query];
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
+    },
+  },
+  {
+    name: "il2cpp_frida",
+    description:
+      "Generate a ready-to-run Frida script that hooks the matching IL2CPP method(s) by RVA and logs " +
+      "typed args/return (CLI '-m il2cpp --il2cpp-frida'; written to <output>/il2cpp/hooks.js and returned). " +
+      "The script resolves the module base itself, so it survives ASLR. Use it to confirm at runtime what a " +
+      "statically-reversed method actually does. Query is a method name (substring/regex) or 0xRVA.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder or IL2CPP binary." },
+        query: { type: "string", description: "Method name (Type$$Method, substring, or regex) or 0xRVA (',' or ';'-separate multiple)." },
+        use_regex: { type: "boolean", description: "Treat query as a regular expression." },
+        use_fuzzy: { type: "boolean", description: "Typo-tolerant name matching." },
+        unity_version: { type: "string" },
+        output_path: { type: "string", description: `Ghidra package folder (hooks.js goes to <output>/il2cpp). Default: ${defaultOutDir()}` },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path", "query"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-frida", a.query];
+      if (a.use_regex) args.push("--filter-with-regex");
+      if (a.use_fuzzy) args.push("--il2cpp-fuzzy");
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      const r = await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600));
+      if (r.ok) r.output += `\n\n[Frida script: ${out}/il2cpp/hooks.js]`;
+      return resultText(r);
+    },
+  },
+  {
+    name: "il2cpp_apply_plan",
+    description:
+      "Emit a JSON batch of {va, name, prototype} for every IL2CPP method (or those matching a name regex) " +
+      "(CLI '-m il2cpp --il2cpp-apply-plan'), to drive Ghidra rename + set-prototype in bulk — feed each " +
+      "entry to the Ghidra MCP (rename_function / set_function_prototype) so you can apply names to just a " +
+      "subset without re-running the whole ghidra.py. Use '*' for all methods.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder or IL2CPP binary." },
+        filter: { type: "string", description: "Name regex to select methods, or '*' for all." },
+        unity_version: { type: "string" },
+        output_path: { type: "string", description: `Ghidra package folder. Default: ${defaultOutDir()}` },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path", "filter"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-apply-plan", a.filter];
       if (a.unity_version) args.push("--unity-version", a.unity_version);
       return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
     },
@@ -822,7 +928,7 @@ async function handle(msg) {
       reply(id, {
         protocolVersion: params?.protocolVersion || "2025-06-18",
         capabilities: { tools: {} },
-        serverInfo: { name: "unityrift-cli", version: "0.5.0" },
+        serverInfo: { name: "unityrift-cli", version: "0.6.0" },
       });
       return;
     case "notifications/initialized":

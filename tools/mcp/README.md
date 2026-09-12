@@ -28,8 +28,12 @@ MCP **stdio** transport (newline-delimited JSON-RPC 2.0). No `npm install` neede
 | `il2cpp_strings` | Search IL2CPP string literals by text (`-m il2cpp --il2cpp-strings`). |
 | `il2cpp_decode` | Decode a raw hex immediate into the float/double/int constant(s) it really is (`--il2cpp-decode`). |
 | `il2cpp_data` | Resolve a `DAT_<addr>` literal-pool load to its constant by reading the binary (`--il2cpp-data`). |
-| `il2cpp_clean` | Strip IL2CPP boilerplate from Ghidra pseudocode and annotate constants inline (`--il2cpp-clean`). |
+| `il2cpp_clean` | Strip IL2CPP boilerplate from Ghidra pseudocode, rewrite `FUN_`/`DAT_` to managed names, annotate constants (`--il2cpp-clean`). |
 | `il2cpp_suggest` | Suggest `Type$$`/`Type$$Method` symbols to decompile from keywords or a script file (`--il2cpp-suggest`). |
+| `il2cpp_field` | Resolve a struct field by type + byte offset (`*(int*)(x+0x24)` → field name/type) (`--il2cpp-field`). |
+| `il2cpp_enum` | Resolve an enum value → name (and flags), or list all pairs (`--il2cpp-enum`). |
+| `il2cpp_frida` | Generate a Frida script hooking method(s) by RVA, logging typed args/return (`--il2cpp-frida`). |
+| `il2cpp_apply_plan` | Emit a `{va, name, prototype}` batch to drive Ghidra rename/retype via its MCP (`--il2cpp-apply-plan`). |
 | `asset_run` | Run the CLI with a verbatim argument list (escape hatch). |
 | `list_output` | Recursively list files in an output folder with sizes. |
 
@@ -56,9 +60,14 @@ the native binary into Ghidra, parse `il2cpp_ghidra.h`, then run the script and 
 (`il2cpp_lookup` takes `use_fuzzy` for typo-tolerant name matching). To read the actual
 game-logic numbers, `il2cpp_decode` turns a raw hex immediate into its float/double value
 and `il2cpp_data` reads the constant behind a `DAT_<addr>` load from the binary;
-`il2cpp_clean` makes a decompiled function readable (drops IL2CPP boilerplate, annotates
-constants); and `il2cpp_suggest` maps a feature you're chasing ("parry", "adrenaline") to
-the `Type$$` symbols worth decompiling.
+`il2cpp_clean` makes a decompiled function readable (drops IL2CPP boilerplate, rewrites
+`FUN_`/`DAT_` to managed names, annotates constants); and `il2cpp_suggest` maps a feature
+you're chasing ("parry", "adrenaline") to the `Type$$` symbols worth decompiling.
+`il2cpp_field` and `il2cpp_enum` turn pointer arithmetic (`x + 0x24`) and integer
+comparisons (`state == 3`) into field names and enum constants (from `il2cpp_types.json`,
+built from the dummy DLLs). `il2cpp_apply_plan` emits a `{va, name, prototype}` batch to
+drive Ghidra rename/retype through its MCP, and `il2cpp_frida` generates a runtime hook
+script to confirm what a statically-reversed method actually does.
 
 Every CLI-invoking tool returns the exact command line, the exit code, elapsed
 time, and the combined stdout+stderr (ANSI stripped) — i.e. the CLI's own log.

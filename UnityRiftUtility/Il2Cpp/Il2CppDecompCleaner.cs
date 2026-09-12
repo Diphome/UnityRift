@@ -42,6 +42,19 @@ namespace UnityRift
         private static readonly Regex StructRe = new Regex(string.Join("|", StructSkip), RegexOptions.Compiled);
         private static readonly Regex HexStore = new Regex(@"=\s*(0x[0-9a-fA-F]{8,16})\s*;", RegexOptions.Compiled);
         private static readonly Regex DatRef = new Regex(@"\bDAT_([0-9a-fA-F]{5,8})\b", RegexOptions.Compiled);
+        // Ghidra's auto-generated symbols for un-named functions/data/pointers (a hex address).
+        private static readonly Regex AutoSym = new Regex(@"\b(FUN|DAT|PTR|UNK|SUB)_([0-9a-fA-F]{5,16})\b", RegexOptions.Compiled);
+
+        /// <summary>Rewrites Ghidra's FUN_/DAT_/PTR_ address symbols to the managed names from the package.</summary>
+        private static string Symbolize(string line, Il2CppSymbolIndex index)
+        {
+            return AutoSym.Replace(line, m =>
+            {
+                if (!Il2CppConstantResolver.TryParseHex("0x" + m.Groups[2].Value, out var v)) return m.Value;
+                var name = index.NameForToken(v);
+                return name ?? m.Value;
+            });
+        }
 
         private static string AnnotateFloats(string line, BinaryImage img)
         {
@@ -73,14 +86,15 @@ namespace UnityRift
         /// Cleans a block of Ghidra pseudocode. <paramref name="strip"/> removes structural noise;
         /// <paramref name="floats"/> annotates constants (<paramref name="img"/> also resolves DAT_ loads).
         /// </summary>
-        public static string Clean(string text, bool strip = true, bool floats = true, BinaryImage img = null)
+        public static string Clean(string text, bool strip = true, bool floats = true, BinaryImage img = null, Il2CppSymbolIndex index = null)
         {
             var lines = text.Replace("\r", "").Split('\n');
             var outLines = new List<string>(lines.Length);
             foreach (var raw in lines)
             {
                 if (strip && StructRe.IsMatch(raw)) continue;
-                outLines.Add(floats ? AnnotateFloats(raw, img) : raw.TrimEnd());
+                var line = index != null ? Symbolize(raw, index) : raw;
+                outLines.Add(floats ? AnnotateFloats(line, img) : line.TrimEnd());
             }
             // Collapse runs of blank lines left behind by stripping.
             var sb = new StringBuilder();

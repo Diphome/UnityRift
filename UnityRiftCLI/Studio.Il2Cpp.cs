@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Ansi = UnityRift.ColorConsole;
 
 namespace UnityRiftCLI
@@ -59,6 +60,10 @@ namespace UnityRiftCLI
                 return;
             }
 
+            // Field offsets + enum maps from the dummy DLLs (cached), for --il2cpp-field / --il2cpp-enum.
+            try { Il2CppTypesJson.Build(folder, log: msg => Logger.Info(msg)); }
+            catch (Exception ex) { Logger.Warning($"Could not build {Il2CppSymbolIndex.TypesFileName}: {ex.Message}"); }
+
             var dest = Path.Combine(CLIOptions.o_outputFolder.Value, "il2cpp");
             var copied = Il2CppAssemblyProvider.ExportGhidraPackage(folder, dest);
             Logger.Info($"Wrote {copied.Count} Ghidra helper file(s) to \"{dest.Color(Ansi.BrightCyan)}\"");
@@ -91,10 +96,15 @@ namespace UnityRiftCLI
             var datas = CLIOptions.o_il2cppData.Value;
             var cleans = CLIOptions.o_il2cppClean.Value;
             var suggests = CLIOptions.o_il2cppSuggest.Value;
+            var fields = CLIOptions.o_il2cppField.Value;
+            var enums = CLIOptions.o_il2cppEnum.Value;
+            var fridas = CLIOptions.o_il2cppFrida.Value;
+            var applyPlans = CLIOptions.o_il2cppApplyPlan.Value;
             var regex = CLIOptions.f_filterWithRegex.Value;
             var fuzzy = CLIOptions.f_il2cppFuzzy.Value;
             if (lookups.Count == 0 && strings.Count == 0 && decodes.Count == 0 &&
-                datas.Count == 0 && cleans.Count == 0 && suggests.Count == 0)
+                datas.Count == 0 && cleans.Count == 0 && suggests.Count == 0 &&
+                fields.Count == 0 && enums.Count == 0 && fridas.Count == 0 && applyPlans.Count == 0)
                 return;
 
             // The game binary backs DAT_ literal-pool reads (data/clean); opened lazily.
@@ -179,9 +189,76 @@ namespace UnityRiftCLI
                     else { Logger.Warning($"--il2cpp-clean: path not found: {pathArg}"); continue; }
                     foreach (var f in files)
                     {
-                        var cleaned = Il2CppDecompCleaner.Clean(File.ReadAllText(f), strip, floats: true, img: img);
+                        var cleaned = Il2CppDecompCleaner.Clean(File.ReadAllText(f), strip, floats: true, img: img, index: idx);
                         Logger.Default.Log(LoggerEvent.Info, $"========= {Path.GetFileName(f)}\n{cleaned}", ignoreLevel: true);
                     }
+                }
+            }
+            if (fields.Count > 0)
+            {
+                var arr = new JArray();
+                foreach (var q in fields)
+                {
+                    var (type, off) = SplitTypeAndValue(q);
+                    arr.Add(idx.FieldLookup(type, off));
+                }
+                root["field"] = arr;
+            }
+            if (enums.Count > 0)
+            {
+                var arr = new JArray();
+                foreach (var q in enums)
+                {
+                    var (type, val) = SplitTypeAndValue(q);
+                    arr.Add(idx.EnumLookup(type, val));
+                }
+                root["enum"] = arr;
+            }
+            if (applyPlans.Count > 0)
+            {
+                var arr = new JArray();
+                foreach (var q in applyPlans)
+                    arr.Add(new JObject { ["filter"] = q, ["plan"] = idx.ApplyPlan(q) });
+                root["applyPlan"] = arr;
+            }
+            if (fridas.Count > 0)
+            {
+                var hooks = new List<Il2CppFridaGenerator.Hook>();
+                foreach (var q in fridas)
+                {
+                    if (idx.TryParseAddress(q, out var rva, out _))
+                    {
+                        var m = idx.Methods.FirstOrDefault(x => x.Rva == rva);
+                        if (m != null) hooks.Add(new Il2CppFridaGenerator.Hook { Name = m.Name, Rva = m.Rva, Signature = m.Signature });
+                    }
+                    else
+                    {
+                        foreach (var hit in idx.FindByName(q, regex, max: 25, fuzzy: fuzzy))
+                        {
+                            if (hit.Value<string>("kind") != "method") continue;
+                            var mrva = hit.Value<string>("rva");
+                            if (mrva == null) continue;
+                            hooks.Add(new Il2CppFridaGenerator.Hook
+                            {
+                                Name = hit.Value<string>("name"),
+                                Rva = Il2CppSymbolIndex.ParseHex(mrva),
+                                Signature = hit.Value<string>("signature"),
+                            });
+                        }
+                    }
+                }
+                if (hooks.Count > 0)
+                {
+                    var module = Path.GetFileName(game.BinaryPath);
+                    var js = Il2CppFridaGenerator.Generate(module, hooks);
+                    var jsPath = Path.Combine(dest, "hooks.js");
+                    File.WriteAllText(jsPath, js);
+                    Logger.Info($"Wrote {hooks.Count} Frida hook(s) to \"{jsPath.Color(Ansi.BrightCyan)}\"");
+                    Logger.Default.Log(LoggerEvent.Info, js, ignoreLevel: true);
+                }
+                else
+                {
+                    Logger.Warning("--il2cpp-frida: no methods matched.");
                 }
             }
             if (suggests.Count > 0)
@@ -199,5 +276,20 @@ namespace UnityRiftCLI
                 Logger.Default.Log(LoggerEvent.Info, root.ToString(Formatting.Indented), ignoreLevel: true);
 #endif
         }
+
+#if !NETFRAMEWORK
+        /// <summary>Splits a "Type@value" query into the type name and an optional numeric value (hex if 0x-prefixed, else decimal).</summary>
+        private static (string type, long? value) SplitTypeAndValue(string q)
+        {
+            var at = q.LastIndexOf('@');
+            if (at < 0) return (q.Trim(), null);
+            var type = q.Substring(0, at).Trim();
+            var v = q.Substring(at + 1).Trim();
+            if (v.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                return (type, Il2CppConstantResolver.TryParseHex(v, out var hv) ? (long)hv : (long?)null);
+            if (long.TryParse(v, out var dv)) return (type, dv);
+            return (type, Il2CppConstantResolver.TryParseHex(v, out var hv2) ? (long)hv2 : (long?)null);
+        }
+#endif
     }
 }
