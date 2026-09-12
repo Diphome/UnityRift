@@ -34,6 +34,8 @@ MCP **stdio** transport (newline-delimited JSON-RPC 2.0). No `npm install` neede
 | `il2cpp_enum` | Resolve an enum value → name (and flags), or list all pairs (`--il2cpp-enum`). |
 | `il2cpp_frida` | Generate a Frida script hooking method(s) by RVA, logging typed args/return (`--il2cpp-frida`). |
 | `il2cpp_apply_plan` | Emit a `{va, name, prototype}` batch to drive Ghidra rename/retype via its MCP (`--il2cpp-apply-plan`). |
+| `il2cpp_map` | Compact name → RVA JSON (Thumb methods listed separately) for a hook script (`--il2cpp-map`). |
+| `il2cpp_wire_layout` | Reconstruct the on-the-wire layout from a decompiled `Serialize`/`Deserialize` (`--il2cpp-wire-layout`). |
 | `asset_run` | Run the CLI with a verbatim argument list (escape hatch). |
 | `list_output` | Recursively list files in an output folder with sizes. |
 

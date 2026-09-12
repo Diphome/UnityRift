@@ -16,7 +16,7 @@ namespace UnityRift
     /// </summary>
     public class Il2CppSymbolIndex
     {
-        public class Method { public ulong Rva; public string Name; public string Signature; }
+        public class Method { public ulong Rva; public string Name; public string Signature; public bool Thumb; }
         public class Symbol { public ulong Rva; public string Name; public string Kind; public string Signature; public ulong MethodRva; }
         public class Str { public ulong Rva; public string Value; }
 
@@ -44,7 +44,7 @@ namespace UnityRift
             }
             var json = JObject.Parse(File.ReadAllText(Path.Combine(folder, "script.json")));
             foreach (var m in json["ScriptMethod"] ?? new JArray())
-                idx.Methods.Add(new Method { Rva = m.Value<ulong>("Address"), Name = m.Value<string>("Name"), Signature = m.Value<string>("Signature") });
+                idx.Methods.Add(new Method { Rva = m.Value<ulong>("Address"), Name = m.Value<string>("Name"), Signature = m.Value<string>("Signature"), Thumb = m.Value<bool?>("Thumb") ?? false });
             foreach (var m in json["ScriptMetadata"] ?? new JArray())
                 idx.Symbols.Add(new Symbol { Rva = m.Value<ulong>("Address"), Name = m.Value<string>("Name"), Kind = "metadata", Signature = m.Value<string>("Signature") });
             foreach (var m in json["ScriptMetadataMethod"] ?? new JArray())
@@ -108,6 +108,7 @@ namespace UnityRift
                     ["name"] = m.Name, ["rva"] = "0x" + m.Rva.ToString("X"), ["va"] = Va(m.Rva),
                     ["offset"] = "+0x" + (rva - m.Rva).ToString("X"), ["signature"] = m.Signature,
                 };
+                if (m.Thumb) jm["thumb"] = true;
                 if (nextStart != 0) jm["nextFunctionRva"] = "0x" + nextStart.ToString("X");
                 o[inside ? "method" : "previousMethod"] = jm;
                 // other methods sharing the same address (identical bodies folded by the linker)
@@ -165,7 +166,7 @@ namespace UnityRift
             foreach (var m in exact.Concat(rest))
             {
                 if (arr.Count >= max) break;
-                arr.Add(new JObject { ["kind"] = "method", ["name"] = m.Name, ["rva"] = "0x" + m.Rva.ToString("X"), ["va"] = Va(m.Rva), ["signature"] = m.Signature });
+                arr.Add(new JObject { ["kind"] = "method", ["name"] = m.Name, ["rva"] = "0x" + m.Rva.ToString("X"), ["va"] = Va(m.Rva), ["signature"] = m.Signature, ["thumb"] = m.Thumb ? (bool?)true : null });
             }
             foreach (var s in Symbols.Where(x => match(x.Name)))
             {
@@ -469,6 +470,27 @@ namespace UnityRift
                 });
             }
             return arr;
+        }
+
+        /// <summary>Compact name → RVA map (optionally name-regex-filtered), for a Frida/hook script to consume directly.
+        /// Thumb methods are listed under a separate "thumb" set so the caller can add the +1 for Interceptor.attach.</summary>
+        public JObject Map(string nameRegex, int max = 100000)
+        {
+            Regex re = string.IsNullOrEmpty(nameRegex) || nameRegex == "*" ? null : new Regex(nameRegex, RegexOptions.IgnoreCase);
+            var map = new JObject();
+            var thumb = new JObject();
+            var n = 0;
+            foreach (var m in Methods)
+            {
+                if (re != null && !re.IsMatch(m.Name)) continue;
+                if (n++ >= max) break;
+                var rva = "0x" + m.Rva.ToString("X");
+                map[m.Name] = rva;
+                if (m.Thumb) thumb[m.Name] = rva;
+            }
+            var result = new JObject { ["module"] = Info?.Value<string>("BinaryName"), ["imageBase"] = ImageBase != 0 ? "0x" + ImageBase.ToString("X") : null, ["count"] = map.Count, ["map"] = map };
+            if (thumb.Count > 0) result["thumb"] = thumb;
+            return result;
         }
 
         public JObject Summary()

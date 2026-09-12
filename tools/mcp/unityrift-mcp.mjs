@@ -690,6 +690,56 @@ const tools = [
     },
   },
   {
+    name: "il2cpp_map",
+    description:
+      "Emit a compact name → RVA JSON map for the matching methods (CLI '-m il2cpp --il2cpp-map'), for a " +
+      "Frida/hook script to consume directly. ARM Thumb methods are listed under a separate `thumb` set " +
+      "(add the +1 for Interceptor.attach). Filter with a name regex, or '*' for all.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder or IL2CPP binary." },
+        filter: { type: "string", description: "Name regex to select methods, or '*' for all." },
+        unity_version: { type: "string" },
+        output_path: { type: "string", description: `Ghidra package folder. Default: ${defaultOutDir()}` },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path", "filter"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-map", a.filter];
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
+    },
+  },
+  {
+    name: "il2cpp_wire_layout",
+    description:
+      "Reconstruct the on-the-wire layout of a Request/Response from a decompiled Serialize/Deserialize " +
+      "method (CLI '-m il2cpp --il2cpp-wire-layout'): the ordered sequence of Write/Read/Serialize ops, " +
+      "which ones are list/array elements (inside a loop), and integer length/count prefixes read ahead of " +
+      "a loop. Give it a Ghidra .c file (or a folder of them) — it is symbolized first so serializer calls " +
+      "carry managed names. Heuristic: reports the sequence the code executes, not a proven schema.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        input_path: { type: "string", description: "Game folder or IL2CPP binary (backs symbolization/DAT_ reads)." },
+        layout_path: { type: "string", description: "A decompiled Serialize/Deserialize .c file, or a folder of them (';'-separate multiple)." },
+        unity_version: { type: "string" },
+        output_path: { type: "string", description: `Ghidra package folder. Default: ${defaultOutDir()}` },
+        timeout_sec: { type: "number", description: `Timeout in seconds (default ${DEFAULT_TIMEOUT}).` },
+      },
+      required: ["input_path", "layout_path"],
+    },
+    handler: async (a) => {
+      const out = a.output_path || defaultOutDir();
+      const args = [a.input_path, "-m", "il2cpp", "-o", out, "--il2cpp-wire-layout", a.layout_path];
+      if (a.unity_version) args.push("--unity-version", a.unity_version);
+      return resultText(await runCli(args, a.timeout_sec || Math.max(DEFAULT_TIMEOUT, 600)));
+    },
+  },
+  {
     name: "asset_run",
     description:
       "Run UnityRiftCLI with a verbatim argument list. Escape hatch for anything the typed " +
@@ -928,7 +978,7 @@ async function handle(msg) {
       reply(id, {
         protocolVersion: params?.protocolVersion || "2025-06-18",
         capabilities: { tools: {} },
-        serverInfo: { name: "unityrift-cli", version: "0.6.0" },
+        serverInfo: { name: "unityrift-cli", version: "0.7.0" },
       });
       return;
     case "notifications/initialized":

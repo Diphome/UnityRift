@@ -100,11 +100,14 @@ namespace UnityRiftCLI
             var enums = CLIOptions.o_il2cppEnum.Value;
             var fridas = CLIOptions.o_il2cppFrida.Value;
             var applyPlans = CLIOptions.o_il2cppApplyPlan.Value;
+            var maps = CLIOptions.o_il2cppMap.Value;
+            var wireLayouts = CLIOptions.o_il2cppWireLayout.Value;
             var regex = CLIOptions.f_filterWithRegex.Value;
             var fuzzy = CLIOptions.f_il2cppFuzzy.Value;
             if (lookups.Count == 0 && strings.Count == 0 && decodes.Count == 0 &&
                 datas.Count == 0 && cleans.Count == 0 && suggests.Count == 0 &&
-                fields.Count == 0 && enums.Count == 0 && fridas.Count == 0 && applyPlans.Count == 0)
+                fields.Count == 0 && enums.Count == 0 && fridas.Count == 0 && applyPlans.Count == 0 &&
+                maps.Count == 0 && wireLayouts.Count == 0)
                 return;
 
             // The game binary backs DAT_ literal-pool reads (data/clean); opened lazily.
@@ -229,7 +232,7 @@ namespace UnityRiftCLI
                     if (idx.TryParseAddress(q, out var rva, out _))
                     {
                         var m = idx.Methods.FirstOrDefault(x => x.Rva == rva);
-                        if (m != null) hooks.Add(new Il2CppFridaGenerator.Hook { Name = m.Name, Rva = m.Rva, Signature = m.Signature });
+                        if (m != null) hooks.Add(new Il2CppFridaGenerator.Hook { Name = m.Name, Rva = m.Rva, Signature = m.Signature, Thumb = m.Thumb });
                     }
                     else
                     {
@@ -243,6 +246,7 @@ namespace UnityRiftCLI
                                 Name = hit.Value<string>("name"),
                                 Rva = Il2CppSymbolIndex.ParseHex(mrva),
                                 Signature = hit.Value<string>("signature"),
+                                Thumb = hit.Value<bool?>("thumb") ?? false,
                             });
                         }
                     }
@@ -259,6 +263,32 @@ namespace UnityRiftCLI
                 else
                 {
                     Logger.Warning("--il2cpp-frida: no methods matched.");
+                }
+            }
+            if (maps.Count > 0)
+            {
+                var arr = new JArray();
+                foreach (var q in maps)
+                    arr.Add(idx.Map(q));
+                root["map"] = arr;
+            }
+            if (wireLayouts.Count > 0)
+            {
+                var img = GetImage();
+                foreach (var pathArg in wireLayouts)
+                {
+                    var files = new List<string>();
+                    if (Directory.Exists(pathArg)) files.AddRange(Directory.GetFiles(pathArg, "*.c"));
+                    else if (File.Exists(pathArg)) files.Add(pathArg);
+                    else { Logger.Warning($"--il2cpp-wire-layout: path not found: {pathArg}"); continue; }
+                    var arr = new JArray();
+                    foreach (var f in files)
+                    {
+                        // symbolize + annotate first so serializer calls carry managed names
+                        var cleaned = Il2CppDecompCleaner.Clean(File.ReadAllText(f), strip: true, floats: true, img: img, index: idx);
+                        arr.Add(Il2CppWireLayout.Analyze(cleaned, Path.GetFileName(f)));
+                    }
+                    root["wireLayout"] = arr;
                 }
             }
             if (suggests.Count > 0)

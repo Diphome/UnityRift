@@ -42,6 +42,9 @@ namespace UnityRift
             public string Name;
             public string Signature;
             public string TypeSignature;
+            // ARM32 Thumb methods have bit0 set in the method pointer; Address is the clean (even) RVA.
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public bool Thumb;
         }
 
         public class ScriptString
@@ -74,6 +77,9 @@ namespace UnityRift
             public int PointerSize;
             public int Methods, GenericMethods, Strings, MetadataSymbols, MetadataMethods, FunctionStarts, Structs;
             public string HeaderVersionNote;
+            public string BinaryName;     // file name of the native binary (version guardrail: match Ghidra's program)
+            public string BinarySha256;   // SHA-256 of the native binary
+            public long BinarySize;       // byte size of the native binary
         }
 
         #endregion
@@ -84,7 +90,7 @@ namespace UnityRift
         };
         public static readonly string[] ScriptFiles =
         {
-            "ghidra.py", "ghidra_with_struct.py", "il2cpp_header_to_ghidra.py", "LICENSE-Il2CppDumper.txt",
+            "ghidra.py", "ghidra_with_struct.py", "il2cpp_header_to_ghidra.py", "il2cpp_fix_analysis.py", "LICENSE-Il2CppDumper.txt",
         };
 
         /// <summary>Writes all outputs into <paramref name="folder"/>. Requires LibCpp2IL to be initialised (call inside Cpp2IL processing).</summary>
@@ -95,6 +101,19 @@ namespace UnityRift
             info.Binary = binaryPath;
             info.Metadata = metadataPath;
             info.UnityVersion = unityVersion;
+            try
+            {
+                if (File.Exists(binaryPath))
+                {
+                    var fi = new FileInfo(binaryPath);
+                    info.BinaryName = fi.Name;
+                    info.BinarySize = fi.Length;
+                    using (var sha = System.Security.Cryptography.SHA256.Create())
+                    using (var fs = File.OpenRead(binaryPath))
+                        info.BinarySha256 = Convert.ToHexString(sha.ComputeHash(fs)).ToLowerInvariant();
+                }
+            }
+            catch (Exception ex) { log?.Invoke($"[il2cpp] Could not hash binary: {ex.Message}"); }
             File.WriteAllText(Path.Combine(folder, "il2cpp_info.json"), JsonConvert.SerializeObject(info, Formatting.Indented));
             WriteScripts(folder);
             return info;
@@ -184,6 +203,7 @@ MCP tools il2cpp_lookup / il2cpp_strings) to translate between managed names and
                     structNameDic[td] = Unique(FixName(TypeDefDisplayName(td)));
 
                 // 2) methods
+                var is32 = PointerSize() == 4; // only 32-bit ARM uses the Thumb bit0 marker
                 ulong imageBase = 0;
                 foreach (var td in md.typeDefs)
                 {
@@ -192,8 +212,10 @@ MCP tools il2cpp_lookup / il2cpp_strings) to translate between managed names and
                     foreach (var m in td.Methods ?? Array.Empty<Il2CppMethodDefinition>())
                     {
                         if (m.MethodPointer == 0) continue;
-                        if (imageBase == 0 && m.Rva != 0 && m.MethodPointer > m.Rva) imageBase = m.MethodPointer - m.Rva;
-                        var sm = new ScriptMethod { Address = bin.GetRva(m.MethodPointer), Name = typeName + "$$" + m.Name };
+                        var thumb = is32 && (m.MethodPointer & 1) != 0;
+                        var cleanPtr = thumb ? m.MethodPointer & ~1UL : m.MethodPointer;
+                        if (imageBase == 0 && m.Rva != 0 && cleanPtr > m.Rva) imageBase = cleanPtr - m.Rva;
+                        var sm = new ScriptMethod { Address = bin.GetRva(cleanPtr), Name = typeName + "$$" + m.Name, Thumb = thumb };
                         BuildSignature(sm, m, td, null, null);
                         json.ScriptMethod.Add(sm);
                     }
@@ -209,7 +231,8 @@ MCP tools il2cpp_lookup / il2cpp_strings) to translate between managed names and
                     {
                         var typeName = TypeDefDisplayName(r.DeclaringType) + GenericArgs(r.TypeGenericParams);
                         var methodName = r.BaseMethod.Name + GenericArgs(r.MethodGenericParams);
-                        var sm = new ScriptMethod { Address = bin.GetRva(pair.Key), Name = typeName + "$$" + methodName };
+                        var gThumb = is32 && (pair.Key & 1) != 0;
+                        var sm = new ScriptMethod { Address = bin.GetRva(gThumb ? pair.Key & ~1UL : pair.Key), Name = typeName + "$$" + methodName, Thumb = gThumb };
                         BuildSignature(sm, r.BaseMethod, r.DeclaringType, null, null);
                         json.ScriptMethod.Add(sm);
                         info.GenericMethods++;
@@ -239,7 +262,8 @@ MCP tools il2cpp_lookup / il2cpp_strings) to translate between managed names and
                     catch { /* pre-24.2 has no codegen modules */ }
                 }
                 pointers.Remove(0);
-                json.Addresses = pointers.Select(p => bin.GetRva(p)).OrderBy(x => x).ToArray();
+                // clear the Thumb bit0 so function starts land on the real (even) instruction
+                json.Addresses = pointers.Select(p => bin.GetRva(is32 ? p & ~1UL : p)).OrderBy(x => x).Distinct().ToArray();
                 info.FunctionStarts = json.Addresses.Length;
 
                 // 4) metadata usages (type infos, method infos, field infos, string literals)

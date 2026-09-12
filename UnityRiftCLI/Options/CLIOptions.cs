@@ -170,6 +170,8 @@ namespace UnityRiftCLI.Options
         public static Option<List<string>> o_il2cppEnum;
         public static Option<List<string>> o_il2cppFrida;
         public static Option<List<string>> o_il2cppApplyPlan;
+        public static Option<List<string>> o_il2cppMap;
+        public static Option<List<string>> o_il2cppWireLayout;
         public static Option<bool> f_il2cppFuzzy;
         public static Option<bool> f_il2cppCleanRaw;
         public static Option<bool> f_il2cppDummyDll;
@@ -770,6 +772,27 @@ namespace UnityRiftCLI.Options
                     "regex), to drive Ghidra rename+retype via its MCP or a script. Use '*' for all.\n" +
                     "Only for \"-m il2cpp\".\n",
                 optionExample: "Example: \"-m il2cpp --il2cpp-apply-plan PlayerController\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp
+            );
+            o_il2cppMap = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--il2cpp-map <regex|*>",
+                optionDescription: "Emit a compact name -> RVA JSON map (optionally name-regex-filtered) for a Frida/hook\n" +
+                    "script to consume directly; Thumb methods are listed separately so you can add the +1.\n" +
+                    "Only for \"-m il2cpp\". Use '*' for all.\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-map Serializer\"\n",
+                optionHelpGroup: HelpGroups.Il2Cpp
+            );
+            o_il2cppWireLayout = new GroupedOption<List<string>>
+            (
+                optionDefaultValue: new List<string>(),
+                optionName: "--il2cpp-wire-layout <path>",
+                optionDescription: "Reconstruct the on-the-wire layout from a decompiled Serialize/Deserialize: the ordered\n" +
+                    "sequence of Write/Read/Serialize ops, list elements, and length/count read-aheads.\n" +
+                    "<path> is a Ghidra .c file (or a folder); it is symbolized first. Only for \"-m il2cpp\".\n" +
+                    "*Multiple paths separated by ';'\n",
+                optionExample: "Example: \"-m il2cpp --il2cpp-wire-layout LoginRequest_Serialize.c\"\n",
                 optionHelpGroup: HelpGroups.Il2Cpp
             );
             f_il2cppFuzzy = new GroupedOption<bool>
@@ -1715,6 +1738,8 @@ namespace UnityRiftCLI.Options
                         case "--il2cpp-enum":
                         case "--il2cpp-frida":
                         case "--il2cpp-apply-plan":
+                        case "--il2cpp-map":
+                        case "--il2cpp-wire-layout":
                             if (o_workMode.Value != WorkMode.Il2Cpp)
                             {
                                 Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. This option is only for \"-m il2cpp\".\n");
@@ -1730,7 +1755,9 @@ namespace UnityRiftCLI.Options
                                 case "--il2cpp-field": o_il2cppField.Value.AddRange(ValueSplitter(value)); break;
                                 case "--il2cpp-enum": o_il2cppEnum.Value.AddRange(ValueSplitter(value)); break;
                                 case "--il2cpp-frida": o_il2cppFrida.Value.AddRange(ValueSplitter(value)); break;
-                                default: o_il2cppApplyPlan.Value.Add(value); break;
+                                case "--il2cpp-apply-plan": o_il2cppApplyPlan.Value.Add(value); break;
+                                case "--il2cpp-map": o_il2cppMap.Value.Add(value); break;
+                                default: o_il2cppWireLayout.Value.AddRange(ValueSplitter(value)); break;
                             }
                             break;
                         case "--typetree-db":

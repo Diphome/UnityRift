@@ -25,7 +25,12 @@ companion to the [MCP server reference](../tools/mcp/README.md) and the
    (`il2cpp_lookup` echoes the VA next to the RVA). Before working in Ghidra, make Ghidra's
    image base match (`mcp__ghidra__set_image_base`, verify with `get_current_program_info`)
    so a VA from UnityRift lands on the right function. When unsure, pass `va:0x…` / `rva:0x…`
-   explicitly to `il2cpp_lookup`.
+   explicitly to `il2cpp_lookup`. On **ARM32** builds, lookups mark `thumb: true` for Thumb methods —
+   the function starts on the even address, but a Frida `Interceptor.attach` needs the address `+1`
+   (`il2cpp_frida` / `il2cpp_map` handle this for you).
+2b. **Same binary on both sides.** `il2cpp_info.json` records the binary's `BinaryName` and
+   `BinarySha256`. Before trusting a translation, confirm Ghidra has the *same* file open
+   (`mcp__ghidra__get_metadata`) — never mix addresses from, say, v1.0.43 and v1.3.102.
 3. **UnityRift is the source of truth for names/layout; Ghidra is where you apply them.**
    Never hand-guess a name Ghidra shows as `FUN_…`/`DAT_…` — ask UnityRift.
 4. **Don't apply all names blindly.** Renaming the whole binary at once is slow and clobbers
@@ -44,9 +49,14 @@ companion to the [MCP server reference](../tools/mcp/README.md) and the
    `stringliteral.json`, `ghidra/`). Add `dummy_dll: true` for DLLs to open in dnSpy/ILSpy.
 2. In Ghidra: `import_file` the native binary (`GameAssembly.dll` / `libil2cpp.so`), run
    analysis (`run_analysis` / `analyze_function_complete`; wait on `analysis_status`).
-3. Align the image base (rule 2).
+3. Align the image base (rule 2) and confirm the binary hash matches (rule 2b).
 4. `import_data_types` on `<output>/il2cpp/il2cpp_ghidra.h` so the `*_o` / `*_Fields` structs
    exist and prototypes can reference them.
+5. Run the bundled `<output>/il2cpp/ghidra/il2cpp_fix_analysis.py` once (Script Manager) to undo
+   Ghidra's IL2CPP no-return trap: it clears the bogus no-return on runtime init helpers
+   (`il2cpp_codegen_initialize_method`, `il2cpp_runtime_class_init`, `object_new`, `GC_*`) and
+   re-disassembles the function bodies they had truncated. Skipping this leaves many functions
+   cut off after their first init call.
 
 ## Core loop (per feature / function)
 
@@ -76,6 +86,16 @@ companion to the [MCP server reference](../tools/mcp/README.md) and the
 6. **Follow the graph in Ghidra** (`get_xrefs_to`, `get_function_callers` / `callees`) and
    translate each `FUN_` back through `il2cpp_lookup`.
 
+## Protocol / serialization work
+
+When the target is a Request/Response wire format, decompile its `Serialize`/`Deserialize` in
+Ghidra, save to a `.c`, and run `il2cpp_wire_layout {layout_path}` — it symbolizes the function and
+reports the **ordered** sequence of `Write`/`Read`/`Serialize` ops, which entries are list/array
+elements (inside a loop), and integer **length/count prefixes** read ahead of a loop. That's the
+hand-reconstructed layout, produced for you. It's heuristic (it reports what the code executes) —
+confirm any `?`-typed op from the field or the decompiled argument, and use `il2cpp_field` to name
+the struct fields the values come from/into.
+
 ## Confirm at runtime (Frida)
 
 - `il2cpp_frida {query}` → `<output>/il2cpp/hooks.js`, hooking the matching method(s) by RVA
@@ -98,7 +118,9 @@ companion to the [MCP server reference](../tools/mcp/README.md) and the
 | `il2cpp_decode` | Packed hex immediate → float/double/int (no binary read). |
 | `il2cpp_data` | `DAT_<va>` literal → constant (reads the binary). |
 | `il2cpp_apply_plan` | `{va, name, prototype}` batch (regex or `*`) to drive Ghidra rename/retype. |
-| `il2cpp_frida` | Generate `hooks.js` for runtime hooks. |
+| `il2cpp_map` | Compact name → RVA JSON (Thumb listed separately) for a hook script. |
+| `il2cpp_wire_layout` | Ordered on-the-wire layout from a decompiled `Serialize`/`Deserialize`. |
+| `il2cpp_frida` | Generate `hooks.js` for runtime hooks (Thumb-aware, decodes String args). |
 | `dotnet_list` / `dotnet_type` | Browse the dummy assemblies as C# stubs. |
 
 ## Common mistakes

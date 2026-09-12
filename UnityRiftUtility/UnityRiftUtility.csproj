@@ -34,6 +34,7 @@
         <EmbeddedResource Include="../tools/ghidra/ghidra.py" LogicalName="ghidra.ghidra.py" />
         <EmbeddedResource Include="../tools/ghidra/ghidra_with_struct.py" LogicalName="ghidra.ghidra_with_struct.py" />
         <EmbeddedResource Include="../tools/ghidra/il2cpp_header_to_ghidra.py" LogicalName="ghidra.il2cpp_header_to_ghidra.py" />
+        <EmbeddedResource Include="../tools/ghidra/il2cpp_fix_analysis.py" LogicalName="ghidra.il2cpp_fix_analysis.py" />
         <EmbeddedResource Include="../tools/ghidra/LICENSE-Il2CppDumper.txt" LogicalName="ghidra.LICENSE-Il2CppDumper.txt" />
     </ItemGroup>
 
