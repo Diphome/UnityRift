@@ -23,19 +23,6 @@ MCP **stdio** transport (newline-delimited JSON-RPC 2.0). No `npm install` neede
 | `asset_dump` | Dump assets to text (`-m dump`). Best for inspecting fields, incl. type-tree-stripped builds via `typetree_db`. |
 | `dotnet_list` | List the game's .NET assemblies and types (`-m dotnet`). Managed folder auto-detected from the game folder / an asset file. |
 | `dotnet_type` | Dump .NET type(s) as C#-like class stubs, optionally with IL (`-m dotnet --dotnet-type`). Can also write `.cs` stub files. |
-| `il2cpp_export` | Generate an Il2CppDumper-compatible Ghidra package (`script.json`, `il2cpp.h`, `ghidra.py`) from GameAssembly/libil2cpp (`-m il2cpp`). |
-| `il2cpp_lookup` | Translate managed names ↔ RVAs/VAs while decompiling (`-m il2cpp --il2cpp-lookup`). |
-| `il2cpp_strings` | Search IL2CPP string literals by text (`-m il2cpp --il2cpp-strings`). |
-| `il2cpp_decode` | Decode a raw hex immediate into the float/double/int constant(s) it really is (`--il2cpp-decode`). |
-| `il2cpp_data` | Resolve a `DAT_<addr>` literal-pool load to its constant by reading the binary (`--il2cpp-data`). |
-| `il2cpp_clean` | Strip IL2CPP boilerplate from Ghidra pseudocode, rewrite `FUN_`/`DAT_` to managed names, annotate constants (`--il2cpp-clean`). |
-| `il2cpp_suggest` | Suggest `Type$$`/`Type$$Method` symbols to decompile from keywords or a script file (`--il2cpp-suggest`). |
-| `il2cpp_field` | Resolve a struct field by type + byte offset (`*(int*)(x+0x24)` → field name/type) (`--il2cpp-field`). |
-| `il2cpp_enum` | Resolve an enum value → name (and flags), or list all pairs (`--il2cpp-enum`). |
-| `il2cpp_frida` | Generate a Frida script hooking method(s) by RVA, logging typed args/return (`--il2cpp-frida`). |
-| `il2cpp_apply_plan` | Emit a `{va, name, prototype}` batch to drive Ghidra rename/retype via its MCP (`--il2cpp-apply-plan`). |
-| `il2cpp_map` | Compact name → RVA JSON (Thumb methods listed separately) for a hook script (`--il2cpp-map`). |
-| `il2cpp_wire_layout` | Reconstruct the on-the-wire layout from a decompiled `Serialize`/`Deserialize` (`--il2cpp-wire-layout`). |
 | `asset_run` | Run the CLI with a verbatim argument list (escape hatch). |
 | `list_output` | Recursively list files in an output folder with sizes. |
 
@@ -55,21 +42,9 @@ cached under `%LOCALAPPDATA%\UnityRift\il2cpp`; the first run takes
 ~10-60 s and a few GB of RAM. `asset_info` / `asset_export` / `asset_dump` accept
 `il2cpp: true` to use those stubs for custom MonoBehaviour fields.
 
-`il2cpp_export` writes the Ghidra helpers next to those stubs (`<output>/il2cpp/script.json`,
-`il2cpp_ghidra.h`, and a `ghidra/` folder with `ghidra.py` / `ghidra_with_struct.py`). Import
-the native binary into Ghidra, parse `il2cpp_ghidra.h`, then run the script and pick `script.json`.
-`il2cpp_lookup` / `il2cpp_strings` translate names and addresses while you decompile
-(`il2cpp_lookup` takes `use_fuzzy` for typo-tolerant name matching). To read the actual
-game-logic numbers, `il2cpp_decode` turns a raw hex immediate into its float/double value
-and `il2cpp_data` reads the constant behind a `DAT_<addr>` load from the binary;
-`il2cpp_clean` makes a decompiled function readable (drops IL2CPP boilerplate, rewrites
-`FUN_`/`DAT_` to managed names, annotates constants); and `il2cpp_suggest` maps a feature
-you're chasing ("parry", "adrenaline") to the `Type$$` symbols worth decompiling.
-`il2cpp_field` and `il2cpp_enum` turn pointer arithmetic (`x + 0x24`) and integer
-comparisons (`state == 3`) into field names and enum constants (from `il2cpp_types.json`,
-built from the dummy DLLs). `il2cpp_apply_plan` emits a `{va, name, prototype}` batch to
-drive Ghidra rename/retype through its MCP, and `il2cpp_frida` generates a runtime hook
-script to confirm what a statically-reversed method actually does.
+Native reverse-engineering of the compiled binary (the Ghidra/Il2CppDumper package,
+decompilation helpers, Frida hooks, and protocol/wire-layout analysis) is **not** part of
+this server — it lives in the separate **unityWyvern** project.
 
 Every CLI-invoking tool returns the exact command line, the exit code, elapsed
 time, and the combined stdout+stderr (ANSI stripped) — i.e. the CLI's own log.
@@ -102,6 +77,3 @@ node tools/mcp/unityrift-mcp.mjs
 - Only protocol JSON is written to stdout; diagnostics go to stderr.
 - The CLI itself only reads inputs and writes exports/dumps; it does not delete
   source assets.
-- For reversing IL2CPP with this server **and** the Ghidra MCP together (address
-  model, the core decompile→clean→resolve→apply loop, and Frida confirmation), see
-  the [agent playbook](../../docs/AGENT_GHIDRA_PLAYBOOK.md).

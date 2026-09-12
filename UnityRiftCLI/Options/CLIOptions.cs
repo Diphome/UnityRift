@@ -16,7 +16,6 @@ namespace UnityRiftCLI.Options
         FBX,
         Filter,
         DotNet,
-        Il2Cpp,
         Advanced,
     }
 
@@ -31,7 +30,6 @@ namespace UnityRiftCLI.Options
         SplitObjects,
         Animator,
         DotNet,
-        Il2Cpp,
         Godot,
         GodotScene,
         GodotScripts,
@@ -160,21 +158,6 @@ namespace UnityRiftCLI.Options
         public static Option<bool> f_dotnetToFiles;
         public static Option<bool> f_dotnetExportDll;
         public static Option<bool> f_il2cpp;
-        public static Option<List<string>> o_il2cppLookup;
-        public static Option<List<string>> o_il2cppStrings;
-        public static Option<List<string>> o_il2cppDecode;
-        public static Option<List<string>> o_il2cppData;
-        public static Option<List<string>> o_il2cppClean;
-        public static Option<List<string>> o_il2cppSuggest;
-        public static Option<List<string>> o_il2cppField;
-        public static Option<List<string>> o_il2cppEnum;
-        public static Option<List<string>> o_il2cppFrida;
-        public static Option<List<string>> o_il2cppApplyPlan;
-        public static Option<List<string>> o_il2cppMap;
-        public static Option<List<string>> o_il2cppWireLayout;
-        public static Option<bool> f_il2cppFuzzy;
-        public static Option<bool> f_il2cppCleanRaw;
-        public static Option<bool> f_il2cppDummyDll;
         public static Option<bool> f_godotAttachPlugin;
 
         static CLIOptions()
@@ -242,7 +225,7 @@ namespace UnityRiftCLI.Options
                 optionDefaultValue: WorkMode.Export,
                 optionName: "-m, --mode <value>",
                 optionDescription: "Specify working mode\n" +
-                    "<Value: extract | export(default) | exportRaw | dump | info | live2d |\nsplitObjects | animator | dotnet | il2cpp | godot | spine>\n" +
+                    "<Value: extract | export(default) | exportRaw | dump | info | live2d |\nsplitObjects | animator | dotnet | godot | spine>\n" +
                     "Extract - Extract(Decompress) asset bundles\n" +
                     "Export - Convert and export assets\n" +
                     "ExportRaw - Export raw assets\n" +
@@ -252,7 +235,6 @@ namespace UnityRiftCLI.Options
                     "SplitObjects - Export all model objects (split) (fbx)\n" +
                     "Animator - Export Animator assets (fbx)\n" +
                     "DotNet - Browse the game's .NET assemblies (list types / dump C#-like class stubs)\n" +
-                    "Il2Cpp - Generate Il2CppDumper-compatible Ghidra helpers (script.json, il2cpp.h) from GameAssembly/libil2cpp\n" +
                     "Godot - Convert materials to Godot 4 scaffolds (.gdshader + .tres) with their textures\n" +
                     "GodotScene - Export the scene as glTF model(s) + a Godot 4 scene (.tscn) that instances them\n" +
                     "GodotScripts - Generate Godot GDScript stubs from MonoBehaviours (class + serialized fields; Mono & IL2CPP)\n" +
@@ -669,162 +651,10 @@ namespace UnityRiftCLI.Options
                 optionDescription: "(Flag) Generate .NET assemblies from the game's IL2CPP binary (GameAssembly.dll / libil2cpp.so +\n" +
                     "global-metadata.dat, auto-detected near the input) with Cpp2IL and use them like --assembly-folder\n" +
                     "(custom MonoBehaviour fields, .NET class browsing). Results are cached. Requires the .NET 8+ build.\n" +
-                    "Implied by \"-m dotnet\" / \"-m il2cpp\" when no Managed folder is found.\n",
+                    "Implied by \"-m dotnet\" when no Managed folder is found.\n",
                 optionExample: "Example: \"-m dump -t monoBehaviour --il2cpp\"\n",
                 optionHelpGroup: HelpGroups.Advanced,
                 isFlag: true
-            );
-            o_il2cppLookup = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--il2cpp-lookup <text>",
-                optionDescription: "Look up a managed method/symbol by name or address in the generated IL2CPP package\n" +
-                    "<Value: Type$$Method | Type.Method | 0xRVA | va:0x... | rva:0x...>\n" +
-                    "Only for \"-m il2cpp\". Use --filter-with-regex to treat the name as a regular expression.\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-lookup PlayerController$$Update\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp
-            );
-            o_il2cppStrings = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--il2cpp-strings <text>",
-                optionDescription: "Search IL2CPP string literals (substring, or regexp with --filter-with-regex)\n" +
-                    "Only for \"-m il2cpp\".\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-strings error\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp
-            );
-            o_il2cppDecode = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--il2cpp-decode <hex>",
-                optionDescription: "Decode a packed float/double/int immediate seen in Ghidra pseudocode\n" +
-                    "(e.g. a '= 0x3f19999a3e99999a;' store -> '(0.3f, 0.6f)'). No binary read needed.\n" +
-                    "Only for \"-m il2cpp\". *Multiple values separated by ',' or ';' without spaces\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-decode 0x3f19999a3e99999a\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp
-            );
-            o_il2cppData = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--il2cpp-data <va>",
-                optionDescription: "Read the literal-pool constant behind a DAT_<addr> load from the IL2CPP binary\n" +
-                    "and decode it as a float/double (the hex in DAT_xxxxxxxx is the virtual address).\n" +
-                    "Only for \"-m il2cpp\". *Multiple values separated by ',' or ';' without spaces\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-data 0x4fb2ada\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp
-            );
-            o_il2cppClean = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--il2cpp-clean <path>",
-                optionDescription: "Clean Ghidra IL2CPP pseudocode: strip class-init/metadata/ctor boilerplate (by shape)\n" +
-                    "and annotate hidden float/DAT_ constants inline. <path> is a .c file or a folder of them.\n" +
-                    "Only for \"-m il2cpp\". *Multiple paths separated by ',' or ';' without spaces\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-clean out/FUN_1800abcd.c\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp
-            );
-            o_il2cppSuggest = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--il2cpp-suggest <kw|file>",
-                optionDescription: "Suggest IL2CPP types/methods worth decompiling for the given keyword(s) or a text file\n" +
-                    "(CamelCase / long identifiers are extracted from a file). Prints ranked Type$$ prefixes.\n" +
-                    "Combine with --il2cpp-fuzzy for typo-tolerant matching. Only for \"-m il2cpp\".\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-suggest adrenaline,parry,damage\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp
-            );
-            o_il2cppField = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--il2cpp-field <Type[@offset]>",
-                optionDescription: "Resolve a struct field: give a type for its full offset layout, or 'Type@0x24' for the\n" +
-                    "field at a byte offset (turns '*(int *)(param_1 + 0x24)' into a field name/type).\n" +
-                    "Needs il2cpp_types.json (built from the dummy DLLs). Only for \"-m il2cpp\".\n" +
-                    "*Multiple queries separated by ';' (values use '@', so ',' would split the offset)\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-field PlayerController@0x24\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp
-            );
-            o_il2cppEnum = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--il2cpp-enum <Type[@value]>",
-                optionDescription: "Resolve an enum: give a type for all value->name pairs, or 'Type@3' for the name of a\n" +
-                    "value (also decomposes flags). Turns 'if (state == 3)' into a constant name.\n" +
-                    "Needs il2cpp_types.json. Only for \"-m il2cpp\". *Multiple queries separated by ';'\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-enum CombatState@3\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp
-            );
-            o_il2cppFrida = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--il2cpp-frida <name|0xRVA>",
-                optionDescription: "Generate a ready-to-run Frida script that hooks the matching method(s) by RVA and logs\n" +
-                    "typed args/return (written to <output>/il2cpp/hooks.js). Confirms behaviour at runtime.\n" +
-                    "Only for \"-m il2cpp\". *Multiple queries separated by ',' or ';'\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-frida PlayerController$$TakeDamage\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp
-            );
-            o_il2cppApplyPlan = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--il2cpp-apply-plan <regex|*>",
-                optionDescription: "Emit a JSON batch of {va, name, prototype} for every method (or those matching a name\n" +
-                    "regex), to drive Ghidra rename+retype via its MCP or a script. Use '*' for all.\n" +
-                    "Only for \"-m il2cpp\".\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-apply-plan PlayerController\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp
-            );
-            o_il2cppMap = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--il2cpp-map <regex|*>",
-                optionDescription: "Emit a compact name -> RVA JSON map (optionally name-regex-filtered) for a Frida/hook\n" +
-                    "script to consume directly; Thumb methods are listed separately so you can add the +1.\n" +
-                    "Only for \"-m il2cpp\". Use '*' for all.\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-map Serializer\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp
-            );
-            o_il2cppWireLayout = new GroupedOption<List<string>>
-            (
-                optionDefaultValue: new List<string>(),
-                optionName: "--il2cpp-wire-layout <path>",
-                optionDescription: "Reconstruct the on-the-wire layout from a decompiled Serialize/Deserialize: the ordered\n" +
-                    "sequence of Write/Read/Serialize ops, list elements, and length/count read-aheads.\n" +
-                    "<path> is a Ghidra .c file (or a folder); it is symbolized first. Only for \"-m il2cpp\".\n" +
-                    "*Multiple paths separated by ';'\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-wire-layout LoginRequest_Serialize.c\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp
-            );
-            f_il2cppFuzzy = new GroupedOption<bool>
-            (
-                optionDefaultValue: false,
-                optionName: "--il2cpp-fuzzy",
-                optionDescription: "(Flag) Typo-tolerant matching for --il2cpp-lookup and --il2cpp-suggest\n" +
-                    "(ranks near-miss names by similarity instead of exact substring).\n" +
-                    "Only for \"-m il2cpp\".\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-lookup PlyerController --il2cpp-fuzzy\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp,
-                isFlag: true
-            );
-            f_il2cppCleanRaw = new GroupedOption<bool>
-            (
-                optionDefaultValue: false,
-                optionName: "--il2cpp-clean-raw",
-                optionDescription: "(Flag) For --il2cpp-clean: keep the structural noise, only annotate constants.\n" +
-                    "Only for \"-m il2cpp\".\n",
-                optionExample: "",
-                optionHelpGroup: HelpGroups.Il2Cpp,
-                isFlag: true
-            );
-            f_il2cppDummyDll = new GroupedOption<bool>
-            (
-                optionDefaultValue: false,
-                optionName: "--il2cpp-dummy-dll",
-                optionDescription: "(Flag) Also export the generated dummy .NET assemblies (*.dll) to <output>/DummyDll,\n" +
-                    "so they can be opened in dnSpy / ILSpy / dotPeek.\n" +
-                    "Only for \"-m il2cpp\".\n",
-                optionExample: "Example: \"-m il2cpp --il2cpp-dummy-dll\"\n",
-                optionHelpGroup: HelpGroups.Il2Cpp
             );
             f_godotAttachPlugin = new GroupedOption<bool>
             (
@@ -1017,9 +847,6 @@ namespace UnityRiftCLI.Options
                     case ".net":
                         o_workMode.Value = WorkMode.DotNet;
                         break;
-                    case "il2cpp":
-                        o_workMode.Value = WorkMode.Il2Cpp;
-                        break;
                     case "godot":
                         o_workMode.Value = WorkMode.Godot;
                         // Material/ParticleSystem are what we convert; Texture2D/Shader must also be
@@ -1153,28 +980,6 @@ namespace UnityRiftCLI.Options
                         break;
                     case "--il2cpp":
                         f_il2cpp.Value = true;
-                        flagIndexes.Add(i);
-                        break;
-                    case "--il2cpp-dummy-dll":
-                        if (o_workMode.Value != WorkMode.Il2Cpp)
-                        {
-                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is only for \"-m il2cpp\".\n");
-                            ShowOptionDescription(o_workMode);
-                            return;
-                        }
-                        f_il2cppDummyDll.Value = true;
-                        flagIndexes.Add(i);
-                        break;
-                    case "--il2cpp-fuzzy":
-                    case "--il2cpp-clean-raw":
-                        if (o_workMode.Value != WorkMode.Il2Cpp)
-                        {
-                            Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{flag.Color(brightYellow)}] flag. This flag is only for \"-m il2cpp\".\n");
-                            ShowOptionDescription(o_workMode);
-                            return;
-                        }
-                        if (flag == "--il2cpp-fuzzy") f_il2cppFuzzy.Value = true;
-                        else f_il2cppCleanRaw.Value = true;
                         flagIndexes.Add(i);
                         break;
                     case "--godot-attach-plugin":
@@ -1712,54 +1517,6 @@ namespace UnityRiftCLI.Options
                         case "--dotnet-assembly":
                             o_dotnetAssemblies.Value.AddRange(ValueSplitter(value));
                             break;
-                        case "--il2cpp-lookup":
-                            if (o_workMode.Value != WorkMode.Il2Cpp)
-                            {
-                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. This option is only for \"-m il2cpp\".\n");
-                                ShowOptionDescription(o_workMode);
-                                return;
-                            }
-                            o_il2cppLookup.Value.AddRange(ValueSplitter(value, isRegex: f_filterWithRegex.Value));
-                            break;
-                        case "--il2cpp-strings":
-                            if (o_workMode.Value != WorkMode.Il2Cpp)
-                            {
-                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. This option is only for \"-m il2cpp\".\n");
-                                ShowOptionDescription(o_workMode);
-                                return;
-                            }
-                            o_il2cppStrings.Value.AddRange(ValueSplitter(value, isRegex: f_filterWithRegex.Value));
-                            break;
-                        case "--il2cpp-decode":
-                        case "--il2cpp-data":
-                        case "--il2cpp-clean":
-                        case "--il2cpp-suggest":
-                        case "--il2cpp-field":
-                        case "--il2cpp-enum":
-                        case "--il2cpp-frida":
-                        case "--il2cpp-apply-plan":
-                        case "--il2cpp-map":
-                        case "--il2cpp-wire-layout":
-                            if (o_workMode.Value != WorkMode.Il2Cpp)
-                            {
-                                Console.WriteLine($"{"Error".Color(brightRed)} during parsing [{option.Color(brightYellow)}] option. This option is only for \"-m il2cpp\".\n");
-                                ShowOptionDescription(o_workMode);
-                                return;
-                            }
-                            switch (option)
-                            {
-                                case "--il2cpp-decode": o_il2cppDecode.Value.AddRange(ValueSplitter(value)); break;
-                                case "--il2cpp-data": o_il2cppData.Value.AddRange(ValueSplitter(value)); break;
-                                case "--il2cpp-clean": o_il2cppClean.Value.AddRange(ValueSplitter(value)); break;
-                                case "--il2cpp-suggest": o_il2cppSuggest.Value.AddRange(ValueSplitter(value)); break;
-                                case "--il2cpp-field": o_il2cppField.Value.AddRange(ValueSplitter(value)); break;
-                                case "--il2cpp-enum": o_il2cppEnum.Value.AddRange(ValueSplitter(value)); break;
-                                case "--il2cpp-frida": o_il2cppFrida.Value.AddRange(ValueSplitter(value)); break;
-                                case "--il2cpp-apply-plan": o_il2cppApplyPlan.Value.Add(value); break;
-                                case "--il2cpp-map": o_il2cppMap.Value.Add(value); break;
-                                default: o_il2cppWireLayout.Value.AddRange(ValueSplitter(value)); break;
-                            }
-                            break;
                         case "--typetree-db":
                             if (File.Exists(value))
                             {
@@ -2042,14 +1799,6 @@ namespace UnityRiftCLI.Options
                     sb.AppendLine($"# Write .cs Files: {f_dotnetToFiles}");
                     sb.AppendLine($"# Export .dll Files: {f_dotnetExportDll}");
                     sb.AppendLine($"# Assembly Path: \"{o_assemblyPath}\"");
-                    break;
-                case WorkMode.Il2Cpp:
-                    sb.AppendLine($"# [{o_workMode} Options]");
-                    sb.AppendLine($"# Lookup: \"{string.Join("\", \"", o_il2cppLookup.Value)}\"");
-                    sb.AppendLine($"# Strings: \"{string.Join("\", \"", o_il2cppStrings.Value)}\"");
-                    sb.AppendLine($"# Filter With Regex: {f_filterWithRegex}");
-                    sb.AppendLine($"# Export Dummy DLLs: {f_il2cppDummyDll}");
-                    sb.AppendLine($"# Unity Version: {unityVer}");
                     break;
                 case WorkMode.Live2D:
                     sb.AppendLine($"# [{o_workMode} Options]");
