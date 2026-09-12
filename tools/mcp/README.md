@@ -100,3 +100,6 @@ node tools/mcp/unityrift-mcp.mjs
 - Only protocol JSON is written to stdout; diagnostics go to stderr.
 - The CLI itself only reads inputs and writes exports/dumps; it does not delete
   source assets.
+- For reversing IL2CPP with this server **and** the Ghidra MCP together (address
+  model, the core decompile→clean→resolve→apply loop, and Frida confirmation), see
+  the [agent playbook](../../docs/AGENT_GHIDRA_PLAYBOOK.md).
