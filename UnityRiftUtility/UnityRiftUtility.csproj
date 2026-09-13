@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFrameworks>net472;net8.0;net8.0-windows;net9.0;net9.0-windows</TargetFrameworks>
         <RootNamespace>UnityRift</RootNamespace>
-        <Version>0.22.0.0</Version>
+        <Version>0.23.0.0</Version>
         <Copyright>Copyright © Perfare 2018-2022; Copyright © aelurum 2021-2025</Copyright>
         <DebugType>embedded</DebugType>
     </PropertyGroup>
@@ -27,14 +27,6 @@
         <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.6" />
         <!-- IL2CPP support: Cpp2IL (MIT) generates dummy assemblies from GameAssembly/libil2cpp + global-metadata.dat -->
         <PackageReference Include="Samboy063.Cpp2IL.Core" Version="2022.1.0-pre-release.21" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <!-- Ghidra helper scripts (Il2CppDumper, MIT) written next to the generated script.json / il2cpp.h -->
-        <EmbeddedResource Include="../tools/ghidra/ghidra.py" LogicalName="ghidra.ghidra.py" />
-        <EmbeddedResource Include="../tools/ghidra/ghidra_with_struct.py" LogicalName="ghidra.ghidra_with_struct.py" />
-        <EmbeddedResource Include="../tools/ghidra/il2cpp_header_to_ghidra.py" LogicalName="ghidra.il2cpp_header_to_ghidra.py" />
-        <EmbeddedResource Include="../tools/ghidra/LICENSE-Il2CppDumper.txt" LogicalName="ghidra.LICENSE-Il2CppDumper.txt" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
