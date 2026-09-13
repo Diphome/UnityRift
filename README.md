@@ -1,6 +1,6 @@
 # UnityRift
 
-**UnityRift** is a toolkit for **reverse-engineering and porting Unity games** — with a full **Unity → Godot 4 pipeline** at its center: export whole scenes (meshes, materials, particles, lights, cameras) and MonoBehaviour script stubs straight into a ready-to-open Godot project, recover shaders and IL2CPP/Mono code, and drive it all from the GUI, the CLI, or an MCP server for AI agents.
+**UnityRift** is a toolkit for **extracting and porting Unity games** — with a full **Unity → Godot 4 pipeline** at its center: export whole scenes (meshes, materials, particles, lights, cameras) and MonoBehaviour script stubs straight into a ready-to-open Godot project, recover shaders, and inspect the game's IL2CPP/Mono code as C#-like stubs — all from the GUI, the CLI, or an MCP server for AI agents.
 
 > **Origins.** UnityRift began as a fork of aelurum's [AssetStudioMod](https://github.com/aelurum/AssetStudio) (itself a fork of Perfare's [AssetStudio](https://github.com/Perfare/AssetStudio)) — huge thanks to both. It has since grown into a **distinct project** with its own direction (the Godot pipeline, IL2CPP/Cpp2IL support, a .NET class explorer, an MCP server, and many core fixes) that no longer resembles a simple fork. The original asset-extraction features are still here and credited below.
 
@@ -13,7 +13,7 @@
 - **IL2CPP support** via [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL): `GameAssembly.dll` / `libil2cpp.so` + `global-metadata.dat` are detected automatically, dummy assemblies are generated and cached, and they feed the .NET explorer and MonoBehaviour field parsing.
 - **.NET class explorer** — browse the game's managed assemblies as C#-like stubs (with optional IL). GUI tab **".NET Classes"**, CLI `-m dotnet`, MCP `dotnet_list` / `dotnet_type`.
 - **Dummy .NET assemblies** for IL2CPP games — generated with [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) and exportable to `<out>/DummyDll` (`-m dotnet --il2cpp --dotnet-export-dll`) to open in dnSpy / ILSpy / dotPeek, and used internally to read custom MonoBehaviour fields and Godot script stubs.
-  > **Native reverse-engineering** of the compiled binary (Ghidra package, decompilation helpers, Frida hooks, protocol/wire-layout analysis) is **not** part of UnityRift — it lives in a separate project, **unityWyvern**. UnityRift stays focused on reading and converting Unity content.
+  > **Note:** UnityRift inspects managed code (C#-like stubs) but does **not** reverse-engineer the compiled native binary — no Ghidra/IDA package, decompilation helpers, Frida hooks, or protocol analysis. That's out of scope; UnityRift stays focused on reading and converting Unity content.
 - **Type-tree database (TPK)** — decode type-tree-stripped builds via a bundled `classdata.tpk` (`--typetree-db`, auto-loaded when present).
 - **glTF 2.0 export** (`.glb` / `.gltf`) as an FBX-free alternative (meshes, skinning, materials + embedded textures, node animations).
 - **Godot 4 export** (`-m godot`) — converts a game's **materials** and **particle FX** into Godot 4 scaffolds:
@@ -124,9 +124,9 @@ UnityRiftCLI <asset folder path> -m animator
 ```
 UnityRiftCLI <game folder> -m dotnet --il2cpp
 ```
-> Native reverse-engineering of the compiled binary (Ghidra package, decompilation helpers,
-> Frida hooks, protocol/wire-layout analysis) lives in a **separate project, unityWyvern** —
 > UnityRift focuses on reading and converting Unity content (assets, scenes, effects, Godot).
+> Reverse-engineering the compiled native binary (Ghidra/decompilation, Frida, protocol analysis)
+> is out of scope.
 
 ### Advanced Samples
 - Export image assets converted to webp format to a specified output folder
@@ -213,7 +213,7 @@ When you select an asset of the MonoBehaviour type for the first time, UnityRift
 
 UnityRift generates dummy assemblies itself: **File → Load IL2CPP binary**, or just load the game folder (GameAssembly.dll / libil2cpp.so + `global-metadata.dat` are detected automatically). The first run uses [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) and is cached. This lets UnityRift read custom MonoBehaviour fields and produce Godot script stubs for IL2CPP games.
 
-> Reverse-engineering the native binary in Ghidra (the Il2CppDumper-style package, decompilation helpers, Frida hooks, wire-layout analysis) is handled by the separate **unityWyvern** project, not UnityRift.
+> This dummy-assembly generation is for **inspection** only (custom fields, C#-like stubs). Reverse-engineering the native binary in Ghidra (an Il2CppDumper-style package, decompilation helpers, Frida hooks) is out of scope for UnityRift.
 
 ## Build
 
