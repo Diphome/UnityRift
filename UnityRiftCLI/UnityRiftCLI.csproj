@@ -6,7 +6,7 @@
         <RootNamespace>UnityRiftCLI</RootNamespace>
         <AssemblyTitle>UnityRift CLI</AssemblyTitle>
         <AssemblyName>UnityRiftCLI</AssemblyName>
-        <Version>0.22.0.0</Version>
+        <Version>0.23.0.0</Version>
         <Copyright>Copyright © Perfare; Copyright © aelurum 2023-2025</Copyright>
         <PlatformTarget>AnyCPU</PlatformTarget>
         <DebugType>embedded</DebugType>
