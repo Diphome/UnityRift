@@ -9,17 +9,36 @@ namespace UnityRift
 {
     public class TypeDefinitionConverter
     {
+        /// <summary>
+        /// Unity stops serializing custom classes/structs past 10 nested levels
+        /// ("Serialization depth limit 10 exceeded"); fields beyond it are omitted.
+        /// </summary>
+        public const int DefaultMaxDepth = 10;
+
+        /// <summary>
+        /// Effective limit; override with the UNITYRIFT_MAX_CLASS_DEPTH environment variable.
+        /// </summary>
+        public static readonly int MaxDepth = ReadMaxDepth();
+
+        private static int ReadMaxDepth()
+        {
+            var value = Environment.GetEnvironmentVariable("UNITYRIFT_MAX_CLASS_DEPTH");
+            return int.TryParse(value, out var depth) && depth >= 0 ? depth : DefaultMaxDepth;
+        }
+
         private readonly TypeDefinition TypeDef;
         private readonly TypeResolver TypeResolver;
         private readonly SerializedTypeHelper Helper;
         private readonly int Indent;
+        private readonly int Depth;
 
-        public TypeDefinitionConverter(TypeDefinition typeDef, SerializedTypeHelper helper, int indent)
+        public TypeDefinitionConverter(TypeDefinition typeDef, SerializedTypeHelper helper, int indent, int depth = 0)
         {
             TypeDef = typeDef;
             TypeResolver = new TypeResolver(null);
             Helper = helper;
             Indent = indent;
+            Depth = depth;
         }
 
         public List<TypeTreeNode> ConvertToTypeTreeNodes()
@@ -159,8 +178,35 @@ namespace UnityRift
             return typeRef.FullName == "System.String";
         }
 
+        private static bool IsCustomSerializableType(TypeReference typeRef)
+        {
+            return !typeRef.IsPrimitive
+                && !IsSystemString(typeRef)
+                && !IsEnum(typeRef)
+                && !UnityEngineTypePredicates.IsUnityEngineObject(typeRef)
+                && !UnityEngineTypePredicates.IsSerializableUnityClass(typeRef)
+                && !UnityEngineTypePredicates.IsSerializableUnityStruct(typeRef);
+        }
+
+        private bool ExceedsDepthLimit(TypeReference typeRef)
+        {
+            if (Depth < MaxDepth)
+            {
+                return false;
+            }
+            var elementRef = typeRef.IsArray || CecilUtils.IsGenericList(typeRef)
+                ? CecilUtils.ElementTypeOfCollection(typeRef)
+                : typeRef;
+            return IsCustomSerializableType(elementRef);
+        }
+
         private List<TypeTreeNode> TypeRefToTypeTreeNodes(TypeReference typeRef, string name, int indent, bool isElement)
         {
+            if (ExceedsDepthLimit(typeRef))
+            {
+                return new List<TypeTreeNode>();
+            }
+
             var align = false;
 
             if (!IsStruct(TypeDef) || !UnityEngineTypePredicates.IsUnityEngineValueType(TypeDef))
@@ -282,7 +328,7 @@ namespace UnityRift
             {
                 nodes.Add(new TypeTreeNode(typeRef.Name, name, indent, align));
                 var typeDef = typeRef.Resolve();
-                var typeDefinitionConverter = new TypeDefinitionConverter(typeDef, Helper, indent + 1);
+                var typeDefinitionConverter = new TypeDefinitionConverter(typeDef, Helper, indent + 1, Depth + 1);
                 nodes.AddRange(typeDefinitionConverter.ConvertToTypeTreeNodes());
             }
 
