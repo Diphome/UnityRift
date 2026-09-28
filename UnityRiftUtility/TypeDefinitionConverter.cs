@@ -13,7 +13,18 @@ namespace UnityRift
         /// Unity stops serializing custom classes/structs past 10 nested levels
         /// ("Serialization depth limit 10 exceeded"); fields beyond it are omitted.
         /// </summary>
-        public const int MaxDepth = 10;
+        public const int DefaultMaxDepth = 10;
+
+        /// <summary>
+        /// Effective limit; override with the UNITYRIFT_MAX_CLASS_DEPTH environment variable.
+        /// </summary>
+        public static readonly int MaxDepth = ReadMaxDepth();
+
+        private static int ReadMaxDepth()
+        {
+            var value = Environment.GetEnvironmentVariable("UNITYRIFT_MAX_CLASS_DEPTH");
+            return int.TryParse(value, out var depth) && depth >= 0 ? depth : DefaultMaxDepth;
+        }
 
         private readonly TypeDefinition TypeDef;
         private readonly TypeResolver TypeResolver;
